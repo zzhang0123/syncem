@@ -1,0 +1,232 @@
+{
+ "description": "E4-KP against a pseudo-truth moment vector: the moments of the JP spectrum with t_eff.\n\nThe reference truth of E4-KP in forward.py and fits.py is the effective diagonal moments of\nN_eff(gamma) = int deta q(eta) 2 N(gamma, eta).  That vector is not the one the data measure:\nan isotropic-pitch JP spectrum with t_eff/t = 1.1475 (params_results.json ->\ntasks.E4-KP_JPfamily.reference_point, the exact-forward JP fit to the noise-free KP direct\nspectrum) reproduces the KP spectrum to < 1e-4 I_j.  Its N = 2 moments are used here as the\npseudo-truth of E4-KP, and the fit-summary quantities of fits.py are recomputed against them\n(LinearFit, seeded_report and realisation_report imported from fits.py; same seeds and 4000\nrealisations).  The values against that reference truth are recomputed alongside.\n\nWrites kp_pseudotruth_results.json and kp_pseudotruth.npz.  Run: python kp_pseudotruth.py\n",
+ "pseudo_truth": {
+  "source": "params_results.json -> tasks.E4-KP_JPfamily.reference_point",
+  "phi_lnA_p_ln_nu_b": [
+   -5.115707185186535,
+   2.599837998576472,
+   22.498713979006943
+  ],
+  "theta_A_p_ln_gamma_c": [
+   0.006001731997341751,
+   2.599837998576472,
+   9.749408873531035
+  ],
+  "gamma_c_eff": 17144.091487102054,
+  "t_eff_over_t": 1.1474927295486617,
+  "column": 0.9960797297178458,
+  "spec_truth_column": 0.996411084150468
+ },
+ "forward": {
+  "max_abs_S_JP_minus_S_KP_over_I_IQU": [
+   7.72549881739285e-05,
+   1.6155133825526165e-05,
+   9.849905722740697e-06
+  ],
+  "N2": {
+   "max_abs_S_KP_minus_C_a_over_I_IQU": [
+    0.008872004516931339,
+    0.0020164751443578132,
+    0.0011384517693476999
+   ],
+   "max_abs_S_JP_minus_C_a_over_I_IQU": [
+    0.00879474952875741,
+    0.0020019489680316764,
+    0.0011302633207151984
+   ],
+   "family_moments_vs_quadrature_moments_max_abs": 3.1502578323738817e-15
+  },
+  "N4": {
+   "max_abs_S_KP_minus_C_a_over_I_IQU": [
+    0.0006405202760658025,
+    0.00021391875924747276,
+    0.00012350128328230471
+   ],
+   "max_abs_S_JP_minus_C_a_over_I_IQU": [
+    0.0006470257351853437,
+    0.0002216587149400837,
+    0.00012799758743091896
+   ],
+   "family_moments_vs_quadrature_moments_max_abs": 3.1502578323738817e-15
+  }
+ },
+ "fit_summary": {
+  "pseudo_truth_JP_t_eff": {
+   "R_star_seeded": 9,
+   "max_abs_rep_bias_over_sigma": 1.0758177476432618,
+   "mode_of_max_bias": 1,
+   "rep_bias_over_sigma": [
+    -1.0758177476432618,
+    -0.10549129624903203,
+    -0.2387511079294682,
+    0.06109765587809682,
+    -0.11872608013364781,
+    -0.09101214997909109,
+    -0.1189856302386448,
+    -0.07477683128053422,
+    -0.011563221767550577
+   ],
+   "beta_hat_minus_true_over_sigma": [
+    -0.8552382993935908,
+    -1.1466949252640006,
+    -0.21383542811315692,
+    -1.3989543353996226,
+    -0.42573732678667753,
+    0.14760386383626134,
+    -0.03905784191345152,
+    -0.7826875498152228,
+    -0.6453218289530263
+   ],
+   "max_abs_beta_dev_sigma": 1.3989543353996226,
+   "eps_diagnostics": {
+    "eps_w_norm2_fit": 1.3316487777369477,
+    "eps_w_outside_span_chi2": 1.1231016117108084e-12,
+    "eps_w_inside_span_norm2": 1.3316487777358246
+   },
+   "max_finite_response_discrepancy_over_I": 0.008872004516931339,
+   "coverage_fixed_R": {
+    "R": 9,
+    "per_mode_analytic": [
+     0.45082664294964003,
+     0.6800017306249491,
+     0.6690269471069753,
+     0.6817867956761134,
+     0.6792867030636007,
+     0.6806879621712767,
+     0.6792718440809444,
+     0.6813377549977565,
+     0.6826571394128012
+    ],
+    "per_mode_empirical": [
+     0.464,
+     0.68625,
+     0.664,
+     0.68475,
+     0.68025,
+     0.66975,
+     0.67825,
+     0.66975,
+     0.66675
+    ],
+    "per_mode_analytic_min_mean": [
+     0.45082664294964003,
+     0.6538759466760065
+    ],
+    "per_mode_empirical_min_mean": [
+     0.464,
+     0.6515277777777777
+    ],
+    "joint_ellipsoid_analytic": 0.5739201214251263,
+    "joint_ellipsoid_empirical": 0.56825
+   },
+   "coverage_post_selection_joint": 0.50425,
+   "n_realisations": 4000,
+   "hausdorff_true_moments_n_bins_violating": 0
+  },
+  "spec_truth_effective_diagonal": {
+   "R_star_seeded": 9,
+   "max_abs_rep_bias_over_sigma": 3.7675744496785337,
+   "mode_of_max_bias": 1,
+   "rep_bias_over_sigma": [
+    -3.7675744496785337,
+    -0.3690465603179248,
+    -0.24075843030537833,
+    0.011914626167408238,
+    -0.09799607577610142,
+    -0.06868907254292644,
+    -0.10862926867064476,
+    -0.06421350827330158,
+    -0.01629913273245509
+   ],
+   "beta_hat_minus_true_over_sigma": [
+    -3.5469950014287974,
+    -1.410250189332828,
+    -0.21584275048905965,
+    -1.4481373651102984,
+    -0.4050073224291495,
+    0.16992694127241492,
+    -0.028701480345464603,
+    -0.7721242268079798,
+    -0.6500577399179468
+   ],
+   "max_abs_beta_dev_sigma": 3.5469950014287974,
+   "eps_diagnostics": {
+    "eps_w_norm2_fit": 14.480102593492742,
+    "eps_w_outside_span_chi2": 1.1084466677857563e-12,
+    "eps_w_inside_span_norm2": 14.480102593491633
+   },
+   "max_finite_response_discrepancy_over_I": 0.025939727329507865,
+   "coverage_fixed_R": {
+    "R": 9,
+    "per_mode_analytic": [
+     0.002822824949451297,
+     0.6504721551355004,
+     0.668798467369549,
+     0.6826551431930343,
+     0.6803695070092135,
+     0.6815487259426538,
+     0.6798397696528288,
+     0.6816924415773553,
+     0.6826252126224772
+    ],
+    "per_mode_empirical": [
+     0.00175,
+     0.65475,
+     0.66325,
+     0.68625,
+     0.6825,
+     0.67025,
+     0.68075,
+     0.6705,
+     0.666
+    ],
+    "per_mode_analytic_min_mean": [
+     0.002822824949451297,
+     0.6012026941613404
+    ],
+    "per_mode_empirical_min_mean": [
+     0.00175,
+     0.5973333333333334
+    ],
+    "joint_ellipsoid_analytic": 0.042438687174071586,
+    "joint_ellipsoid_empirical": 0.04125
+   },
+   "coverage_post_selection_joint": 0.037,
+   "n_realisations": 4000,
+   "hausdorff_true_moments_n_bins_violating": 0
+  }
+ },
+ "checks": {
+  "S_KP_vs_forward_npz_max_over_I": 0.0,
+  "spec_truth_bias_vs_fits_json_max_abs": 0.0,
+  "t_eff_over_t_params_json": 1.1474927295486617,
+  "gamma_c_eff_vs_params_json_rel": 0.0
+ },
+ "npz": "kp_pseudotruth.npz",
+ "npz_sha256": "c4d4ee507134cec2175363f7329c16f2d11953ab341adbd1d80e9cf89be3813c",
+ "provenance": {
+  "script": "kp_pseudotruth.py",
+  "script_sha256": "e844f52c5a847863b89dbbb2e6affcc65529b630f8e84ba963db335f6407de54",
+  "lib_sha256": {
+   "kernels.py": "b0983233f8fee93b12b10c299c0ea0d0011d72a106884029ec46107ba4121570",
+   "config.py": "f5577f60bd12158c413ffb1f8edc9361b1c202f66bc25d9cf812d466816831c6",
+   "basis.py": "2188cf4adbc3fc4e0148a36c3c43ce7d0b444224f5a1c58f58a3fb24f8c6ceb3",
+   "ensembles.py": "a224faeeba1a2f16b8db4f98f95a60126913ff3e7dd9a6c37304cd09ec8e6655",
+   "provenance.py": "32dc912a4bc75a4460d6264b1ffcf8e278e7da1c6db8e0a43e810fa31f737590"
+  },
+  "inputs_sha256": {
+   "params_results.json": "7dce37696c5ff62e90bfdbca4a028c9a97b4c587006c313ab7c35d5898bb0b20",
+   "forward_spectra.npz": "e9f5d7c3d3c216b1b8c31e36165f91577cc605d6d6180273c353e3ad79f2e9d8",
+   "fits.py": "f0f4cf5141ebd34f62269b1623842afa18ca8dd0b4bf7bfa64abf5244fc14b99",
+   "paramlib.py": "523da25c34f774acf6c4e21f6af5b43ece5429af6b00fed58f632818e80ab437",
+   "fits_results.json": "3afbdb199049a2090c9fd3c3de57a1a81e84449e2f111745fe631fda38400562"
+  },
+  "versions": {
+   "python": "3.12.9",
+   "numpy": "2.3.5",
+   "scipy": "1.16.3"
+  },
+  "wall_clock_s": 3.422774076461792,
+  "finished": "2026-10-27T16:01:31+0000"
+ }
+}

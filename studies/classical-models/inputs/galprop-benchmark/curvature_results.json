@@ -1,0 +1,324 @@
+{
+  "source_url": "https://www.mpe.mpg.de/~aws/test_healpix_standard_synchrotron_healpix_55_z10LMPD_SUNfE.gz",
+  "input_sha256": "29334988dfb630aa2b9adc95d4a2fc9979619b9fc2eacddd4327c52b1980f596",
+  "script_sha256": "e9e574472579015a6d57e0635be51c8181fcdeb836e1e0ef3630bcb74cf594b2",
+  "model": "55_z10LMPD_SUNfE",
+  "scope": "Published-output curvature diagnostic, not a GALPROP rerun or moment fit",
+  "frequency_units": "GHz; original Frequency values interpreted as Hz from manual",
+  "intensity_units": "erg cm^-2 s^-1 sr^-1 Hz^-1 per GALPROP manual",
+  "metadata_caveats": [
+    "FITS intensity units say unknown and frequency units incorrectly say MeV",
+    "Galactic coordinates follow publication; FITS has no COORDSYS keyword",
+    "Matching galdef absent: absorption flags and detailed numerical provenance unverified",
+    "Residuals measure tabulated output shape, not physical or numerical uncertainty"
+  ],
+  "fit_definition": "Equal-weight least squares in ln(I); no mock noise or likelihood",
+  "split": "Even original-file indices train; each band endpoint also trains. Remaining odd indices are withheld interpolation nodes.",
+  "pixel_counts": {
+    "all_sky": 196608,
+    "mid_latitude": 102968,
+    "high_latitude": 26568
+  },
+  "versions": {
+    "numpy": "2.3.5",
+    "astropy": "7.2.0",
+    "healpy": "1.19.0",
+    "matplotlib": "3.10.8"
+  },
+  "bands": {
+    "current_band": {
+      "requested_ghz": [
+        0.1,
+        10.0
+      ],
+      "actual_ghz": [
+        0.11447545997288276,
+        9.10043815000214
+      ],
+      "n_train": 13,
+      "n_withheld": 12,
+      "regions": {
+        "all_sky": {
+          "power_law": {
+            "coefficients_ascending_in_ln_nu_GHz": [
+              -41.99947206597253,
+              -0.9715960980764287
+            ],
+            "withheld_rms_fraction": 0.08300544039317326,
+            "withheld_max_abs_fraction": 0.1395197621242572,
+            "all_max_abs_fraction": 0.1973400519215618
+          },
+          "log_parabola": {
+            "coefficients_ascending_in_ln_nu_GHz": [
+              -41.89417563874935,
+              -0.96928048902904,
+              -0.05657795929340062
+            ],
+            "withheld_rms_fraction": 0.010714448815511618,
+            "withheld_max_abs_fraction": 0.018495012755732843,
+            "all_max_abs_fraction": 0.024626691642212428
+          },
+          "log_cubic": {
+            "coefficients_ascending_in_ln_nu_GHz": [
+              -41.89375620854665,
+              -0.9897714480652094,
+              -0.05695654100437308,
+              0.006166665786925459
+            ],
+            "withheld_rms_fraction": 0.003598746081983247,
+            "withheld_max_abs_fraction": 0.00499613822869116,
+            "all_max_abs_fraction": 0.0055227552678189795
+          }
+        },
+        "mid_latitude": {
+          "power_law": {
+            "coefficients_ascending_in_ln_nu_GHz": [
+              -42.41868891517387,
+              -0.9972356271494788
+            ],
+            "withheld_rms_fraction": 0.07823681974063759,
+            "withheld_max_abs_fraction": 0.1323681988740093,
+            "all_max_abs_fraction": 0.187485403543167
+          },
+          "log_parabola": {
+            "coefficients_ascending_in_ln_nu_GHz": [
+              -42.31964959805462,
+              -0.9950576203090169,
+              -0.05321588395912896
+            ],
+            "withheld_rms_fraction": 0.011480646707298398,
+            "withheld_max_abs_fraction": 0.01907216547753121,
+            "all_max_abs_fraction": 0.02544266213127655
+          },
+          "log_cubic": {
+            "coefficients_ascending_in_ln_nu_GHz": [
+              -42.31919784412027,
+              -1.0171277318638654,
+              -0.0536236413793164,
+              0.0066419049298132365
+            ],
+            "withheld_rms_fraction": 0.0033330391862845146,
+            "withheld_max_abs_fraction": 0.004830327321680317,
+            "all_max_abs_fraction": 0.005123918389615234
+          }
+        },
+        "high_latitude": {
+          "power_law": {
+            "coefficients_ascending_in_ln_nu_GHz": [
+              -42.77227195419091,
+              -1.0033893616734704
+            ],
+            "withheld_rms_fraction": 0.0781568242592543,
+            "withheld_max_abs_fraction": 0.1326487483221479,
+            "all_max_abs_fraction": 0.18812578619619935
+          },
+          "log_parabola": {
+            "coefficients_ascending_in_ln_nu_GHz": [
+              -42.67338268895924,
+              -1.0012146546743945,
+              -0.05313525796060578
+            ],
+            "withheld_rms_fraction": 0.011894491226491116,
+            "withheld_max_abs_fraction": 0.019506898790958127,
+            "all_max_abs_fraction": 0.0260195050226123
+          },
+          "log_cubic": {
+            "coefficients_ascending_in_ln_nu_GHz": [
+              -42.67291406262023,
+              -1.0241090553488394,
+              -0.05355824457454027,
+              0.006889971186905271
+            ],
+            "withheld_rms_fraction": 0.003285720816463373,
+            "withheld_max_abs_fraction": 0.004897145035655193,
+            "all_max_abs_fraction": 0.005139727690154139
+          }
+        }
+      },
+      "train_frequency_ghz": [
+        0.11447545997288276,
+        0.16484466236095124,
+        0.23737631379976995,
+        0.34182189187166767,
+        0.4922235242952017,
+        0.7088018749850908,
+        1.0206746999785314,
+        1.4697715679690808,
+        2.1164710578754775,
+        3.047718323340689,
+        4.388714385610594,
+        6.31974871527926,
+        9.10043815000214
+      ],
+      "withheld_frequency_ghz": [
+        0.13737055196745934,
+        0.19781359483314084,
+        0.28485157655972304,
+        0.4101862702460013,
+        0.5906682291542423,
+        0.8505622499821093,
+        1.2248096399742379,
+        1.7637258815629036,
+        2.539765269450574,
+        3.657261988008828,
+        5.2664572627327155,
+        7.583698458335115
+      ]
+    },
+    "wide_band": {
+      "requested_ghz": [
+        0.02,
+        30.0
+      ],
+      "actual_ghz": [
+        0.022186111067404382,
+        27.173762708895936
+      ],
+      "n_train": 21,
+      "n_withheld": 19,
+      "regions": {
+        "all_sky": {
+          "power_law": {
+            "coefficients_ascending_in_ln_nu_GHz": [
+              -42.15320697009041,
+              -0.9067197280238187
+            ],
+            "withheld_rms_fraction": 0.20548084006442754,
+            "withheld_max_abs_fraction": 0.3783379171529031,
+            "all_max_abs_fraction": 0.6059107279920326
+          },
+          "log_parabola": {
+            "coefficients_ascending_in_ln_nu_GHz": [
+              -41.89186045889306,
+              -0.9415623963701972,
+              -0.055426224624484606
+            ],
+            "withheld_rms_fraction": 0.03805295577991821,
+            "withheld_max_abs_fraction": 0.06483088346423993,
+            "all_max_abs_fraction": 0.09585919228326456
+          },
+          "log_cubic": {
+            "coefficients_ascending_in_ln_nu_GHz": [
+              -41.90462435678982,
+              -0.9858473795409873,
+              -0.050773326072643635,
+              0.00534647772426939
+            ],
+            "withheld_rms_fraction": 0.010224534265564187,
+            "withheld_max_abs_fraction": 0.015897543101942357,
+            "all_max_abs_fraction": 0.016369556673750618
+          }
+        },
+        "mid_latitude": {
+          "power_law": {
+            "coefficients_ascending_in_ln_nu_GHz": [
+              -42.5610745061302,
+              -0.9366054451209779
+            ],
+            "withheld_rms_fraction": 0.19073373790458042,
+            "withheld_max_abs_fraction": 0.34328975269740436,
+            "all_max_abs_fraction": 0.5348962364684464
+          },
+          "log_parabola": {
+            "coefficients_ascending_in_ln_nu_GHz": [
+              -42.31978609537253,
+              -0.9687739712411019,
+              -0.05117231369444855
+            ],
+            "withheld_rms_fraction": 0.03610282075602651,
+            "withheld_max_abs_fraction": 0.06198743729713718,
+            "all_max_abs_fraction": 0.09044110610686518
+          },
+          "log_cubic": {
+            "coefficients_ascending_in_ln_nu_GHz": [
+              -42.331400680420735,
+              -1.0090713559080535,
+              -0.04693838089522394,
+              0.0048650593054825435
+            ],
+            "withheld_rms_fraction": 0.011867659486287587,
+            "withheld_max_abs_fraction": 0.01767345571187051,
+            "all_max_abs_fraction": 0.01795480802466809
+          }
+        },
+        "high_latitude": {
+          "power_law": {
+            "coefficients_ascending_in_ln_nu_GHz": [
+              -42.914110006997674,
+              -0.9429113622339645
+            ],
+            "withheld_rms_fraction": 0.19020942479735,
+            "withheld_max_abs_fraction": 0.34120883715883443,
+            "all_max_abs_fraction": 0.5257858710139816
+          },
+          "log_parabola": {
+            "coefficients_ascending_in_ln_nu_GHz": [
+              -42.674084027324525,
+              -0.9749115812763032,
+              -0.05090457800307136
+            ],
+            "withheld_rms_fraction": 0.036172537555721085,
+            "withheld_max_abs_fraction": 0.06197692614954953,
+            "all_max_abs_fraction": 0.0899451865737716
+          },
+          "log_cubic": {
+            "coefficients_ascending_in_ln_nu_GHz": [
+              -42.68553568127649,
+              -1.014643668342693,
+              -0.04673003943183847,
+              0.004796811542638317
+            ],
+            "withheld_rms_fraction": 0.01253307628914316,
+            "withheld_max_abs_fraction": 0.018307822055843137,
+            "all_max_abs_fraction": 0.01855980604499008
+          }
+        }
+      },
+      "train_frequency_ghz": [
+        0.022186111067404382,
+        0.026623333280885172,
+        0.03833759992447467,
+        0.05520614389124356,
+        0.07949684720339076,
+        0.11447545997288276,
+        0.16484466236095124,
+        0.23737631379976995,
+        0.34182189187166767,
+        0.4922235242952017,
+        0.7088018749850908,
+        1.0206746999785314,
+        1.4697715679690808,
+        2.1164710578754775,
+        3.047718323340689,
+        4.388714385610594,
+        6.31974871527926,
+        9.10043815000214,
+        13.104630936003089,
+        18.870668547844456,
+        27.173762708895936
+      ],
+      "withheld_frequency_ghz": [
+        0.03194799993706222,
+        0.04600511990936962,
+        0.06624737266949228,
+        0.09539621664406894,
+        0.13737055196745934,
+        0.19781359483314084,
+        0.28485157655972304,
+        0.4101862702460013,
+        0.5906682291542423,
+        0.8505622499821093,
+        1.2248096399742379,
+        1.7637258815629036,
+        2.539765269450574,
+        3.657261988008828,
+        5.2664572627327155,
+        7.583698458335115,
+        10.920525780002531,
+        15.725557123203654,
+        22.64480225741327
+      ]
+    }
+  },
+  "analytic_powerlaw_max_relative_error": 8.881784197001252e-16
+}

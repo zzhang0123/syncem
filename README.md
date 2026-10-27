@@ -5,8 +5,8 @@ Documentation: <https://syncem.readthedocs.io>. Releases:
 <https://github.com/zzhang0123/syncem/releases>.
 
 Differentiable JAX/Equinox synchrotron kernels, finite statistical contractions,
-and polarised radiative transfer for *A statistical framework for synchrotron
-emission* (Zhang & Chluba).
+and polarised radiative transfer for *A statistical framework for the modelling
+of synchrotron emission* (Zhang & Chluba).
 
 This research implementation keeps four operations explicit: physical kernel
 approximation, finite kernel Taylor expansion, statistical closure, and numerical
@@ -114,6 +114,15 @@ compares the complex harmonic amplitudes with direct Fourier integration of the
 original electric field, independently of this package's Python implementation.
 
 <!-- docs:derivation:end -->
+## Scripts behind Sec. 5 of the paper
+
+[`studies/classical-models/`](https://github.com/zzhang0123/syncem/tree/main/studies/classical-models)
+holds the scripts, settings, inputs, results and SHA-256 checksums behind
+Sec. 5 (classical synchrotron models) of Zhang & Chluba. Its README gives the
+run order. The npz products and figures are attached to the GitHub Release.
+The directory is not in the source distribution or the wheel; run it from a
+checkout of this repository.
+
 ## Install and verify
 <!-- docs:install:start -->
 
@@ -1218,7 +1227,8 @@ itself remains future work.
 
 ## Citation and license
 
-Please cite Zhang & Chluba, *A statistical framework for synchrotron emission*.
+Please cite Zhang & Chluba, *A statistical framework for the modelling of
+synchrotron emission*.
 MIT license; see [LICENSE](https://github.com/zzhang0123/syncem/blob/main/LICENSE).
 
 <!-- docs:scope:end -->

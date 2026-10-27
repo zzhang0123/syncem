@@ -4,9 +4,9 @@ This document describes the top-level layer of the package: how a finite set
 of joint population moments predicts channel-integrated Stokes spectra with an
 explicit error budget, how assumptions about the population are declared, and
 how the same response matrix serves prediction and fitting. It follows the
-manuscript (Zhang & Chluba, *A statistical framework for synchrotron
-emission*), whose equation labels are quoted in backticks; anything the
-manuscript does not define is tagged `[extension]`.
+manuscript (Zhang & Chluba, *A statistical framework for the modelling of
+synchrotron emission*), whose equation labels are quoted in backticks;
+anything the manuscript does not define is tagged `[extension]`.
 
 Section 12 records the test inventory of the 0.2.0 acceptance run on
 2026-09-24, after three rounds of review fixes (test files, what each

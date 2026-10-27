@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased (0.6.0)
+## 0.6.0 (2026-10-27)
 
 ### Renamed
 
@@ -22,6 +22,8 @@
   says that the package's own PyPI name belongs to an unrelated project.
   Provenance still records the imported package's `__version__`, not
   installed-distribution metadata.
+- The README and `docs/DESIGN.md` cite the paper under its current title,
+  *A statistical framework for the modelling of synchrotron emission*.
 
 ### Added
 
@@ -42,6 +44,20 @@
   `uniform_phi`) and `known_field`. `fit_linear`'s `parameter_map` is now
   optional, and a `CombinationFit` lists the map's assumption record in its
   provenance.
+- `studies/classical-models` holds the scripts, inputs, results and
+  checksums behind Sec. 5 of the paper. The npz products and figures are
+  attached to the GitHub Release. `studies/` is not in the sdist or wheel.
+
+### Documentation
+
+- The docstrings of `high_order_basis`, `high_order_harmonic` and the
+  interval helpers state their manuscript labels, array shapes and which
+  results are not certified, and `syncem.__doc__` lists `high_order_basis`.
+  The twelve docstring-policy tests that failed at 0.5.0 pass. The test
+  that forbids calling a finite check a certificate now allows eleven
+  listed sentences that describe the conditional interval-arithmetic
+  envelope of `certify_high_order_basis_coarse`, and fails if a listed
+  sentence disappears. No package code changed.
 
 ## 0.5.0 (2026-09-28)
 

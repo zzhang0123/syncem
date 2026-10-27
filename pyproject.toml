@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "syncem"
-version = "0.6.0.dev0"
+version = "0.6.0"
 description = "Differentiable synchrotron kernels and explicitly scoped statistical approximations"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -33,7 +33,8 @@ markers = ["slow: long-running tests, excluded with -m 'not slow'"]
 
 [tool.ruff]
 # Verbatim copy of the manuscript reference; its hashes are checked by a test.
-extend-exclude = ["tests/model/reference"]
+# studies/ holds the scripts of the paper's study as they were run.
+extend-exclude = ["tests/model/reference", "studies"]
 
 [tool.ruff.lint]
 # I is the physical Stokes-I symbol throughout this package.
@@ -41,4 +42,4 @@ ignore = ["E741"]
 
 [tool.black]
 target-version = ["py312"]
-extend-exclude = "tests/model/reference/"
+extend-exclude = "(tests/model/reference/|^/studies/)"

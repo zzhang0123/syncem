@@ -1,0 +1,574 @@
+{
+ "machine": {
+  "platform": "macOS-26.5-arm64-arm-64bit",
+  "machine": "arm64",
+  "cpu": "Apple M3 Ultra",
+  "ncpu": "28",
+  "performance_cores": "20",
+  "efficiency_cores": "8",
+  "python": "3.12.9",
+  "numpy": "2.3.5",
+  "scipy": "1.16.3",
+  "blas": "accelerate",
+  "thread_env": {
+   "OPENBLAS_NUM_THREADS": "1",
+   "VECLIB_MAXIMUM_THREADS": "1",
+   "OMP_NUM_THREADS": "1",
+   "MKL_NUM_THREADS": "1"
+  },
+  "process": "single Python process, no multiprocessing"
+ },
+ "wait_for_idle": {
+  "waited_s": 45.15346312522888,
+  "last": {
+   "time": "14:33:08",
+   "loadavg": [
+    5.01953125,
+    5.423828125,
+    4.62060546875
+   ],
+   "other_processes_pcpu": 79.7
+  },
+  "n_samples": 4,
+  "limits": {
+   "other_processes_pcpu": 400.0,
+   "load_1min": 6.0
+  }
+ },
+ "machine_start": {
+  "time": "14:33:09",
+  "loadavg": [
+   5.01953125,
+   5.423828125,
+   4.62060546875
+  ],
+  "other_processes_pcpu": 64.7
+ },
+ "one_d": {
+  "E2": {
+   "route_i_recompute": {
+    "n": 60,
+    "median_s": 1.3343439790000002,
+    "p16_s": 1.33078920504,
+    "p84_s": 1.34093884352,
+    "min_s": 1.3245632090000001,
+    "machine_after": {
+     "time": "14:34:33",
+     "loadavg": [
+      3.5087890625,
+      4.7978515625,
+      4.453125
+     ],
+     "other_processes_pcpu": 37.8
+    },
+    "kernel_nodes_per_eval": 288
+   },
+   "route_ii_table_288": {
+    "n": 2000,
+    "median_s": 1.6916000000000002e-05,
+    "p16_s": 1.5208e-05,
+    "p84_s": 1.7083000000000002e-05,
+    "min_s": 1.3375000000000002e-05,
+    "machine_after": {
+     "time": "14:34:34",
+     "loadavg": [
+      3.5087890625,
+      4.7978515625,
+      4.453125
+     ],
+     "other_processes_pcpu": 40.6
+    },
+    "build_s": 1.340868208091706,
+    "columns": 288,
+    "max_rel_err_vs_route_i": 2.3794437189811917e-15
+   },
+   "route_ii_table_96": {
+    "n": 2000,
+    "median_s": 9.542000000000001e-06,
+    "p16_s": 9.250000000000001e-06,
+    "p84_s": 9.708000000000001e-06,
+    "min_s": 7.417e-06,
+    "machine_after": {
+     "time": "14:34:35",
+     "loadavg": [
+      3.5087890625,
+      4.7978515625,
+      4.453125
+     ],
+     "other_processes_pcpu": 40.1
+    },
+    "build_s": 0.4471698752604425,
+    "columns": 96,
+    "max_rel_err_vs_route_i": 8.404528622572583e-14
+   },
+   "route_iii_parts": {
+    "family_moments_only": {
+     "n": 2000,
+     "median_s": 2.0834e-05,
+     "p16_s": 2.0709e-05,
+     "p84_s": 2.1125000000000002e-05,
+     "min_s": 2.0458e-05,
+     "machine_after": {
+      "time": "14:34:35",
+      "loadavg": [
+       3.5087890625,
+       4.7978515625,
+       4.453125
+      ],
+      "other_processes_pcpu": 40.1
+     }
+    },
+    "matvec_123x36_only": {
+     "n": 2000,
+     "median_s": 7.92e-07,
+     "p16_s": 7.91e-07,
+     "p84_s": 8.33e-07,
+     "min_s": 7.08e-07,
+     "machine_after": {
+      "time": "14:34:35",
+      "loadavg": [
+       3.5087890625,
+       4.7978515625,
+       4.453125
+      ],
+      "other_processes_pcpu": 40.1
+     }
+    }
+   },
+   "route_iii_moment_basis_36": {
+    "n": 2000,
+    "median_s": 2.2458e-05,
+    "p16_s": 2.2333e-05,
+    "p84_s": 2.2833e-05,
+    "min_s": 2.2041e-05,
+    "machine_after": {
+     "time": "14:34:35",
+     "loadavg": [
+      3.5087890625,
+      4.7978515625,
+      4.453125
+     ],
+     "other_processes_pcpu": 42.199999999999996
+    },
+    "columns": 36,
+    "max_rel_err_vs_route_i": 0.0011822871267127006
+   },
+   "n_theta_cycled": 60
+  },
+  "E4-JP": {
+   "route_i_recompute": {
+    "n": 60,
+    "median_s": 1.003086458,
+    "p16_s": 1.00028009048,
+    "p84_s": 1.017952017,
+    "min_s": 0.9954522920000001,
+    "machine_after": {
+     "time": "14:35:38",
+     "loadavg": [
+      2.849609375,
+      4.3642578125,
+      4.31396484375
+     ],
+     "other_processes_pcpu": 94.5
+    },
+    "kernel_nodes_per_eval": 216
+   },
+   "route_ii_table_288": {
+    "n": 2000,
+    "median_s": 1.7250000000000003e-05,
+    "p16_s": 1.5167e-05,
+    "p84_s": 1.7375000000000002e-05,
+    "min_s": 1.3625e-05,
+    "machine_after": {
+     "time": "14:35:40",
+     "loadavg": [
+      2.849609375,
+      4.3642578125,
+      4.31396484375
+     ],
+     "other_processes_pcpu": 43.1
+    },
+    "build_s": 1.3480832921341062,
+    "columns": 288,
+    "max_rel_err_vs_route_i": 0.0036815313690047127
+   },
+   "route_ii_table_96": {
+    "n": 2000,
+    "median_s": 1.0417e-05,
+    "p16_s": 1.0083840000000001e-05,
+    "p84_s": 1.0542e-05,
+    "min_s": 8.125000000000001e-06,
+    "machine_after": {
+     "time": "14:35:40",
+     "loadavg": [
+      2.849609375,
+      4.3642578125,
+      4.31396484375
+     ],
+     "other_processes_pcpu": 66.8
+    },
+    "build_s": 0.4547759583219886,
+    "columns": 96,
+    "max_rel_err_vs_route_i": 0.019448166866622634
+   },
+   "route_iii_parts": {
+    "family_moments_only": {
+     "n": 2000,
+     "median_s": 4.6750000000000005e-05,
+     "p16_s": 4.6334e-05,
+     "p84_s": 4.975e-05,
+     "min_s": 4.5875000000000004e-05,
+     "machine_after": {
+      "time": "14:35:40",
+      "loadavg": [
+       2.849609375,
+       4.3642578125,
+       4.31396484375
+      ],
+      "other_processes_pcpu": 75.8
+     }
+    },
+    "matvec_123x36_only": {
+     "n": 2000,
+     "median_s": 7.91e-07,
+     "p16_s": 7.5e-07,
+     "p84_s": 7.92e-07,
+     "min_s": 7.08e-07,
+     "machine_after": {
+      "time": "14:35:40",
+      "loadavg": [
+       2.849609375,
+       4.3642578125,
+       4.31396484375
+      ],
+      "other_processes_pcpu": 77.3
+     }
+    }
+   },
+   "route_iii_moment_basis_36": {
+    "n": 2000,
+    "median_s": 4.8583000000000006e-05,
+    "p16_s": 4.8368440000000005e-05,
+    "p84_s": 5.0881559999999995e-05,
+    "min_s": 4.7959000000000006e-05,
+    "machine_after": {
+     "time": "14:35:41",
+     "loadavg": [
+      2.849609375,
+      4.3642578125,
+      4.31396484375
+     ],
+     "other_processes_pcpu": 77.0
+    },
+    "columns": 36,
+    "max_rel_err_vs_route_i": 0.011380032355271172
+   },
+   "n_theta_cycled": 60
+  }
+ },
+ "build": {
+  "kernel_table_build_s_single": 3.02734754094854,
+  "kernel_table": {
+   "y_nodes": 10132,
+   "B_nodes": 16,
+   "kernels": 2,
+   "orders": 7,
+   "F_or_G_quadratures": 324224,
+   "u_nodes_each": 200
+  },
+  "kbar_call_definition": "one averaged kernel Kbar(gamma): eta (12) x channel (41 x 400 nodes) x screen average of the B-averaged spline, for I, Q, U",
+  "spline_evaluations_per_kbar_call_per_kernel": 196800,
+  "kbar_order0_single_gamma": {
+   "n": 240,
+   "median_s": 0.004466479000000001,
+   "p16_s": 0.0043331761600000004,
+   "p84_s": 0.0046501486800000005,
+   "min_s": 0.0041497090000000006,
+   "machine_after": {
+    "time": "14:35:45",
+    "loadavg": [
+     2.861328125,
+     4.34130859375,
+     4.30615234375
+    ],
+    "other_processes_pcpu": 97.0
+   }
+  },
+  "kbar_order2_single_gamma": {
+   "n": 240,
+   "median_s": 0.008963375,
+   "p16_s": 0.00863243508,
+   "p84_s": 0.009310607,
+   "min_s": 0.008165542000000001,
+   "machine_after": {
+    "time": "14:35:47",
+    "loadavg": [
+     3.1123046875,
+     4.36865234375,
+     4.31591796875
+    ],
+    "other_processes_pcpu": 59.5
+   }
+  },
+  "continuum_analytic_basis": {
+   "kbar_calls": 12,
+   "orders_per_call": 3,
+   "columns": 36,
+   "n": 60,
+   "median_s": 0.09301516700000001,
+   "p16_s": 0.092214845,
+   "p84_s": 0.09382739552000001,
+   "min_s": 0.091420916,
+   "machine_after": {
+    "time": "14:35:53",
+    "loadavg": [
+     3.10302734375,
+     4.345703125,
+     4.30810546875
+    ],
+    "other_processes_pcpu": 71.10000000000001
+   }
+  },
+  "continuum_stencil_basis": {
+   "kbar_calls": 60,
+   "orders_per_call": 1,
+   "columns": 36,
+   "n": 60,
+   "median_s": 0.281061938,
+   "p16_s": 0.27942618348000003,
+   "p84_s": 0.28651981800000004,
+   "min_s": 0.27638425,
+   "machine_after": {
+    "time": "14:36:11",
+    "loadavg": [
+     3.091796875,
+     4.27978515625,
+     4.28466796875
+    ],
+    "other_processes_pcpu": 68.0
+   }
+  },
+  "harmonic_stencil_basis_read_from_survey": {
+   "source": "survey memo of the harmonic pipeline, section 3; not distributed with the study (it records local paths); the values below are copied from it by hand",
+   "kbar_calls": 60,
+   "half_step_check_calls": 60,
+   "columns": 36,
+   "per_call_s_adopted_settings": {
+    "gamma_382": 1.32,
+    "gamma_6977": 2.26,
+    "gamma_78502": 2.89
+   },
+   "per_call_s_coarse_settings": {
+    "gamma_382": 0.5,
+    "gamma_6977": 0.82,
+    "gamma_78502": 1.02
+   },
+   "recorded_logs_s": {
+    "basis_refined": 134.7,
+    "basis_halfstep": 49.1,
+    "basis_coarse": 47.9,
+    "truth_refined_96_energy_nodes": 208.7,
+    "truth_coarse": 57.3
+   },
+   "label": "read (survey memo section 3, OPENBLAS_NUM_THREADS=1); not re-run here",
+   "truth_energy_nodes": 96
+  }
+ },
+ "joint_gamma_B": {
+  "definition": "N(gamma, B) = P(B) (A/1e4)(gamma/1e4)^-p (1 - gamma/gamma_c(B))^(p-2), P(B) = U[4,6] muG, gamma_c(B) = 1/((b_s(B) + b_c) t), b_s(B) from B^2 in the local field, b_c Thomson on 1 eV cm^-3, t = 19 Myr, p = 2.6; A sets unit total column",
+  "x_B": "(B - 5 muG)/(1 muG)",
+  "monomials_(r,s)": [
+   [
+    0,
+    0
+   ],
+   [
+    1,
+    0
+   ],
+   [
+    2,
+    0
+   ],
+   [
+    0,
+    1
+   ],
+   [
+    1,
+    1
+   ],
+   [
+    0,
+    2
+   ]
+  ],
+  "fixed_B_table_build_s": 0.1911734170280397,
+  "fixed_B_tables_16_build_s": 2.5422819582745433,
+  "gamma_c_range": [
+   16949.547601292757,
+   22901.385886443808
+  ],
+  "A_unit_column": 0.006000558809723244,
+  "direct_one_eval_s": 16.011903167236596,
+  "direct_node_doubling_max_rel": 7.062597991159654e-16,
+  "scaling_identity_max_rel": 1.7635273370872895e-14,
+  "joint_basis_build_s": 0.09532533306628466,
+  "joint_basis_stencil_check": {
+   "I_(0, 1)_max_abs_diff_over_col_max": 2.091992702202067e-09,
+   "I_(0, 2)_max_abs_diff_over_col_max": 3.2446150947600916e-09,
+   "I_(1, 1)_max_abs_diff_over_col_max": 9.883606226439812e-09,
+   "P_(0, 1)_max_abs_diff_over_col_max": 3.279040031143965e-09,
+   "P_(0, 2)_max_abs_diff_over_col_max": 3.1397291053533235e-09,
+   "P_(1, 1)_max_abs_diff_over_col_max": 9.838964516392809e-09
+  },
+  "joint_moments_vs_measure_max_abs": 2.9559688030644793e-15,
+  "moment_route_72_max_rel_err": 0.007808321078184797,
+  "preaveraged_36_with_marginal_moments_max_rel_err": 0.08365175273548485,
+  "stencil_B_columns_rel_residual_outside_gamma_span": {
+   "max_over_own_norm_all_bins": 0.00040712858919792497,
+   "max_over_own_norm_bins_3_11": 1.6144792598488023e-11,
+   "max_over_largest_gamma_column_norm": 7.049814319578559e-13,
+   "note": "stencil step 0.04 in x_B; residual includes the stencil's own truncation error"
+  },
+  "pushforward_36_fixed_B0_max_rel_err": 0.0037105939493409963,
+  "pushforward_note": "continuum only: K(gamma, B) = (B/B0) K(gamma sqrt(B/B0), B0) maps any (gamma, B) ensemble onto gamma-moments at B0; nodes with gamma' outside [300, 1e5] are kept in the edge bins (|x| slightly > 1)",
+  "table_build_s": 21.61860066698864,
+  "route_i_recompute": {
+   "n": 5,
+   "median_s": 16.623059125,
+   "p16_s": 16.39967167024,
+   "p84_s": 16.81393033988,
+   "min_s": 16.126149084,
+   "machine_after": {
+    "time": "14:39:40",
+    "loadavg": [
+     3.22998046875,
+     3.5712890625,
+     3.95654296875
+    ],
+    "other_processes_pcpu": 156.8
+   },
+   "kernel_nodes_per_eval": 3456,
+   "note": "5 calls only (each evaluation recomputes 16 fixed-B channel averages)"
+  },
+  "route_ii_table": {
+   "n": 200,
+   "median_s": 0.0001482705,
+   "p16_s": 0.00014749328,
+   "p84_s": 0.00016389972,
+   "min_s": 0.000146792,
+   "machine_after": {
+    "time": "14:39:40",
+    "loadavg": [
+     3.22998046875,
+     3.5712890625,
+     3.95654296875
+    ],
+    "other_processes_pcpu": 155.9
+   },
+   "columns": 4608,
+   "kernel_calls_to_build": 4608,
+   "max_rel_err_vs_route_i": 0.0008897409975087183
+  },
+  "route_iii_joint_moment_basis_72": {
+   "n": 200,
+   "median_s": 0.000409021,
+   "p16_s": 0.00038707728000000007,
+   "p84_s": 0.00046046828000000003,
+   "min_s": 0.00036995800000000004,
+   "machine_after": {
+    "time": "14:39:41",
+    "loadavg": [
+     3.22998046875,
+     3.5712890625,
+     3.95654296875
+    ],
+    "other_processes_pcpu": 137.5
+   },
+   "columns": 72,
+   "kernel_calls_to_build": 12,
+   "max_rel_err_vs_route_i": 0.008665560536513144
+  },
+  "counts": {
+   "table_nodes_n_gamma_x_n_B": [
+    288,
+    16
+   ],
+   "table_columns": 4608,
+   "table_entries": 566784,
+   "moment_bins_x_monomials": [
+    12,
+    6
+   ],
+   "moment_columns": 72,
+   "moment_entries": 8856,
+   "continuum_kernel_calls_moment": "12 at B0 (orders 0..2 in ln gamma; B derivatives by the scaling identity)",
+   "generic_kernel_calls_moment_tensor_5pt_stencil": 300,
+   "generic_kernel_calls_moment_note": "no scaling identity (e.g. harmonic): 5-point stencils along x_gamma and x_B and their tensor product for the mixed term need 25 evaluations per bin",
+   "table_kernel_calls": 4608
+  }
+ },
+ "machine_end": {
+  "time": "14:39:41",
+  "loadavg": [
+   3.22998046875,
+   3.5712890625,
+   3.95654296875
+  ],
+  "other_processes_pcpu": 137.5
+ },
+ "description": "Cost of one parametric evaluation and of building the bases; continuum kernel.\n\nAll three routes use the same continuum kernel: the B-averaged spline table of F and G\n(basis.KernelTable) and the eta-, channel- and screen-averaging of basis.channel_kernels.\nOne evaluation returns all 123 rows (41 channels x I, Q, U).\n  (i)   recompute: build the energy quadrature of the parametric density and evaluate the\n        averaged kernel at every node (ensembles.direct_from_measure);\n  (ii)  cached fine gamma table: Kbar at fixed gamma nodes, precomputed once; one evaluation is\n        the density at the nodes and a (123 x n_gamma) matrix-vector product;\n  (iii) moment basis: family moments a(theta) (12 x 3) and a (123 x 36) matrix-vector product.\nFamilies: E2 smoothly broken power law (no kink) and E4-JP (cut-off that moves with theta).\nTimings: one process, BLAS forced single-threaded, each call timed individually\n(time.perf_counter_ns), medians of >= 50 calls after warm-up.\n\nCounts: kernel calls and columns to build the continuum basis (analytic derivatives, and the\npaper's 5-point stencil for comparison), the harmonic basis (5-point stencil; per-call times\nread from the survey memo, not re-run here), and one (gamma, B) joint case: JP ageing with\nsynchrotron losses in the local field B ~ U[4, 6] muG (gamma_c depends on B), comparing a\n(gamma x B) table with a 12-bin x 6-monomial (total degree <= 2 in x_gamma, x_B) basis.\n\nWrites cost_results.json.  Run: python cost.py\n",
+ "config": {
+  "nu_lo": 100000000.0,
+  "nu_hi": 10000000000.0,
+  "n_channels": 41,
+  "chan_half": 0.2,
+  "n_chan_nodes": 400,
+  "b_kind": "uniform",
+  "b_lo": 4.0,
+  "b_hi": 6.0,
+  "b_rms": 5.0,
+  "n_b": 16,
+  "maxwell_cut": 8.0,
+  "eta_max": 0.5,
+  "n_eta": 12,
+  "azimuth_amp": 0.8,
+  "azimuth_phase": 0.25,
+  "screen_mean": 8.0,
+  "screen_sd": 0.5,
+  "noise_frac": 0.01,
+  "seed": 20260928,
+  "gamma_lo": 300.0,
+  "gamma_hi": 100000.0,
+  "n_bins": 12,
+  "ref_slope": 2.6,
+  "azimuth_factor": [
+   0.3510330247561491,
+   0.1917702154416812
+  ],
+  "Z1": 1.2069003224378763,
+  "h_b": 0.2420476245964176,
+  "mean_b2_muG2": 25.333333333333336,
+  "mean_bperp_muG": 4.783057387452592
+ },
+ "provenance": {
+  "script": "cost.py",
+  "script_sha256": "b9ba1c0557b7107091249e558b1941b307d1e5aa2335dd44050d4dae887da685",
+  "lib_sha256": {
+   "kernels.py": "b0983233f8fee93b12b10c299c0ea0d0011d72a106884029ec46107ba4121570",
+   "config.py": "f5577f60bd12158c413ffb1f8edc9361b1c202f66bc25d9cf812d466816831c6",
+   "basis.py": "2188cf4adbc3fc4e0148a36c3c43ce7d0b444224f5a1c58f58a3fb24f8c6ceb3",
+   "ensembles.py": "a224faeeba1a2f16b8db4f98f95a60126913ff3e7dd9a6c37304cd09ec8e6655",
+   "provenance.py": "32dc912a4bc75a4460d6264b1ffcf8e278e7da1c6db8e0a43e810fa31f737590"
+  },
+  "inputs_sha256": {},
+  "versions": {
+   "python": "3.12.9",
+   "numpy": "2.3.5",
+   "scipy": "1.16.3"
+  },
+  "wall_clock_s": 437.24276208877563,
+  "finished": "2026-10-27T14:39:41+0000"
+ }
+}

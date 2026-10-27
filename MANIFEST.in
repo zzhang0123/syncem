@@ -3,4 +3,5 @@ recursive-include tests *.py *.json *.md
 recursive-include scripts *.py
 recursive-include docs *.md *.rst *.py
 prune docs/_build
+prune studies
 global-exclude __pycache__ *.py[cod]
