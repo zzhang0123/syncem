@@ -9,7 +9,7 @@ This is a provisional value and first-derivative backend for the vacuum
 helical-orbit reference. ``build_high_order_basis`` uses it in an eager
 preparation step; the resulting matrix can then be reused by JIT prediction.
 It keeps the finite-gamma line powers and evaluates each line's response and
-Faraday weight. It does *not* certify the accelerated result: the special-
+Faraday weight. It does not certify the accelerated result: the special-
 function, Euler--Maclaurin remainder, and floating-point errors have no
 computed upper bound. It is intentionally separate from ``HarmonicKernel`` and
 the low-order ``build_basis`` route. ``build_high_order_basis`` can use its
@@ -99,11 +99,17 @@ class HighOrderChannelResult:
 class HighOrderDerivativeResult:
     """Unscaled physical gamma/B first derivatives of fixed-point channel modes.
 
+    LABEL: ``eq: channel kernel`` [extension]. ``build_high_order_basis``
+    projects ``d_gamma`` and ``d_B`` onto Legendre pairs and multiplies them by
+    ``reference.scales[0]`` and ``reference.scales[1]``, respectively, to form
+    the ``r=1`` and ``s=1`` columns of ``eq: channel derivative coefficients``.
+
     ``d_gamma`` has units of mode power per unit gamma; ``d_B`` has units of
     mode power per Gauss. ``quadrature.value`` (when present) has shape
     ``(3, 2+n_weights, n_ch)`` for value, gamma and B differences. Every
     dense-route difference is a stopping estimate, not an error bound.
     The Bessel and floating-point errors remain unbounded on nonzero lines.
+    The overall numerical result is not certified; see the module docstring.
     """
 
     modes: HostModes
@@ -752,6 +758,8 @@ def high_order_channel_derivatives(
     separate absolute stopping thresholds in value, per-gamma and per-Gauss
     units respectively; all default to zero. No threshold is an error bound.
     The Euler--Maclaurin, SciPy and floating-point errors remain unbounded.
+    The returned values and derivatives are not certified; see the module
+    docstring.
     """
     if not isinstance(channels, Channels):
         raise TypeError("channels must be a Channels instance")

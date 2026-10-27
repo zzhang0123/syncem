@@ -3,8 +3,8 @@
 For a fixed positive-mu slab, each side maps ``u in [0,1]`` onto one side of
 the viewing-angle domain. Intervals preserve the mu/eta correlation near the
 beaming ridge. This is geometry only: mpmath's experimental interval
-elementary functions remain an assumption, and no angular integral or
-population error is certified by this module.
+elementary functions remain an assumption, and this module does not certify
+an angular integral or a population error.
 """
 
 from __future__ import annotations

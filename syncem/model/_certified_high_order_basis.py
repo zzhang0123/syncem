@@ -8,9 +8,10 @@ control the two physical-parameter columns. Positivity of intensity,
 ``(2*l+1)*(2*k+1)*I00_upper`` for an allowed angular coefficient.  The
 TaylorPhase depth coefficient also receives ``|tau*s_depth|**b/b!``, with
 ``tau <= 2*(c/nu_support_lo)**2``.  Exact parity and Stokes-layout zeros are
-handled separately.  This is deliberately coarse: it certifies the cached
-matrix only at its fixed binary gamma/B reference and does not bound a
-parameter displacement, model discrepancy, population tail or fit error.
+handled separately.  This envelope is coarse: it conditionally bounds the
+numerical error of each cached matrix entry only at its fixed binary gamma/B
+reference and does not bound a parameter displacement, model discrepancy,
+population tail or fit error.
 
 The underlying full-domain I00 enclosure is conditional on mpmath's
 experimental interval elementary functions, as well as the stated ideal

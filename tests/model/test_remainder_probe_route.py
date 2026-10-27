@@ -129,8 +129,7 @@ _NEGATED = re.compile(
 _NEGATED_AFTER = re.compile(r"\s+(nothing|no)\b", flags=re.IGNORECASE)
 
 
-def _positive_certification_claims(text):
-    claims = []
+def _positive_certification_matches(text):
     for match in re.finditer(r"\bcertif\w*", text, flags=re.IGNORECASE):
         word = match.group(0)
         if word.lower() == "certified_orders":
@@ -139,8 +138,58 @@ def _positive_certification_claims(text):
         before = before.split(".")[-1]
         after = text[match.end() : match.end() + 12]
         if not _NEGATED.search(before) and not _NEGATED_AFTER.match(after):
-            claims.append(text[max(0, match.start() - 40) : match.end() + 20])
-    return claims
+            yield match
+
+
+def _claim_snippet(text, match):
+    return text[max(0, match.start() - 40) : match.end() + 20]
+
+
+def _positive_certification_claims(text):
+    return [_claim_snippet(text, m) for m in _positive_certification_matches(text)]
+
+
+def _containing_sentence(text, match):
+    starts = [m.end() for m in re.finditer(r"\.\s", text[: match.start()])]
+    stop = re.search(r"\.(\s|$)", text[match.end() :])
+    end = len(text) if stop is None else match.end() + stop.start() + 1
+    return " ".join(text[starts[-1] if starts else 0 : end].split())
+
+
+# 0.5.0 added a conditional fixed-reference envelope computed with mpmath interval
+# arithmetic under exact-binary inputs; the public certify_high_order_basis_coarse
+# names it a certificate. These two modules implement it. The sentences below
+# refer to that envelope and are the only positive "certif..." uses allowed in
+# them; every other positive use in these modules, and in every other scanned
+# module, still fails R30. An entry that no longer occurs also fails.
+_R30_INTERVAL_ENVELOPE_SENTENCES = {
+    "syncem.model._certified_angular_i00": frozenset(
+        {
+            "Conditional whole-angle I00 certificate for one fixed-particle bump.",
+            "A resource cap prevented the requested certificate.",
+        }
+    ),
+    "syncem.model._certified_high_order_basis": frozenset(
+        {
+            "Optional, conditional coarse numerical certificate for a high-order "
+            "N<=1 basis.",
+            "Every dynamic input used to identify this fixed-response certificate.",
+            "The exact static model, layout, certificate label and source record.",
+            "Basis whose response refuses changed coefficients or certificate "
+            "inputs.",
+            "A routine ``eqx.tree_at`` edit changes the live field, while its "
+            "certified snapshot remains the one validated at attachment.",
+            "This guard detects accidental stale-certificate reuse; it is not a "
+            "tamper-resistant seal against deliberate replacement of both live "
+            "fields and snapshots.",
+            "The exact cached C, after a JAX-compatible certificate identity check.",
+            "Any unsupported input, missing I00 certificate, resource cap or "
+            "unrepresentable outward rounded value raises; the supplied immutable "
+            "basis is untouched.",
+            "No gamma/B displacement remainder is inferred from this certificate.",
+        }
+    ),
+}
 
 
 def _owned_modules():
@@ -170,5 +219,14 @@ def test_r30_no_positive_certification_claims_in_docstrings(module):
                 texts += [
                     getattr(m, "__doc__", None) or "" for m in vars(value).values()
                 ]
-    claims = [c for text in texts for c in _positive_certification_claims(text)]
+    allowed = _R30_INTERVAL_ENVELOPE_SENTENCES.get(module.__name__, frozenset())
+    claims, used = [], set()
+    for text in texts:
+        for match in _positive_certification_matches(text):
+            sentence = _containing_sentence(text, match)
+            if sentence in allowed:
+                used.add(sentence)
+            else:
+                claims.append(_claim_snippet(text, match))
     assert not claims, claims
+    assert used == allowed, sorted(allowed - used)

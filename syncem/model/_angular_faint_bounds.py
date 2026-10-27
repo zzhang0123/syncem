@@ -4,8 +4,8 @@ For fixed exact-binary gamma and B, this internal helper bounds the channel
 sum at every point of one angular box. It uses DLMF 10.14.5--6 for the exact
 integer Bessel functions and the interval geometry from
 ``_interval_angular_geometry``. The result remains conditional on mpmath's
-experimental interval elementary functions; it is not an angular integral,
-population, or physical-model certificate.
+experimental interval elementary functions; it does not certify an angular
+integral, a population, or a physical model.
 
 The caller must supply a channel response already verified to vanish outside
 its stored open support and obey ``0 <= R(nu) <= 1`` inside, such as the

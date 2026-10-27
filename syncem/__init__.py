@@ -26,7 +26,7 @@ sed              : frequency-domain SED (spectral index, curvature, abs. emissiv
 model            : finite joint response of channel Stokes spectra and spectral
                    fits (subpackage: index, errors, channels, phase, moments,
                    bounds, assumptions, kernels, harmonic,
-                   high_order_harmonic, screens, basis,
+                   high_order_harmonic, screens, basis, high_order_basis,
                    predict, adapters, fit.observation, fit.linear,
                    fit.nonlinear, fit.diagnostics, fit.result, fit.layout,
                    fit.reduction, fit.combinations, fit.combination_result);

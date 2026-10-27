@@ -5,8 +5,8 @@ reference at every ``0 <= z <= 1``, including axes and the turning region.
 The caller must validate a unit-peak bump, or otherwise prove that ``R=0``
 outside the stored open support and ``0 <= R <= 1`` inside. Only its positive lower frequency is passed
 here. Mpmath's experimental interval elementary functions remain a
-conditional numerical assumption. The output is not an angular integral,
-population, or physical-model certificate.
+conditional numerical assumption. The output does not certify an angular
+integral, a population, or a physical model.
 
 Positive MP bounds below binary64's smallest positive number must be rounded
 outward if published as floats; an ordinary ``float(bound.b)`` can become

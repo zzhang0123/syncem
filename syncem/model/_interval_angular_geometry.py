@@ -87,10 +87,10 @@ def prepare_angular_geometry(ctx, gamma, B) -> AngularFixedGeometry:
 def angular_box_geometry(ctx, fixed, mu_box, eta_box):
     """Enclose ``(D, delta, perpendicular, z, omega_b, spacing)`` on a box.
 
-    The tuple matches the fixed-point ``_geometry`` used by the internal
-    certified harmonic routes. A box touching ``|mu|=1`` or ``|eta|=1`` may
-    have ``z.a == 0``; callers that divide by ``z`` must subdivide or use an
-    axis-compatible branch. The physical identity
+    The tuple matches the fixed-point ``_certified_sparse_harmonic._geometry``
+    used by the internal interval harmonic routes. A box touching ``|mu|=1``
+    or ``|eta|=1`` may have ``z.a == 0``; callers that divide by ``z`` must
+    subdivide or use an axis-compatible branch. The physical identity
 
     ``D² - beta²(1-mu²)(1-eta²) = (eta-beta*mu)² + gamma^-2(1-eta²) >= 0``
 

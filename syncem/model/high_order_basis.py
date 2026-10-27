@@ -1,5 +1,14 @@
 """Eager low Taylor-order moment bases for the high-order harmonic route.
 
+LABEL: ``eq: channel derivative coefficients`` at ``N<=1`` in the reference's
+scaled coordinates, from ``eq: legendre spectral response`` projections of
+``eq: channel kernel``, and ``eq: angular parity`` (``I_basis`` is zero on
+``index.h0`` columns with odd ``l+k`` and ``V_basis`` on even ``l+k``;
+``index.h2`` omits odd ``l+k``, so ``P_basis`` has no such columns);
+``[extension]`` denotes the ridge eta rule. The returned basis stores real
+``I_basis`` and ``V_basis`` of shape ``(n_ch, n0)`` and complex ``P_basis``
+of shape ``(n_ch, n2)``, as in :class:`~syncem.model.basis.SpectralBasis`.
+
 The expensive harmonic and angular calculations run once here.  Repeated
 ``predict`` calls use the resulting :class:`~syncem.model.basis.SpectralBasis`
 matrix. ``Truncation.N`` may be zero or one; first derivatives are evaluated
@@ -65,7 +74,7 @@ def _ridge_eta_rule(mu, nodes, weights, gamma, B, frequency_floor):
     The physical beaming width gamma**(-1) is the other
     scale.  Multiplication by D=1-beta*mu**2 converts either angular width
     into the local eta-mu width.  This choice sets a quadrature coordinate;
-    it is not a support truncation or a quadrature-error certificate.
+    it does not truncate the support or certify a quadrature error.
     """
     beta = math.sqrt(1.0 - gamma**-2)
     D = 1.0 - beta * mu * mu
@@ -129,10 +138,11 @@ def build_high_order_basis(
     ``atol_gamma`` and ``atol_B`` as separate *physical-unit* quadrature
     stopping thresholds. They are not error bounds. The finite angular rule
     and host harmonic values/derivatives are not certified by this builder;
-    ``kernel_terms.numerical`` is ``unbounded`` until the optional separate
-    fixed-reference certificate is requested. Its N=1 derivative bound is
-    coarse. No bound for a nonzero gamma/B Taylor displacement is inferred
-    from either basis.
+    ``kernel_terms.numerical`` is ``unbounded``. The optional separate
+    postprocessor returns a new basis, with a report, whose ``numerical``
+    term is a conditional fixed-reference ``bound``; the supplied basis is
+    unchanged. The N=1 derivative part of that bound is coarse. No bound for
+    a nonzero gamma/B Taylor displacement is inferred from either basis.
     ``allow_unconverged=True`` permits failed inner quadrature-difference
     checks for exploratory work; the count is recorded in provenance.
     ``E_phys`` is an optional *declared* model discrepancy, not a numerical

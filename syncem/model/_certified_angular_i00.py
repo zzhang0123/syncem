@@ -6,8 +6,9 @@ in build_high_order_basis. Two correlated ridge patches cover the entire eta
 interval. The proof assumes exact binary inputs, the ideal stored-support
 unit-peak bump, and mpmath's experimental interval elementary functions.
 The optional derivative extension also accumulates coarse whole-angle
-gamma/B magnitudes at the same fixed reference. Neither route certifies
-populations, physical response-model fidelity, or a parameter displacement.
+gamma/B magnitudes at the same fixed reference. No route in this module
+certifies populations, physical response-model fidelity, or a parameter
+displacement.
 """
 
 from __future__ import annotations
