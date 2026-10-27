@@ -45,6 +45,8 @@ import jax
 import jax.numpy as jnp
 
 from . import _basis_core as _core
+from ._registry import require_affine, resolve_map
+from .assumptions import ParameterMap
 from .channels import Channels
 from .errors import ErrorTerm, Provenance
 from .index import MomentIndex, Truncation
@@ -155,6 +157,27 @@ class SpectralBasis(eqx.Module):
         return _core.response_matrix(
             self.index, self.n_ch, self.I_basis, self.V_basis, self.P_basis
         )
+
+    def constrained(self, parameter_map=None, *, assumptions=None) -> tuple:
+        """``(C P, C c, labels)`` of an affine map, ``m = P theta + c``.
+
+        The per-electron response is then ``C m = (C P) theta + C c``
+        (``extra eq: finite fit model``): shapes ``(4 n_ch, n_free)``,
+        ``(4 n_ch,)`` and ``n_free`` labels. Give a ``ParameterMap`` on this
+        index or ``assumptions`` (names for ``assumptions.declare``), not
+        both. ``ValueError`` for a non-affine map (``fit_bfgs``;
+        ``known_angles`` for the bilinear uncoupled case). The assumptions
+        are declared, not verified.
+        """
+        parameter_map = resolve_map(self.index, parameter_map, assumptions)
+        if not isinstance(parameter_map, ParameterMap) or (
+            parameter_map.index != self.index
+        ):
+            raise ValueError("constrained needs a ParameterMap on basis.index")
+        require_affine(parameter_map, "SpectralBasis.constrained")
+        P, c = parameter_map.affine_pieces(reference=self.reference)
+        C = self.response_matrix()
+        return C @ P, C @ c, parameter_map.labels()
 
 
 # -- construction ---------------------------------------------------------------------------

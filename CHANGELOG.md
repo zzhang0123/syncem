@@ -23,6 +23,26 @@
   Provenance still records the imported package's `__version__`, not
   installed-distribution metadata.
 
+### Added
+
+- An `assumptions=` keyword on `fit_linear`, `fit_combinations`,
+  `LogDensity`, `JointMoments.from_samples` and the new
+  `SpectralBasis.constrained` declares the parameter map by name
+  (`assumptions.declare`, `Assume`, `ASSUMPTIONS`), as an alternative to
+  `parameter_map=`. `LogDensity`'s `parameter_map` is now optional, so the
+  bilinear `angles_independent` map is fitted with
+  `fit_bfgs(LogDensity(basis, data, assumptions="angles_independent"), z0)`.
+  `declare` refuses a known table with a nonzero entry that a declared
+  symmetry sets to zero (for example `known_angles` with `a_lk[1, 0] != 0`
+  and `pitch_symmetric`); `ParameterMap.assume` still takes such a table as
+  its symmetrised marginal. New maps:
+  `angles_independent` (the uncoupled case of `eq: uncoupled moments`,
+  bilinear), `known_angles` with `angular_table` (known `a_lk`, affine),
+  `uniform_field_direction`, `uniform_azimuth` (closures `uniform_eta`,
+  `uniform_phi`) and `known_field`. `fit_linear`'s `parameter_map` is now
+  optional, and a `CombinationFit` lists the map's assumption record in its
+  provenance.
+
 ## 0.5.0 (2026-09-28)
 
 This release adds a finite-$\gamma$ high-order harmonic route for declared

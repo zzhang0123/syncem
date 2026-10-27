@@ -509,6 +509,7 @@ with `f_gamma = z_gamma^r`, `f_B = z_B^s`, `f_mu = P_l(mu)`, `f_eta = P_k(eta)`,
 | `{B} \| rest` | `<P_l P_k e^{ih phi} z_gamma^r z_varphi^b> <z_B^s>` | |
 | `{phi} \| rest` | `M2 = m_phi M0_ext`, `m_phi = <e^{2i phi}>` | `detail-eq: angular factorisation error` (constant conditional circular moment; weaker than independence) |
 | `{mu} \| rest` with `uniform_mu` | `<P_l(mu) ...> = 0` for `l >= 1` | isotropic pitch |
+| `{mu, eta} \| {gamma, B, phi, depth}` | `M^{(h)}_{lk;rsb} = a_lk / ((2l+1)(2k+1)) <e^{ih phi} z_gamma^r z_B^s z_varphi^b>` | `eq: uncoupled moments` (constant `a_lk` of `eq: conditional legendre coefficients`) |
 | six singletons | product of marginal tables | fully independent |
 
 ### 7.2 `ParameterMap`
@@ -519,8 +520,9 @@ constructors below call it; the raw dataclass also needs the computed
 `tables_spec` and `gathers`): per group,
 the distinct nonconstant projections of the rows of `m` onto that group's
 variables form its free table (static, built at construction); rows whose
-closed factor is exactly zero (`uniform_mu` with `l > 0`, and the rows a
-symmetry closure drops group by group, Section 7.4) are removed
+closed factor is exactly zero (`uniform_mu` with `l > 0`, `uniform_eta`
+with `k > 0`, `uniform_phi` with `h = 2`, and the rows a symmetry closure
+drops group by group, Section 7.4) are removed
 before tables are formed; reconstruction is a product of static gathers.
 `h0_ext` rows are reconstructed whenever their projections are covered by the
 free tables. Methods: `n_free()`, `labels()`, `is_affine()` (at most one
@@ -539,9 +541,11 @@ closures keep their constructor values. The fitted values are in `theta`
 and in the provenance note "fitted hyper-parameters of '<map>' (the
 AssumptionRecord holds NaN placeholders for them): ..." of the `FitResult`
 and of `FitResult.prediction`. Closures:
-`uniform_mu`, `gaussian_depth`, `cumulant_depth`, `delta`, `fixed_table`,
-and the symmetry closures `pitch_symmetric`, `field_reversal_symmetric`
-(Section 7.4).
+`uniform_mu`, `uniform_eta`, `uniform_phi`, `gaussian_depth`,
+`cumulant_depth`, `delta`, `fixed_table`, and the symmetry closures
+`pitch_symmetric`, `field_reversal_symmetric` (Section 7.4). The three
+uniform closures close a singleton group (`mu`, `eta`, `phi`) and drop the
+rows with `l >= 1`, `k >= 1` and `h = 2` before the tables are formed.
 
 Free parameters at `(L_mu, L_eta, N) = (2, 2, 2)` (the unit moment excluded):
 
@@ -560,6 +564,11 @@ Free parameters at `(L_mu, L_eta, N) = (2, 2, 2)` (the unit moment excluded):
 | `field_reversal_symmetric` | one group, odd-`l + k` rows dropped | 129 |
 | `pitch_symmetric + field_reversal_symmetric` | | 103 |
 | `fully_independent + field_reversal_symmetric` | six singletons, odd `l` and odd `k` dropped | 10 |
+| `angles_independent` | `{mu, eta} \| {gamma, B, phi, depth}`, both free (bilinear) | 8 + 25 = 33 |
+| `known_angles(table)` | `{mu, eta}` closed by `fixed_table` | 25 |
+| `uniform_field_direction` | `{eta}` closed uniform | 57 |
+| `uniform_azimuth` | `{phi}` closed uniform | 53 |
+| `known_field(B)` | `{B}` closed by `delta` | 86 |
 
 `Factorisation(groups=...)` builds a generic partition `[extension]`.
 
@@ -724,6 +733,89 @@ correlated with the electron energy (synchrotron losses scale as
 the field direction, so the route would rest on an assumption that does not
 hold there. Per-variable caps (`max_orders` with a small `N_B`, Section
 3.1) reduce the cost of the `B` direction and keep the joint moments.
+
+### 7.6 Named assumptions and the `assumptions=` keyword `[extension]`
+
+The manuscript has two cases for the angular statistics. In the coupled
+case, `eq: conditional legendre coefficients`, the coefficients
+`a_lk(gamma, B, phi, Psi)` vary with the four conditioning variables and
+every retained moment is free (`no_assumption`). In the uncoupled case the
+`a_lk` are constants, and `eq: uncoupled moments` factorises every moment
+into `a_lk / ((2l+1)(2k+1))` times a non-angular moment. This is the
+partition `{mu, eta} | {gamma, B, phi, depth}`:
+
+* `angles_independent(index)`: both tables free. At `(2, 2, 2)` there are 8
+  angular and 25 non-angular parameters; at `(8, 8, 2)` 80 and 25 (the 410
+  polarisation rows use 41 of the angular entries and the 10 non-angular
+  `(r, s, b)`, as the manuscript counts). The moments are bilinear, so the
+  map is not affine.
+* `known_angles(index, table=None, *, a_lk=None)`: the angular group closed
+  by a `fixed_table`. `angular_table(index, a_lk=None)` returns the table in
+  the `tables_spec` order of the angular group, `a_lk[l, k] / ((2l+1)(2k+1))`
+  for an `(L_mu + 1, L_eta + 1)` array with `a_lk[0, 0] = 1` (checked when
+  concrete; traceable). `a_lk=None` gives zeros: isotropic pitch and
+  uniform `eta`. The azimuth is not constrained, so the 20 `h = 2`
+  parameters stay free; an isotropic field direction also needs
+  `uniform_azimuth` (5 free parameters at `(2, 2, 2)` and `(8, 8, 2)`).
+  The map is affine; it has 25 free parameters at `(2, 2, 2)`, at
+  `(8, 8, 2)` and at `(0, 2, 2)` with `(I, Q)`. With the zero table it has
+  the same labels, affine pieces and moments as
+  `isotropic_pitch(index).assume(uniform_field_direction(index))`, and
+  with `uniform_azimuth` added to both the same as the three uniform
+  closures (`test_assumptions_keyword.py` compares them with exact
+  equality).
+
+Three further constructors close one variable:
+`uniform_field_direction` (`{eta} | rest`, closure `uniform_eta`, rows with
+`k >= 1` dropped), `uniform_azimuth` (`{phi} | rest`, closure
+`uniform_phi`, every `h = 2` row dropped, so the finite `Q, U` response is
+zero) and `known_field(index, B)` (`{B} | rest`, a `delta` closure at `B`
+in Gauss). An isotropic field direction is `uniform_field_direction` and
+`uniform_azimuth` together. A zero `fixed_table` on `eta` or `phi` gives the
+same moments but keeps 20 parameters at `(2, 2, 2)` (77 and 73 instead of
+57 and 53) that multiply a zero factor and are not identified; the static
+drop removes them.
+
+`declare(index, assumptions, *, discrepancy=None) -> ParameterMap` builds a
+map from a name of `ASSUMPTIONS`, an `Assume(name, **params)` (for example
+`Assume("known_field", B=5e-6)` or `Assume("known_angles", a_lk=a)`) or a
+tuple of them. `ASSUMPTIONS` is a read-only mapping from the names of the
+named constructors above and in Section 7.2 (except `nodal`, which `assume`
+cannot combine) to their builders. A tuple is combined with
+`ParameterMap.assume` in the order of `ASSUMPTIONS`, not the order given:
+the common refinement does not depend on the order, and the combined name
+`"a+b"` (the record name and the key of `assumption_allowances`) does not
+either. A repeated name, an unknown name, missing builder parameters or a
+conflict raises `ValueError`. So does a concrete known table with a nonzero
+entry that a declared symmetry sets to zero, for example `known_angles`
+with `a_lk[1, 0] != 0` and `pitch_symmetric`: `ParameterMap.build` and
+`assume` take that table as its symmetrised marginal and ignore the entry
+(Section 7.4), but a declaration that states both is contradictory. The
+error names the entry; traced tables are not checked. A combined map
+keeps the rule of Section 7.3, item 1: it carries no discrepancy, so its
+budget term is `unbounded`, unless `declare(..., discrepancy=ErrorTerm)`
+supplies one for the combination.
+
+The keyword `assumptions=` of `fit_linear`, `fit_combinations`,
+`LogDensity`, `JointMoments.from_samples` and `SpectralBasis.constrained`
+calls `declare(basis.index, ...)` (or `declare(index, ...)`); it is
+mutually exclusive with `parameter_map` (`ValueError` when both are given).
+The linear routes need an affine map. When closing the angular group would
+make the map affine (exactly two free groups, one of them `{mu, eta}`, and
+no fitted hyper-parameters; `angles_independent` alone or with closed
+groups or a symmetry) the error names `known_angles(...)` and `fit_bfgs` on
+`LogDensity(basis, data, assumptions=...)`; otherwise it names `fit_bfgs`
+only. `LogDensity` is the route for the bilinear map itself; `Transform`
+takes a map, not names (it has no index), so a custom transform is built on
+`declare(basis.index, ...)`. `SpectralBasis.constrained(parameter_map)`
+returns `(C P, C c, labels)` of an affine map, the constrained linear basis
+that `fit_combinations` forms internally. A `CombinationFit` from a map now
+lists the map's record in its provenance. Every named assumption is one
+`AssumptionRecord` named as above and one budget term `assumption:<name>`,
+`unbounded` unless `from_samples(..., discrepancy="measured")` measured it,
+`declare(..., discrepancy=)` supplied it or `predict(...,
+assumption_allowances={name: ErrorTerm})` replaces it. Nothing here checks
+that a population satisfies a declared assumption.
 
 ## 8. Error budget (`errors.py`)
 
@@ -992,8 +1084,10 @@ broadcasts from `(4,)` to `(n_ch, 4)` (with a response, a mask over the
 `dof(n_params) = n_kept - n_params`; `discrepancy_vector()` propagates a
 Stokes-space `ErrorTerm` by `|R|`.
 
-`fit_linear(basis, data, parameter_map, *, amplitude="fit",
-discrepancy_policy="bias_bound", tol=1e-8, diagnostics=True) -> FitResult`: with `m = P theta + c` and
+`fit_linear(basis, data, parameter_map=None, *, assumptions=None,
+amplitude="fit", discrepancy_policy="bias_bound", tol=1e-8,
+diagnostics=True) -> FitResult` (exactly one of `parameter_map` and
+`assumptions=`, Section 7.6): with `m = P theta + c` and
 the unknown `u = (A, A theta)`, the design is `G = R C [c | P]`; the solver
 minimises `||L^-1 (d - G u)||` by a rank-revealing SVD of the
 column-equilibrated design `G D`, `D = diag(1/||G_i||)`, so the rank does
@@ -1022,7 +1116,9 @@ a provenance note gives the `chi2` under the declared noise.
 Nonlinear: `Parameters(log_amplitude, tables, hyper, logits)`, `Transform`
 (`forward`, `inverse`, `log_det`: log for amplitude and sigma, softmax for
 nodal weights, tanh-box for support intervals), `LogDensity(basis, data,
-parameter_map, prior=None, transform)` callable in `z` (jit, grad, vmap),
+parameter_map=None, prior=None, transform=None, *, amplitude=None,
+assumptions=None)` callable in `z` (jit, grad, vmap; exactly one of
+`parameter_map` and `assumptions=`, Section 7.6),
 `fit_bfgs(logdensity, z0, *, maxiter=500, tol=1e-9, precondition=True,
 restarts=2, line_search_maxiter=30, diagnostics=True)` (refuses
 `n_params > 2000`; the search runs in Gauss-Newton-diagonal scaled
@@ -1147,7 +1243,7 @@ through the elimination (`check_rtol` times `max_d sum_i ||R_i||_1
 certify the relations.
 
 **Fit.** `fit_combinations(basis, data, *, max_sigma, reduction=None,
-parameter_map=None, amplitude="fit", metric=None, rank_tol=1e-8,
+parameter_map=None, assumptions=None, amplitude="fit", metric=None, rank_tol=1e-8,
 cluster_rtol=1e-10, discrepancy_policy="bias_bound", coefficient_bound=None)
 -> CombinationFit` fits the reduced model `R H T a` in unknowns `x` with
 `a = a_off + J x`:

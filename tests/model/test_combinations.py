@@ -317,6 +317,8 @@ def test_fit_linear_defaults_unchanged():
         }
 
     assert defaults(fit_linear) == {
+        "parameter_map": None,  # 0.6.0: optional when assumptions= declares the map
+        "assumptions": None,
         "amplitude": "fit",
         "discrepancy_policy": "bias_bound",
         "tol": 1e-8,

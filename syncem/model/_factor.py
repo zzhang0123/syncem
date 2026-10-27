@@ -17,7 +17,10 @@ including the ``h0_ext`` rows when their projections are covered.
 Closure tables are evaluated in the same displacement coordinates: depth
 closures take their hyper-parameters in rad/m^2 and are converted with the
 reference ``depth_ref`` and ``s_depth``; a ``delta`` closure takes raw values
-(``gamma``, Gauss, cosines, radians, rad/m^2). Symmetry closures
+(``gamma``, Gauss, cosines, radians, rad/m^2). The uniform closures
+(``UNIFORM_KINDS``: ``uniform_mu``, ``uniform_eta``, ``uniform_phi``) close a
+singleton group with a uniform marginal and drop the rows with a nonzero
+exponent on it (``l > 0``, ``k > 0``, ``h = 2``). Symmetry closures
 (``SYMMETRY_KINDS``) have the empty group ``()``: they constrain the joint
 measure, close no marginal, and only drop rows (``pitch_symmetric``: odd
 ``l``; ``field_reversal_symmetric``: odd ``l`` or odd ``k`` when ``mu`` and
@@ -41,6 +44,8 @@ VARS = ("gamma", "B", "mu", "eta", "phi", "depth")
 ROW_POSITION = {"phi": 0, "mu": 1, "eta": 2, "gamma": 3, "B": 4, "depth": 5}
 CLOSURE_KINDS = (
     "uniform_mu",
+    "uniform_eta",
+    "uniform_phi",
     "gaussian_depth",
     "cumulant_depth",
     "delta",
@@ -49,7 +54,9 @@ CLOSURE_KINDS = (
     "field_reversal_symmetric",
 )
 SYMMETRY_KINDS = ("pitch_symmetric", "field_reversal_symmetric")
-REFERENCE_FREE = ("uniform_mu", "fixed_table") + SYMMETRY_KINDS
+# uniform closures and the variable whose marginal each declares uniform
+UNIFORM_KINDS = {"uniform_mu": "mu", "uniform_eta": "eta", "uniform_phi": "phi"}
+REFERENCE_FREE = tuple(UNIFORM_KINDS) + ("fixed_table",) + SYMMETRY_KINDS
 
 
 FLIPPED = {"pitch_symmetric": ("mu",), "field_reversal_symmetric": ("mu", "eta")}
@@ -58,8 +65,11 @@ FLIPPED = {"pitch_symmetric": ("mu",), "field_reversal_symmetric": ("mu", "eta")
 def drops_row(kind, row, groups=(VARS,)):
     """True when a closure of ``kind`` sets the 6-tuple ``row`` to zero exactly.
 
-    ``uniform_mu``: ``l > 0``. A symmetry ``g`` acts variable by variable:
-    ``pitch_symmetric`` flips ``mu``, ``field_reversal_symmetric`` flips
+    ``uniform_mu``: ``l > 0``; ``uniform_eta``: ``k > 0``; ``uniform_phi``:
+    ``h = 2`` (a uniform marginal of a variable in its own group zeroes every
+    nonconstant Legendre or circular factor of it). A symmetry ``g`` acts
+    variable by variable: ``pitch_symmetric`` flips ``mu``,
+    ``field_reversal_symmetric`` flips
     ``mu`` and ``eta`` and shifts ``phi`` by ``pi`` (``e^{i h pi} = 1`` for
     ``h in {0, 2}``) at fixed ``gamma, B, depth``. Under the product measure
     ``p = prod_G p_G`` of ``groups``, ``g`` maps each group to itself, so the
@@ -71,8 +81,8 @@ def drops_row(kind, row, groups=(VARS,)):
     field reversal drops odd ``l`` and odd ``k`` rows, so no free table keeps
     ``<P_odd(mu) ...>`` or ``<P_odd(eta) ...>``.
     """
-    if kind == "uniform_mu":
-        return row[1] > 0
+    if kind in UNIFORM_KINDS:
+        return row[ROW_POSITION[UNIFORM_KINDS[kind]]] > 0
     flipped = FLIPPED.get(kind, ())
     return any(
         sum(row[ROW_POSITION[v]] for v in group if v in flipped) % 2 == 1
@@ -134,8 +144,9 @@ def build_tables(index, groups, closures):
     the gather index for every retained row in ``(h0, h0_ext, h2)`` order
     (``0`` = constant entry, ``j >= 1`` = table entry ``j-1``, ``-1`` =
     dropped or not covered), the static keep mask (rows whose closed factor
-    is exactly zero, ``l > 0`` under ``uniform_mu``, are dropped before the
-    tables are formed; also the rows with an odd group factor under the
+    is exactly zero, ``l > 0`` under ``uniform_mu``, ``k > 0`` under
+    ``uniform_eta`` and ``h = 2`` under ``uniform_phi``, are dropped before
+    the tables are formed; also the rows with an odd group factor under the
     symmetry closures, see :func:`drops_row`) and whether every kept
     ``h0_ext`` row is covered.
     """
@@ -263,9 +274,11 @@ def validate_closure(closure, groups, index):
             f"closure group {group} is not a group of the factorisation {groups}"
         )
     n_hyper = len(closure.hyper)
-    if closure.kind == "uniform_mu" and (group != ("mu",) or n_hyper != 0):
+    variable = UNIFORM_KINDS.get(closure.kind)
+    if variable is not None and (group != (variable,) or n_hyper != 0):
         raise ValueError(
-            "uniform_mu closes the group ('mu',) and takes no hyper-parameters"
+            f"{closure.kind} closes the group ('{variable}',) and takes no "
+            "hyper-parameters"
         )
     if closure.kind == "gaussian_depth" and (group != ("depth",) or n_hyper != 2):
         raise ValueError(
@@ -344,7 +357,7 @@ def closure_table(closure, group, spec, reference, hyper):
     or the fitted ones). Returns a 1D array of length ``len(spec)``.
     """
     n = len(spec)
-    if closure.kind == "uniform_mu":
+    if closure.kind in UNIFORM_KINDS:
         return jnp.zeros(n)
     if closure.kind in ("gaussian_depth", "cumulant_depth"):
         kappa = _depth_cumulants(closure, hyper, reference)
@@ -377,6 +390,7 @@ __all__ = [
     "ROW_POSITION",
     "CLOSURE_KINDS",
     "SYMMETRY_KINDS",
+    "UNIFORM_KINDS",
     "REFERENCE_FREE",
     "FLIPPED",
     "drops_row",

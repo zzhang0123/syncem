@@ -23,6 +23,7 @@ in ``z`` is therefore not the maximum-likelihood point when a log or box
 slot is present; a prior of ``-log sigma`` (or ``-log_det``) restores it.
 
 :class:`LogDensity` evaluates ``-chi^2/2 + log prior(theta) + log_det(z)``
+for a ``ParameterMap`` (or one declared by name with ``assumptions=``)
 with the whitened residual of :class:`StokesData` on the kept rows; it is
 ``jax.jit``, ``jax.grad`` and ``jax.vmap`` ready in ``z``. The data
 ``discrepancy`` and ``response_uncertainty`` are not part of the density;
@@ -60,6 +61,7 @@ import jax.numpy as jnp
 import numpy as np
 from jax.scipy.optimize import minimize
 
+from .._registry import resolve_map
 from ..assumptions import ParameterMap, Parameters, nodal
 from ..errors import ErrorTerm
 from ..moments import PopulationSamples
@@ -101,7 +103,11 @@ class LogDensity(eqx.Module):
     (``(4 n_ch, n_real)``, channel-major), ``m(theta)`` the map's moment
     vector at ``basis.reference``, ``A = exp(theta.log_amplitude)`` from
     the transform or the fixed keyword ``amplitude`` when the transform
-    carries none. ``prior(theta) -> scalar`` is a log prior on the
+    carries none. ``parameter_map``: a ``ParameterMap`` on ``basis.index``,
+    or ``assumptions`` (keyword addition): names or ``Assume`` specs for
+    ``declare(basis.index, ...)``, the route for a non-affine declared map
+    such as ``angles_independent`` (``ValueError`` when both or neither are
+    given). ``prior(theta) -> scalar`` is a log prior on the
     constrained coordinates (``None`` for flat). The whitened design
     ``W = L^-1 R C`` and target ``L^-1 d`` are precomputed leaves.
     Dimensionless value (log density in ``z``); data and basis in the
@@ -121,10 +127,21 @@ class LogDensity(eqx.Module):
     target: jax.Array
 
     def __init__(
-        self, basis, data, parameter_map, prior=None, transform=None, *, amplitude=None
+        self,
+        basis,
+        data,
+        parameter_map=None,
+        prior=None,
+        transform=None,
+        *,
+        amplitude=None,
+        assumptions=None,
     ):
+        parameter_map = resolve_map(basis.index, parameter_map, assumptions)
         if not isinstance(parameter_map, ParameterMap):
-            raise ValueError("parameter_map must be a ParameterMap")
+            raise ValueError(
+                "parameter_map must be a ParameterMap (or pass assumptions=)"
+            )
         if transform is None:
             transform = Transform(parameter_map, amplitude=amplitude is None)
         if not isinstance(transform, Transform):

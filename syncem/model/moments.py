@@ -28,8 +28,9 @@ reference are validated by the package tests (finite checks, not
 certificates). Not certified:
 sampling or quadrature error of the discrete measure relative to a continuous
 population, feasibility of a vector supplied to ``from_vector``, and any
-factorised construction beyond the supplied samples (``parameter_map``,
-``discrepancy="measured"`` measure the factorisation error on those samples only).
+factorised construction beyond the supplied samples (``parameter_map`` or
+``assumptions``, ``discrepancy="measured"`` measure the factorisation error on
+those samples only).
 """
 
 from __future__ import annotations
@@ -169,21 +170,36 @@ class JointMoments(eqx.Module):
 
     @classmethod
     def from_samples(
-        cls, samples, index, reference, *, parameter_map=None, discrepancy=None
+        cls,
+        samples,
+        index,
+        reference,
+        *,
+        parameter_map=None,
+        assumptions=None,
+        discrepancy=None,
     ) -> "JointMoments":
         """Exact moments of a discrete population for every retained row.
 
         Computes ``h0``, ``h0_ext`` and ``h2`` by chunked weighted sums
         (JIT and autodiff safe). With ``parameter_map`` the joint tensor is
         projected onto the map and the factorised tensor is returned (with
-        the map's record and discrepancy); ``discrepancy="measured"`` stores
+        the map's record and discrepancy); ``assumptions`` (keyword addition)
+        declares the map by name instead (``assumptions.declare(index, ...)``;
+        ``ValueError`` when both are given). ``discrepancy="measured"`` stores
         ``|m_joint - m_fac|`` on these samples as a ``measured`` term, which
         is not a bound for any other population.
         """
+        if assumptions is not None:
+            from ._registry import resolve_map  # assumptions imports this module
+
+            parameter_map = resolve_map(index, parameter_map, assumptions)
         if discrepancy not in (None, "measured"):
             raise ValueError("discrepancy must be None or 'measured'")
         if discrepancy == "measured" and parameter_map is None:
-            raise ValueError("discrepancy='measured' needs a parameter_map")
+            raise ValueError(
+                "discrepancy='measured' needs parameter_map or assumptions"
+            )
         if parameter_map is not None and not (
             callable(parameter_map) and hasattr(parameter_map, "project")
         ):

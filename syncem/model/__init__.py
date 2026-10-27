@@ -18,6 +18,7 @@ LaplaceScreen, GammaScreen                                      depth phase rout
 HarmonicKernel, ContinuumKernel, PolynomialTestKernel           kernel models
 Reference, Support, PopulationSamples, JointMoments             statistics
 ParameterMap and named constructors                             declared assumptions
+declare, Assume, ASSUMPTIONS                                    assumptions by name
 build_basis -> SpectralBasis                                    the cacheable response
 predict, direct_channel_average -> Prediction                   forward modelling
 fit.*                                                           spectral fits
@@ -49,20 +50,29 @@ from .bounds import (
     screen_factorisation_bound,
 )
 from .assumptions import (
+    ASSUMPTIONS,
+    Assume,
     Closure,
     Factorisation,
     ParameterMap,
     Parameters,
+    angles_independent,
+    angular_table,
     azimuth_separable,
+    declare,
     field_independent,
     field_reversal_symmetric,
     fully_independent,
     gaussian_screen,
     independent_screen,
     isotropic_pitch,
+    known_angles,
+    known_field,
     no_assumption,
     nodal,
     pitch_symmetric,
+    uniform_azimuth,
+    uniform_field_direction,
 )
 from .kernels import (
     ContinuumKernel,
@@ -114,20 +124,29 @@ __all__ = [
     "azimuth_factorisation_bound",
     "depth_error_bound",
     "screen_factorisation_bound",
+    "ASSUMPTIONS",
+    "Assume",
     "Closure",
     "Factorisation",
     "ParameterMap",
     "Parameters",
+    "angles_independent",
+    "angular_table",
     "azimuth_separable",
+    "declare",
     "field_independent",
     "field_reversal_symmetric",
     "fully_independent",
     "gaussian_screen",
     "independent_screen",
     "isotropic_pitch",
+    "known_angles",
+    "known_field",
     "no_assumption",
     "nodal",
     "pitch_symmetric",
+    "uniform_azimuth",
+    "uniform_field_direction",
     "ContinuumKernel",
     "Modes",
     "PolynomialTestKernel",

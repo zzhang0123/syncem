@@ -5,9 +5,11 @@ observing response ``R`` inside ``C``) and ``extra eq: data error
 propagation`` (the declared discrepancy ``delta`` that the bias bound uses).
 
 :func:`fit_linear` needs an affine ``ParameterMap`` (``m = P theta + c``,
-``ParameterMap.is_affine()``); any other map raises ``ValueError`` naming
-``fit_bfgs``. With the amplitude fitted the unknowns are ``u = (A, A theta)``
-and the design is ``G = R C [c | P]``; with ``amplitude=<float>`` the
+``ParameterMap.is_affine()``), given as ``parameter_map`` or declared by name
+with ``assumptions=`` (``assumptions.declare``; not both); any other map
+raises ``ValueError`` naming ``fit_bfgs`` (and ``known_angles`` for the
+bilinear uncoupled case of ``eq: uncoupled moments``). With the amplitude
+fitted the unknowns are ``u = (A, A theta)`` and the design is ``G = R C [c | P]``; with ``amplitude=<float>`` the
 unknowns are ``theta`` and the design ``A R C P`` with the offset
 ``A R C c`` removed from the data. The solver minimises
 ``||L^-1 (d - G u)||`` on the kept rows by a rank-revealing SVD of the
@@ -62,6 +64,7 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 
+from .._registry import require_affine, resolve_map
 from ..assumptions import ParameterMap, Parameters
 from . import _result_core as core
 from ._identifiability import whitened_design
@@ -104,8 +107,9 @@ def _check_amplitude(amplitude):
 def fit_linear(
     basis,
     data,
-    parameter_map,
+    parameter_map=None,
     *,
+    assumptions=None,
     amplitude="fit",
     discrepancy_policy="bias_bound",
     tol=TOL,
@@ -114,23 +118,25 @@ def fit_linear(
     """Closed-form least-squares fit of an affine map (module docstring).
 
     ``basis``: ``SpectralBasis``; ``data``: ``StokesData``; ``parameter_map``:
-    an affine ``ParameterMap`` on ``basis.index``. ``amplitude="fit"`` or a
+    an affine ``ParameterMap`` on ``basis.index``, or ``assumptions`` (keyword
+    addition): names or ``Assume`` specs for ``declare(basis.index, ...)``;
+    exactly one of the two. ``amplitude="fit"`` or a
     positive float; ``discrepancy_policy`` in ``POLICIES``; ``tol`` the
     relative singular-value cutoff on the column-equilibrated design (passed
     to ``identifiability``, so both report the same rank);
     ``diagnostics=False`` skips the identifiability report, the feasibility
     checks and the prediction (keyword addition, for repeated fits). Raises
-    ``ValueError`` for a non-affine map (use ``fit_bfgs``), an index or
+    ``ValueError`` for both or neither of ``parameter_map`` and
+    ``assumptions``, a non-affine map (use ``fit_bfgs``), an index or
     channel mismatch, an unknown policy, ``"inflate"`` without a valued
     discrepancy, or a non-positive fixed amplitude. Returns a ``FitResult``;
     shapes, units and what is not certified: module docstring.
     """
+    parameter_map = resolve_map(basis.index, parameter_map, assumptions)
+    if parameter_map is None:
+        raise ValueError("fit_linear needs parameter_map or assumptions=")
     C = _check_map(basis, parameter_map)
-    if not parameter_map.is_affine():
-        raise ValueError(
-            f"parameter map '{parameter_map.name}' is not affine (several free "
-            "groups, fitted hyper-parameters or nodal); use fit_bfgs or fit_nodal"
-        )
+    require_affine(parameter_map, "fit_linear")
     if discrepancy_policy not in POLICIES:
         raise ValueError(f"discrepancy_policy must be one of {POLICIES}")
     fitted, fixed = _check_amplitude(amplitude)

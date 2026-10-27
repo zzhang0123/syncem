@@ -41,6 +41,12 @@ syncem.model.bounds
 syncem.model.assumptions
 ------------------------
 
+``declare``, ``Assume`` and ``ASSUMPTIONS`` back the ``assumptions=`` keyword of
+``fit_linear``, ``fit_combinations``, ``LogDensity``,
+``JointMoments.from_samples`` and ``SpectralBasis.constrained``. ``angles_independent`` and ``known_angles`` are the
+uncoupled case of ``eq: uncoupled moments``, with unknown (bilinear) and known
+(affine) coefficients ``a_lk``; Section 7.6 of the design document has the rules.
+
 .. automodule:: syncem.model.assumptions
 
 syncem.model.kernels

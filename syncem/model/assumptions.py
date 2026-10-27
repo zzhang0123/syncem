@@ -5,8 +5,12 @@ independent gaussian screen`` (Gaussian depth closure on the Taylor route),
 ``detail-eq: angular factorisation error`` (``{phi} | rest``, constant
 conditional circular moment), ``extra eq: pitch angle expansion``
 (``uniform_mu`` zeroes every ``l >= 1`` coefficient), ``extra eq: nodal
-distribution`` (weights on fixed nodes); other partitions and the symmetry
-closures ``pitch_symmetric``, ``field_reversal_symmetric`` are ``[extension]``.
+distribution`` (weights on fixed nodes), ``eq: uncoupled moments``
+(``angles_independent``, ``known_angles``: constant ``a_lk`` of ``eq:
+conditional legendre coefficients``); other partitions, the symmetry
+closures ``pitch_symmetric``, ``field_reversal_symmetric`` and
+``uniform_field_direction``, ``uniform_azimuth``, ``known_field`` are
+``[extension]``.
 
 A ``ParameterMap`` is a map ``theta -> m`` from free parameters to the
 ``(n_real,)`` moment vector of ``eq: explicit joint moments``; it never switches the
@@ -15,8 +19,15 @@ is a product of group marginals; closures replace a marginal by a fixed
 table. Moments are stored in the displacements ``z`` of ``eq: local response
 remainder``; depth closures take rad/m^2 and convert with the reference.
 Free counts at ``(2, 2, 2)``: 153, 115, 113, 88, 75, 57, 12, 115, 129 for the
-named constructors in order. Free tables come from the rows of ``m`` (``h0``,
-``h2``); ``h0_ext`` is reconstructed when covered (``ext_ok``), else ``None``.
+named constructors in order; 33, 25, 57, 53, 86 for ``angles_independent``,
+``known_angles``, ``uniform_field_direction``, ``uniform_azimuth`` and
+``known_field``. Free tables come from the rows of ``m`` (``h0``, ``h2``);
+``h0_ext`` is reconstructed when covered (``ext_ok``), else ``None``.
+``declare(index, assumptions)`` builds a map from the names of
+``ASSUMPTIONS`` (``Assume(name, **params)`` for parameters); it backs the
+``assumptions=`` keyword of ``fit_linear``, ``fit_combinations``,
+``LogDensity``, ``JointMoments.from_samples`` and
+``SpectralBasis.constrained`` (``_registry``).
 
 Not certified: that an assumption holds for a population (a moment-level
 ``discrepancy`` or a measured value from ``JointMoments.from_samples`` is the
@@ -60,8 +71,9 @@ class Factorisation(eqx.Module):
 class Closure(eqx.Module):
     """Fixed marginal of one group. ``kind`` in ``CLOSURE_KINDS``.
 
-    ``hyper``: ``()`` for ``uniform_mu``; ``(mean, sigma)`` rad/m^2 for
-    ``gaussian_depth``; ``(kappa (K,),)`` rad/m^2 cumulants for
+    ``hyper``: ``()`` for ``uniform_mu``, ``uniform_eta`` (group
+    ``('eta',)``) and ``uniform_phi`` (``('phi',)``); ``(mean, sigma)``
+    rad/m^2 for ``gaussian_depth``; ``(kappa (K,),)`` rad/m^2 cumulants for
     ``cumulant_depth``; one raw value per group variable for ``delta``;
     ``(table,)`` over the group's nonconstant entries for ``fixed_table``
     (as without symmetries; a symmetry ignores the entries it sets to zero).
@@ -104,7 +116,8 @@ class ParameterMap(eqx.Module):
     whether ``m0_ext`` is reconstructed. ``free_hyper`` names the closures
     whose hyper-parameters come from ``theta.hyper``; ``nodes`` makes the
     map nodal (``theta.logits``); ``symmetrised`` holds the trims of fixed
-    tables under a symmetry (``_factor``). Only ``uniform_mu`` and the symmetry
+    tables under a symmetry (``_factor``). Only the uniform closures
+    (``uniform_mu``, ``uniform_eta``, ``uniform_phi``) and the symmetry
     closures drop rows statically; value-dependent zeros of other closures
     are kept. Complex free tables keep only the real part of entries
     without ``e^{2i phi}``.
@@ -381,6 +394,20 @@ def nodal(index, nodes: PopulationSamples) -> ParameterMap:
     )
 
 
+# The registry and the constructors of eq: uncoupled moments live in _registry.py
+# (file length); it imports the classes above, so this import comes last.
+from ._registry import (  # noqa: E402
+    ASSUMPTIONS,
+    Assume,
+    angles_independent,
+    angular_table,
+    declare,
+    known_angles,
+    known_field,
+    uniform_azimuth,
+    uniform_field_direction,
+)
+
 __all__ = [
     "VARS",
     "Factorisation",
@@ -397,4 +424,13 @@ __all__ = [
     "pitch_symmetric",
     "field_reversal_symmetric",
     "nodal",
+    "angles_independent",
+    "known_angles",
+    "angular_table",
+    "uniform_field_direction",
+    "uniform_azimuth",
+    "known_field",
+    "ASSUMPTIONS",
+    "Assume",
+    "declare",
 ]

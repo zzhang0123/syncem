@@ -8,7 +8,9 @@ propagation`` (``|K| delta``) and ``[extension]``.
 ``x`` (``a = a_off + J x``): the full coordinates themselves by default
 (``J = I``, the source-column weighted coefficients ``a = (N_src/N_*) (m,
 m0_ext)``, no slot fixed), ``a[1:]`` with a fixed amplitude, or the
-``u = (A, A theta)`` / ``v = A theta`` of an affine ``ParameterMap``. The
+``u = (A, A theta)`` / ``v = A theta`` of an affine ``ParameterMap``
+(``parameter_map``, or declared by name with ``assumptions=``; its record
+joins the provenance). The
 coefficient metric ``||a||^2 = a^T M a`` (Euclidean by default; a positive
 diagonal or an SPD matrix) is pulled back to ``M_x = J^T M J = R_x^T R_x``,
 and ``T J R_x^-1 = L Q`` (``Q Q^T = I``) keeps it: the whitened design
@@ -44,6 +46,7 @@ import math
 import jax.numpy as jnp
 import numpy as np
 
+from .._registry import require_affine, resolve_map
 from ..assumptions import ParameterMap
 from ..errors import ErrorTerm
 from . import _combination_core as core_svd
@@ -110,10 +113,7 @@ def _coordinates(basis, layout, parameter_map, fitted, fixed):
         raise ValueError("parameter_map must be a ParameterMap or None")
     if parameter_map.index != basis.index:
         raise ValueError("parameter_map.index must equal basis.index")
-    if not parameter_map.is_affine():
-        raise ValueError(
-            f"parameter map '{parameter_map.name}' is not affine; use fit_bfgs"
-        )
+    require_affine(parameter_map, "fit_combinations")
     P, c = (
         np.asarray(v, dtype=float)
         for v in parameter_map.affine_pieces(reference=basis.reference)
@@ -131,6 +131,10 @@ def _coordinates(basis, layout, parameter_map, fitted, fixed):
         tuple(parameter_map.labels()),
         f"v = A theta, A = {fixed:.6g} fixed",
     )
+
+
+def _records(parameter_map):
+    return () if parameter_map is None else (parameter_map.record(),)
 
 
 def _metric(metric, n_full):
@@ -201,6 +205,7 @@ def fit_combinations(
     max_sigma,
     reduction=None,
     parameter_map=None,
+    assumptions=None,
     amplitude="fit",
     metric=None,
     rank_tol=TOL,
@@ -213,7 +218,9 @@ def fit_combinations(
     ``max_sigma`` (required, positive, finite or ``math.inf``): keep a mode
     when ``1/s <= max_sigma``. ``reduction``: ``None`` (``reduce_response(basis)``)
     or a ``ResponseReduction`` of this basis. ``parameter_map``: ``None`` or
-    an affine ``ParameterMap``. ``amplitude``: ``"fit"`` or a positive float.
+    an affine ``ParameterMap``; ``assumptions`` (keyword addition): names or
+    ``Assume`` specs for ``declare(basis.index, ...)`` instead (``ValueError``
+    when both are given). ``amplitude``: ``"fit"`` or a positive float.
     ``metric``: ``None`` (Euclidean in ``a``), ``(n_full,)`` positive weights
     or an ``(n_full, n_full)`` SPD matrix. ``rank_tol``: numerical-rank
     cutoff relative to ``s_max``; ``cluster_rtol``: repeated-value gap
@@ -234,6 +241,7 @@ def fit_combinations(
     if not (math.isfinite(cluster_rtol) and cluster_rtol >= 0.0):
         raise ValueError("cluster_rtol must be finite and >= 0")
     fitted, fixed = _check_amplitude(amplitude)
+    parameter_map = resolve_map(basis.index, parameter_map, assumptions)
     reduction = _check_reduction(basis, reduction)
     layout = reduction.layout
     _check_data(data, reduction)
@@ -317,7 +325,7 @@ def fit_combinations(
         coefficient_bound=bound,
         response=None if fit_data.response is None else jnp.asarray(fit_data.response),
         noise_model="variances" if np.ndim(fit_data.noise) == 1 else "covariance",
-        provenance=core.provenance_of(basis, (), notes),
+        provenance=core.provenance_of(basis, _records(parameter_map), notes),
     )
 
 
