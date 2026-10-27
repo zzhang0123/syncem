@@ -1,6 +1,6 @@
 """Closed-form second tangent of ``w / sum(w)``: identity, boundaries, transforms.
 
-``syncmoments.rm._divide_by_sum`` computes ``p = r / R`` (``R = sum r``) with
+``syncem.rm._divide_by_sum`` computes ``p = r / R`` (``R = sum r``) with
 the operations of the plain division and its JVP, so primal and first
 derivatives must be bit-identical to the round-4 formulation
 ``optimization_barrier(core(w)) / sum(...)``. Its tangent ``_sum_tangent`` has a
@@ -42,13 +42,13 @@ from test_weight_normalisation_oracle import (
     variance,
     X,
 )
-from syncmoments.rm import (
+from syncem.rm import (
     _HEADROOM,
     _normalised_weights,
     _relative_weights_wide,
     gaussian_rm_cumulants,
 )
-from syncmoments.expansion import mixed_moments
+from syncem.expansion import mixed_moments
 
 
 @eqx.filter_jit  # compiled as one unit, like ``_normalised_weights``

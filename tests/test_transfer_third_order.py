@@ -1,4 +1,4 @@
-"""Third derivatives of ``transfer_slab`` (through ``syncmoments._expm``).
+"""Third derivatives of ``transfer_slab`` (through ``syncem._expm``).
 
 Before 0.4.0 these were checked only by round-5 probes (1e-16 to 7e-14 against
 autodiff of ``jax.scipy.linalg.expm``). Third derivatives differentiate the
@@ -20,8 +20,8 @@ import numpy as np
 import pytest
 import scipy.linalg as sla
 
-import syncmoments  # noqa: F401  (enables x64)
-from syncmoments.transfer import mueller_matrix, transfer_slab
+import syncem  # noqa: F401  (enables x64)
+from syncem.transfer import mueller_matrix, transfer_slab
 
 TOL = 1e-12
 NESTINGS = {

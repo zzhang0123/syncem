@@ -18,7 +18,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib import rc
 
-from syncmoments.sed import spectral_curvature
+from syncem.sed import spectral_curvature
 
 rc("text", usetex=False)
 rc("font", family="serif", size=11)

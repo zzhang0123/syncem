@@ -1,4 +1,4 @@
-"""Tests of ``syncmoments.model.adapters`` against the existing package routines:
+"""Tests of ``syncem.model.adapters`` against the existing package routines:
 ``faraday.joint_faraday_average`` (``app: depth moments`` contraction), ``expansion``
 (fixed-harmonic quadratic average) and ``rm.burn_depolarisation``.
 
@@ -14,11 +14,11 @@ from numpy.testing import assert_allclose
 import pytest
 from scipy.special import eval_legendre
 
-import syncmoments  # noqa: F401
-from syncmoments.constants import C_SI_M
-from syncmoments.expansion import build_expansion
-from syncmoments.faraday import joint_faraday_average
-from syncmoments.model.adapters import (
+import syncem  # noqa: F401
+from syncem.constants import C_SI_M
+from syncem.expansion import build_expansion
+from syncem.faraday import joint_faraday_average
+from syncem.model.adapters import (
     BurnCheck,
     HarmonicComparison,
     burn_screen_check,
@@ -26,17 +26,17 @@ from syncmoments.model.adapters import (
     joint_faraday_rows,
     to_joint_faraday,
 )
-from syncmoments.model.channels import Channels
-from syncmoments.model.harmonic import HarmonicKernel
-from syncmoments.model.index import Truncation
-from syncmoments.model.kernels import ContinuumKernel, PolynomialTestKernel
-from syncmoments.model.moments import (
+from syncem.model.channels import Channels
+from syncem.model.harmonic import HarmonicKernel
+from syncem.model.index import Truncation
+from syncem.model.kernels import ContinuumKernel, PolynomialTestKernel
+from syncem.model.moments import (
     JointMoments,
     PopulationSamples,
     Reference,
     Support,
 )
-from syncmoments.model.predict import predict
+from syncem.model.predict import predict
 
 from _basis_stub import build_stub_basis
 from _harmonic_oracles import B0, GAMMA0, NU_STAR, S_DEPTH, oracle_lines

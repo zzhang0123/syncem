@@ -6,7 +6,7 @@ JAX path. The float64 pins (``*_PINS``) are checked against the
 mpmath by ``scripts/reference_constants.py``, which also checks them with
 ``--check``); the tests never import mpmath, so no pin check is skipped when
 it is absent. ``slow`` marks the heaviest sweeps; the shared
-``tests/conftest.py`` skips them unless ``-m slow`` or ``SYNCMOMENTS_RUN_SLOW=1``
+``tests/conftest.py`` skips them unless ``-m slow`` or ``SYNCEM_RUN_SLOW=1``
 selects them.
 """
 
@@ -16,10 +16,10 @@ import numpy as np
 import pytest
 from scipy.special import jv, jvp
 
-from syncmoments.constants import C_CGS, C_SI_M, E_ESU, M_E
-from syncmoments.model.channels import Channels
-from syncmoments.model.kernels import PolynomialTestKernel
-from syncmoments.model.moments import PopulationSamples, Reference, Support
+from syncem.constants import C_CGS, C_SI_M, E_ESU, M_E
+from syncem.model.channels import Channels
+from syncem.model.kernels import PolynomialTestKernel
+from syncem.model.moments import PopulationSamples, Reference, Support
 
 slow = pytest.mark.slow  # gated by tests/conftest.py
 

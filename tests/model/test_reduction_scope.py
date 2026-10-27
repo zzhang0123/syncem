@@ -20,7 +20,7 @@ from _reduction_fixtures import (
     small_continuum_basis,
     stokes_data,
 )
-from syncmoments.model.fit import (
+from syncem.model.fit import (
     LinearRelation,
     find_column_relations,
     fit_combinations,

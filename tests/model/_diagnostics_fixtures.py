@@ -13,16 +13,16 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 
-from syncmoments.model.channels import Channels
-from syncmoments.model.index import MomentIndex
-from syncmoments.model.moments import PopulationSamples, Reference, Support
+from syncem.model.channels import Channels
+from syncem.model.index import MomentIndex
+from syncem.model.moments import PopulationSamples, Reference, Support
 
 try:  # real classes when the phase-2 modules have landed
-    from syncmoments.model.basis import SpectralBasis as _RealBasis
+    from syncem.model.basis import SpectralBasis as _RealBasis
 except ImportError:  # pragma: no cover - depends on the phase-2 schedule
     _RealBasis = None
 try:
-    from syncmoments.model.fit.observation import StokesData as _RealData
+    from syncem.model.fit.observation import StokesData as _RealData
 except ImportError:  # pragma: no cover
     _RealData = None
 
@@ -112,8 +112,8 @@ def make_basis(index, rng, n_ch=3, reference=None):
 
 
 def _real_basis(index, channels, reference, I, V, P):
-    from syncmoments.model.basis import KernelTerms, SpectralBasis
-    from syncmoments.model.errors import ErrorTerm, Provenance
+    from syncem.model.basis import KernelTerms, SpectralBasis
+    from syncem.model.errors import ErrorTerm, Provenance
 
     support = Support((2.0, 9.0), (0.3, 3.0), (-3.0, 3.0))
     terms = KernelTerms(*(ErrorTerm.unbounded("test") for _ in range(4)))

@@ -10,8 +10,8 @@ import mpmath as mp
 import numpy as np
 import pytest
 
-from syncmoments.constants import C_SI_M
-from syncmoments.model import (
+from syncem.constants import C_SI_M
+from syncem.model import (
     Channels,
     ErrorTerm,
     JointMoments,
@@ -23,8 +23,8 @@ from syncmoments.model import (
     certify_high_order_basis_coarse,
     predict,
 )
-from syncmoments.model._certified_angular_i00 import AngularI00Limit
-from syncmoments.model._certified_high_order_basis import CertifiedHighOrderBasis
+from syncem.model._certified_angular_i00 import AngularI00Limit
+from syncem.model._certified_high_order_basis import CertifiedHighOrderBasis
 
 
 @jax.jit

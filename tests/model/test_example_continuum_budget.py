@@ -15,8 +15,8 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 
-import syncmoments  # noqa: F401  (float64)
-from syncmoments.model.kernels import ContinuumKernel
+import syncem  # noqa: F401  (float64)
+from syncem.model.kernels import ContinuumKernel
 
 sys.path.insert(
     0, os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, "scripts")

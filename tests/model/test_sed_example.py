@@ -101,7 +101,7 @@ def test_example_quick_runs_and_writes_outputs(quick):
     assert saved["configuration"]["quick"] is True
     assert "not comparable" in saved["configuration"]["note"]
     prov = saved["provenance"]
-    assert prov["syncmoments_version"]
+    assert prov["syncem_version"]
     assert set(prov["git"]) >= {"revision", "status_porcelain"}
     assert any(k.endswith("fit/combinations.py") for k in prov["source_sha256"])
     assert set(prov["script_sha256"]) == set(EXAMPLE_FILES)
@@ -218,7 +218,7 @@ def test_example_is_public_api_only():
     for name in EXAMPLE_FILES:
         for module in _imports(SCRIPTS / name):
             root = module.split(".")[0]
-            if root == "syncmoments":
+            if root == "syncem":
                 parts = module.split(".")
                 assert not any(p.startswith("_") for p in parts), (name, module)
             elif root in SIBLINGS or root in {"validation", "synchro"}:
@@ -227,8 +227,8 @@ def test_example_is_public_api_only():
 
 def test_direct_oracle_uses_no_package_solver():
     for module in _imports(SCRIPTS / "sed_reconstruction_direct.py"):
-        if module.startswith("syncmoments"):
-            assert module == "syncmoments.constants", module
+        if module.startswith("syncem"):
+            assert module == "syncem.constants", module
 
 
 @pytest.mark.slow

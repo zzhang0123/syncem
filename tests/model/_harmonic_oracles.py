@@ -6,9 +6,9 @@ from pathlib import Path
 import numpy as np
 from scipy.special import jv, jvp
 
-from syncmoments.constants import C_CGS, C_SI_M, E_ESU, M_E
-from syncmoments.model.channels import Channels
-from syncmoments.model.moments import Support
+from syncem.constants import C_CGS, C_SI_M, E_ESU, M_E
+from syncem.model.channels import Channels
+from syncem.model.moments import Support
 
 # Verbatim copy of the manuscript's independent NumPy/SciPy reference
 # (validation/full_response*.py and its saved results); see reference/README.md.

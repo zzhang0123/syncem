@@ -1,4 +1,4 @@
-"""Regressions of the review fixes in ``syncmoments.model.bounds`` (R04, R06, R07, R14, R30).
+"""Regressions of the review fixes in ``syncem.model.bounds`` (R04, R06, R07, R14, R30).
 
 R04: a line-kernel basis with channel smoothness below ``N + 1`` has an
 unbounded ``basis_remainder``. R06: the screen factorisation bound with
@@ -15,21 +15,21 @@ import jax.numpy as jnp
 import numpy as np
 import pytest
 
-import syncmoments  # noqa: F401
-from syncmoments.model._kernel_helpers import phase_coordinate, phase_weights
-from syncmoments.model._polynomial import PolynomialTestKernel
-from syncmoments.model.basis import build_basis
-from syncmoments.model.bounds import RemainderInputs, screen_factorisation_bound
-from syncmoments.model.channels import Channels
-from syncmoments.model.index import Truncation
-from syncmoments.model.moments import (
+import syncem  # noqa: F401
+from syncem.model._kernel_helpers import phase_coordinate, phase_weights
+from syncem.model._polynomial import PolynomialTestKernel
+from syncem.model.basis import build_basis
+from syncem.model.bounds import RemainderInputs, screen_factorisation_bound
+from syncem.model.channels import Channels
+from syncem.model.index import Truncation
+from syncem.model.moments import (
     JointMoments,
     PopulationSamples,
     Reference,
     Support,
 )
-from syncmoments.model.phase import GaussianScreen, TaylorPhase
-from syncmoments.model.predict import direct_channel_average, predict
+from syncem.model.phase import GaussianScreen, TaylorPhase
+from syncem.model.predict import direct_channel_average, predict
 
 from _basis_stub import build_stub_basis
 from _predict_helpers import (

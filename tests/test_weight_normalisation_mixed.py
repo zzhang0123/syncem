@@ -1,6 +1,6 @@
 """Derivatives of ``mixed_moments`` at the smallest normal weights (T-004 round 3, H2).
 
-``mixed_moments`` normalises its weights with ``syncmoments.rm._normalised_weights``,
+``mixed_moments`` normalises its weights with ``syncem.rm._normalised_weights``,
 the helper used by every other weighted average. Round 2 normalised with its
 own ``scaled / sum(scaled)`` after ``_relative_weights`` (no tangent headroom):
 at ``w = full(4, 2^-1022)`` a ones tangent made the intermediate
@@ -26,8 +26,8 @@ import numpy as np
 from numpy.testing import assert_allclose
 import pytest
 
-import syncmoments  # noqa: F401  (enables x64)
-from syncmoments.expansion import mixed_moments
+import syncem  # noqa: F401  (enables x64)
+from syncem.expansion import mixed_moments
 
 OFFSETS = np.array([[0.1, 1.0], [0.2, 2.0], [0.3, -1.0], [0.4, 0.5]])
 FACTORS = {"ones": np.ones(4), "varied": np.array([1.0, 1.5, 0.5, 1.25])}

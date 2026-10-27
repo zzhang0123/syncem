@@ -22,16 +22,16 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 
-import syncmoments  # noqa: F401  (enables x64)
-from syncmoments.expansion import mixed_moments
-from syncmoments.model import (
+import syncem  # noqa: F401  (enables x64)
+from syncem.expansion import mixed_moments
+from syncem.model import (
     JointMoments,
     MomentIndex,
     PopulationSamples,
     Reference,
     Truncation,
 )
-from syncmoments.rm import gaussian_rm_cumulants
+from syncem.rm import gaussian_rm_cumulants
 
 EPS = Fraction(np.finfo(float).eps)
 BIG = Fraction(np.finfo(float).max)

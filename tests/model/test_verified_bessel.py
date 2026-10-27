@@ -2,7 +2,7 @@
 
 import pytest
 
-from syncmoments.model._verified_bessel import integer_bessel_enclosure
+from syncem.model._verified_bessel import integer_bessel_enclosure
 
 
 @pytest.mark.parametrize("m,z", [(100, 0.9), (1000, 0.999), (1000, 1.0)])

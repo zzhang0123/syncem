@@ -30,10 +30,10 @@ import jax.numpy as jnp
 import numpy as np
 import pytest
 
-import syncmoments  # noqa: F401  (enables x64)
+import syncem  # noqa: F401  (enables x64)
 from _ad_matrix_cases import K1, K2, K3, slab_ref
-from syncmoments._expm import any_member, batched_only
-from syncmoments.transfer import _uses_companion, transfer_los, transfer_slab
+from syncem._expm import any_member, batched_only
+from syncem.transfer import _uses_companion, transfer_los, transfer_slab
 
 S = jnp.array([1.0, 0.2, -0.1, 0.05])
 EPS = jnp.array([2.0, 0.3, -0.2, 0.1])

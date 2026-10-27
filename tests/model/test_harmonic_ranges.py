@@ -7,12 +7,12 @@ import numpy as np
 from numpy.testing import assert_allclose
 import pytest
 
-from syncmoments.model import _harmonic_taylor
-from syncmoments.model.basis import build_basis
-from syncmoments.model.channels import Channels
-from syncmoments.model.harmonic import HarmonicKernel
-from syncmoments.model.index import Truncation
-from syncmoments.model.moments import PopulationSamples, Reference, Support
+from syncem.model import _harmonic_taylor
+from syncem.model.basis import build_basis
+from syncem.model.channels import Channels
+from syncem.model.harmonic import HarmonicKernel
+from syncem.model.index import Truncation
+from syncem.model.moments import PopulationSamples, Reference, Support
 
 SUPPORT = Support((1.05, 1.15), (0.99, 1.01), (0.0, 0.0))
 REFERENCE = Reference(1.1, 1.0)

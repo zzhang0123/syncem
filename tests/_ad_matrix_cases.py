@@ -19,7 +19,7 @@ Every public entry point whose value passes through a custom derivative rule
 * ``model._bessel_recurrence`` (``bessel_band``, ``neighbours_recurrence``,
   and their consumer ``model.harmonic.harmonic_lines``;
   ``tests/_ad_matrix_model_cases.py``). Reference: autodiff of the contour
-  quadrature of ``syncmoments.bessel`` (``harmonic_lines(..., bessel="autodiff")``).
+  quadrature of ``syncem.bessel`` (``harmonic_lines(..., bessel="autodiff")``).
 
 Values are in the normal floating-point range (the extreme-scale behaviour is
 covered by ``tests/test_transfer_*`` and ``tests/test_weight_normalisation_*``).
@@ -31,17 +31,17 @@ import jax.numpy as jnp
 import numpy as np
 
 from _ad_matrix import Group
-from syncmoments import expansion, faraday, rm
-from syncmoments.conversion import mueller_conversion, mueller_rotation
-from syncmoments.kirchhoff import (
+from syncem import expansion, faraday, rm
+from syncem.conversion import mueller_conversion, mueller_rotation
+from syncem.kirchhoff import (
     absorption_from_moments,
     absorption_Q_from_moments,
     cgs_coefficients_from_moments,
     emissivity_from_moments,
     emissivity_Q_from_moments,
 )
-from syncmoments.los_moments import moment_driven_slab, moment_driven_slab_cgs
-from syncmoments.transfer import mueller_matrix, transfer_los, transfer_slab
+from syncem.los_moments import moment_driven_slab, moment_driven_slab_cgs
+from syncem.transfer import mueller_matrix, transfer_los, transfer_slab
 
 A = jnp.asarray
 

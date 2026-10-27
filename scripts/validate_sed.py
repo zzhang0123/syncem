@@ -10,9 +10,9 @@
 from __future__ import annotations
 
 import numpy as np
-from syncmoments.ultrarel import F
+from syncem.ultrarel import F
 import jax.numpy as jnp
-from syncmoments.sed import (
+from syncem.sed import (
     spectral_index,
     spectral_curvature,
     power_law_emissivity_rel,
@@ -106,7 +106,7 @@ def test_running_index(p0=2.5, a=0.02):
     This test intentionally extends gamma below1, as does the analytic Mellin
     identity. It is not a physical low-energy cutoff validation.
     """
-    from syncmoments.sed import running_spectral_index, log_parabola_running_index
+    from syncem.sed import running_spectral_index, log_parabola_running_index
 
     nus = np.logspace(-2, 2, 60)
     alpha = running_spectral_index(

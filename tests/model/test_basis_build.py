@@ -1,4 +1,4 @@
-"""Tests of ``syncmoments.model.basis.build_basis`` validation: refusals on both
+"""Tests of ``syncem.model.basis.build_basis`` validation: refusals on both
 sides of ``required_m_max`` and the smoothness threshold, the continuum kernel's
 closure, phase-degree checks and screen terms, input validation."""
 
@@ -10,19 +10,19 @@ import numpy as np
 from numpy.testing import assert_allclose
 import pytest
 
-import syncmoments  # noqa: F401
-from syncmoments.constants import C_SI_M
-from syncmoments.model.basis import (
+import syncem  # noqa: F401
+from syncem.constants import C_SI_M
+from syncem.model.basis import (
     SpectralBasis,
     build_basis,
 )
-from syncmoments.model.channels import Channels
-from syncmoments.model.errors import ErrorTerm
-from syncmoments.model.harmonic import HarmonicKernel
-from syncmoments.model.index import MomentIndex, Truncation
-from syncmoments.model.kernels import ContinuumKernel
-from syncmoments.model.moments import Reference, Support
-from syncmoments.model.phase import CumulantScreen, GaussianScreen, TaylorPhase
+from syncem.model.channels import Channels
+from syncem.model.errors import ErrorTerm
+from syncem.model.harmonic import HarmonicKernel
+from syncem.model.index import MomentIndex, Truncation
+from syncem.model.kernels import ContinuumKernel
+from syncem.model.moments import Reference, Support
+from syncem.model.phase import CumulantScreen, GaussianScreen, TaylorPhase
 
 from _basis_fixtures import (
     SMALL_SUPPORT,

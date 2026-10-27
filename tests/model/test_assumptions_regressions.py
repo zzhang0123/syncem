@@ -1,4 +1,4 @@
-"""Regression tests for review findings on ``syncmoments.model.assumptions``.
+"""Regression tests for review findings on ``syncem.model.assumptions``.
 
 R01: ``assume()`` must not hand one input map's discrepancy allowance to a
 combined assumption that the other maps constrain further; the combined
@@ -19,7 +19,7 @@ import jax.numpy as jnp
 import numpy as np
 import pytest
 
-from syncmoments.model.assumptions import (
+from syncem.model.assumptions import (
     Closure,
     ParameterMap,
     fully_independent,
@@ -28,9 +28,9 @@ from syncmoments.model.assumptions import (
     isotropic_pitch,
     no_assumption,
 )
-from syncmoments.model.errors import ErrorTerm
-from syncmoments.model.index import MomentIndex, Truncation
-from syncmoments.model.moments import JointMoments, PopulationSamples, Reference
+from syncem.model.errors import ErrorTerm
+from syncem.model.index import MomentIndex, Truncation
+from syncem.model.moments import JointMoments, PopulationSamples, Reference
 
 
 def reference():

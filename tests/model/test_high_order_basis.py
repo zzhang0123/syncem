@@ -7,8 +7,8 @@ import numpy as np
 from numpy.testing import assert_allclose
 import pytest
 
-from syncmoments.constants import C_CGS, E_ESU, M_E
-from syncmoments.model import (
+from syncem.constants import C_CGS, E_ESU, M_E
+from syncem.model import (
     Channels,
     HarmonicKernel,
     JointMoments,
@@ -18,7 +18,7 @@ from syncmoments.model import (
     Truncation,
     predict,
 )
-from syncmoments.model.high_order_basis import build_high_order_basis
+from syncem.model.high_order_basis import build_high_order_basis
 
 
 def _setup():
@@ -100,9 +100,7 @@ def test_prediction_reuses_prepared_matrix_without_harmonic_calls(monkeypatch):
     def fail(*args, **kwargs):
         raise AssertionError("predict must reuse the prepared matrix")
 
-    monkeypatch.setattr(
-        "syncmoments.model.high_order_basis.high_order_channel_modes", fail
-    )
+    monkeypatch.setattr("syncem.model.high_order_basis.high_order_channel_modes", fail)
     for amplitude in (1.0, 2.0):
         result = predict(basis, moments, amplitude=amplitude)
         assert_allclose(np.asarray(result.stokes), amplitude * expected, rtol=1e-13)
@@ -283,7 +281,7 @@ def test_galactic_n1_basis_prepares_scaled_derivatives_without_mode_array(monkey
         raise AssertionError("prepared N=1 prediction must not evaluate harmonics")
 
     monkeypatch.setattr(
-        "syncmoments.model.high_order_basis.high_order_channel_derivatives", fail
+        "syncem.model.high_order_basis.high_order_channel_derivatives", fail
     )
 
     @jax.jit

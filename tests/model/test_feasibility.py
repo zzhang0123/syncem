@@ -1,4 +1,4 @@
-"""Tests for ``syncmoments.model.fit.diagnostics.feasibility_checks``.
+"""Tests for ``syncem.model.fit.diagnostics.feasibility_checks``.
 
 Oracles: explicit weighted sums over a discrete population for every moment
 inequality (Cauchy-Schwarz, ``|<f^2 e^{2i phi}>| <= <f^2>``, moment
@@ -19,9 +19,9 @@ from _diagnostics_fixtures import (
     random_population,
     reference_222,
 )
-from syncmoments.model.fit.diagnostics import FeasibilityReport, feasibility_checks
-from syncmoments.model.index import MomentIndex, Truncation
-from syncmoments.model.moments import JointMoments, Support
+from syncem.model.fit.diagnostics import FeasibilityReport, feasibility_checks
+from syncem.model.index import MomentIndex, Truncation
+from syncem.model.moments import JointMoments, Support
 
 # -- feasibility oracles ----------------------------------------------------------
 
@@ -239,7 +239,7 @@ def test_feasibility_rejects_index_mismatch(index_222, index_111):
 
 
 def test_legendre_minimum_matches_dense_grid():
-    from syncmoments.model.fit.diagnostics import legendre_range
+    from syncem.model.fit.diagnostics import legendre_range
 
     x = np.linspace(-1, 1, 200001)
     for l in range(0, 9):

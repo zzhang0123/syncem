@@ -22,9 +22,9 @@ from _reduction_fixtures import (
     oracle_fit,
     stokes_data,
 )
-from syncmoments.model.assumptions import ParameterMap, isotropic_pitch, no_assumption
-from syncmoments.model.errors import ErrorTerm
-from syncmoments.model.fit import (
+from syncem.model.assumptions import ParameterMap, isotropic_pitch, no_assumption
+from syncem.model.errors import ErrorTerm
+from syncem.model.fit import (
     CombinationFit,
     StokesData,
     fit_combinations,
@@ -32,8 +32,8 @@ from syncmoments.model.fit import (
     identifiability,
     reduce_response,
 )
-from syncmoments.model.fit import linear as linear_module
-from syncmoments.model.fit._result_core import TOL
+from syncem.model.fit import linear as linear_module
+from syncem.model.fit._result_core import TOL
 
 MAX_SIGMA = 0.1
 
@@ -349,7 +349,7 @@ def test_invalid_fit_inputs():
     other, _, _, _ = continuum_problem(scales=(0.1, 0.3))
     with pytest.raises(ValueError, match="foreign"):
         fit_combinations(basis, data, max_sigma=1.0, reduction=reduce_response(other))
-    from syncmoments.model.assumptions import independent_screen
+    from syncem.model.assumptions import independent_screen
 
     with pytest.raises(ValueError, match="fit_bfgs"):
         fit_combinations(

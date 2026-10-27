@@ -1,7 +1,7 @@
 # SED fits of identifiable combinations
 
-`syncmoments.model.fit.reduce_response` and
-`syncmoments.model.fit.fit_combinations` fit the linear combinations of the
+`syncem.model.fit.reduce_response` and
+`syncem.model.fit.fit_combinations` fit the linear combinations of the
 joint moments that a finite-band channel SED constrains, and report the rest
 as unconstrained. The design, the formulas and the test record are in
 Section 10.1 of [the design document](../DESIGN.md). This page describes the
@@ -54,7 +54,7 @@ Outputs, written to `figures/` by default:
 
 The repository keeps the figure and the CSV. The JSON and NPZ of the 0.4.0
 run are attached to the
-[v0.4.0 release](https://github.com/zzhang0123/syncmoments/releases/tag/v0.4.0);
+[v0.4.0 release](https://github.com/zzhang0123/syncem/releases/tag/v0.4.0);
 the script regenerates all five files in about 20 s.
 
 ## Steps

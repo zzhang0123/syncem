@@ -23,8 +23,8 @@ import numpy as np
 from numpy.testing import assert_allclose
 import pytest
 
-from syncmoments.model import _factor as _f
-from syncmoments.model.assumptions import (
+from syncem.model import _factor as _f
+from syncem.model.assumptions import (
     VARS,
     Closure,
     Factorisation,
@@ -33,8 +33,8 @@ from syncmoments.model.assumptions import (
     field_reversal_symmetric,
     pitch_symmetric,
 )
-from syncmoments.model.index import MomentIndex, Truncation
-from syncmoments.model.moments import Reference
+from syncem.model.index import MomentIndex, Truncation
+from syncem.model.moments import Reference
 
 REF = Reference(20.0, 2.0, depth_ref=1.5, scales=(2.0, 0.2, 0.5))
 SINGLETONS = tuple((v,) for v in VARS)

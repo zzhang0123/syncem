@@ -19,12 +19,12 @@ import numpy as np
 from numpy.testing import assert_allclose
 import pytest
 
-import syncmoments  # noqa: F401
-from syncmoments.model.channels import Channels
-from syncmoments.model.harmonic import HarmonicKernel
-from syncmoments.model.index import Truncation
-from syncmoments.model.kernels import ContinuumKernel
-from syncmoments.ultrarel import F, G
+import syncem  # noqa: F401
+from syncem.model.channels import Channels
+from syncem.model.harmonic import HarmonicKernel
+from syncem.model.index import Truncation
+from syncem.model.kernels import ContinuumKernel
+from syncem.ultrarel import F, G
 
 from _boundary_oracles import (
     BLOWUP,

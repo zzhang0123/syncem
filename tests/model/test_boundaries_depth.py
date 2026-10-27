@@ -19,14 +19,14 @@ import numpy as np
 from numpy.testing import assert_allclose
 import pytest
 
-from syncmoments.model.basis import build_basis
-from syncmoments.model.bounds import RemainderInputs
-from syncmoments.model.channels import Channels
-from syncmoments.model.index import Truncation
-from syncmoments.model.moments import JointMoments, PopulationSamples
-from syncmoments.model.moments import Reference, Support
-from syncmoments.model.phase import EmpiricalScreen, GaussianScreen, TaylorPhase
-from syncmoments.model.predict import direct_channel_average, predict
+from syncem.model.basis import build_basis
+from syncem.model.bounds import RemainderInputs
+from syncem.model.channels import Channels
+from syncem.model.index import Truncation
+from syncem.model.moments import JointMoments, PopulationSamples
+from syncem.model.moments import Reference, Support
+from syncem.model.phase import EmpiricalScreen, GaussianScreen, TaylorPhase
+from syncem.model.predict import direct_channel_average, predict
 
 from _basis_fixtures import polynomial_setup, small_harmonic
 from _boundary_oracles import (

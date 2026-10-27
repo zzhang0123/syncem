@@ -27,7 +27,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib import rc
 
-from syncmoments.kirchhoff import (
+from syncem.kirchhoff import (
     emissivity,
     absorption,
     emissivity_Q,
@@ -35,8 +35,8 @@ from syncmoments.kirchhoff import (
     source_function,
     absorbed_intensity_from_moments,
 )
-from syncmoments.transfer import mueller_matrix, transfer_los
-from syncmoments.magnus import magnus_S
+from syncem.transfer import mueller_matrix, transfer_los
+from syncem.magnus import magnus_S
 
 rc("text", usetex=False)
 rc("font", family="serif", size=11)

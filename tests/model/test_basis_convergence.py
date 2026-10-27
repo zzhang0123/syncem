@@ -10,18 +10,18 @@ import numpy as np
 from numpy.testing import assert_allclose
 import pytest
 
-import syncmoments  # noqa: F401
-from syncmoments.model.basis import (
+import syncem  # noqa: F401
+from syncem.model.basis import (
     _build_core,
     basis_convergence,
     build_basis,
 )
-from syncmoments.model.channels import Channels
-from syncmoments.model.errors import Provenance
-from syncmoments.model.index import MomentIndex, Truncation
-from syncmoments.model.kernels import ContinuumKernel
-from syncmoments.model.moments import Reference, Support
-from syncmoments.model.phase import TaylorPhase
+from syncem.model.channels import Channels
+from syncem.model.errors import Provenance
+from syncem.model.index import MomentIndex, Truncation
+from syncem.model.kernels import ContinuumKernel
+from syncem.model.moments import Reference, Support
+from syncem.model.phase import TaylorPhase
 
 from _basis_fixtures import (
     polynomial_setup,

@@ -1,4 +1,4 @@
-"""Boundary validation of the propagators' exponential (``syncmoments._expm``).
+"""Boundary validation of the propagators' exponential (``syncem._expm``).
 
 ``expm_pade13`` dispatches on the squaring count ``n``: Pade 13 of ``A 2^-n``,
 squared ``n`` times, ``n = ceil(log2(|A|_1 / theta_13))`` (0 below ``theta_13``).
@@ -23,9 +23,9 @@ import numpy as np
 import pytest
 import scipy.linalg as sla
 
-import syncmoments  # noqa: F401  (enables x64)
-from syncmoments._expm import _THETA13, expm_pade13, expm_squared
-from syncmoments.transfer import mueller_matrix
+import syncem  # noqa: F401  (enables x64)
+from syncem._expm import _THETA13, expm_pade13, expm_squared
+from syncem.transfer import mueller_matrix
 
 KS = {
     "thick": mueller_matrix(5.0, 1.0, -0.5, 0.2, 4.0, -2.0, 1.0),

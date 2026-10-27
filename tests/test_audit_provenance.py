@@ -8,7 +8,7 @@ import sys
 
 def test_radiation_audit_rejects_shadow_package_before_computing(tmp_path):
     shadow = tmp_path / "shadow"
-    package = shadow / "syncmoments"
+    package = shadow / "syncem"
     package.mkdir(parents=True)
     (package / "__init__.py").write_text("", encoding="utf-8")
     sentinel = "raise AssertionError('wrong package numerical kernel was executed')"

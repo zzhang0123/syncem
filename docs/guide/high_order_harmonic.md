@@ -15,7 +15,7 @@ It does not bound a nonzero $\gamma/B$ displacement, omitted physics,
 population tails or the final inference error. Those terms must be carried
 separately to the intended scientific quantity.
 
-Install the value route with `python -m pip install 'syncmoments[high_harmonic]'`.
+Install the value route with `python -m pip install 'syncem[high_harmonic]'`.
 Install `mpmath` as well before requesting the optional certificate.
 
 `high_order_channel_modes` evaluates the finite-$\gamma$ discrete-harmonic
@@ -66,7 +66,7 @@ the GHz, microgauss high-order `build_basis` path.
 Install the optional `high_harmonic` extra for SciPy. For example:
 
 ```python
-from syncmoments.model import Channels, TaylorPhase, high_order_channel_modes
+from syncem.model import Channels, TaylorPhase, high_order_channel_modes
 
 channels = Channels.bump([1.0e8], [2.0e7])
 result = high_order_channel_modes(
@@ -119,7 +119,7 @@ The current accelerated route lacks a valid absolute error certificate.
 The host route can prepare a zeroth-order moment basis once:
 
 ```python
-from syncmoments.model import (
+from syncem.model import (
     Channels, Reference, Support, Truncation, build_high_order_basis,
 )
 
@@ -203,7 +203,7 @@ it in the likelihood. `build_high_order_basis` constructs an exploratory
 call can attach a coarse **fixed-reference numerical** column envelope:
 
 ```python
-from syncmoments.model import certify_high_order_basis_coarse
+from syncem.model import certify_high_order_basis_coarse
 
 bounded_basis, report = certify_high_order_basis_coarse(
     basis, i00_atol=1e-18, max_cells=512,
@@ -280,7 +280,7 @@ neither basis construction nor optional certification is in that loop:
 ```python
 import jax
 import jax.numpy as jnp
-from syncmoments.model import JointMoments, predict
+from syncem.model import JointMoments, predict
 
 def spectra(moment_vector):
     moments = JointMoments.from_vector(

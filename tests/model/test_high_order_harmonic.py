@@ -12,16 +12,16 @@ import numpy as np
 from numpy.testing import assert_allclose
 import pytest
 
-from syncmoments.constants import C_CGS, E_ESU, M_E
-from syncmoments.model import (
+from syncem.constants import C_CGS, E_ESU, M_E
+from syncem.model import (
     Channels,
     HarmonicKernel,
     TaylorPhase,
     high_order_channel_modes,
     high_order_line_powers,
 )
-from syncmoments.model._kernel_helpers import phase_coordinate, phase_weights
-from syncmoments.model.high_order_harmonic import (
+from syncem.model._kernel_helpers import phase_coordinate, phase_weights
+from syncem.model.high_order_harmonic import (
     _host_bump_response_and_slope,
     _host_phase_weights,
     _host_response,

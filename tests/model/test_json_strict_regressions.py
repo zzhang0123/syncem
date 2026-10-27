@@ -16,12 +16,12 @@ import numpy as np
 import pytest
 
 from _nonlinear_oracles import polynomial_basis
-from syncmoments.model.assumptions import gaussian_screen
-from syncmoments.model.errors import AssumptionRecord, Provenance
-from syncmoments.model.fit.nonlinear import LogDensity, Transform, fit_bfgs
-from syncmoments.model.fit.observation import StokesData
-from syncmoments.model.index import MomentIndex, Truncation
-from syncmoments.model.predict import predict
+from syncem.model.assumptions import gaussian_screen
+from syncem.model.errors import AssumptionRecord, Provenance
+from syncem.model.fit.nonlinear import LogDensity, Transform, fit_bfgs
+from syncem.model.fit.observation import StokesData
+from syncem.model.index import MomentIndex, Truncation
+from syncem.model.predict import predict
 
 
 def strict_round_trip(d):

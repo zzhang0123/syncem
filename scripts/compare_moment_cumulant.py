@@ -19,7 +19,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib import rc
 
-from syncmoments.cumulants import raw_moments_from_cumulants
+from syncem.cumulants import raw_moments_from_cumulants
 
 rc("text", usetex=False)
 rc("font", family="serif", size=11)

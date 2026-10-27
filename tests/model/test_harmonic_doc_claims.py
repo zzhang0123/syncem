@@ -18,7 +18,7 @@ samples only through the direct average's ``samples_per_step`` cap.
 
 import re
 
-from syncmoments.model import _direct, _harmonic_cells, _harmonic_taylor, harmonic
+from syncem.model import _direct, _harmonic_cells, _harmonic_taylor, harmonic
 
 
 def flat(text):

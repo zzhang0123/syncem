@@ -2,13 +2,13 @@
 
 import pytest
 
-from syncmoments.model._verified_airy import (
+from syncem.model._verified_airy import (
     _airy_coefficients,
     _airy_on_interval,
     _airy_series,
     integer_bessel_airy_enclosure,
 )
-from syncmoments.model._verified_bessel import integer_bessel_enclosure
+from syncem.model._verified_bessel import integer_bessel_enclosure
 
 
 @pytest.mark.parametrize("x", [0.0, 0.3, 1.0, 5.0, 10.0])

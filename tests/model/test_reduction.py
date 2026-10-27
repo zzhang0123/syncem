@@ -22,15 +22,15 @@ from _reduction_fixtures import (
     reference,
     small_continuum_basis,
 )
-from syncmoments.model.fit import (
+from syncem.model.fit import (
     CoefficientLayout,
     LinearRelation,
     ResponseReduction,
     reduce_response,
 )
-from syncmoments.model.fit._relations import lq_qr, lq_svd
-from syncmoments.model.index import MomentIndex, Truncation
-from syncmoments.model.moments import JointMoments, PopulationSamples
+from syncem.model.fit._relations import lq_qr, lq_svd
+from syncem.model.index import MomentIndex, Truncation
+from syncem.model.moments import JointMoments, PopulationSamples
 
 CASES = {
     "20/20": ((0.2, 0.2), (0, 2, 2, None, None)),

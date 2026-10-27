@@ -19,8 +19,8 @@ import equinox as eqx
 import numpy as np
 from numpy.polynomial.legendre import leggauss
 
-from syncmoments.model.index import MomentIndex, Truncation
-from syncmoments.model.moments import JointMoments, PopulationSamples, Reference
+from syncem.model.index import MomentIndex, Truncation
+from syncem.model.moments import JointMoments, PopulationSamples, Reference
 
 from _harmonic_oracles import B0, GAMMA0, REFERENCE, S_DEPTH, UNITS
 

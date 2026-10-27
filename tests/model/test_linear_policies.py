@@ -1,4 +1,4 @@
-"""Tests of ``syncmoments.model.fit.linear``: coverage, discrepancy policies, the
+"""Tests of ``syncem.model.fit.linear``: coverage, discrepancy policies, the
 bias bound, fixed amplitude with mask and response, and agreement with ``fit_bfgs``.
 
 Oracles: exact Gaussian sampling for the coverage statistic (the estimator
@@ -14,13 +14,13 @@ import pytest
 
 from _diagnostics_fixtures import random_population
 from _linear_fixtures import oracle_design, setup, stokes_of, truth_of
-from syncmoments.model.assumptions import isotropic_pitch
-from syncmoments.model.errors import ErrorTerm
-from syncmoments.model.fit.linear import POLICIES, fit_linear
-from syncmoments.model.fit.nonlinear import LogDensity, fit_bfgs
-from syncmoments.model.fit.observation import StokesData
-from syncmoments.model.fit.result import FitResult
-from syncmoments.model.moments import JointMoments
+from syncem.model.assumptions import isotropic_pitch
+from syncem.model.errors import ErrorTerm
+from syncem.model.fit.linear import POLICIES, fit_linear
+from syncem.model.fit.nonlinear import LogDensity, fit_bfgs
+from syncem.model.fit.observation import StokesData
+from syncem.model.fit.result import FitResult
+from syncem.model.moments import JointMoments
 
 # -- coverage ------------------------------------------------------------------------
 

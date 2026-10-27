@@ -10,7 +10,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 import pytest
 
-from syncmoments.model.errors import (
+from syncem.model.errors import (
     KINDS,
     MANUSCRIPT_TERMS,
     WEAKEST_ORDER,

@@ -20,8 +20,8 @@ import numpy as np
 import pytest
 from scipy.linalg import expm, expm_frechet
 
-import syncmoments  # noqa: F401  (enables x64)
-from syncmoments.transfer import mueller_matrix, transfer_slab
+import syncem  # noqa: F401  (enables x64)
+from syncem.transfer import mueller_matrix, transfer_slab
 
 KS = {
     "weak": mueller_matrix(0.3, 0.1, -0.05, 0.02, 0.4, -0.2, 0.1),
@@ -103,7 +103,7 @@ def test_length_derivative_near_the_float64_limit(K, ds, top, mode):
 
 def test_normal_range_rule_is_unscaled():
     """Below ``2^512`` the split exponent is 0: all factors are exactly 1."""
-    from syncmoments.transfer import _split_exponent
+    from syncem.transfer import _split_exponent
 
     for top in (1.0, 1e150, 1e154):
         assert int(_split_exponent(jnp.asarray(S0), jnp.asarray(D * top))) == 0

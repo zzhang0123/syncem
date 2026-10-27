@@ -1,4 +1,4 @@
-"""Tests for ``syncmoments.model.fit.diagnostics.identifiability``.
+"""Tests for ``syncem.model.fit.diagnostics.identifiability``.
 
 Oracle: ``numpy.linalg.svd`` of an independently assembled whitened design
 ``L^-1 R C [c | P]`` (``P, c`` from ``ParameterMap.affine_pieces``; a
@@ -21,12 +21,12 @@ from _diagnostics_fixtures import (
     make_data,
     reference_222,
 )
-from syncmoments.model.assumptions import (
+from syncem.model.assumptions import (
     gaussian_screen,
     isotropic_pitch,
     no_assumption,
 )
-from syncmoments.model.fit.diagnostics import (
+from syncem.model.fit.diagnostics import (
     IdentifiabilityReport,
     identifiability,
 )

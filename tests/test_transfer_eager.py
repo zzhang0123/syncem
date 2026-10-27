@@ -17,9 +17,9 @@ import jax
 import jax.numpy as jnp
 import pytest
 
-import syncmoments  # noqa: F401  (enables x64)
-from syncmoments.los_moments import moment_driven_slab, moment_driven_slab_cgs
-from syncmoments.transfer import mueller_matrix, transfer_los, transfer_slab
+import syncem  # noqa: F401  (enables x64)
+from syncem.los_moments import moment_driven_slab, moment_driven_slab_cgs
+from syncem.transfer import mueller_matrix, transfer_los, transfer_slab
 
 THICK = mueller_matrix(5.0, 1.0, -0.5, 0.2, 4.0, -2.0, 1.0)
 WEAK = mueller_matrix(0.3, 0.1, -0.05, 0.02, 0.4, -0.2, 0.1)

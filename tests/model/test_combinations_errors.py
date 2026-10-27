@@ -21,8 +21,8 @@ from _reduction_fixtures import (
     reference,
     stokes_data,
 )
-from syncmoments.model.errors import ErrorTerm
-from syncmoments.model.fit import (
+from syncem.model.errors import ErrorTerm
+from syncem.model.fit import (
     LinearRelation,
     StokesData,
     coefficient_bounds,
@@ -30,7 +30,7 @@ from syncmoments.model.fit import (
     fit_linear,
     reduce_response,
 )
-from syncmoments.model.moments import JointMoments, PopulationSamples, Support
+from syncem.model.moments import JointMoments, PopulationSamples, Support
 from test_combinations import _polynomial_problem
 
 

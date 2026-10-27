@@ -1,5 +1,28 @@
 # Changelog
 
+## Unreleased (0.6.0)
+
+### Renamed
+
+- The project is renamed SyncEM. The distribution and import name change
+  from `syncmoments` to `syncem` (`python -m pip install syncem`,
+  `import syncem`). There is no compatibility alias: replace
+  `import syncmoments` and `from syncmoments...` with `syncem`.
+- The `syncmoments` 0.5.0 distribution on PyPI is unchanged.
+- The environment variables are renamed with no compatibility alias. Set
+  `SYNCEM_RUN_SLOW=1` instead of `SYNCMOMENTS_RUN_SLOW=1` to run the slow
+  tests; `SYNCEM_BENCH_ANGULAR` replaces `SYNCMOMENTS_BENCH_ANGULAR`.
+- The provenance record of `scripts/sed_reconstruction_report.py` names
+  its keys `syncem_version` and `syncem_file` instead of
+  `syncmoments_version` and `syncmoments_file`.
+- The project URLs in `pyproject.toml`, the README and the documentation
+  point to `github.com/zzhang0123/syncem` and `syncem.readthedocs.io`.
+  Released tags keep the names they were released under.
+- The docstring of `syncem.model._basis_core.package_version` no longer
+  says that the package's own PyPI name belongs to an unrelated project.
+  Provenance still records the imported package's `__version__`, not
+  installed-distribution metadata.
+
 ## 0.5.0 (2026-09-28)
 
 This release adds a finite-$\gamma$ high-order harmonic route for declared

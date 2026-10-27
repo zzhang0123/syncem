@@ -13,11 +13,11 @@ import pytest
 from scipy import integrate, stats
 from scipy.special import eval_legendre
 
-import syncmoments  # noqa: F401
-from syncmoments.model.channels import Channels
-from syncmoments.model.phase import GaussianScreen
-from syncmoments.model.predict import direct_channel_average
-from syncmoments.model.screens import GammaScreen, LaplaceScreen
+import syncem  # noqa: F401
+from syncem.model.channels import Channels
+from syncem.model.phase import GaussianScreen
+from syncem.model.predict import direct_channel_average
+from syncem.model.screens import GammaScreen, LaplaceScreen
 
 from _predict_helpers import (
     B0,
@@ -180,10 +180,10 @@ def test_build_basis_and_predict_route_matches_direct_and_oracle(route_name):
     The polynomial kernel's finite response is exact, so ``predict`` equals
     ``direct_channel_average`` and the per-atom NumPy oracle to roundoff.
     """
-    from syncmoments.model.basis import build_basis
-    from syncmoments.model.index import Truncation
-    from syncmoments.model.moments import JointMoments
-    from syncmoments.model.predict import predict
+    from syncem.model.basis import build_basis
+    from syncem.model.index import Truncation
+    from syncem.model.moments import JointMoments
+    from syncem.model.predict import predict
 
     from _predict_helpers import reference, support
 

@@ -19,15 +19,15 @@ import jax.numpy as jnp
 import numpy as np
 import pytest
 
-import syncmoments  # noqa: F401
-from syncmoments.constants import C_CGS, E_ESU, M_E
-from syncmoments.model.basis import _build_core, build_basis
-from syncmoments.model.channels import Channels
-from syncmoments.model._harmonic_cells import RHO_SWITCH, harmonic_lines, product_cells
-from syncmoments.model.harmonic import HarmonicKernel
-from syncmoments.model.index import MomentIndex, Truncation
-from syncmoments.model.moments import Reference, Support
-from syncmoments.model.phase import TaylorPhase
+import syncem  # noqa: F401
+from syncem.constants import C_CGS, E_ESU, M_E
+from syncem.model.basis import _build_core, build_basis
+from syncem.model.channels import Channels
+from syncem.model._harmonic_cells import RHO_SWITCH, harmonic_lines, product_cells
+from syncem.model.harmonic import HarmonicKernel
+from syncem.model.index import MomentIndex, Truncation
+from syncem.model.moments import Reference, Support
+from syncem.model.phase import TaylorPhase
 
 from _harmonic_oracles import B0, GAMMA0, S_DEPTH, benchmark_channels
 

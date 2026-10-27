@@ -1,49 +1,49 @@
-syncmoments.model.fit
-=====================
+syncem.model.fit
+================
 
 Spectral fits: data, weighted least squares, nonlinear and nodal fits, diagnostics and results; pre-fit response reduction and identifiable-combination fits.
 
-syncmoments.model.fit.observation
----------------------------------
-
-.. automodule:: syncmoments.model.fit.observation
-
-syncmoments.model.fit.linear
+syncem.model.fit.observation
 ----------------------------
 
-.. automodule:: syncmoments.model.fit.linear
+.. automodule:: syncem.model.fit.observation
 
-syncmoments.model.fit.nonlinear
--------------------------------
+syncem.model.fit.linear
+-----------------------
 
-.. automodule:: syncmoments.model.fit.nonlinear
+.. automodule:: syncem.model.fit.linear
 
-syncmoments.model.fit.diagnostics
----------------------------------
+syncem.model.fit.nonlinear
+--------------------------
 
-.. automodule:: syncmoments.model.fit.diagnostics
+.. automodule:: syncem.model.fit.nonlinear
 
-syncmoments.model.fit.result
+syncem.model.fit.diagnostics
 ----------------------------
 
-.. automodule:: syncmoments.model.fit.result
+.. automodule:: syncem.model.fit.diagnostics
 
-syncmoments.model.fit.layout
-----------------------------
+syncem.model.fit.result
+-----------------------
 
-.. automodule:: syncmoments.model.fit.layout
+.. automodule:: syncem.model.fit.result
 
-syncmoments.model.fit.reduction
--------------------------------
+syncem.model.fit.layout
+-----------------------
 
-.. automodule:: syncmoments.model.fit.reduction
+.. automodule:: syncem.model.fit.layout
 
-syncmoments.model.fit.combinations
-----------------------------------
+syncem.model.fit.reduction
+--------------------------
 
-.. automodule:: syncmoments.model.fit.combinations
+.. automodule:: syncem.model.fit.reduction
 
-syncmoments.model.fit.combination_result
-----------------------------------------
+syncem.model.fit.combinations
+-----------------------------
 
-.. automodule:: syncmoments.model.fit.combination_result
+.. automodule:: syncem.model.fit.combinations
+
+syncem.model.fit.combination_result
+-----------------------------------
+
+.. automodule:: syncem.model.fit.combination_result

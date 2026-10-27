@@ -35,15 +35,15 @@ import numpy as np
 from numpy.testing import assert_allclose
 import pytest
 
-from syncmoments.model.assumptions import (
+from syncem.model.assumptions import (
     Factorisation,
     ParameterMap,
     field_reversal_symmetric,
     fully_independent,
     pitch_symmetric,
 )
-from syncmoments.model.index import MomentIndex, Truncation
-from syncmoments.model.moments import JointMoments, PopulationSamples, Reference
+from syncem.model.index import MomentIndex, Truncation
+from syncem.model.moments import JointMoments, PopulationSamples, Reference
 
 REF = Reference(20.0, 2.0, depth_ref=1.5, scales=(2.0, 0.2, 0.5))
 ETA_APART = (("gamma", "B", "mu", "phi", "depth"), ("eta",))

@@ -13,18 +13,18 @@ from __future__ import annotations
 import numpy as np
 import jax.numpy as jnp
 
-from syncmoments.magnus import magnus_S
-from syncmoments.transfer import mueller_matrix, transfer_los
-from syncmoments.conversion import (
+from syncem.magnus import magnus_S
+from syncem.transfer import mueller_matrix, transfer_los
+from syncem.conversion import (
     conversion_rotation_ratio,
     mueller_rotation,
     mueller_conversion,
 )
-from syncmoments.kirchhoff import (
+from syncem.kirchhoff import (
     emissivity_from_moments,
     absorbed_intensity_from_moments,
 )
-from syncmoments.los_moments import moment_driven_slab
+from syncem.los_moments import moment_driven_slab
 
 
 # --- 1. Magnus -----------------------------------------------------------
@@ -127,8 +127,8 @@ def test_moment_slab(nu=100.0, nu_c_ref=1.0, gamma0=30.0):
     abs_err = abs(float(S_abs[0]) - float(I_ref)) / abs(float(I_ref))
 
     # (c) Physical slab at finite internal Faraday depth, with CGS throughout.
-    from syncmoments.los_moments import moment_driven_slab_cgs
-    from syncmoments.kirchhoff import cgs_coefficients_from_moments
+    from syncem.los_moments import moment_driven_slab_cgs
+    from syncem.kirchhoff import cgs_coefficients_from_moments
 
     nu_hz, ne, bpar, bperp, g0 = 1e8, 0.03, 2e-6, 5e-6, 2500.0
     number = 1e-15  # suppress absorption, retaining finite internal rotation

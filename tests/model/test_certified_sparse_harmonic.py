@@ -5,10 +5,10 @@ import math
 import numpy as np
 import pytest
 
-from syncmoments.constants import C_CGS, E_ESU, M_E
-from syncmoments.model import Channels, TaylorPhase, high_order_channel_modes
-from syncmoments.model._certified_sparse_harmonic import certified_sparse_channel_modes
-from syncmoments.model.high_order_harmonic import high_order_line_powers
+from syncem.constants import C_CGS, E_ESU, M_E
+from syncem.model import Channels, TaylorPhase, high_order_channel_modes
+from syncem.model._certified_sparse_harmonic import certified_sparse_channel_modes
+from syncem.model.high_order_harmonic import high_order_line_powers
 
 
 def _spacing(gamma, B):

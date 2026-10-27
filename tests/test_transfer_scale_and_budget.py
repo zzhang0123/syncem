@@ -14,8 +14,8 @@ import jax.numpy as jnp
 import numpy as np
 import pytest
 
-import syncmoments  # noqa: F401  (enables float64)
-from syncmoments.transfer import mueller_matrix, transfer_los, transfer_slab
+import syncem  # noqa: F401  (enables float64)
+from syncem.transfer import mueller_matrix, transfer_los, transfer_slab
 
 K1 = np.asarray(mueller_matrix(1.2, 0.3, -0.2, 0.1, 0.4, -0.3, 2.0))
 S1 = np.array([1.0, 0.3, -0.2, 0.1])

@@ -1,9 +1,9 @@
-# Publish SyncMoments to PyPI with trusted publishing (no API token).
+# Publish SyncEM to PyPI with trusted publishing (no API token).
 #
 # Runs when a GitHub Release is published, or manually for an existing tag
 # (Actions -> "Publish to PyPI" -> Run workflow, ref = e.g. v0.3.0).
 # PyPI must list this repository, workflow file and the "pypi" environment
-# as a trusted publisher for the project "syncmoments".
+# as a trusted publisher for the project "syncem".
 
 name: Publish to PyPI
 
@@ -67,7 +67,7 @@ jobs:
           python -m venv "$RUNNER_TEMP/smoke"
           "$RUNNER_TEMP/smoke/bin/python" -m pip install dist/*.whl
           cd "$RUNNER_TEMP"
-          "$RUNNER_TEMP/smoke/bin/python" -c "import syncmoments, syncmoments.model, syncmoments.model.fit; print(syncmoments.__version__)"
+          "$RUNNER_TEMP/smoke/bin/python" -c "import syncem, syncem.model, syncem.model.fit; print(syncem.__version__)"
 
       - uses: actions/upload-artifact@v4
         with:
@@ -81,7 +81,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/project/syncmoments/
+      url: https://pypi.org/project/syncem/
     permissions:
       id-token: write
     steps:

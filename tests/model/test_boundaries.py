@@ -23,14 +23,14 @@ import pytest
 from scipy.integrate import quad
 from scipy.special import jv, jvp
 
-import syncmoments  # noqa: F401  (enables x64)
-from syncmoments.bessel import bessel_jn_and_prime
-from syncmoments.model.basis import build_basis
-from syncmoments.model.harmonic import HarmonicKernel, auto_nodes, harmonic_lines
-from syncmoments.model.index import MomentIndex, Truncation
-from syncmoments.model.kernels import required_m_max
-from syncmoments.model.channels import Channels
-from syncmoments.model.moments import (
+import syncem  # noqa: F401  (enables x64)
+from syncem.bessel import bessel_jn_and_prime
+from syncem.model.basis import build_basis
+from syncem.model.harmonic import HarmonicKernel, auto_nodes, harmonic_lines
+from syncem.model.index import MomentIndex, Truncation
+from syncem.model.kernels import required_m_max
+from syncem.model.channels import Channels
+from syncem.model.moments import (
     JointMoments,
     PopulationSamples,
     Reference,

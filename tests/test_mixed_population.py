@@ -7,8 +7,8 @@ import numpy as np
 from numpy.testing import assert_allclose
 import pytest
 
-from syncmoments import QuadraticTaylorExpansion, build_expansion, mixed_moments
-from syncmoments.stokes import stokes_harmonic
+from syncem import QuadraticTaylorExpansion, build_expansion, mixed_moments
+from syncem.stokes import stokes_harmonic
 
 
 def polynomial_model():

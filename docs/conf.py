@@ -1,4 +1,4 @@
-"""Sphinx configuration for the SyncMoments documentation (Read the Docs)."""
+"""Sphinx configuration for the SyncEM documentation (Read the Docs)."""
 
 from __future__ import annotations
 
@@ -7,12 +7,12 @@ import sys
 
 sys.path.insert(0, os.path.abspath(".."))
 
-import syncmoments  # noqa: E402  (enables float64; provides the version)
+import syncem  # noqa: E402  (enables float64; provides the version)
 
-project = "SyncMoments"
+project = "SyncEM"
 author = "Zheng Zhang and Jens Chluba"
 copyright = "2026, Zheng Zhang and Jens Chluba"
-release = syncmoments.__version__
+release = syncem.__version__
 version = release
 
 extensions = [
@@ -44,9 +44,9 @@ intersphinx_mapping = {
 }
 
 html_theme = "furo"
-html_title = f"SyncMoments {release}"
+html_title = f"SyncEM {release}"
 html_theme_options = {
-    "source_repository": "https://github.com/zzhang0123/syncmoments/",
+    "source_repository": "https://github.com/zzhang0123/syncem/",
     "source_branch": "main",
     "source_directory": "docs/",
 }

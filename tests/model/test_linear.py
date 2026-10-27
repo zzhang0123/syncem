@@ -1,4 +1,4 @@
-"""Tests of ``syncmoments.model.fit.linear`` (``fit_linear``, ``fisher``): recovery,
+"""Tests of ``syncem.model.fit.linear`` (``fit_linear``, ``fisher``): recovery,
 Fisher matrices, rank deficiency, the singular-value cutoff and validation.
 
 Oracles: NumPy SVD least squares on the independently assembled whitened
@@ -17,18 +17,18 @@ import pytest
 
 from _diagnostics_fixtures import random_population
 from _linear_fixtures import oracle_design, setup, stokes_of, truth_of, with_amplitude
-from syncmoments.model.assumptions import (
+from syncem.model.assumptions import (
     ParameterMap,
     gaussian_screen,
     isotropic_pitch,
     no_assumption,
 )
-from syncmoments.model.fit.linear import fisher, fit_linear
-from syncmoments.model.fit.nonlinear import Transform
-from syncmoments.model.fit.observation import StokesData
-from syncmoments.model.fit.result import FitResult
-from syncmoments.model.index import MomentIndex, Truncation
-from syncmoments.model.moments import JointMoments
+from syncem.model.fit.linear import fisher, fit_linear
+from syncem.model.fit.nonlinear import Transform
+from syncem.model.fit.observation import StokesData
+from syncem.model.fit.result import FitResult
+from syncem.model.index import MomentIndex, Truncation
+from syncem.model.moments import JointMoments
 
 # -- zero-noise recovery on a full-rank configuration ------------------------------
 

@@ -3,83 +3,83 @@ Kernels, contractions and transfer
 
 The single-electron kernels, fixed-harmonic contractions, Faraday averages and transfer modules.
 
-syncmoments.constants
----------------------
+syncem.constants
+----------------
 
-.. automodule:: syncmoments.constants
+.. automodule:: syncem.constants
 
-syncmoments.bessel
-------------------
+syncem.bessel
+-------------
 
-.. automodule:: syncmoments.bessel
+.. automodule:: syncem.bessel
 
-syncmoments.stokes
-------------------
+syncem.stokes
+-------------
 
-.. automodule:: syncmoments.stokes
+.. automodule:: syncem.stokes
 
-syncmoments.ultrarel
---------------------
-
-.. automodule:: syncmoments.ultrarel
-
-syncmoments.derivatives
------------------------
-
-.. automodule:: syncmoments.derivatives
-
-syncmoments.expansion
----------------------
-
-.. automodule:: syncmoments.expansion
-
-syncmoments.cumulants
----------------------
-
-.. automodule:: syncmoments.cumulants
-
-syncmoments.rm
---------------
-
-.. automodule:: syncmoments.rm
-
-syncmoments.faraday
--------------------
-
-.. automodule:: syncmoments.faraday
-
-syncmoments.sed
+syncem.ultrarel
 ---------------
 
-.. automodule:: syncmoments.sed
+.. automodule:: syncem.ultrarel
 
-syncmoments.transfer
---------------------
-
-.. automodule:: syncmoments.transfer
-
-syncmoments.solutions
----------------------
-
-.. automodule:: syncmoments.solutions
-
-syncmoments.kirchhoff
----------------------
-
-.. automodule:: syncmoments.kirchhoff
-
-syncmoments.conversion
-----------------------
-
-.. automodule:: syncmoments.conversion
-
-syncmoments.magnus
+syncem.derivatives
 ------------------
 
-.. automodule:: syncmoments.magnus
+.. automodule:: syncem.derivatives
 
-syncmoments.los_moments
------------------------
+syncem.expansion
+----------------
 
-.. automodule:: syncmoments.los_moments
+.. automodule:: syncem.expansion
+
+syncem.cumulants
+----------------
+
+.. automodule:: syncem.cumulants
+
+syncem.rm
+---------
+
+.. automodule:: syncem.rm
+
+syncem.faraday
+--------------
+
+.. automodule:: syncem.faraday
+
+syncem.sed
+----------
+
+.. automodule:: syncem.sed
+
+syncem.transfer
+---------------
+
+.. automodule:: syncem.transfer
+
+syncem.solutions
+----------------
+
+.. automodule:: syncem.solutions
+
+syncem.kirchhoff
+----------------
+
+.. automodule:: syncem.kirchhoff
+
+syncem.conversion
+-----------------
+
+.. automodule:: syncem.conversion
+
+syncem.magnus
+-------------
+
+.. automodule:: syncem.magnus
+
+syncem.los_moments
+------------------
+
+.. automodule:: syncem.los_moments
 

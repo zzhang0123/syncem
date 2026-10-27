@@ -32,8 +32,8 @@ import numpy as np
 from numpy.testing import assert_array_equal
 import pytest
 
-import syncmoments  # noqa: F401  (enables x64)
-from syncmoments.transfer import (
+import syncem  # noqa: F401  (enables x64)
+from syncem.transfer import (
     _companion,
     _companion_exponent,
     _exposure,

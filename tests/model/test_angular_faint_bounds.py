@@ -5,14 +5,14 @@ import math
 import numpy as np
 import pytest
 
-from syncmoments.constants import C_CGS, E_ESU, M_E
-from syncmoments.model import Channels, TaylorPhase, high_order_channel_modes
-from syncmoments.model._angular_faint_bounds import (
+from syncem.constants import C_CGS, E_ESU, M_E
+from syncem.model import Channels, TaylorPhase, high_order_channel_modes
+from syncem.model._angular_faint_bounds import (
     angular_faint_magnitude_bounds,
     prepare_faint_bound_constants,
     prepare_faint_cell,
 )
-from syncmoments.model._interval_angular_geometry import (
+from syncem.model._interval_angular_geometry import (
     active_channel_ranges,
     angular_box_geometry,
     prepare_angular_geometry,

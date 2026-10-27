@@ -20,11 +20,11 @@ import pytest
 
 from _reduction_fixtures import continuum_problem, matrix_basis, oracle_fit
 from _reduction_fixtures import stokes_data
-from syncmoments.model.assumptions import no_assumption
-from syncmoments.model.fit import fit_combinations, fit_linear, reduce_response
-from syncmoments.model.fit._combination_core import pivoted_basis
-from syncmoments.model.fit._combination_errors import PI_RTOL
-from syncmoments.model.index import MomentIndex, Truncation
+from syncem.model.assumptions import no_assumption
+from syncem.model.fit import fit_combinations, fit_linear, reduce_response
+from syncem.model.fit._combination_core import pivoted_basis
+from syncem.model.fit._combination_errors import PI_RTOL
+from syncem.model.index import MomentIndex, Truncation
 
 U = 2.0**-53
 C_ROUND = 16.0  # the oracle attains 0.3 to 0.7 u cond on these problems

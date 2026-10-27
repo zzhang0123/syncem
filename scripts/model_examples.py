@@ -3,7 +3,7 @@
 Run from the package root with ``PYTHONPATH=. python scripts/model_examples.py``
 (optionally ``a``, ``b``, ``c`` or ``d`` to select examples). The printed
 numbers are pasted into ``README.md``; rerun this script after any change to
-``syncmoments.model`` and update the README when the output changes.
+``syncem.model`` and update the README when the output changes.
 
 (a) the manuscript's smooth-channel benchmark regime (main.tex Section 5.3.1)
     with the harmonic kernel, ``independent_screen`` declared and
@@ -34,23 +34,23 @@ from pathlib import Path
 import numpy as np
 from numpy.polynomial.legendre import leggauss
 
-import syncmoments  # noqa: F401  (enables float64)
-from syncmoments.constants import C_CGS, C_SI_M, E_ESU, M_E
-from syncmoments.model.assumptions import independent_screen
-from syncmoments.model.basis import build_basis
-from syncmoments.model.bounds import RemainderInputs
-from syncmoments.model.channels import Channels
-from syncmoments.model.errors import ErrorTerm
-from syncmoments.model.harmonic import HarmonicKernel
-from syncmoments.model.index import Truncation
-from syncmoments.model.kernels import required_m_max
-from syncmoments.model.moments import (
+import syncem  # noqa: F401  (enables float64)
+from syncem.constants import C_CGS, C_SI_M, E_ESU, M_E
+from syncem.model.assumptions import independent_screen
+from syncem.model.basis import build_basis
+from syncem.model.bounds import RemainderInputs
+from syncem.model.channels import Channels
+from syncem.model.errors import ErrorTerm
+from syncem.model.harmonic import HarmonicKernel
+from syncem.model.index import Truncation
+from syncem.model.kernels import required_m_max
+from syncem.model.moments import (
     JointMoments,
     PopulationSamples,
     Reference,
     Support,
 )
-from syncmoments.model.predict import predict
+from syncem.model.predict import predict
 
 from model_examples_continuum import banner, example_b, example_d
 from model_examples_fit import example_c

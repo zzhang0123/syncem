@@ -1,4 +1,4 @@
-# `syncmoments.model`: finite joint response and spectral fits
+# `syncem.model`: finite joint response and spectral fits
 
 This document describes the top-level layer of the package: how a finite set
 of joint population moments predicts channel-integrated Stokes spectra with an
@@ -51,12 +51,12 @@ document.
 Units: Gauss, Hz, rad/m^2, metres for wavelengths, erg/s/sr per electron for
 harmonic powers; channel outputs are channel-integrated powers for
 `unit_peak` channels and per-Hz averages for `unit_integral` channels.
-Importing `syncmoments` enables float64.
+Importing `syncem` enables float64.
 
 ## 2. Object model
 
 ```
-syncmoments/model/
+syncem/model/
   index.py         Truncation, MomentIndex, Entry, lower_set_margin
   errors.py        ErrorTerm, ErrorBudget, AssumptionRecord, Provenance
   channels.py      Channels
@@ -285,7 +285,7 @@ product-versus-tensor route check (`build_basis(..., cross_route=True)` or
 slowly for derivative bases.
 
 Bessel functions: `harmonic_lines` needs `J_{m-1}`, `J_{m+1}` and `J_m'`
-at `x = m beta sin(theta) / D`. `syncmoments.bessel.bessel_jn_neighbours`
+at `x = m beta sin(theta) / D`. `syncem.bessel.bessel_jn_neighbours`
 evaluates all three with one periodic trapezoid rule on the order-`m`
 contour: the order-`k` integrand is `exp(-k a) E e^{i(phi + (k - m) t)}`, so
 the three integrands share `cos(phi)`, `sin(phi)` and `E` (three
@@ -1237,7 +1237,7 @@ the package does not export them), the truth through
 `JointMoments.from_samples` and in closed form, mock data from an
 independent NumPy/SciPy integration of the full population
 (`scripts/sed_reconstruction_direct.py`, which imports only
-`syncmoments.constants`), `fit_combinations(max_sigma=0.1)` grouped,
+`syncem.constants`), `fit_combinations(max_sigma=0.1)` grouped,
 ungrouped and with an illustrative `coefficient_bounds(amplitude_bound=2.0)`,
 and `against_truth` with the direct-minus-forward discrepancy. Each
 validation item in its JSON record is labelled a finite check, a measured
@@ -1325,7 +1325,7 @@ the full-resolution population (1,048,576 samples) at `N = 2, L = 8`:
 | `test_predict.py`, `test_predict_routes.py` | 8 + 3 | `predict` equals `direct_channel_average` and a NumPy oracle to 1e-12 on the polynomial kernel; every budget slot's kind; `propagate`; `filter_jit` and `grad` |
 | `test_adapters.py` | 5 | `to_joint_faraday` reproduces `predict` through `faraday.joint_faraday_average` (< 1e-12 with 1e-13-relative-width channels); Burn sign pin; both measured remainders of `fixed_harmonic_comparison` |
 | `test_jit_ad.py` | 6 | one trace per static configuration; `grad` with respect to `m0`, closure hyper-parameters and `gamma0` against Richardson differences; `vmap` over a batch of moments |
-| `test_docstrings.py` | 115 | every public module of `syncmoments.model` and `syncmoments.model.fit` states `LABEL`, units, shapes and what it does not certify; every public class and function has its own docstring, a manuscript label (classes) and a limits statement or a pointer to the module docstring that has one; `docs/DESIGN.md` names every keyword of `predict`, `direct_channel_average`, `build_basis`, `basis_convergence` and the three fit routes, neither this file nor the README repeats a statement superseded by the round-2 fixes, and the README shows `assumption_allowances` with `screen_factorisation_bound` (textual checks only) |
+| `test_docstrings.py` | 115 | every public module of `syncem.model` and `syncem.model.fit` states `LABEL`, units, shapes and what it does not certify; every public class and function has its own docstring, a manuscript label (classes) and a limits statement or a pointer to the module docstring that has one; `docs/DESIGN.md` names every keyword of `predict`, `direct_channel_average`, `build_basis`, `basis_convergence` and the three fit routes, neither this file nor the README repeats a statement superseded by the round-2 fixes, and the README shows `assumption_allowances` with `screen_factorisation_bound` (textual checks only) |
 
 Regression tests of the review fixes (each written to fail before its fix).
 The last three files and the fitted-hyper and `cross_route` tests of the
@@ -1453,7 +1453,7 @@ with the identifiability and feasibility reports; example (d) passes
 `assumption_allowances` on a continuum `EmpiricalScreen` route with two
 correlated rays (`screen_factorisation_bound` for `independent_screen`, a
 declared zero for `isotropic_pitch`). Rerun the script after any change to
-`syncmoments.model` and paste the new output into the README. The run of
+`syncem.model` and paste the new output into the README. The run of
 2026-09-24 12:29, after the second review round, took 6 min 20 s wall time
 (a: 346.2 s, of which 96.4 s is the basis build with its one convergence
 rebuild and 147.2 s the remainder probe; b: 20.7 s; c: 5.7 s; d: 5.4 s);
@@ -1561,7 +1561,7 @@ round, `tests/test_transfer_scale_and_budget.py` (30 tests) was added with
 the last two fixes (Section 12.10). The per-file
 counts quoted in Sections 12.1 to 12.5 and 12.10 match this collection.
 
-The 1635 `slow` tests are opt-in (`-m slow` or `SYNCMOMENTS_RUN_SLOW=1`,
+The 1635 `slow` tests are opt-in (`-m slow` or `SYNCEM_RUN_SLOW=1`,
 gated by `tests/conftest.py`; a plain run reports them as skipped): 1555
 cells of `test_ad_transform_matrix.py`, 18 Hessian pins in
 `test_ad_transform_matrix_v020.py`, 24 full-resolution benchmark cases in
@@ -1611,7 +1611,7 @@ cells of `test_ad_transform_matrix.py`, 18 Hessian pins in
 * The continuum examples still need more memory with JAX 0.10.2 than with
   0.10.0 (Section 6.2): example (b) peaks at 1.79 GB against 1.16 GB and
   example (d) at 1.12 GB against 0.85 GB.
-* `syncmoments.transfer.transfer_slab` checks only its value. A derivative
+* `syncem.transfer.transfer_slab` checks only its value. A derivative
   whose own value exceeds float64 overflows to inf without an error; this
   needs `eps` within a few orders of 1.8e308. A check on the tangent would
   be non-linear in the tangent and break transposition. For non-diagonal
@@ -1648,7 +1648,7 @@ cells of `test_ad_transform_matrix.py`, 18 Hessian pins in
   `vmap` in `K` are faster than 0.2.0 (`grad` of a sum over 16 rays 16 to
   18 ms against 32 to 33 ms).
 * Since 0.4.0 the value's 5x5 exponential and the rule's 8x8 exponential
-  are both `syncmoments._expm.expm_pade13` (`ceil(log2(|A|_1 / theta_13))`
+  are both `syncem._expm.expm_pade13` (`ceil(log2(|A|_1 / theta_13))`
   squarings). The value's error model `c u max(|K ds|_1, 1)` (`u = 2^-53`)
   is measured, not proven: `c <= 4.13` on 214 slabs (150 random, 24
   Faraday-dominated slabs at `2^(m+1) theta_13 (1 +- 1e-9)` for
@@ -1945,7 +1945,7 @@ Changes of the fifth review round (details and measurements in the
 changelog, 0.3.0):
 
 * `transfer_slab`'s derivative rule takes its 8x8 propagator exponential
-  from `syncmoments/_expm.py::expm_pade13` (Pade 13, `ceil` squaring
+  from `syncem/_expm.py::expm_pade13` (Pade 13, `ceil` squaring
   count, a squaring `lax.cond` on `any_member`, per-member selection by
   `batched_only`) instead of `jax.scipy.linalg.expm`. Reverse mode through
   `vmap` and nested `vmap` over batched `K` or `ds` works; it raised

@@ -1,7 +1,7 @@
 """Relative-weight normalisation at the float64 extremes (T-004 package A).
 
 Every weighted average in the package normalises relative electron-number
-weights ``w`` through ``syncmoments.rm._relative_weights``. On jax 0.10.2 CPU,
+weights ``w`` through ``syncem.rm._relative_weights``. On jax 0.10.2 CPU,
 ``5e307 / 1e308`` evaluates to 0: XLA forms the reciprocal ``1e-308``, which
 is subnormal and flushed to zero. XLA CPU also treats subnormal inputs as
 zero in arithmetic and comparisons (``5e-324 > 0`` is False on jax 0.10.0 and
@@ -24,10 +24,10 @@ import numpy as np
 from numpy.testing import assert_allclose, assert_array_equal
 import pytest
 
-import syncmoments  # noqa: F401  (enables x64)
-from syncmoments.expansion import mixed_moments
-from syncmoments.model.moments import PopulationSamples
-from syncmoments.rm import _relative_weights, gaussian_rm_cumulants, screen_polarisation
+import syncem  # noqa: F401  (enables x64)
+from syncem.expansion import mixed_moments
+from syncem.model.moments import PopulationSamples
+from syncem.rm import _relative_weights, gaussian_rm_cumulants, screen_polarisation
 
 TINY = 5e-324  # smallest positive subnormal float64, 2^-1074
 MIN_NORMAL = 2.0**-1022  # smallest normal float64, 2.2e-308

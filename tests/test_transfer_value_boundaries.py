@@ -1,7 +1,7 @@
 """Boundary validation of the value's exponential at its squaring thresholds.
 
 The value of ``transfer_slab`` is ``exp(M) [S; 2^k]`` for the 5x5 matrix
-``M = [[-K ds, eps ds 2^-k], [0, 0]]``, by ``syncmoments._expm.expm_pade13``:
+``M = [[-K ds, eps ds 2^-k], [0, 0]]``, by ``syncem._expm.expm_pade13``:
 Pade 13 of ``M 2^-n`` squared ``n`` times, ``n = ceil(log2(|M|_1 / theta_13))``.
 At each threshold ``|M|_1 = theta_13 2^m`` the neighbouring methods (``n`` and
 ``n + 1`` squarings) are evaluated directly, bypassing the dispatcher, and
@@ -26,10 +26,10 @@ import numpy as np
 import pytest
 import scipy.linalg as sla
 
-import syncmoments  # noqa: F401  (enables x64)
-from syncmoments._expm import _THETA13, expm_pade13, expm_squared
-from syncmoments.rm import _pow2
-from syncmoments.transfer import (
+import syncem  # noqa: F401  (enables x64)
+from syncem._expm import _THETA13, expm_pade13, expm_squared
+from syncem.rm import _pow2
+from syncem.transfer import (
     _plain_value,
     _source_exponent,
     mueller_matrix,

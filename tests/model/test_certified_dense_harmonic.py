@@ -5,9 +5,9 @@ import math
 import numpy as np
 import pytest
 
-from syncmoments.constants import C_CGS, E_ESU, M_E
-from syncmoments.model import Channels, TaylorPhase, high_order_channel_modes
-from syncmoments.model._certified_dense_harmonic import (
+from syncem.constants import C_CGS, E_ESU, M_E
+from syncem.model import Channels, TaylorPhase, high_order_channel_modes
+from syncem.model._certified_dense_harmonic import (
     _refine_blocks,
     certified_dense_channel_modes,
 )

@@ -23,8 +23,8 @@ import numpy as np
 from numpy.testing import assert_allclose, assert_array_equal
 import pytest
 
-import syncmoments  # noqa: F401  (enables x64)
-from syncmoments.transfer import transfer_slab
+import syncem  # noqa: F401  (enables x64)
+from syncem.transfer import transfer_slab
 
 # max|eps ds| in {4e307, 1e308, 1.79e308}; the last is within 0.5% of float64 max.
 SOURCES = (
@@ -109,7 +109,7 @@ def test_sources_below_one_keep_the_unit_scale_bit_for_bit():
     unscaled matrix is exponentiated with it for the bit-for-bit check, and
     v0.2.0's value is only required within ``16 u`` (both are accurate to a
     few ``u`` here, ``|K ds|_1 = 0.99``)."""
-    from syncmoments._expm import expm_pade13
+    from syncem._expm import expm_pade13
 
     K = jnp.asarray(
         [[0.3, 0.04, 0, 0], [0.04, 0.3, 0.6, 0], [0, -0.6, 0.3, -0.2], [0, 0, 0.2, 0.3]]

@@ -4,8 +4,8 @@ import math
 
 import pytest
 
-from syncmoments.constants import C_CGS, E_ESU, M_E
-from syncmoments.model._interval_angular_geometry import (
+from syncem.constants import C_CGS, E_ESU, M_E
+from syncem.model._interval_angular_geometry import (
     active_channel_ranges,
     angular_box_geometry,
     prepare_angular_geometry,

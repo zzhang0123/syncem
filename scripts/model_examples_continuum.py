@@ -20,24 +20,24 @@ import jax.numpy as jnp
 import numpy as np
 from numpy.polynomial.legendre import leggauss
 
-import syncmoments  # noqa: F401  (enables float64)
-from syncmoments.constants import C_CGS, C_SI_M, E_ESU, M_E
-from syncmoments.model.assumptions import isotropic_pitch
-from syncmoments.model.basis import build_basis
-from syncmoments.model.bounds import RemainderInputs, screen_factorisation_bound
-from syncmoments.model.channels import Channels
-from syncmoments.model.errors import ErrorTerm
-from syncmoments.model.harmonic import HarmonicKernel
-from syncmoments.model.index import Truncation
-from syncmoments.model.kernels import ContinuumKernel, required_m_max
-from syncmoments.model.moments import (
+import syncem  # noqa: F401  (enables float64)
+from syncem.constants import C_CGS, C_SI_M, E_ESU, M_E
+from syncem.model.assumptions import isotropic_pitch
+from syncem.model.basis import build_basis
+from syncem.model.bounds import RemainderInputs, screen_factorisation_bound
+from syncem.model.channels import Channels
+from syncem.model.errors import ErrorTerm
+from syncem.model.harmonic import HarmonicKernel
+from syncem.model.index import Truncation
+from syncem.model.kernels import ContinuumKernel, required_m_max
+from syncem.model.moments import (
     JointMoments,
     PopulationSamples,
     Reference,
     Support,
 )
-from syncmoments.model.phase import EmpiricalScreen, GaussianScreen
-from syncmoments.model.predict import direct_channel_average, predict
+from syncem.model.phase import EmpiricalScreen, GaussianScreen
+from syncem.model.predict import direct_channel_average, predict
 
 
 def banner(title: str) -> None:

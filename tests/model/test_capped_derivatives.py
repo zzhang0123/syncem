@@ -20,9 +20,9 @@ import numpy as np
 from numpy.testing import assert_allclose
 import pytest
 
-import syncmoments  # noqa: F401
-from syncmoments.constants import C_CGS, C_SI_M, E_ESU, M_E
-from syncmoments.model._harmonic_taylor import (
+import syncem  # noqa: F401
+from syncem.constants import C_CGS, C_SI_M, E_ESU, M_E
+from syncem.model._harmonic_taylor import (
     lower_closure,
     level_cost,
     level_plan,
@@ -30,13 +30,13 @@ from syncmoments.model._harmonic_taylor import (
     point_taylor,
     reachable,
 )
-from syncmoments.model.basis import _build_core
-from syncmoments.model.channels import Channels
-from syncmoments.model.harmonic import HarmonicKernel
-from syncmoments.model.index import MomentIndex, Truncation
-from syncmoments.model.kernels import PolynomialTestKernel
-from syncmoments.model.moments import Reference
-from syncmoments.model.phase import TaylorPhase
+from syncem.model.basis import _build_core
+from syncem.model.channels import Channels
+from syncem.model.harmonic import HarmonicKernel
+from syncem.model.index import MomentIndex, Truncation
+from syncem.model.kernels import PolynomialTestKernel
+from syncem.model.moments import Reference
+from syncem.model.phase import TaylorPhase
 
 RTOL = 1e-13  # spec: capped columns vs uncapped restricted, per Stokes block
 CAPS_N2 = [(2, 1, None), (2, 0, None), (0, 2, None), (1, 1, None), (None, 0, 1)]

@@ -22,14 +22,14 @@ import equinox as eqx
 import jax
 import numpy as np
 
-from syncmoments.model.basis import build_basis
-from syncmoments.model.channels import Channels
-from syncmoments.model.errors import Provenance
-from syncmoments.model.fit.observation import StokesData
-from syncmoments.model.index import MomentIndex, Truncation
-from syncmoments.model.kernels import ContinuumKernel
-from syncmoments.model.moments import Reference, Support
-from syncmoments.model.phase import GaussianScreen, TaylorPhase
+from syncem.model.basis import build_basis
+from syncem.model.channels import Channels
+from syncem.model.errors import Provenance
+from syncem.model.fit.observation import StokesData
+from syncem.model.index import MomentIndex, Truncation
+from syncem.model.kernels import ContinuumKernel
+from syncem.model.moments import Reference, Support
+from syncem.model.phase import GaussianScreen, TaylorPhase
 
 GAMMA0, B0, DEPTH0, S_DEPTH = 1.0e4, 5.0e-6, 2.0, 0.3
 SUPPORT = Support(gamma=(8000.0, 12000.0), B=(4e-6, 6e-6), depth=(1.7, 2.3))

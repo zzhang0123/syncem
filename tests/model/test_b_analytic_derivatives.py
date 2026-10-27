@@ -25,15 +25,15 @@ import numpy as np
 from numpy.testing import assert_allclose
 import pytest
 
-import syncmoments  # noqa: F401
-from syncmoments.constants import C_CGS, C_SI_M, E_ESU, M_E
-from syncmoments.model import _basis_core as core
-from syncmoments.model.basis import _build_core
-from syncmoments.model.channels import Channels
-from syncmoments.model.harmonic import HarmonicKernel
-from syncmoments.model.index import MomentIndex, Truncation
-from syncmoments.model.moments import Reference
-from syncmoments.model.phase import TaylorPhase
+import syncem  # noqa: F401
+from syncem.constants import C_CGS, C_SI_M, E_ESU, M_E
+from syncem.model import _basis_core as core
+from syncem.model.basis import _build_core
+from syncem.model.channels import Channels
+from syncem.model.harmonic import HarmonicKernel
+from syncem.model.index import MomentIndex, Truncation
+from syncem.model.moments import Reference
+from syncem.model.phase import TaylorPhase
 
 from _harmonic_oracles import B0, GAMMA0, S_DEPTH, benchmark_channels
 

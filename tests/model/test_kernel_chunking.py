@@ -17,16 +17,16 @@ import jax.numpy as jnp
 import numpy as np
 import pytest
 
-import syncmoments  # noqa: F401
-from syncmoments.model import _direct
-from syncmoments.model.basis import build_basis
-from syncmoments.model.channels import Channels
-from syncmoments.model.harmonic import HarmonicKernel
-from syncmoments.model.index import Truncation
-from syncmoments.model.kernels import ContinuumKernel
-from syncmoments.model.moments import PopulationSamples, Reference, Support
-from syncmoments.model.phase import GaussianScreen, TaylorPhase
-from syncmoments.model.predict import direct_channel_average
+import syncem  # noqa: F401
+from syncem.model import _direct
+from syncem.model.basis import build_basis
+from syncem.model.channels import Channels
+from syncem.model.harmonic import HarmonicKernel
+from syncem.model.index import Truncation
+from syncem.model.kernels import ContinuumKernel
+from syncem.model.moments import PopulationSamples, Reference, Support
+from syncem.model.phase import GaussianScreen, TaylorPhase
+from syncem.model.predict import direct_channel_average
 
 RTOL = 1e-13
 HUGE = 1 << 40  # a budget no example reaches: one block, no chunking

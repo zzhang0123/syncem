@@ -7,26 +7,26 @@ import numpy as np
 import pytest
 from scipy.special import jv, jvp
 
-from syncmoments.constants import C_CGS, E_ESU, M_E
-from syncmoments.model import (
+from syncem.constants import C_CGS, E_ESU, M_E
+from syncem.model import (
     Channels,
     TaylorPhase,
     high_order_channel_derivatives,
     high_order_channel_modes,
 )
-from syncmoments.model._angular_global_bounds import (
+from syncem.model._angular_global_bounds import (
     angular_global_first_derivative_bounds,
     angular_global_magnitude_bounds,
     prepare_global_bound_constants,
     prepare_global_cell,
 )
-from syncmoments.model._interval_angular_geometry import (
+from syncem.model._interval_angular_geometry import (
     active_channel_ranges,
     angular_box_geometry,
     prepare_angular_geometry,
     prepare_channel_supports,
 )
-from syncmoments.model._ridge_interval_cells import (
+from syncem.model._ridge_interval_cells import (
     prepare_ridge_slab,
     ridge_interval_cell,
 )

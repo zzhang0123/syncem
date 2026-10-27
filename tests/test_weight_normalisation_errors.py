@@ -1,12 +1,12 @@
 """Eager refusals of invalid weights and samples (T-004 round 3, H2).
 
-The weight and sample checks of ``syncmoments.rm`` run inside one compiled
+The weight and sample checks of ``syncem.rm`` run inside one compiled
 helper per shape. Compiled with ``jax.jit`` (round 2), an eager refusal raised
 ``jax.errors.JaxRuntimeError`` and JAX printed a "jax.pure_callback failed"
 traceback to stderr; v0.2.0 raised ``equinox.EquinoxRuntimeError``. These
 tests pin the v0.2.0 error type and a silent stderr at every public entry
-point that reaches the helpers: ``syncmoments.rm``, ``syncmoments.faraday``,
-``syncmoments.model.phase.EmpiricalScreen``, ``PopulationSamples`` (constructor,
+point that reaches the helpers: ``syncem.rm``, ``syncem.faraday``,
+``syncem.model.phase.EmpiricalScreen``, ``PopulationSamples`` (constructor,
 ``normalised_weights``, ``product``), the harmonic-tail probe and
 ``mixed_moments``.
 
@@ -24,13 +24,13 @@ import numpy as np
 from numpy.testing import assert_array_equal
 import pytest
 
-import syncmoments  # noqa: F401  (enables x64)
-from syncmoments.expansion import mixed_moments
-from syncmoments.faraday import emission_polarisation, joint_faraday_moments
-from syncmoments.model._harmonic_tail import _points
-from syncmoments.model.moments import PopulationSamples
-from syncmoments.model.phase import EmpiricalScreen
-from syncmoments.rm import _screen_samples, gaussian_rm_cumulants, screen_polarisation
+import syncem  # noqa: F401  (enables x64)
+from syncem.expansion import mixed_moments
+from syncem.faraday import emission_polarisation, joint_faraday_moments
+from syncem.model._harmonic_tail import _points
+from syncem.model.moments import PopulationSamples
+from syncem.model.phase import EmpiricalScreen
+from syncem.rm import _screen_samples, gaussian_rm_cumulants, screen_polarisation
 
 X = np.array([1.5, 2.0, 2.5, 3.0])
 LAM = jnp.array([0.2])

@@ -11,7 +11,7 @@ import pytest
 from scipy.integrate import quad
 from scipy.special import erf, expit
 
-from syncmoments.model.channels import Channels
+from syncem.model.channels import Channels
 
 CENTRES = np.array([2.0e8, 4.0e8, 8.0e8])
 WIDTHS = 0.65 * CENTRES

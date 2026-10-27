@@ -1,4 +1,4 @@
-"""``Truncation.max_orders`` in every output, and the ``syncmoments.model`` exports.
+"""``Truncation.max_orders`` in every output, and the ``syncem.model`` exports.
 
 A capped truncation (``max_orders=(N_gamma, N_B, N_depth)``) retains a lower
 set of ``(r, s, b)`` rows, so the flattened moment vector and the response
@@ -18,13 +18,13 @@ import json
 import numpy as np
 import pytest
 
-import syncmoments.model as model
-from syncmoments.model import assumptions, index as index_module
-from syncmoments.model._basis_checks import truncation_record
-from syncmoments.model.basis import build_basis
-from syncmoments.model.index import MomentIndex, Truncation
-from syncmoments.model.moments import JointMoments, PopulationSamples
-from syncmoments.model.predict import predict
+import syncem.model as model
+from syncem.model import assumptions, index as index_module
+from syncem.model._basis_checks import truncation_record
+from syncem.model.basis import build_basis
+from syncem.model.index import MomentIndex, Truncation
+from syncem.model.moments import JointMoments, PopulationSamples
+from syncem.model.predict import predict
 
 from _basis_fixtures import polynomial_setup
 from _basis_stub import build_stub_basis
@@ -200,7 +200,7 @@ NEW_EXPORTS = {
 }
 
 
-@pytest.mark.parametrize("package", ["syncmoments.model", "syncmoments.model.fit"])
+@pytest.mark.parametrize("package", ["syncem.model", "syncem.model.fit"])
 def test_every_exported_name_imports(package):
     module = importlib.import_module(package)
     names = module.__all__

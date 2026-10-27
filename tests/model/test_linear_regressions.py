@@ -17,11 +17,11 @@ import pytest
 
 from _linear_fixtures import setup, stokes_of, truth_of
 from _nonlinear_oracles import StubBasis
-from syncmoments.model.assumptions import no_assumption
-from syncmoments.model.errors import ErrorTerm
-from syncmoments.model.fit.diagnostics import identifiability
-from syncmoments.model.fit.linear import fit_linear
-from syncmoments.model.fit.observation import StokesData
+from syncem.model.assumptions import no_assumption
+from syncem.model.errors import ErrorTerm
+from syncem.model.fit.diagnostics import identifiability
+from syncem.model.fit.linear import fit_linear
+from syncem.model.fit.observation import StokesData
 
 
 def _u_of(result, pm):

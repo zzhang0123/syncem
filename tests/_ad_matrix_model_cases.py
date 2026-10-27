@@ -15,12 +15,12 @@ from __future__ import annotations
 import jax.numpy as jnp
 
 from _ad_matrix_cases import RMS, WEIGHTS, A, _complex_parts, _groups, _p
-from syncmoments.bessel import bessel_jn, bessel_jn_neighbours
-from syncmoments.model._bessel_recurrence import bessel_band, neighbours_recurrence
-from syncmoments.model.harmonic import harmonic_lines
-from syncmoments.model.index import MomentIndex, Truncation
-from syncmoments.model.moments import JointMoments, PopulationSamples, Reference
-from syncmoments.model.phase import EmpiricalScreen
+from syncem.bessel import bessel_jn, bessel_jn_neighbours
+from syncem.model._bessel_recurrence import bessel_band, neighbours_recurrence
+from syncem.model.harmonic import harmonic_lines
+from syncem.model.index import MomentIndex, Truncation
+from syncem.model.moments import JointMoments, PopulationSamples, Reference
+from syncem.model.phase import EmpiricalScreen
 
 INDEX = MomentIndex.build(Truncation(1, 1, 1))
 N_NODES = 64

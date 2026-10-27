@@ -26,16 +26,16 @@ import jax
 import numpy as np
 import pytest
 
-import syncmoments  # noqa: F401  (float64)
-from syncmoments.model import _basis_core as core
-from syncmoments.model import _remainder_probe as probe
-from syncmoments.model.basis import basis_convergence, build_basis
-from syncmoments.model.channels import Channels
-from syncmoments.model.harmonic import HarmonicKernel
-from syncmoments.model.index import MomentIndex, Truncation
-from syncmoments.model.kernels import ContinuumKernel
-from syncmoments.model.moments import PopulationSamples, Reference, Support
-from syncmoments.model.phase import GaussianScreen
+import syncem  # noqa: F401  (float64)
+from syncem.model import _basis_core as core
+from syncem.model import _remainder_probe as probe
+from syncem.model.basis import basis_convergence, build_basis
+from syncem.model.channels import Channels
+from syncem.model.harmonic import HarmonicKernel
+from syncem.model.index import MomentIndex, Truncation
+from syncem.model.kernels import ContinuumKernel
+from syncem.model.moments import PopulationSamples, Reference, Support
+from syncem.model.phase import GaussianScreen
 
 RTOL = 1e-13  # blocking changes only the summation order
 BUDGET = 1 << 20

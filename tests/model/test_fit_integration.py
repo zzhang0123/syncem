@@ -1,4 +1,4 @@
-"""End-to-end synthetic linear fits on the harmonic kernel (``syncmoments.model.fit``).
+"""End-to-end synthetic linear fits on the harmonic kernel (``syncem.model.fit``).
 
 Pipeline: ``HarmonicKernel(m_max = required_m_max <= 40)`` on 16 bump
 channels, ``Truncation(1, 1, 1)``, a correlated 12-atom population,
@@ -34,14 +34,14 @@ from _integration_fixtures import (
     whitened_design,
     with_amplitude,
 )
-from syncmoments.model.assumptions import (
+from syncem.model.assumptions import (
     gaussian_screen,
     isotropic_pitch,
     no_assumption,
 )
-from syncmoments.model.errors import ErrorTerm
-from syncmoments.model.fit.observation import StokesData
-from syncmoments.model.moments import JointMoments
+from syncem.model.errors import ErrorTerm
+from syncem.model.fit.observation import StokesData
+from syncem.model.moments import JointMoments
 
 
 @pytest.fixture(scope="module")

@@ -9,13 +9,13 @@ from numpy.testing import assert_allclose
 import pytest
 from scipy.special import eval_legendre
 
-import syncmoments  # noqa: F401
-from syncmoments.model.basis import build_basis
-from syncmoments.model.channels import Channels
-from syncmoments.model.index import Truncation
-from syncmoments.model.moments import JointMoments
-from syncmoments.model.phase import GaussianScreen, TaylorPhase
-from syncmoments.model.predict import direct_channel_average, predict
+import syncem  # noqa: F401
+from syncem.model.basis import build_basis
+from syncem.model.channels import Channels
+from syncem.model.index import Truncation
+from syncem.model.moments import JointMoments
+from syncem.model.phase import GaussianScreen, TaylorPhase
+from syncem.model.predict import direct_channel_average, predict
 
 from _basis_stub import build_stub_basis
 from _predict_helpers import (

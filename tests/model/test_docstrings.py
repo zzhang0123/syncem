@@ -1,6 +1,6 @@
-"""Docstring contract of ``syncmoments.model`` (documentation audit, 2026-09-24).
+"""Docstring contract of ``syncem.model`` (documentation audit, 2026-09-24).
 
-Every public module of ``syncmoments.model`` and ``syncmoments.model.fit`` states its
+Every public module of ``syncem.model`` and ``syncem.model.fit`` states its
 manuscript labels (``LABEL``), its units (or that it is dimensionless), its
 shapes, and what it does not certify. Every public class or function has its
 own docstring; every public class names a manuscript label (a ``LABEL``
@@ -27,8 +27,8 @@ from pathlib import Path
 
 import pytest
 
-import syncmoments.model
-import syncmoments.model.fit
+import syncem.model
+import syncem.model.fit
 
 LABEL_RX = re.compile(r"LABEL|eq:|\[extension\]|app:|sec:|tab:")
 UNITS_RX = re.compile(
@@ -49,7 +49,7 @@ MODULE_POINTER_RX = re.compile(r"module\s+docstring|see\s+:(class|func|mod):", r
 
 def _public_modules():
     names = []
-    for package in (syncmoments.model, syncmoments.model.fit):
+    for package in (syncem.model, syncem.model.fit):
         for info in pkgutil.iter_modules(package.__path__):
             if info.name.startswith("_") or info.name == "fit":
                 continue
@@ -68,7 +68,7 @@ def _public_objects(module):
         obj = getattr(module, name, None)
         if not (inspect.isclass(obj) or inspect.isfunction(obj)):
             continue
-        if not getattr(obj, "__module__", "").startswith("syncmoments.model"):
+        if not getattr(obj, "__module__", "").startswith("syncem.model"):
             continue
         yield name, obj
 
@@ -120,15 +120,15 @@ def test_public_object_docstring(module_name, name):
 
 ROOT = Path(__file__).resolve().parents[2]
 DOCUMENTED = (
-    ("syncmoments.model.predict", "predict"),
-    ("syncmoments.model.predict", "direct_channel_average"),
-    ("syncmoments.model.basis", "build_basis"),
-    ("syncmoments.model.basis", "basis_convergence"),
-    ("syncmoments.model.fit.linear", "fit_linear"),
-    ("syncmoments.model.fit.nonlinear", "fit_bfgs"),
-    ("syncmoments.model.fit.nonlinear", "fit_nodal"),
-    ("syncmoments.model.fit.reduction", "reduce_response"),
-    ("syncmoments.model.fit.combinations", "fit_combinations"),
+    ("syncem.model.predict", "predict"),
+    ("syncem.model.predict", "direct_channel_average"),
+    ("syncem.model.basis", "build_basis"),
+    ("syncem.model.basis", "basis_convergence"),
+    ("syncem.model.fit.linear", "fit_linear"),
+    ("syncem.model.fit.nonlinear", "fit_bfgs"),
+    ("syncem.model.fit.nonlinear", "fit_nodal"),
+    ("syncem.model.fit.reduction", "reduce_response"),
+    ("syncem.model.fit.combinations", "fit_combinations"),
 )
 STALE = (
     "record(theta",  # ParameterMap.record() is theta-independent
@@ -174,13 +174,13 @@ def test_readme_shows_assumption_allowances_with_the_screen_bound():
 
 
 def test_package_docstring_lists_every_public_model_module():
-    """``syncmoments.__doc__`` names each public ``model`` and ``model.fit`` module."""
-    import syncmoments
+    """``syncem.__doc__`` names each public ``model`` and ``model.fit`` module."""
+    import syncem
 
-    doc = " ".join((syncmoments.__doc__ or "").split())
+    doc = " ".join((syncem.__doc__ or "").split())
     missing = []
     for module_name in MODULES:
-        short = module_name.removeprefix("syncmoments.model.")
+        short = module_name.removeprefix("syncem.model.")
         if not re.search(rf"(?<![\w.]){re.escape(short)}\b", doc):
             missing.append(short)
-    assert not missing, f"syncmoments module docstring omits {missing}"
+    assert not missing, f"syncem module docstring omits {missing}"

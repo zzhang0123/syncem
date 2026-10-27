@@ -14,19 +14,19 @@ import numpy as np
 from numpy.testing import assert_allclose
 import pytest
 
-import syncmoments  # noqa: F401
-from syncmoments.model.basis import basis_convergence, build_basis
-from syncmoments.model.channels import Channels
-from syncmoments.model.harmonic import HarmonicKernel
-from syncmoments.model.index import Truncation
-from syncmoments.model.kernels import ContinuumKernel
-from syncmoments.model.moments import (
+import syncem  # noqa: F401
+from syncem.model.basis import basis_convergence, build_basis
+from syncem.model.channels import Channels
+from syncem.model.harmonic import HarmonicKernel
+from syncem.model.index import Truncation
+from syncem.model.kernels import ContinuumKernel
+from syncem.model.moments import (
     JointMoments,
     PopulationSamples,
     Reference,
     Support,
 )
-from syncmoments.model.predict import predict
+from syncem.model.predict import predict
 
 from _basis_fixtures import small_harmonic
 from _harmonic_oracles import B0, GAMMA0, S_DEPTH
@@ -165,7 +165,7 @@ def test_r20_continuum_tail_rides_on_the_mass_column():
 
 def _counted_build(monkeypatch, **kwargs):
     """``build_basis`` on the small harmonic setup, counting ``_build_core`` calls."""
-    import syncmoments.model.basis as basis_module
+    import syncem.model.basis as basis_module
 
     calls = []
     original = basis_module._build_core

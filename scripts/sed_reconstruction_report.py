@@ -2,7 +2,7 @@
 
 ``build_payload`` assembles the strict-JSON record (arrays as lists,
 non-finite floats as strings), ``provenance`` records the package version,
-git revision and status, SHA-256 of every ``syncmoments/**/*.py`` and of the
+git revision and status, SHA-256 of every ``syncem/**/*.py`` and of the
 example scripts, and the environment; ``write_outputs`` writes
 ``<stem>.json``, ``<stem>_arrays.npz`` and ``<stem>_combinations.csv``.
 """
@@ -21,7 +21,7 @@ from pathlib import Path
 
 import numpy as np
 
-import syncmoments
+import syncem
 
 import sed_reconstruction_direct as direct
 
@@ -98,11 +98,11 @@ def _version(name):
 
 def provenance():
     """Package version, git state, source hashes, environment and command line."""
-    package = Path(syncmoments.__file__).resolve().parent
+    package = Path(syncem.__file__).resolve().parent
     repo = package.parent
     return {
-        "syncmoments_version": syncmoments.__version__,
-        "syncmoments_file": str(Path(syncmoments.__file__).resolve()),
+        "syncem_version": syncem.__version__,
+        "syncem_file": str(Path(syncem.__file__).resolve()),
         "git": {
             "repository": str(repo),
             "revision": _git(repo, "rev-parse", "HEAD"),

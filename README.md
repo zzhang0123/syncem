@@ -1,8 +1,8 @@
-# SyncMoments
+# SyncEM
 <!-- docs:intro:start -->
 
-Documentation: <https://syncmoments.readthedocs.io>. Releases:
-<https://github.com/zzhang0123/syncmoments/releases>.
+Documentation: <https://syncem.readthedocs.io>. Releases:
+<https://github.com/zzhang0123/syncem/releases>.
 
 Differentiable JAX/Equinox synchrotron kernels, finite statistical contractions,
 and polarised radiative transfer for *A statistical framework for synchrotron
@@ -46,10 +46,10 @@ propagate it as `abs(A) @ envelope` (flattening the Stokes/harmonic axes as need
 For example, zero is justified for this exactly quadratic synthetic kernel:
 
 ```python
-import syncmoments
+import syncem
 import jax.numpy as jnp
 
-model = syncmoments.QuadraticTaylorExpansion(
+model = syncem.QuadraticTaylorExpansion(
     harmonics=(1,), S0=jnp.zeros((1, 3)),
     dS=jnp.zeros((1, 3, 1)), ddS=2*jnp.ones((1, 3, 1, 1)),
 )
@@ -62,7 +62,7 @@ establishes Gaussianity. Use `burn_depolarisation` for a declared Gaussian scree
 or `screen_polarisation` for a discrete weighted screen without that closure:
 
 ```python
-from syncmoments.rm import screen_polarisation, rm_moments
+from syncem.rm import screen_polarisation, rm_moments
 
 mean_rm, var_rm = rm_moments([-1., 1.])
 P = screen_polarisation([1., -1.], [-1., 1.], jnp.sqrt(jnp.pi / 4))
@@ -99,14 +99,14 @@ For fixed normalized weights, perturbing incident polarisation and RM gives
 Use consistent intermediate values when also changing weights; their additional
 bound is `max(|P0|)*sum(|delta w|)`. Sampling/quadrature uncertainty remains an
 external input. For internally distributed emission and frequency-dependent emitter spectra,
-use `syncmoments.faraday.emission_polarisation` below. Absorption and conversion
+use `syncem.faraday.emission_polarisation` below. Absorption and conversion
 require the separate transfer interfaces.
 
 <!-- docs:screens:end -->
 ## Independent symbolic derivation
 <!-- docs:derivation:start -->
 
-[`derivation/`](https://github.com/zzhang0123/syncmoments/blob/main/derivation/README.md) contains local Wolfram scripts that derive
+[`derivation/`](https://github.com/zzhang0123/syncem/blob/main/derivation/README.md) contains local Wolfram scripts that derive
 and check the helical orbit, retarded radiation, absolute harmonic powers and
 Stokes basis conventions from the classical equations. Run
 `wolframscript -file derivation/verify.wls` to regenerate the report. It also
@@ -120,7 +120,7 @@ original electric field, independently of this package's Python implementation.
 Python 3.12 is the tested runtime. Install the release from PyPI:
 
 ```bash
-python -m pip install syncmoments
+python -m pip install syncem
 ```
 
 To run the tests, install from a checkout (or the source distribution, which
@@ -134,7 +134,7 @@ python -m pytest tests -q
 A plain run skips the 1661 tests marked `slow` (1573 of them in the
 automatic-differentiation transform matrix, 24 third-order derivative
 checks of the transfer, the others mostly the full-resolution benchmark);
-run them with `python -m pytest tests -m slow` or `SYNCMOMENTS_RUN_SLOW=1`.
+run them with `python -m pytest tests -m slow` or `SYNCEM_RUN_SLOW=1`.
 
 Two environments are tested: JAX 0.10.0, Equinox 0.13.7, NumPy 2.3.5,
 SciPy 1.16.3, Matplotlib 3.10.8 and pytest 9.0.2; and JAX 0.10.2,
@@ -153,7 +153,7 @@ the optional `high_harmonic` extra also uses SciPy for host-side high-order
 values and basis preparation. The optional coefficient certificate additionally
 requires `mpmath`.
 
-Importing `syncmoments` enables JAX float64 globally for scientific accuracy. Import
+Importing `syncem` enables JAX float64 globally for scientific accuracy. Import
 it before creating arrays; this is a documented compatibility side effect.
 For a source checkout without installation, `PYTHONPATH=.` remains supported.
 
@@ -172,8 +172,8 @@ generators and captions. Do not substitute one set without checking assumptions.
 <!-- docs:radiation:start -->
 
 ```python
-from syncmoments.stokes import stokes_harmonic
-from syncmoments.derivatives import derivative_spectra
+from syncem.stokes import stokes_harmonic
+from syncem.derivatives import derivative_spectra
 
 I, Q, V = stokes_harmonic(10, 5.0, 0.785, 1.047, B=5e-6)
 value, gradient, hessian = derivative_spectra(10, 5.0, 0.785, 1.047, B=5e-6)
@@ -225,7 +225,7 @@ electron pitch angles alone do not perform that viewing-direction average.
 ```python
 import equinox as eqx
 import jax.numpy as jnp
-from syncmoments.expansion import build_expansion
+from syncem.expansion import build_expansion
 
 response = build_expansion([1, 2, 5, 10], 5.0, 0.785, 1.047, B=5e-6)
 mean_deviation = jnp.zeros(3)                    # gamma, alpha, theta
@@ -264,7 +264,7 @@ derivatives with unnormalised mixed moments. No unknown conditional function is
 differentiated. `mixed_moments` computes these statistics from paired samples:
 
 ```python
-from syncmoments import mixed_moments
+from syncem import mixed_moments
 
 def average_joint_population(response, offsets, B_over_B0, phi, weights, envelope):
     # response was built at B0>0; offsets use the SAME (gamma, alpha, theta)
@@ -348,7 +348,7 @@ physical support, admissible moment set and likelihood. The Gaussian
 ### Finite joint response and spectral fits
 <!-- docs:model:start -->
 
-`syncmoments.model` predicts channel-integrated Stokes spectra from a finite set of
+`syncem.model` predicts channel-integrated Stokes spectra from a finite set of
 joint population moments (`eq: finite joint response`, `eq: channel derivative
 coefficients`) and fits those moments to channel data (`extra eq: finite fit
 model`). The population is never factorised unless an assumption object is
@@ -376,13 +376,13 @@ grid (1,048,576 samples), harmonics through `m = 40`, and the truncation
 `N = 2`, `L = 8` (1306 real moments).
 
 ```python
-from syncmoments.model.assumptions import independent_screen
-from syncmoments.model.basis import build_basis
-from syncmoments.model.channels import Channels
-from syncmoments.model.harmonic import HarmonicKernel
-from syncmoments.model.index import Truncation
-from syncmoments.model.moments import JointMoments, Reference, Support
-from syncmoments.model.predict import predict
+from syncem.model.assumptions import independent_screen
+from syncem.model.basis import build_basis
+from syncem.model.channels import Channels
+from syncem.model.harmonic import HarmonicKernel
+from syncem.model.index import Truncation
+from syncem.model.moments import JointMoments, Reference, Support
+from syncem.model.predict import predict
 
 y = np.array([2.0, 4.0, 8.0])
 channels = Channels.bump(centres_hz=y * NU_STAR, widths_hz=0.65 * y * NU_STAR)
@@ -524,8 +524,8 @@ angle of 60 degrees, one sky azimuth), and the remainder is probed on
 eight corner samples.
 
 ```python
-from syncmoments.model.kernels import ContinuumKernel, required_m_max
-from syncmoments.model.phase import GaussianScreen
+from syncem.model.kernels import ContinuumKernel, required_m_max
+from syncem.model.phase import GaussianScreen
 
 centres = np.geomspace(0.1e9, 3.0e9, 8)
 channels = Channels.bump(centres_hz=centres, widths_hz=0.3 * centres)
@@ -623,13 +623,13 @@ with $I$, $V$ and line-dependent complex polarisation. Its ordinary fast
 evaluation is exploratory; an optional offline pass attaches a conditional,
 often very loose coefficient envelope. Neither path bounds a nonzero
 $\gamma/B$ Taylor displacement or proves that the continuum example above
-is physically adequate. See [the high-order harmonic guide](https://syncmoments.readthedocs.io/en/latest/guide/high_order_harmonic.html)
+is physically adequate. See [the high-order harmonic guide](https://syncem.readthedocs.io/en/latest/guide/high_order_harmonic.html)
 for supported channels, error statuses and a reusable-matrix example.
 
 #### Non-Gaussian independent screens
 
 `LaplaceScreen(mean, sigma)` and `GammaScreen(mean, sigma, shape=4.0, sign=1)`
-(`syncmoments.model.screens`) are the illustrated screens of the manuscript
+(`syncem.model.screens`) are the illustrated screens of the manuscript
 (`eq: illustrated screens`). Each is an exact characteristic function with the
 same depth mean and standard deviation as `GaussianScreen`, applied line by
 line inside the channel sum, with `depth_degree=0`. At `mean=0`, `sigma=1` and
@@ -655,9 +655,9 @@ applies), the amplitude fitted. `StokesData` takes the channel Stokes
 `(n_ch, 4)`, per-row variances (channel-major) and a mask of rows to keep.
 
 ```python
-from syncmoments.model.fit.diagnostics import feasibility_checks, identifiability
-from syncmoments.model.fit.linear import fit_linear
-from syncmoments.model.fit.observation import StokesData
+from syncem.model.fit.diagnostics import feasibility_checks, identifiability
+from syncem.model.fit.linear import fit_linear
+from syncem.model.fit.observation import StokesData
 
 data = StokesData(stokes=stokes, noise=sigma.ravel() ** 2,
                   mask=jnp.array([True, True, True, False]))
@@ -732,9 +732,9 @@ the rays. Each ray is uniform in `mu` by construction, so the continuum
 kernel's forced `isotropic_pitch` gets a declared zero.
 
 ```python
-from syncmoments.model.bounds import screen_factorisation_bound
-from syncmoments.model.errors import ErrorTerm
-from syncmoments.model.phase import EmpiricalScreen
+from syncem.model.bounds import screen_factorisation_bound
+from syncem.model.errors import ErrorTerm
+from syncem.model.phase import EmpiricalScreen
 
 screen = EmpiricalScreen(jnp.asarray([25.0, 35.0]), jnp.asarray([0.5, 0.5]))
 basis = build_basis(ContinuumKernel(), channels, Truncation(0, 2, 2, depth_degree=0),
@@ -785,7 +785,7 @@ and `build_basis` differentiates only in the directions those rows need.
 Caps that remove no row are dropped, so `max_orders=(5, 5, None)` at `N = 2`
 is the default truncation. The retained multi-indices form a lower
 (downward-closed) set `Lambda`, and `basis_remainder` of a capped basis
-uses the margin `S(Lambda)` returned by `syncmoments.model.lower_set_margin`:
+uses the margin `S(Lambda)` returned by `syncem.model.lower_set_margin`:
 
 ```
 |f(z) - T_Lambda f(z)| <= sum_{beta in S} |z^beta| / beta! sup_{0<=t<=1} |d^beta f(p_k(t))|
@@ -808,7 +808,7 @@ declare symmetries of the population as `ParameterMap`s, alone or combined
 with `assume`:
 
 ```python
-from syncmoments.model import field_reversal_symmetric, pitch_symmetric
+from syncem.model import field_reversal_symmetric, pitch_symmetric
 
 both = pitch_symmetric(basis.index).assume(field_reversal_symmetric(basis.index))
 moments = JointMoments.from_samples(samples, basis.index, reference,
@@ -888,14 +888,14 @@ example (a) with `convergence=False`, on one shared machine:
 
 #### Identifiable combinations of a continuum SED
 
-`reduce_response` and `fit_combinations` (`syncmoments.model.fit`, since
+`reduce_response` and `fit_combinations` (`syncem.model.fit`, since
 0.4.0) `[extension]` keep three statements apart that a fit of the full
 moment vector mixes: exact redundancy of the response columns, the
 numerical rank of the design, and which combinations the data determine at
 the declared noise.
 
 ```python
-from syncmoments.model.fit import fit_combinations, reduce_response
+from syncem.model.fit import fit_combinations, reduce_response
 
 reduction = reduce_response(basis, relations="continuum")
 fit = fit_combinations(basis, data, reduction=reduction, max_sigma=0.1)
@@ -1012,7 +1012,7 @@ as a probability weight. A zero source column gives zero emission; the supplied
 measure must still be well defined. The original `screen_polarisation` retains
 its existing scalar/per-ray input contract and foreground interpretation.
 
-`faraday_depth_practical(n_e_cm3, B_par_uG, s_pc)` in `syncmoments.rm` integrates
+`faraday_depth_practical(n_e_cm3, B_par_uG, s_pc)` in `syncem.rm` integrates
 from **each node to the last node**, using the rounded 0.812 coefficient and
 trapezoids. Positions increase towards the observer. Field reversals are
 allowed; depth need not be monotone. Add any exterior foreground depth to all
@@ -1030,7 +1030,7 @@ keeps its intrinsic source error zero and bounds only the phase truncation:
 
 ```python
 import jax.numpy as jnp
-from syncmoments.faraday import (
+from syncem.faraday import (
     emission_polarisation, joint_faraday_moments, joint_faraday_average,
 )
 
@@ -1093,7 +1093,7 @@ matrix exponential, swapped layers, correlated spectra and analytic gradients.
 <!-- docs:transfer:start -->
 
 ```python
-from syncmoments.los_moments import moment_driven_slab_cgs
+from syncem.los_moments import moment_driven_slab_cgs
 
 # Local electron-number moments M_k=int N(gamma)(gamma-gamma0)^k dgamma.
 # This narrow-population illustration does not certify an energy PDF closure.
@@ -1219,6 +1219,6 @@ itself remains future work.
 ## Citation and license
 
 Please cite Zhang & Chluba, *A statistical framework for synchrotron emission*.
-MIT license; see [LICENSE](https://github.com/zzhang0123/syncmoments/blob/main/LICENSE).
+MIT license; see [LICENSE](https://github.com/zzhang0123/syncem/blob/main/LICENSE).
 
 <!-- docs:scope:end -->

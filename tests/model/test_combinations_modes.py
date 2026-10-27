@@ -13,9 +13,9 @@ import numpy as np
 import pytest
 
 from _reduction_fixtures import continuum_problem, matrix_basis, stokes_data
-from syncmoments.model.fit import fit_combinations, reduce_response
-from syncmoments.model.fit._combination_core import classify, find_clusters
-from syncmoments.model.index import MomentIndex, Truncation
+from syncem.model.fit import fit_combinations, reduce_response
+from syncem.model.fit._combination_core import classify, find_clusters
+from syncem.model.index import MomentIndex, Truncation
 
 INDEX = MomentIndex.build(Truncation(0, 0, 1), components=("I", "Q"))  # n_real 11
 

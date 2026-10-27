@@ -6,7 +6,7 @@ quadrature amplify roundoff by about ``(2n/|x|)^k`` at derivative order ``k``.
 At ``n = 1``, ``x = 1e-6`` (default count, 128 nodes) the third derivatives
 of ``J_0`` and ``J_1'`` are off by more than 1 against SciPy (true values of
 order ``3e-7``), while the order recurrence
-(``syncmoments.model._bessel_recurrence.neighbours_recurrence``, used by
+(``syncem.model._bessel_recurrence.neighbours_recurrence``, used by
 ``HarmonicKernel(derivatives="analytic")``) agrees to ``1e-15``. The
 docstring of ``bessel_jn_neighbours`` states this; this test pins the quoted
 numbers in both environments.
@@ -17,9 +17,9 @@ import jax.numpy as jnp
 import numpy as np
 from scipy.special import jvp
 
-import syncmoments  # noqa: F401  (float64)
-from syncmoments.bessel import bessel_jn_neighbours
-from syncmoments.model._bessel_recurrence import neighbours_recurrence
+import syncem  # noqa: F401  (float64)
+from syncem.bessel import bessel_jn_neighbours
+from syncem.model._bessel_recurrence import neighbours_recurrence
 
 X = 1e-6
 NODES = 128  # the automatic count for n = 1 (``2^ceil(log2(max(128, 4 (n+1) + 64)))``)

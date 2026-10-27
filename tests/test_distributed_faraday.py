@@ -8,17 +8,17 @@ from numpy.polynomial.legendre import leggauss
 from numpy.testing import assert_allclose
 import pytest
 
-from syncmoments.faraday import (
+from syncem.faraday import (
     emission_polarisation,
     joint_faraday_average,
     joint_faraday_moments,
 )
-from syncmoments.rm import (
+from syncem.rm import (
     faraday_depth_practical,
     rotation_measure_practical,
     screen_polarisation,
 )
-from syncmoments.transfer import mueller_matrix, transfer_slab
+from syncem.transfer import mueller_matrix, transfer_slab
 
 
 def test_swapping_emitters_retains_marginals_but_changes_polarisation():

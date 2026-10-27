@@ -6,8 +6,8 @@ from random import Random
 import numpy as np
 import pytest
 
-from syncmoments.model import Channels
-from syncmoments.model._certified_sparse_harmonic import _response
+from syncem.model import Channels
+from syncem.model._certified_sparse_harmonic import _response
 
 
 def _fixture():

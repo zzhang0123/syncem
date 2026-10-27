@@ -29,7 +29,7 @@ import jax
 import jax.numpy as jnp
 import pytest
 
-import syncmoments  # noqa: F401  (enables x64)
+import syncem  # noqa: F401  (enables x64)
 from _ad_matrix import TRANSFORMS, Expected, Group, check, mismatch, transforms
 from _ad_matrix_cases import all_groups
 

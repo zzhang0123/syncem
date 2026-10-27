@@ -10,11 +10,11 @@ import numpy as np
 from numpy.testing import assert_allclose
 import pytest
 
-import syncmoments  # noqa: F401
-from syncmoments.model.channels import Channels
-from syncmoments.model.harmonic import HarmonicKernel, product_cells
-from syncmoments.model.index import MomentIndex, Truncation
-from syncmoments.model.phase import TaylorPhase
+import syncem  # noqa: F401
+from syncem.model.channels import Channels
+from syncem.model.harmonic import HarmonicKernel, product_cells
+from syncem.model.index import MomentIndex, Truncation
+from syncem.model.phase import TaylorPhase
 
 from _harmonic_oracles import (
     B0,

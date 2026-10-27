@@ -27,10 +27,10 @@ import numpy as np
 from numpy.testing import assert_allclose
 import pytest
 
-import syncmoments  # noqa: F401  (enables x64)
-from syncmoments.expansion import mixed_moments
-from syncmoments.model.moments import PopulationSamples
-from syncmoments.rm import (
+import syncem  # noqa: F401  (enables x64)
+from syncem.expansion import mixed_moments
+from syncem.model.moments import PopulationSamples
+from syncem.rm import (
     _normalised_weights,
     _relative_weights,
     gaussian_rm_cumulants,

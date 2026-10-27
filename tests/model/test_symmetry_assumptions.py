@@ -26,7 +26,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 import pytest
 
-from syncmoments.model.assumptions import (
+from syncem.model.assumptions import (
     VARS,
     Closure,
     Factorisation,
@@ -37,9 +37,9 @@ from syncmoments.model.assumptions import (
     no_assumption,
     pitch_symmetric,
 )
-from syncmoments.model.index import MomentIndex, Truncation
-from syncmoments.model.moments import JointMoments, PopulationSamples, Reference
-from syncmoments.model.predict import predict
+from syncem.model.index import MomentIndex, Truncation
+from syncem.model.moments import JointMoments, PopulationSamples, Reference
+from syncem.model.predict import predict
 
 from _basis_fixtures import polynomial_setup
 from _basis_stub import build_stub_basis

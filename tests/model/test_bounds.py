@@ -1,4 +1,4 @@
-"""Bound helpers of ``syncmoments.model.bounds`` against explicit NumPy sums.
+"""Bound helpers of ``syncem.model.bounds`` against explicit NumPy sums.
 
 ``basis_remainder`` and ``depth_error_bound`` are tested with minimal stand-in
 objects exposing only the interface fields they consume (``basis.index``,
@@ -15,14 +15,14 @@ import numpy as np
 from numpy.testing import assert_allclose
 import pytest
 
-from syncmoments.model.bounds import (
+from syncem.model.bounds import (
     RemainderInputs,
     azimuth_factorisation_bound,
     depth_error_bound,
     screen_factorisation_bound,
 )
-from syncmoments.model.index import MomentIndex, Truncation
-from syncmoments.model.moments import PopulationSamples
+from syncem.model.index import MomentIndex, Truncation
+from syncem.model.moments import PopulationSamples
 
 C_SI_M = 2.99792458e8
 

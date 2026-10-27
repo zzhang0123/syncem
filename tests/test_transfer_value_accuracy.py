@@ -6,7 +6,7 @@ up to ``2 theta_13``. Just below ``|A|_1 = 2^(m+1) theta_13`` that cost relative
 errors of 1.3e-9 to 1.7e-9 for a Faraday-dominated slab (m = 0 to 5) and up to
 7.2e-10 on the realistic spectrum below (n_e = 0.03 cm^-3, B_par = 3 uG,
 L = 1 kpc, 50 MHz to 20 GHz). Since 0.4.0 the value uses
-``syncmoments._expm.expm_pade13`` (``ceil``), as the derivatives already did.
+``syncem._expm.expm_pade13`` (``ceil``), as the derivatives already did.
 
 Error model (``A = -K ds``, ``u = 2^-53``, max-norm relative to the largest
 entry of the truth): ``|out - truth| <= c u max(|A|_1, 1) |truth|``. A squaring
@@ -29,9 +29,9 @@ import jax.numpy as jnp
 import numpy as np
 import pytest
 
-import syncmoments  # noqa: F401  (enables x64)
-from syncmoments.rm import _pow2
-from syncmoments.transfer import _source_exponent, mueller_matrix, transfer_slab
+import syncem  # noqa: F401  (enables x64)
+from syncem.rm import _pow2
+from syncem.transfer import _source_exponent, mueller_matrix, transfer_slab
 
 U64, U32 = 2.0**-53, 2.0**-24
 C = 16.0

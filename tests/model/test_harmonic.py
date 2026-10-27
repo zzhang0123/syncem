@@ -1,4 +1,4 @@
-"""Tests of ``syncmoments.model.harmonic.HarmonicKernel``: channel modes, derivatives,
+"""Tests of ``syncem.model.harmonic.HarmonicKernel``: channel modes, derivatives,
 Bessel resolution classes, truncation dispatch (projections: ``test_harmonic_projection``).
 """
 
@@ -10,15 +10,15 @@ import numpy as np
 from numpy.testing import assert_allclose
 import pytest
 
-import syncmoments  # noqa: F401
-from syncmoments.constants import C_CGS, E_ESU, M_E
-from syncmoments.model.channels import Channels
-from syncmoments.model.errors import ErrorTerm
-from syncmoments.model.harmonic import HarmonicKernel, auto_nodes, harmonic_lines
-from syncmoments.model.index import Truncation
-from syncmoments.model.kernels import required_m_max
-from syncmoments.model.moments import PopulationSamples, Reference, Support
-from syncmoments.model.phase import TaylorPhase
+import syncem  # noqa: F401
+from syncem.constants import C_CGS, E_ESU, M_E
+from syncem.model.channels import Channels
+from syncem.model.errors import ErrorTerm
+from syncem.model.harmonic import HarmonicKernel, auto_nodes, harmonic_lines
+from syncem.model.index import Truncation
+from syncem.model.kernels import required_m_max
+from syncem.model.moments import PopulationSamples, Reference, Support
+from syncem.model.phase import TaylorPhase
 
 from _harmonic_oracles import (
     BENCH_SUPPORT,

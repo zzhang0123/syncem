@@ -8,8 +8,8 @@ import mpmath as mp
 import numpy as np
 import pytest
 
-from syncmoments.model import Channels, TaylorPhase, high_order_channel_modes
-from syncmoments.model._certified_angular_i00 import (
+from syncem.model import Channels, TaylorPhase, high_order_channel_modes
+from syncem.model._certified_angular_i00 import (
     AngularI00Limit,
     certify_angular_i00,
 )

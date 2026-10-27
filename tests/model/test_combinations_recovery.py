@@ -14,8 +14,8 @@ import numpy as np
 import pytest
 
 from _reduction_fixtures import continuum_problem, small_continuum_basis, stokes_data
-from syncmoments.model.assumptions import isotropic_pitch
-from syncmoments.model.fit import fit_combinations, reduce_response
+from syncem.model.assumptions import isotropic_pitch
+from syncem.model.fit import fit_combinations, reduce_response
 
 MAX_SIGMA = 0.1
 

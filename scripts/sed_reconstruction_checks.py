@@ -10,7 +10,7 @@ from __future__ import annotations
 import numpy as np
 from scipy.linalg import subspace_angles
 
-from syncmoments.model.fit import reduce_response
+from syncem.model.fit import reduce_response
 
 import sed_reconstruction_direct as direct
 from sed_reconstruction_setup import (

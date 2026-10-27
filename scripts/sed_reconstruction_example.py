@@ -33,9 +33,9 @@ from pathlib import Path
 
 import numpy as np
 
-import syncmoments  # noqa: F401  (enables float64)
-from syncmoments.model import predict
-from syncmoments.model.fit import coefficient_bounds, reduce_response
+import syncem  # noqa: F401  (enables float64)
+from syncem.model import predict
+from syncem.model.fit import coefficient_bounds, reduce_response
 
 import sed_reconstruction_direct as direct
 import sed_reconstruction_report as report

@@ -1,6 +1,6 @@
 """
 Compute and plot the Schott harmonic Stokes parameters and their derivative
-spectra using the syncmoments package (corrected normalisation, autodiff).
+spectra using the syncem package (corrected normalisation, autodiff).
 
 Generates figures/derivative_spectra.pdf:
   (a) I_n vs harmonic number n for several gamma
@@ -21,7 +21,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib import rc
 
-from syncmoments.stokes import stokes_harmonic
+from syncem.stokes import stokes_harmonic
 
 rc("text", usetex=False)
 rc("font", family="serif", size=11)

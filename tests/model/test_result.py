@@ -1,4 +1,4 @@
-"""Tests of ``syncmoments.model.fit.result`` (``FitResult`` and the builders that
+"""Tests of ``syncem.model.fit.result`` (``FitResult`` and the builders that
 wrap ``fit_bfgs``/``fit_nodal`` outcomes).
 
 Oracles: NumPy Gauss-Newton Fisher ``J^T J`` from central-difference
@@ -16,20 +16,20 @@ from numpy.testing import assert_allclose
 import pytest
 
 from _nonlinear_oracles import node_features, polynomial_basis, random_nodes, samples_of
-from syncmoments.model.assumptions import (
+from syncem.model.assumptions import (
     Parameters,
     gaussian_screen,
     isotropic_pitch,
     no_assumption,
     nodal,
 )
-from syncmoments.model.errors import ErrorTerm, Provenance
-from syncmoments.model.fit.linear import fit_linear
-from syncmoments.model.fit.nonlinear import LogDensity, Transform, fit_bfgs, fit_nodal
-from syncmoments.model.fit.observation import StokesData
-from syncmoments.model.fit.result import MAX_FISHER_PARAMS, FitResult
-from syncmoments.model.index import MomentIndex, Truncation
-from syncmoments.model.predict import Prediction
+from syncem.model.errors import ErrorTerm, Provenance
+from syncem.model.fit.linear import fit_linear
+from syncem.model.fit.nonlinear import LogDensity, Transform, fit_bfgs, fit_nodal
+from syncem.model.fit.observation import StokesData
+from syncem.model.fit.result import MAX_FISHER_PARAMS, FitResult
+from syncem.model.index import MomentIndex, Truncation
+from syncem.model.predict import Prediction
 
 # -- helpers ---------------------------------------------------------------------
 

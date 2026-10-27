@@ -13,8 +13,8 @@ import jax.numpy as jnp
 import numpy as np
 import pytest
 
-import syncmoments  # noqa: F401  (enables x64)
-from syncmoments.transfer import mueller_matrix, transfer_los, transfer_slab
+import syncem  # noqa: F401  (enables x64)
+from syncem.transfer import mueller_matrix, transfer_los, transfer_slab
 
 THICK = mueller_matrix(5.0, 1.0, -0.5, 0.2, 4.0, -2.0, 1.0)
 ONES = jnp.ones(4)

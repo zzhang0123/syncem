@@ -7,7 +7,7 @@ non-separable analytic test functions (``exp((a + i b).z)`` and
 ``1/(1 - c.z)``), whose sup along a path segment is taken on a dense grid
 including both ends.
 
-The bound under test (``syncmoments.model.index.lower_set_margin``) is
+The bound under test (``syncem.model.index.lower_set_margin``) is
 
     |f(z) - T_Lambda f(z)| <= sum_{beta in S(Lambda)} |z^beta| / beta!
                                sup_{t in [0, 1]} |d^beta f(p_k(t))|,
@@ -24,7 +24,7 @@ import math
 import numpy as np
 import pytest
 
-from syncmoments.model.index import MomentIndex, Truncation, lower_set_margin
+from syncem.model.index import MomentIndex, Truncation, lower_set_margin
 
 CAPS = (None, 0, 1, 2)
 

@@ -1,4 +1,4 @@
-"""Tests of ``syncmoments.model.basis``: exactness on the polynomial oracle, nested
+"""Tests of ``syncem.model.basis``: exactness on the polynomial oracle, nested
 derivatives against finite differences and the manuscript Section 5.3.1 benchmark
 coefficients (refusals, JIT/AD, provenance and convergence: ``test_basis_build``
 and ``test_basis_convergence``)."""
@@ -14,17 +14,17 @@ from numpy.testing import assert_allclose
 import pytest
 from scipy.special import eval_legendre
 
-import syncmoments  # noqa: F401
-from syncmoments.constants import C_SI_M
-from syncmoments.model.basis import (
+import syncem  # noqa: F401
+from syncem.constants import C_SI_M
+from syncem.model.basis import (
     KernelTerms,
     SpectralBasis,
     build_basis,
 )
-from syncmoments.model.harmonic import HarmonicKernel
-from syncmoments.model.index import Truncation
-from syncmoments.model.moments import JointMoments, PopulationSamples, Reference
-from syncmoments.model.phase import TaylorPhase
+from syncem.model.harmonic import HarmonicKernel
+from syncem.model.index import Truncation
+from syncem.model.moments import JointMoments, PopulationSamples, Reference
+from syncem.model.phase import TaylorPhase
 
 from _basis_fixtures import (
     SMALL_SUPPORT,

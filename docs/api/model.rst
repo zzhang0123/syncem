@@ -1,79 +1,79 @@
-syncmoments.model
-=================
+syncem.model
+============
 
 Finite joint response of channel Stokes spectra, error budget and declared assumptions.
 
-syncmoments.model.index
------------------------
+syncem.model.index
+------------------
 
-.. automodule:: syncmoments.model.index
+.. automodule:: syncem.model.index
 
-syncmoments.model.errors
+syncem.model.errors
+-------------------
+
+.. automodule:: syncem.model.errors
+
+syncem.model.channels
+---------------------
+
+.. automodule:: syncem.model.channels
+
+syncem.model.phase
+------------------
+
+.. automodule:: syncem.model.phase
+
+syncem.model.screens
+--------------------
+
+.. automodule:: syncem.model.screens
+
+syncem.model.moments
+--------------------
+
+.. automodule:: syncem.model.moments
+
+syncem.model.bounds
+-------------------
+
+.. automodule:: syncem.model.bounds
+
+syncem.model.assumptions
 ------------------------
 
-.. automodule:: syncmoments.model.errors
+.. automodule:: syncem.model.assumptions
 
-syncmoments.model.channels
---------------------------
+syncem.model.kernels
+--------------------
 
-.. automodule:: syncmoments.model.channels
+.. automodule:: syncem.model.kernels
 
-syncmoments.model.phase
------------------------
+syncem.model.harmonic
+---------------------
 
-.. automodule:: syncmoments.model.phase
+.. automodule:: syncem.model.harmonic
 
-syncmoments.model.screens
--------------------------
+syncem.model.high_order_harmonic
+--------------------------------
 
-.. automodule:: syncmoments.model.screens
+.. automodule:: syncem.model.high_order_harmonic
 
-syncmoments.model.moments
--------------------------
-
-.. automodule:: syncmoments.model.moments
-
-syncmoments.model.bounds
-------------------------
-
-.. automodule:: syncmoments.model.bounds
-
-syncmoments.model.assumptions
+syncem.model.high_order_basis
 -----------------------------
 
-.. automodule:: syncmoments.model.assumptions
+.. automodule:: syncem.model.high_order_basis
 
-syncmoments.model.kernels
--------------------------
+syncem.model.basis
+------------------
 
-.. automodule:: syncmoments.model.kernels
+.. automodule:: syncem.model.basis
 
-syncmoments.model.harmonic
---------------------------
+syncem.model.predict
+--------------------
 
-.. automodule:: syncmoments.model.harmonic
+.. automodule:: syncem.model.predict
 
-syncmoments.model.high_order_harmonic
--------------------------------------
+syncem.model.adapters
+---------------------
 
-.. automodule:: syncmoments.model.high_order_harmonic
-
-syncmoments.model.high_order_basis
-----------------------------------
-
-.. automodule:: syncmoments.model.high_order_basis
-
-syncmoments.model.basis
------------------------
-
-.. automodule:: syncmoments.model.basis
-
-syncmoments.model.predict
--------------------------
-
-.. automodule:: syncmoments.model.predict
-
-syncmoments.model.adapters
---------------------------
-
-.. automodule:: syncmoments.model.adapters
+.. automodule:: syncem.model.adapters

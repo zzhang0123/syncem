@@ -16,8 +16,8 @@ import numpy as np
 from numpy.testing import assert_allclose
 import pytest
 
-import syncmoments  # noqa: F401
-from syncmoments.model.assumptions import (
+import syncem  # noqa: F401
+from syncem.model.assumptions import (
     Parameters,
     azimuth_separable,
     field_independent,
@@ -28,17 +28,17 @@ from syncmoments.model.assumptions import (
     no_assumption,
     nodal,
 )
-from syncmoments.model.bounds import RemainderInputs
-from syncmoments.model.fit.diagnostics import identifiability
-from syncmoments.model.fit.nonlinear import LogDensity
-from syncmoments.model.fit.observation import StokesData
-from syncmoments.model.index import MomentIndex, Truncation
-from syncmoments.model.moments import JointMoments, PopulationSamples, Reference
-from syncmoments.model.predict import direct_channel_average, predict
+from syncem.model.bounds import RemainderInputs
+from syncem.model.fit.diagnostics import identifiability
+from syncem.model.fit.nonlinear import LogDensity
+from syncem.model.fit.observation import StokesData
+from syncem.model.index import MomentIndex, Truncation
+from syncem.model.moments import JointMoments, PopulationSamples, Reference
+from syncem.model.predict import direct_channel_average, predict
 
 from _basis_fixtures import polynomial_setup
 from _nonlinear_oracles import polynomial_basis, random_nodes, samples_of
-from syncmoments.model.basis import build_basis
+from syncem.model.basis import build_basis
 
 REF = Reference(5.2, 2.1, 0.1, scales=(1.3, 0.7, 0.9))
 

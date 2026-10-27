@@ -1,4 +1,4 @@
-"""Tests of ``syncmoments.model.kernels``: shared helpers, the ``KernelModel`` protocol,
+"""Tests of ``syncem.model.kernels``: shared helpers, the ``KernelModel`` protocol,
 ``required_m_max`` and ``PolynomialTestKernel`` exactness (continuum: ``test_continuum``).
 """
 
@@ -15,12 +15,12 @@ from numpy.testing import assert_allclose
 import pytest
 from scipy.special import eval_legendre
 
-import syncmoments  # noqa: F401
-from syncmoments.constants import C_CGS, C_SI_M, E_ESU, M_E
-from syncmoments.model.channels import Channels
-from syncmoments.model.harmonic import HarmonicKernel
-from syncmoments.model.index import MomentIndex, Truncation
-from syncmoments.model.kernels import (
+import syncem  # noqa: F401
+from syncem.constants import C_CGS, C_SI_M, E_ESU, M_E
+from syncem.model.channels import Channels
+from syncem.model.harmonic import HarmonicKernel
+from syncem.model.index import MomentIndex, Truncation
+from syncem.model.kernels import (
     ContinuumKernel,
     KernelModel,
     Modes,
@@ -33,8 +33,8 @@ from syncmoments.model.kernels import (
     phase_weights,
     required_m_max,
 )
-from syncmoments.model.moments import Support
-from syncmoments.model.phase import TaylorPhase
+from syncem.model.moments import Support
+from syncem.model.phase import TaylorPhase
 
 from _harmonic_oracles import REFERENCE
 

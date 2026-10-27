@@ -13,8 +13,8 @@ from dataclasses import dataclass
 
 import numpy as np
 
-import syncmoments  # noqa: F401  (enables float64)
-from syncmoments.model import (
+import syncem  # noqa: F401  (enables float64)
+from syncem.model import (
     Channels,
     ContinuumKernel,
     JointMoments,
@@ -25,7 +25,7 @@ from syncmoments.model import (
     Truncation,
     build_basis,
 )
-from syncmoments.model.fit import StokesData, fit_combinations
+from syncem.model.fit import StokesData, fit_combinations
 
 import sed_reconstruction_direct as direct
 

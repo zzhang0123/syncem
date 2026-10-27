@@ -14,22 +14,22 @@ import jax.numpy as jnp
 import numpy as np
 import pytest
 
-import syncmoments  # noqa: F401
-from syncmoments.model._allowances import check_allowances
-from syncmoments.model.basis import build_basis
-from syncmoments.model.bounds import RemainderInputs
-from syncmoments.model.channels import Channels
-from syncmoments.model.errors import ErrorTerm
-from syncmoments.model.index import Truncation
-from syncmoments.model.kernels import ContinuumKernel
-from syncmoments.model.moments import (
+import syncem  # noqa: F401
+from syncem.model._allowances import check_allowances
+from syncem.model.basis import build_basis
+from syncem.model.bounds import RemainderInputs
+from syncem.model.channels import Channels
+from syncem.model.errors import ErrorTerm
+from syncem.model.index import Truncation
+from syncem.model.kernels import ContinuumKernel
+from syncem.model.moments import (
     JointMoments,
     PopulationSamples,
     Reference,
     Support,
 )
-from syncmoments.model.phase import EmpiricalScreen
-from syncmoments.model.predict import direct_channel_average, predict
+from syncem.model.phase import EmpiricalScreen
+from syncem.model.predict import direct_channel_average, predict
 
 from _boundary_oracles import constant_kernel
 

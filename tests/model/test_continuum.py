@@ -11,13 +11,13 @@ import pytest
 from scipy.integrate import quad
 from scipy.special import eval_legendre, kv
 
-import syncmoments  # noqa: F401
-from syncmoments.constants import C_CGS, C_SI_M, E_ESU, M_E
-from syncmoments.model.channels import Channels
-from syncmoments.model.errors import ErrorTerm
-from syncmoments.model.index import MomentIndex, Truncation
-from syncmoments.model.kernels import ContinuumKernel
-from syncmoments.model.phase import TaylorPhase
+import syncem  # noqa: F401
+from syncem.constants import C_CGS, C_SI_M, E_ESU, M_E
+from syncem.model.channels import Channels
+from syncem.model.errors import ErrorTerm
+from syncem.model.index import MomentIndex, Truncation
+from syncem.model.kernels import ContinuumKernel
+from syncem.model.phase import TaylorPhase
 
 
 def continuum_oracle(nu, gamma, B, eta):

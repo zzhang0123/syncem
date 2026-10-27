@@ -14,8 +14,8 @@ import jax
 import jax.numpy as jnp
 import equinox as eqx
 
-from syncmoments.expansion import build_expansion
-from syncmoments.transfer import mueller_matrix, transfer_los
+from syncem.expansion import build_expansion
+from syncem.transfer import mueller_matrix, transfer_los
 
 
 def test_cumulant_expansion_jit():

@@ -18,12 +18,12 @@ from numpy.testing import assert_allclose
 import pytest
 from scipy.integrate import quad
 
-import syncmoments  # noqa: F401
-from syncmoments.model.basis import build_basis
-from syncmoments.model.channels import Channels
-from syncmoments.model.harmonic import HarmonicKernel
-from syncmoments.model.index import Truncation
-from syncmoments.model.moments import Reference, Support
+import syncem  # noqa: F401
+from syncem.model.basis import build_basis
+from syncem.model.channels import Channels
+from syncem.model.harmonic import HarmonicKernel
+from syncem.model.index import Truncation
+from syncem.model.moments import Reference, Support
 
 from _basis_fixtures import small_harmonic
 from _boundary_oracles import (

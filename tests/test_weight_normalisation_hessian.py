@@ -1,7 +1,7 @@
 """Second derivatives in the weights (T-004 round 5, items F2 and F4).
 
 ``_normalised_weights`` gives ``w / sum(w)`` a closed-form second-order tangent
-(``syncmoments.rm._sum_tangent``). Round 4 refused every second derivative for
+(``syncem.rm._sum_tangent``). Round 4 refused every second derivative for
 ``max(w) < 2^-958``; that refused representable results such as Hessians in
 log-weights ``theta`` (``w = exp(theta)``), which are softmax Hessians of order 1.
 Checked here against the exact rational oracle of
@@ -47,7 +47,7 @@ from test_weight_normalisation_oracle import (
     linear,
     variance,
 )
-from syncmoments.rm import _normalised_weights, gaussian_rm_cumulants
+from syncem.rm import _normalised_weights, gaussian_rm_cumulants
 
 WRAPS = {"eager": lambda f: f, "jit": jax.jit}
 SHIFTS = [0.0, -300.0, -690.0, -700.0, -708.0]

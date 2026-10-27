@@ -1,4 +1,4 @@
-"""Tests of ``syncmoments.model.assumptions``: factorised parameter maps.
+"""Tests of ``syncem.model.assumptions``: factorised parameter maps.
 
 Oracles are NumPy/SciPy: exact weighted sums over discrete populations
 (``eval_legendre``), the product-of-marginals definition of a factorised
@@ -20,7 +20,7 @@ from numpy.testing import assert_allclose
 import pytest
 from scipy.special import eval_legendre
 
-from syncmoments.model.assumptions import (
+from syncem.model.assumptions import (
     VARS,
     Closure,
     Factorisation,
@@ -35,9 +35,9 @@ from syncmoments.model.assumptions import (
     no_assumption,
     nodal,
 )
-from syncmoments.model.errors import AssumptionRecord, ErrorTerm
-from syncmoments.model.index import MomentIndex, Truncation
-from syncmoments.model.moments import JointMoments, PopulationSamples, Reference
+from syncem.model.errors import AssumptionRecord, ErrorTerm
+from syncem.model.index import MomentIndex, Truncation
+from syncem.model.moments import JointMoments, PopulationSamples, Reference
 
 REF = (5.2, 2.1, 0.3, (1.3, 0.7, 0.9))
 POSITION = {"phi": 0, "mu": 1, "eta": 2, "gamma": 3, "B": 4, "depth": 5}

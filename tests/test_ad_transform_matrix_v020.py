@@ -12,7 +12,7 @@ matrix's cotangent), summed over the leaves. They were computed once with the
 v0.2.0 export in jax 0.10.0 (DEV) by importing tests/_ad_matrix_cases.py
 with syncmoments aliased to synchro (so each group's f is the
 v0.2.0 function; bessel_band has no v0.2.0 counterpart and pins its
-reference, syncmoments.bessel.bessel_jn; harmonic_lines pins v0.2.0's
+reference, syncem.bessel.bessel_jn; harmonic_lines pins v0.2.0's
 harmonic_lines, three contours per point, where the package shares one). jax
 0.10.2 (NEW) reproduces them to 2.1e-14 relative per projection. Tolerance:
 1e-12 of sum(|a| |cos(...)|).
@@ -24,7 +24,7 @@ import jax
 import jax.numpy as jnp
 import pytest
 
-import syncmoments  # noqa: F401  (enables x64)
+import syncem  # noqa: F401  (enables x64)
 from _ad_matrix import cotangent
 from _ad_matrix_cases import all_groups
 

@@ -1,6 +1,6 @@
-"""R30 wording scan extended to ``syncmoments.model.fit`` (review item NEW2-5).
+"""R30 wording scan extended to ``syncem.model.fit`` (review item NEW2-5).
 
-``test_remainder_probe_route.py`` scans ``syncmoments.model`` but skips the
+``test_remainder_probe_route.py`` scans ``syncem.model`` but skips the
 ``fit`` subpackage and a few modules; this file scans those, with the same
 rule: a docstring may say what is *not* certified, never that a finite check
 certifies something. It also pins the ``AssumptionRecord.hyper`` wording for
@@ -14,18 +14,18 @@ import pkgutil
 
 import pytest
 
-import syncmoments  # noqa: F401
-import syncmoments.model.fit
-from syncmoments.model.errors import AssumptionRecord
+import syncem  # noqa: F401
+import syncem.model.fit
+from syncem.model.errors import AssumptionRecord
 from test_remainder_probe_route import _positive_certification_claims
 
 
 def _modules():
-    for info in pkgutil.iter_modules(syncmoments.model.fit.__path__):
-        yield importlib.import_module(f"syncmoments.model.fit.{info.name}")
-    yield importlib.import_module("syncmoments.model.fit")
+    for info in pkgutil.iter_modules(syncem.model.fit.__path__):
+        yield importlib.import_module(f"syncem.model.fit.{info.name}")
+    yield importlib.import_module("syncem.model.fit")
     for name in ("assumptions", "_project", "_refine"):
-        yield importlib.import_module(f"syncmoments.model.{name}")
+        yield importlib.import_module(f"syncem.model.{name}")
 
 
 def _docstrings(module):

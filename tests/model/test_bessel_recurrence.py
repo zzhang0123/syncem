@@ -20,15 +20,15 @@ from numpy.testing import assert_allclose
 import pytest
 from scipy.special import jv, jvp
 
-import syncmoments  # noqa: F401
-from syncmoments.bessel import bessel_jn_neighbours
-from syncmoments.model._bessel_recurrence import (
+import syncem  # noqa: F401
+from syncem.bessel import bessel_jn_neighbours
+from syncem.model._bessel_recurrence import (
     bessel_band,
     derivative_coefficients,
     neighbours_recurrence,
     taylor_neighbours,
 )
-from syncmoments.model._harmonic_cells import harmonic_lines
+from syncem.model._harmonic_cells import harmonic_lines
 
 CLASSES = (1, 2, 16, 48, 112, 240, 496, 1008)
 TINY = 1e-280  # SciPy's relative accuracy is not used below this magnitude

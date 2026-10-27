@@ -22,10 +22,10 @@ from numpy.testing import assert_allclose, assert_array_equal
 import pytest
 from scipy.linalg import expm, expm_frechet
 
-import syncmoments  # noqa: F401  (enables x64)
-from syncmoments._expm import expm_pade13
-from syncmoments.rm import _pow2
-from syncmoments.transfer import (
+import syncem  # noqa: F401  (enables x64)
+from syncem._expm import expm_pade13
+from syncem.rm import _pow2
+from syncem.transfer import (
     _source_exponent,
     mueller_matrix,
     transfer_los,

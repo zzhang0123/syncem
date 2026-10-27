@@ -1,6 +1,6 @@
 """Shared Bessel quadrature and bounded-memory chunking of ``HarmonicKernel``.
 
-Shared quadrature: ``syncmoments.bessel.bessel_jn_neighbours`` evaluates
+Shared quadrature: ``syncem.bessel.bessel_jn_neighbours`` evaluates
 ``J_{m-1}``, ``J_{m+1}`` and ``J_m'`` from one set of ``cos/sin(m t - x sin t)``
 on the contour shifted for order ``m``. Checked against SciPy ``jv/jvp`` over
 the Bessel resolution classes, at small ``x`` (the axis limit), at ``x`` close
@@ -22,14 +22,14 @@ from numpy.testing import assert_allclose
 import pytest
 from scipy.special import jv, jvp
 
-import syncmoments  # noqa: F401
-from syncmoments.bessel import bessel_jn_and_prime, bessel_jn_neighbours
-from syncmoments.constants import C_CGS, E_ESU, M_E
-from syncmoments.model._harmonic_cells import chunk_plan, harmonic_lines
-from syncmoments.model._kernel_helpers import sine_from_cosine
-from syncmoments.model.harmonic import HarmonicKernel
-from syncmoments.model.index import MomentIndex, Truncation
-from syncmoments.model.phase import TaylorPhase
+import syncem  # noqa: F401
+from syncem.bessel import bessel_jn_and_prime, bessel_jn_neighbours
+from syncem.constants import C_CGS, E_ESU, M_E
+from syncem.model._harmonic_cells import chunk_plan, harmonic_lines
+from syncem.model._kernel_helpers import sine_from_cosine
+from syncem.model.harmonic import HarmonicKernel
+from syncem.model.index import MomentIndex, Truncation
+from syncem.model.phase import TaylorPhase
 
 from _harmonic_oracles import GAMMA0, S_DEPTH, benchmark_channels, richardson
 

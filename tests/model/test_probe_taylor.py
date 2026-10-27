@@ -21,15 +21,15 @@ import jax.numpy as jnp
 import numpy as np
 import pytest
 
-import syncmoments  # noqa: F401
-from syncmoments.constants import C_CGS, C_SI_M, E_ESU, M_E
-from syncmoments.model import _harmonic_tail as tail
-from syncmoments.model import _remainder_probe as probe
-from syncmoments.model.channels import Channels
-from syncmoments.model.harmonic import HarmonicKernel
-from syncmoments.model.index import MomentIndex, Truncation
-from syncmoments.model.moments import PopulationSamples, Reference
-from syncmoments.model.phase import GaussianScreen
+import syncem  # noqa: F401
+from syncem.constants import C_CGS, C_SI_M, E_ESU, M_E
+from syncem.model import _harmonic_tail as tail
+from syncem.model import _remainder_probe as probe
+from syncem.model.channels import Channels
+from syncem.model.harmonic import HarmonicKernel
+from syncem.model.index import MomentIndex, Truncation
+from syncem.model.moments import PopulationSamples, Reference
+from syncem.model.phase import GaussianScreen
 
 RTOL = 1e-12  # spec: new probe equals the nested-jacfwd probe
 

@@ -17,7 +17,7 @@ Error bound (first order in ``u = 2^-53``, componentwise, ``gamma_n = n u``):
 
 the first term from rounding ``eps - K S`` (four products, three sums, one
 subtraction), the second from the product with ``Phi``, the third from the
-error of the computed propagator (``syncmoments._expm.expm_pade13``). That last
+error of the computed propagator (``syncem._expm.expm_pade13``). That last
 error is not bounded rigorously; it is modelled as ``64 u max(|K ds|_1, 1)
 max|Phi|`` per entry. Measured against mpmath: at most ``37 u max(|K ds|_1, 1)``
 over the 119 finite round-5 slabs (slab 103, an absorbing ``K``: for a decaying
@@ -36,8 +36,8 @@ import numpy as np
 import pytest
 import scipy.linalg as sla
 
-import syncmoments  # noqa: F401  (enables x64)
-from syncmoments.transfer import mueller_matrix, transfer_slab
+import syncem  # noqa: F401  (enables x64)
+from syncem.transfer import mueller_matrix, transfer_slab
 
 U = 2.0**-53
 
@@ -188,8 +188,8 @@ def test_scaled_rate_equals_the_unscaled_one_across_the_threshold(shift):
     unscaled one on inputs pre-scaled by ``2^-i``, which gives ``i = 0``) and
     agree bit for bit on both sides and far above: powers of two commute with
     rounding when nothing under- or overflows."""
-    from syncmoments._expm import propagators
-    from syncmoments.transfer import _length_rate
+    from syncem._expm import propagators
+    from syncem.transfer import _length_rate
 
     K = jnp.asarray(_mueller(1.5, (0.2, -0.1, 0.05, 0.3, -0.2, 1.1)))  # e(|K|) = 1
     S = jnp.array([0.75, -0.5, 0.25, 0.6]) * 2.0 ** (
