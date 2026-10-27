@@ -288,7 +288,7 @@ def test_physical_error_describe_and_validation():
     assert described["m_chunk"] == 64 and described["chunk_budget"] == 1 << 20
     assert dict(HarmonicKernel(40, n_nodes=512).describe())["n_nodes"] == 512
     assert kernel.components == ("I", "Q", "V") and kernel.required_closures == ()
-    assert "eq: smooth channel kernel" in kernel.LABEL
+    assert "eq: channel kernel" in kernel.LABEL
     bad = [
         dict(m_max=0),
         dict(m_max=40, n_nodes=128),

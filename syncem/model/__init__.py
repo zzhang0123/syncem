@@ -3,10 +3,10 @@
 This layer implements the manuscript's Section 4 construction: Legendre
 projection in the angular cosines, Taylor expansion in scaled energy, field and
 Faraday-depth displacements, smooth-channel evaluation of the Dirac-line kernel
-(main.tex ``eq: smooth channel kernel``, ``eq: channel derivative coefficients``),
+(main.tex ``eq: channel kernel``, ``eq: channel derivative coefficients``),
 the finite joint response (``eq: finite joint response``) and its error budget
-(``eq: channel error budget``), plus a fitting layer (extended discussion
-``eq: finite fit model``).
+(the componentwise channel envelope of ``sec: frequency order``), plus a
+fitting layer (``sec: linear fit``).
 
 Objects
 -------

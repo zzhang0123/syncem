@@ -1,10 +1,9 @@
 """Harmonic (Dirac-line) channel kernel (``syncem.model.harmonic``).
 
-LABEL: ``eq: smooth channel kernel`` (``H_{P,j} = sum_m Q_m R_j(nu_m)
+LABEL: ``eq: channel kernel`` (``H_{P,j} = sum_m Q_m R_j(nu_m)
 exp(2 i (c/nu_m)^2 varphi)``, ``nu_m = m nu_B / D``; ``I, V`` without phase),
 ``eq: channel derivative coefficients`` (``build_basis`` uses the Taylor
-tensors of :meth:`HarmonicKernel.angular_taylor`), ``extra eq: channel kernel`` and
-``extra eq: faraday channel kernel``. The natural-basis line powers
+tensors of :meth:`HarmonicKernel.angular_taylor`). The natural-basis line powers
 ``(I_m, Q_m, V_m)`` are the recurrence used by ``syncem.stokes``
 (``J_m/sin theta = b_perp (J_{m-1} + J_{m+1})/(2D)``), in erg/s/sr per
 electron, at a traced float harmonic index with a static Bessel resolution
@@ -156,10 +155,8 @@ class HarmonicKernel(eqx.Module):
 
     name: ClassVar[str] = "harmonic"
     LABEL: ClassVar[tuple[str, ...]] = (
-        "eq: smooth channel kernel",
+        "eq: channel kernel",
         "eq: channel derivative coefficients",
-        "extra eq: channel kernel",
-        "extra eq: faraday channel kernel",
     )
     components: ClassVar[tuple[str, ...]] = ("I", "Q", "V")
     required_closures: ClassVar[tuple[str, ...]] = ()

@@ -1,10 +1,12 @@
 """Population statistics of the finite joint response (``syncem.model.moments``).
 
 LABEL: ``eq: explicit joint moments`` (``JointMoments``), the dimensionless
-displacement coordinates of ``eq: local response remainder`` (``Reference.z``),
-the declared population support of ``eq: channel error budget``
-(``Support``) and the discrete electron-number measure of
-``eq: joint emission depth`` (``PopulationSamples``).
+displacement coordinates (``Reference.z``; the offsets of
+``eq: channel basis expansion`` divided by fixed positive scales,
+``[extension]``), the declared population support (``Support``;
+``sec: frequency order``, paragraph 'Energy range and distribution width') and
+the discrete electron-number measure of ``eq: joint emission depth``
+(``PopulationSamples``).
 
 Coordinates. Moments are stored in the dimensionless displacements
 ``z = ((gamma - gamma0)/s_gamma, (B - B0)/s_B, (depth - depth_ref)/s_depth)``
@@ -135,9 +137,9 @@ class JointMoments(eqx.Module):
     ``m0`` is real ``(n0,)`` in ``index.h0`` order, ``m2`` complex ``(n2,)``
     in ``index.h2`` order, ``m0_ext`` real ``(n0_ext,)`` over ``index.h0_ext``
     (``b >= 1`` rows outside ``m``; ``None`` when built from a vector).
-    ``to_vector`` is ``concat(m0, Re m2, Im m2)`` (``extra eq: finite fit
-    model``). ``assumptions`` records the parameter maps that produced the
-    moments; ``discrepancy`` is a moment-level ``Delta_a`` (``n_real,``).
+    ``to_vector`` is ``concat(m0, Re m2, Im m2)`` (``eq: linear basis``).
+    ``assumptions`` records the parameter maps that produced the moments;
+    ``discrepancy`` is a moment-level ``Delta_a`` (``n_real,``).
     Shape mismatches raise ``ValueError``; nothing here checks feasibility.
     Units: dimensionless (moments of ``z`` displacements and Legendre
     polynomials); ``to_raw_displacements`` restores ``s_gamma^r s_B^s

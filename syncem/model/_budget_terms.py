@@ -1,5 +1,5 @@
-"""Slot fillers of ``eq: channel error budget`` shared by ``predict`` and the
-direct average (private helper of ``syncem.model.predict``).
+"""Slot fillers of :class:`ErrorBudget` (``sec: frequency order``) shared by
+``predict`` and the direct average (private helper of ``syncem.model.predict``).
 
 Every function returns an ``ErrorTerm`` of value shape ``(n_ch, 4)`` in the
 units of the prediction (amplitude times the per-electron kernel). A missing
@@ -17,7 +17,7 @@ import numpy as np
 
 from .errors import WEAKEST_ORDER, ErrorTerm
 
-_PROPAGATION = "extra eq: data error propagation"
+_PROPAGATION = "sec: frequency order"
 _STATISTICAL = "N_src sum_a |S_a| Delta_a"
 
 
@@ -335,7 +335,11 @@ def scaled_kernel_term(term, amplitude, m, n_ch):
 
 
 def propagate_envelope(total, stokes, R, response_uncertainty):
-    """``|R| @ envelope + |delta R| @ |stokes|`` per data element (``extra eq: data error propagation``)."""
+    """``|R| @ envelope + |delta R| @ |stokes|`` per data element.
+
+    Labels: ``sec: frequency order``; the response-error term follows
+    ``eq: chromatic beam response``.
+    """
     n_ch = stokes.shape[0]
     R = jnp.asarray(R)
     if R.ndim != 2 or R.shape[1] != 4 * n_ch:

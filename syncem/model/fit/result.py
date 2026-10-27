@@ -1,10 +1,12 @@
 """The ``FitResult`` container of every spectral fit (``syncem.model.fit.result``).
 
-LABEL: ``extra eq: finite fit model`` (the fitted ``u = (A, A theta)`` or
-``theta`` of ``d = A C m(theta) + delta + eta``), ``eq: joint moment
-feasible set`` (the attached :class:`FeasibilityReport`), ``eq: channel error
-budget`` (the attached :class:`Prediction` and its budget), ``extra eq:
-nodal bound`` (the ``discretisation`` term of a nodal fit).
+LABEL: ``sec: linear fit`` (the fitted ``u = (A, A theta)`` or ``theta`` of
+a model ``a(theta)`` fitted to ``d = A C m(theta) + delta + eta``),
+``sec: finite joint response`` (the attached :class:`FeasibilityReport`),
+``sec: frequency order`` (the attached :class:`Prediction` and its budget)
+and ``[extension]`` (the ``discretisation`` term of a nodal fit: a
+caller-supplied discretisation envelope of the nodal population, propagated
+as a supplied channel envelope as in ``sec: frequency order``).
 
 A :class:`FitResult` holds the fitted parameters, the moments they imply,
 the amplitude, the Fisher matrix and its covariance in the fit's own
@@ -17,10 +19,12 @@ is the numerical rank, ``dof = n_kept - rank`` (``n_kept - n_params`` when
 no Fisher matrix was formed). ``chi2`` is the whitened residual norm
 squared at the fitted point, in the data units.
 
-``bias_bound`` is ``|K| |delta|`` over the fit coordinates, ``K`` the
-estimator matrix and ``delta`` the declared ``data.discrepancy`` on the kept
-rows plus, with an observing response, ``|delta R| (|S_hat| + E)`` (``extra
-eq: data error propagation``). ``fit_linear``: over ``u``, kind of the
+``bias_bound`` is ``|K| |delta|`` over the fit coordinates
+(``eq: estimator bias``), ``K`` the estimator matrix and ``delta`` the
+declared ``data.discrepancy`` on the kept rows (composed as in
+``sec: frequency order``) plus, with an observing response, the
+response-error term ``|delta R| (|S_hat| + E)`` (stated after
+``eq: chromatic beam response``). ``fit_linear``: over ``u``, kind of the
 discrepancy (``estimate`` when the plug-in ``S_hat`` term is nonzero).
 ``fit_bfgs``: over ``z`` with ``K = J^+ L^-1`` from the whitened Jacobian,
 an ``estimate`` linearised at the optimum (prior and log-Jacobian curvature
@@ -64,7 +68,7 @@ from ..errors import ErrorTerm, Provenance
 from . import _result_core as core
 from ._result_core import MAX_FISHER_PARAMS, TOL
 
-LABEL = "extra eq: finite fit model"
+LABEL = "sec: linear fit"
 METHODS = ("linear", "bfgs", "nodal")
 
 

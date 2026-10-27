@@ -1,15 +1,18 @@
 """Adapters between the finite joint response and the existing package routines
 (``syncem.model.adapters``).
 
-LABEL: ``eq: joint screen response`` and ``eq: joint screen remainder``
-(:func:`to_joint_faraday`: the ``app: depth moments`` contraction of
-``syncem.faraday.joint_faraday_average``), ``extra eq: channel kernel``
-against the fixed-harmonic quadratic average of ``syncem.expansion``
-(:func:`fixed_harmonic_comparison`; two different observables, not an
-equality), ``eq: independent gaussian screen`` against
+LABEL: ``eq: finite joint response`` evaluated with one nominal ``tau_j`` per
+channel (an ``[extension]`` approximation) in the ``[extension]`` depth-degree
+layout ``r+s <= N, b <= L`` (moments ``M[a, b]`` of
+``eq: explicit joint moments``), and the ``[extension]`` depth-Taylor bound
+of its residual (:func:`to_joint_faraday`: the frequency-resolved
+contraction of ``syncem.faraday.joint_faraday_average``),
+``eq: channel kernel`` against the fixed-harmonic quadratic average of
+``syncem.expansion`` (:func:`fixed_harmonic_comparison`; two different
+observables, not an equality), ``eq: independent gaussian screen`` against
 ``syncem.rm.burn_depolarisation`` (:func:`burn_screen_check`).
 
-Shapes: channel quantities are ``(n_ch, 4)`` or ``(n_ch,)``; the ``app: depth moments``
+Shapes: channel quantities are ``(n_ch, 4)`` or ``(n_ch,)``; the depth-degree
 contraction uses ``(n_ch, n_a)`` coefficients and an ``(n_a, L+1)`` matrix.
 Units follow ``syncem.model.predict``: channel Stokes are the amplitude
 times the per-electron channel kernel; wavelengths are in metres; depths in
@@ -44,10 +47,10 @@ from .predict import predict
 
 
 def joint_faraday_rows(index) -> tuple:
-    """``app: depth moments`` row order ``a = (l, k, r, s)``: the ``h2`` rows with ``b = 0``.
+    """``[extension]`` depth-degree row order ``a = (l, k, r, s)``: the ``h2`` rows with ``b = 0``.
 
-    Dimensionless bookkeeping (``app: depth moments``); assumes the ``app: depth moments``
-    layout of the index; nothing certified.
+    Dimensionless bookkeeping; assumes the ``[extension]`` depth-degree layout
+    ``r+s <= N, b <= L`` of the index; nothing certified.
     """
     return tuple(row[:4] for row in depth_rows(index))
 
@@ -55,7 +58,7 @@ def joint_faraday_rows(index) -> tuple:
 def to_joint_faraday(basis, moments, *, samples=None, absolute_next=None):
     """``(coefficients (n_ch, n_a), M (n_a, L+1), absolute_next (n_a,) | None)``.
 
-    ``basis`` must use the ``app: depth moments`` layout (``depth_degree = L``);
+    ``basis`` must use the ``[extension]`` depth-degree layout (``depth_degree = L``);
     ``coefficients[j, a]`` is the ``b = 0`` column of ``P_basis`` divided by
     ``exp(i tau_j depth_ref)`` with ``tau_j = 2 (c / centre_j)^2`` (the
     nominal wavelength ``lam_j = C_SI_M / centre_j``); ``M[a, b]`` is
@@ -75,7 +78,7 @@ def to_joint_faraday(basis, moments, *, samples=None, absolute_next=None):
     L = index.truncation.depth_degree
     if L is None:
         raise ValueError(
-            "to_joint_faraday needs the ``app: depth moments`` layout (depth_degree=L)"
+            "to_joint_faraday needs the depth-degree layout (depth_degree=L)"
         )
     if moments.index != index:
         raise ValueError("moments.index must equal basis.index")

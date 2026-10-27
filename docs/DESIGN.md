@@ -17,9 +17,10 @@ per-variable caps, symmetry assumptions, and the derivative rules of the
 transfer and weight-normalisation code) and their acceptance in two
 environments. Sections 10.1, 12.11 and 12.12 record the changes of 0.4.0
 (task T-006: response reduction, fits of identifiable combinations and the
-Section 5.3 example; task T-007: the transfer value, `d out / d ds` and
-third-derivative tests). The pass/fail record of the suite is kept outside this
-document.
+`[extension]` continuum SED example, a smooth correlated population in 72
+channels over 0.4-3 GHz from the 2026-09-26 manuscript draft; task T-007: the
+transfer value, `d out / d ds` and third-derivative tests). The pass/fail
+record of the suite is kept outside this document.
 
 ## 1. Principles
 
@@ -34,16 +35,19 @@ document.
 3. Dirac-line kernels are evaluated only after pairing with a smooth,
    compactly supported channel response. The Faraday phase and any screen
    characteristic function multiply each harmonic line at its own
-   `tau_m = 2 lambda_m^2` inside the channel sum (`eq: smooth channel kernel`).
+   `tau_m = 2 lambda_m^2` inside the channel sum (`eq: channel kernel`;
+   screen routes `eq: channel screen response`).
 4. Every approximation carries an `ErrorTerm(value, kind, note)` with
    `kind in {bound, estimate, measured, unbounded, not_applicable}`. A missing
    input is `unbounded` (`value=None`), never zero. `ErrorBudget.total()` is
    `unbounded` when any term is, otherwise the sum with the weakest kind.
-5. Every object names the manuscript equation it implements in `LABEL`.
+5. Every object names in `LABEL` the main.tex label it implements, or
+   `[extension]` with a one-clause description.
 6. Coordinates are the manuscript's Legendre cosines `(mu, eta)` and the
    dimensionless displacements
    `z = ((gamma - gamma0)/s_gamma, (B - B0)/s_B, (varphi - varphi_ref)/s_varphi)`
-   of `eq: local response remainder`. Moments and bases are stored in `z`;
+   (the offsets of `eq: channel basis expansion` divided by fixed positive
+   scales, `[extension]`). Moments and bases are stored in `z`;
    the raw-displacement form of `eq: explicit joint moments` is
    `M_raw = s_gamma^r s_B^s s_varphi^b M_z`. The manuscript's worked example
    uses `scales = (gamma0, B0, 1/(2 (c/nu_*)^2))`.
@@ -61,7 +65,7 @@ syncem/model/
   errors.py        ErrorTerm, ErrorBudget, AssumptionRecord, Provenance
   channels.py      Channels
   phase.py         TaylorPhase, GaussianScreen, CumulantScreen, EmpiricalScreen
-  screens.py       LaplaceScreen, GammaScreen (eq: illustrated screens)
+  screens.py       LaplaceScreen, GammaScreen (fig: screen shapes)
   moments.py       Reference, Support, PopulationSamples, JointMoments
   bounds.py        RemainderInputs, screen_/azimuth_factorisation_bound, depth_error_bound
   assumptions.py   Factorisation, Closure, ParameterMap, named constructors
@@ -100,7 +104,7 @@ SpectralBasis + StokesData + ParameterMap --fit_linear / fit_bfgs / fit_nodal-->
 `Truncation(L_mu, L_eta, N, depth_degree=None, *, max_orders=None)` holds
 static integers. `N` is the total Taylor degree. `depth_degree=None` uses the
 main-text cutoff `r + s + b <= N` for the `P` block; `depth_degree=L` uses the
-`app: depth moments` layout `r + s <= N, b <= L` (`app: depth moments`).
+`[extension]` depth-degree layout `r + s <= N, b <= L`.
 `max_orders=(N_gamma, N_B, N_depth)` `[extension]` (each an int or `None`)
 also requires `r <= N_gamma`, `s <= N_B`, `b <= N_depth` (Section 3.1).
 
@@ -109,7 +113,7 @@ Rows are tuples `(l, k, r, s, b)` in lexicographic order:
 | block | rows | size |
 |---|---|---|
 | `h0` | `l <= L_mu`, `k <= L_eta`, `r + s <= N`, `b = 0` | `n0 = (L_mu+1)(L_eta+1) C(N+2, 2)` |
-| `h2` | `l + k` even (with `parity=True`), `r + s + b <= N` | `n2 = n_+ C(N+3, 3)` (`app: depth moments`: `n_+ C(N+2, 2)(L+1)`) |
+| `h2` | `l + k` even (with `parity=True`), `r + s + b <= N` | `n2 = n_+ C(N+3, 3)` (`[extension]` depth-degree layout: `n_+ C(N+2, 2)(L+1)`) |
 | `h0_ext` | real rows with `l + k` even, `b >= 1`, same cutoff as `h2` | not part of `m` |
 
 Here `n_+ = [(L_mu+1)(L_eta+1) + d]/2` with `d = 1` iff both limits are
@@ -120,7 +124,7 @@ even. Slot 0 is `M0_{00;000} = 1`. `h0_ext` is used by `ParameterMap`
 `parity=False` keeps them `[extension]`. `components` without `"V"` drops the
 odd-parity `h0` rows (continuum kernel).
 
-Flattening (`extra eq: finite fit model`):
+Flattening (`eq: linear basis`):
 `m = concat(M0[h0], Re M2[h2], Im M2[h2])`, `n_real = n0 + 2 n2`. `I` bases
 are nonzero only on `h0` rows with `l + k` even, `V` bases only on `l + k`
 odd (masks `parity_I`, `parity_V`); both parity classes stay in `h0` because
@@ -148,10 +152,10 @@ The caps intersect the cutoffs above with `r <= N_gamma`, `s <= N_B`,
 `b <= N_depth`. Caps that remove no row normalise to `None`, so a
 non-binding `max_orders` gives a `Truncation` equal to (and hashing like) the
 default and a byte-identical `MomentIndex`; `is_capped()` is true only when a
-row is removed. In the `app: depth moments` layout `N_depth < depth_degree`
-raises `ValueError` (set `depth_degree` instead), because the adapters
-enumerate `b` up to `depth_degree`. `caps()` returns the effective limits,
-`max_b()` honours `N_depth`, so `build_basis` picks
+row is removed. In the `[extension]` depth-degree layout
+`N_depth < depth_degree` raises `ValueError` (set `depth_degree` instead),
+because the adapters enumerate `b` up to `depth_degree`. `caps()` returns
+the effective limits, `max_b()` honours `N_depth`, so `build_basis` picks
 `TaylorPhase(min(N, N_depth))`. `main_text_sizes` has no closed form for a
 capped truncation and raises. Sizes (`n0 / n2 / n_real`):
 
@@ -169,7 +173,7 @@ The retained `(r, s, b)` set is a lower (downward-closed) set `Lambda`.
 `margin_rows()` returns its telescoped margin `S(Lambda)`
 (`lower_set_margin`, Section 8.1): for the main-text layout the margin of
 the `P` row set (the `I, V` set is its `b = 0` section), for the
-`app: depth moments` layout the margin of the `(r, s)` set with `b = 0`
+`[extension]` depth-degree layout the margin of the `(r, s)` set with `b = 0`
 (the depth order is bounded by the depth tail). The basis cost falls with
 the caps: `_basis_taylor.needed_orders` collects the `(r, s)` of the
 retained rows and `angular_taylor(..., orders=)` chooses, for each nested
@@ -198,7 +202,7 @@ outside the support edges.
 
 | family | response | smoothness |
 |---|---|---|
-| `bump` (default; the manuscript's channel) | `exp[1 - 1/(1 - t^2)]`, `t = (nu - c)/w` | C-infinity (99) |
+| `bump` (default; the `k = 1` shape of `eq: forward response families`) | `exp[1 - 1/(1 - t^2)]`, `t = (nu - c)/w` | C-infinity (99) |
 | `planck_taper(taper)` | flat centre, Planck tapers | C-infinity |
 | `raised_cosine` | | 1 |
 | `tophat` | | 0 |
@@ -206,7 +210,8 @@ outside the support edges.
 | `from_table(..., smoothness=, argument="nu"\|"omega")` | interpolated table | declared |
 
 `normalisation="unit_peak"` (default) gives band-integrated powers (the
-manuscript's example); `"unit_integral"` gives `int R(nu) dnu = 1` per Hz.
+acceptance benchmark's normalisation; main.tex uses unit area);
+`"unit_integral"` gives `int R(nu) dnu = 1` per Hz.
 `build_basis` requires `smoothness >= N + 1` for a `basis_remainder` of kind
 `bound`; otherwise that term is `unbounded` with the reason. No `2 pi`
 factor enters anywhere; `from_table(..., argument="omega")` converts
@@ -226,7 +231,7 @@ line or per frequency node.
 | `GaussianScreen(mean, sigma)` | `w_0 = exp(i tau mean - tau^2 sigma^2 / 2)` (`eq: independent gaussian screen`, Burn) | `independent_screen`, `gaussian_screen` |
 | `CumulantScreen(kappa (4,), g5_bound=None)` | `w_0 = exp(g_4(tau))` | `independent_screen`, `cumulant_screen`; zero-free interval assumed |
 | `EmpiricalScreen(depths, weights)` | `w_0 = sum_i w_i exp(i tau depth_i)` | `independent_screen` (exact for the supplied discrete screen) |
-| `LaplaceScreen(mean, sigma)` | `w_0 = exp(i tau mean) / (1 + (tau sigma)^2 / 2)` (`eq: illustrated screens`) | `independent_screen`, `laplace_screen` |
+| `LaplaceScreen(mean, sigma)` | `w_0 = exp(i tau mean) / (1 + (tau sigma)^2 / 2)` (`fig: screen shapes`) | `independent_screen`, `laplace_screen` |
 | `GammaScreen(mean, sigma, shape=4, sign=1)` | `w_0 = exp(i tau mean) exp(-i s t sqrt(k)) (1 - i s t / sqrt(k))^(-k)`, `t = tau sigma` | `independent_screen`, `gamma_screen` |
 
 `varphi_ref` and `s_varphi` are read from `Reference` by `build_basis`.
@@ -252,8 +257,8 @@ takes their `(z_gamma, z_B)` Taylor tensors from
 `HarmonicKernel(m_max, *, n_nodes=None, n_outer=64, n_inner=64, n_mu=48,
 n_eta=48, m_chunk=64, chunk_budget=CHUNK_BUDGET, tail_probe=None,
 E_phys=None, quadrature="product", derivatives="analytic")`
-implements `eq: smooth channel kernel` and `eq: channel derivative
-coefficients`: `H_{P,j} = sum_m Q_m R_j(nu_m) w(tau_m)`, `nu_m = m nu_B / D`.
+implements `eq: channel kernel` and `eq: channel derivative coefficients`:
+`H_{P,j} = sum_m Q_m R_j(nu_m) w(tau_m)`, `nu_m = m nu_B / D`.
 Harmonics are traced floats `m = 1..m_max` batched inside `lax.map` steps.
 `describe()` (the provenance kernel record) includes `chunk_budget` and
 `derivatives`.
@@ -263,9 +268,9 @@ channel and sign the cell in `t = mu eta` where the line meets the channel
 support is integrated with `t = sign v^4`, `v` on Gauss-Legendre nodes, and
 the inner variable `log mu` from `log|t|` to `0`; the `mu < 0` half enters
 through the parity factors `(1 +/- (-1)^(l+k))`. This resolves the
-`1/|mu|` Jacobian of the double projection before parameter differentiation
-(main text, Section 4). Because `R_j` vanishes to all orders at its support
-edges, the boundary terms of the `(gamma, B)`-dependent cells vanish.
+`1/|mu|` Jacobian of the double projection before parameter differentiation.
+Because `R_j` vanishes to all orders at its support edges, the boundary
+terms of the `(gamma, B)`-dependent cells vanish.
 Automatic differentiation is the derivative of the computed values in
 cells with `lo = 0` or `lo >= 0.1 hi`, except at an exact coincidence of a
 channel edge with a line at `t = 0`: there the rule is not differentiable,
@@ -507,7 +512,7 @@ with `f_gamma = z_gamma^r`, `f_B = z_B^s`, `f_mu = P_l(mu)`, `f_eta = P_k(eta)`,
 |---|---|---|
 | `{depth} \| rest` | `M^{(h)}_{lk;rsb} = M^{(h)}_{lk;rs0} m_b`, `m_b = <z_varphi^b>` | `eq: independent screen moments` |
 | `{B} \| rest` | `<P_l P_k e^{ih phi} z_gamma^r z_varphi^b> <z_B^s>` | |
-| `{phi} \| rest` | `M2 = m_phi M0_ext`, `m_phi = <e^{2i phi}>` | `detail-eq: angular factorisation error` (constant conditional circular moment; weaker than independence) |
+| `{phi} \| rest` | `M2 = m_phi M0_ext`, `m_phi = <e^{2i phi}>` | `[extension]` constant conditional circular moment over all other variables (weaker than independence); the energy-moment case is the single azimuth factor of `sec: classical forward` |
 | `{mu} \| rest` with `uniform_mu` | `<P_l(mu) ...> = 0` for `l >= 1` | isotropic pitch |
 | `{mu, eta} \| {gamma, B, phi, depth}` | `M^{(h)}_{lk;rsb} = a_lk / ((2l+1)(2k+1)) <e^{ih phi} z_gamma^r z_B^s z_varphi^b>` | `eq: uncoupled moments` (constant `a_lk` of `eq: conditional legendre coefficients`) |
 | six singletons | product of marginal tables | fully independent |
@@ -558,7 +563,7 @@ Free parameters at `(L_mu, L_eta, N) = (2, 2, 2)` (the unit moment excluded):
 | `azimuth_separable` | `{phi} \| rest` | 73 + 2 = 75 |
 | `isotropic_pitch` | `{mu}` closed uniform | 17 + 40 = 57 |
 | `independent_screen + azimuth_separable` | | 57 |
-| `fully_independent` | six singletons | `N_gamma + N_B + max_b + L_mu + L_eta + 2 = 12` with `(N_gamma, N_B, max_b) = truncation.caps()` (`2N + max_b + ...` uncapped; `max_b = N`, or `depth_degree` in the `app: depth moments` layout) |
+| `fully_independent` | six singletons | `N_gamma + N_B + max_b + L_mu + L_eta + 2 = 12` with `(N_gamma, N_B, max_b) = truncation.caps()` (`2N + max_b + ...` uncapped; `max_b = N`, or `depth_degree` in the `[extension]` depth-degree layout) |
 | `nodal(index, nodes)` | nonnegative weights on fixed nodes (softmax of logits) | number of nodes |
 | `pitch_symmetric` | one group, odd-`l` rows dropped | 115 |
 | `field_reversal_symmetric` | one group, odd-`l + k` rows dropped | 129 |
@@ -587,17 +592,19 @@ An assumption's discrepancy has four explicit sources; otherwise it is
    for example `ParameterMap.build(..., discrepancy=...)` on the combined
    map or `JointMoments.from_samples(parameter_map=combined,
    discrepancy="measured")`.
-2. The manuscript bound helpers in `bounds.py`:
-   `screen_factorisation_bound(sigma_P_in, Phi_R_abs_min)`
-   (`detail-eq: screen factorisation error`) takes per-line arrays
+2. The bound helpers in `bounds.py`:
+   `screen_factorisation_bound(sigma_P_in, Phi_R_abs_min)` (`[extension]`
+   bound `sigma_P sqrt(1 - |Phi_R|^2)` on the covariance omitted by an
+   independent-screen factorisation) takes per-line arrays
    `(n_ch, n_line)`, `sigma_m` the ray standard deviation of
    `|R_j(nu_m)| P_m` and `Phi_m = |<exp(i tau_m R)>|`, and returns
    `sum_m sigma_m sqrt(1 - |Phi_m|^2)`; the `(n_ch,)` form takes
    `sigma = sum_m |R_j(nu_m)| sigma_{P_m}` (`int |R_j| sigma_{P(nu)} dnu` for
    a continuum) and `Phi = min_m |Phi_R|`. The standard deviation of the
    channel-summed incident polarisation is not a valid input.
-   `azimuth_factorisation_bound(sigma_F, m_phi_abs)` (`detail-eq: angular
-   factorisation error`; `(n_ch,)` only, `P` column, zeros in `I, V`).
+   `azimuth_factorisation_bound(sigma_F, m_phi_abs)` (`[extension]` bound
+   `sigma_F sqrt(1 - |m_phi|^2)` on the covariance omitted by a constant
+   circular moment; `(n_ch,)` only, `P` column, zeros in `I, V`).
    Both take `amplitude=` (default 1) and return a Stokes-unit
    `ErrorTerm` of kind `bound` for the caller's inputs; pass it to
    `predict` or `direct_channel_average` through `assumption_allowances`
@@ -825,23 +832,25 @@ envelope `(n_ch, 4)` (or broadcastable) in channel Stokes units, `None` iff
 zero bound with its reason. `total()` orders kinds `bound < measured <
 estimate` and returns the weakest kind present.
 
-`ErrorBudget` (`eq: channel error budget`) slots, in order:
+`ErrorBudget` splits the componentwise channel envelope `E^ch` of
+`sec: frequency order` into typed terms. The slots and the names `E_num`,
+`E_phys` and `E_tail` are `[extension]`. Slots, in order:
 
-| slot | content | manuscript term |
+| slot | content | budget symbol |
 |---|---|---|
-| `basis_remainder` | `eq: local response remainder` from `RemainderInputs` (angular residual and order-`N+1` derivative envelopes times absolute moments; for a capped truncation the lower-set margin sum of Section 8.1); `unbounded` for a line-kernel basis with channel smoothness `< N + 1`, and in `predict(samples=...)` when order `N + 1` is not in `certified_orders`; on a screen route `P` is the intrinsic residual only | `N_src <rho_nu>` |
-| `statistical_input` | `A sum_a \|S~_a\| Delta_a`; an explicit `Delta` and a moment-level discrepancy not attributed to an assumption are summed (weaker kind) | `N_src sum_a \|S_a\| Delta_a` |
+| `basis_remainder` | `[extension]` truncation bound of `eq: channel residual average` from `RemainderInputs` (angular residual and order-`N+1` derivative envelopes times absolute moments; for a capped truncation the lower-set margin sum of Section 8.1); `unbounded` for a line-kernel basis with channel smoothness `< N + 1`, and in `predict(samples=...)` when order `N + 1` is not in `certified_orders`; on a screen route `P` is the intrinsic residual only | `[extension]` `N_src <rho_nu>` |
+| `statistical_input` | `A sum_a \|S~_a\| Delta_a`; an explicit `Delta` and a moment-level discrepancy not attributed to an assumption are summed (weaker kind) | `[extension]` `N_src sum_a \|S_a\| Delta_a` |
 | `physical_kernel` | kernel model discrepancy; `unbounded` unless declared | `E_phys` |
 | `harmonic_truncation` | omitted harmonics beyond `m_max`; the zero `bound` is conditional on the population lying inside the `Support`; `predict(samples=..., kernel=...)` and `direct_channel_average` check concrete samples (Section 6.1), a basis-level zero without samples keeps the unchecked hypothesis in its note | part of `E_num` |
 | `excluded_tail` | population outside the declared support; in `predict(samples=...)` and `direct_channel_average` a `Support.truncated=False` declaration contradicted by concrete samples outside `gamma`, `B` or depth is `unbounded` (traced samples are not checked and the declared zero is kept) | `E_tail` |
 | `numerical` | per-column envelope `\|C' - C\|` `(4 n_ch, n_real)` of the primary route refined against itself (2x angular nodes; `convergence="full"` also 2x Bessel or `F`/`G` resolution), contracted with `\|m\|` by `predict` (invariant under `Reference.scales`); continuum `F`/`G` tail bound on the mass column; kind `estimate` | `E_num` |
-| `screen_exponent` | Taylor route `not_applicable`; Gaussian, empirical, Laplace and Gamma screens a zero `bound`; cumulant screen `unbounded` without `g5_bound`, otherwise the `estimate` `A <H_I>_angles max\|w_0\| (e^{eps5,j} - 1)` at the reference point (basis) or `A <\|P_j\|> (e^{eps5,j} - 1)` with the phased-sum modulus (direct average), `eps5,j = tau_max^5 g5/5!` at the channel's lower edge | `eq: screen exponent error` |
-| `depth_model` | `tau <\|K_P\| \|delta varphi\|>` via `depth_error_bound` (`estimate` by default) | `eq: joint screen remainder` |
+| `screen_exponent` | Taylor route `not_applicable`; Gaussian, empirical, Laplace and Gamma screens a zero `bound`; cumulant screen `unbounded` without `g5_bound`, otherwise the `estimate` `A <H_I>_angles max\|w_0\| (e^{eps5,j} - 1)` at the reference point (basis) or `A <\|P_j\|> (e^{eps5,j} - 1)` with the phased-sum modulus (direct average), `eps5,j = tau_max^5 g5/5!` at the channel's lower edge | `R_5 bound of eq: independent gaussian screen` |
+| `depth_model` | `tau <\|K_P\| \|delta varphi\|>` via `depth_error_bound` (`estimate` by default) | `N_src tau <\|K_P\| \|delta varphi\|>` (`[extension]` depth perturbation; a `depth_error_bound` term carries `E_phys`) |
 | `amplitude` | `delta N_src (\|C m\| + e)`, `e` the valued per-electron slots (`depth_model / N_src` and Stokes-unit assumption allowances `/ N_src` included; `excluded_tail` not rescaled), the same in `predict` and `direct_channel_average`; a concrete `delta N_src = 0` is a zero `bound` ("amplitude declared exact"); a traced one keeps the weakest kind of `bound` and the valued slots; a negative or NaN value raises through `equinox.error_if`, a complex one `ValueError`; `None` is `unbounded`; an `ErrorTerm` input is taken as the whole slot | |
 | `assumption` | tuple of `(name, ErrorTerm)` pairs, one per declared assumption; an `assumption_allowances` entry replaces the named term (Section 7.3) | `E_phys` |
 
 `terms()`, `total()`, `unbounded()`, `envelope()` and `to_dict()` are
-provided; `to_dict()` fills the manuscript term of each slot. A budget with
+provided; `to_dict()` fills the `manuscript_term` of each slot. A budget with
 assumptions crosses a JIT boundary through `equinox.filter_jit` (the names
 are string leaves).
 
@@ -858,18 +867,25 @@ tests (finite checks, not certificates). Notes such as "incident polarisation no
 channels)` offers `to_dict()`, `summary()` and
 `propagate(R, response_uncertainty=None) -> ErrorTerm (n_data,)`, which
 returns `|R| @ envelope + |delta R| @ |stokes|`
-(`extra eq: data error propagation`); the second term is `unbounded` when
+(`sec: frequency order`; the response-error term is stated after
+`eq: chromatic beam response`); the second term is `unbounded` when
 `delta R` is not supplied.
 
 `RemainderInputs(rho_ang, H, absolute_moments, depth_tail,
 intrinsic_residual, kind, *, absolute_depth_coefficients=None,
-margin_H=None, margin_moments=None)` collects the
-inputs of `eq: local response remainder`. `from_samples(samples, basis, *,
-kernel=None, derivative_envelope="probe", angular_residual=None,
-phase=None, ...)` estimates the order-`N+1` envelopes on the samples
-(`kind="estimate"`) and computes the absolute moments on the
-samples it is given, so those samples must be the predicted population (or
-its absolute moments must be recomputed there, as README example (a) does).
+margin_H=None, margin_moments=None)` collects the inputs of the
+`[extension]` truncation bound
+`<rho_ang> + sum_lk H_lk <|P_l P_k| ||z||^{N+1}>/(N+1)!` of the residual in
+`eq: channel residual average` (`epsilon_{X,j}` of `eq: XV joint response`
+for `I, V`), with `rho_ang` bounding the angular remainder of
+`eq: angular channel remainder`; `depth_tail` and `intrinsic_residual` are
+the inputs of the `[extension]` depth-Taylor bound (depth-degree layout).
+`from_samples(samples, basis, *, kernel=None, derivative_envelope="probe",
+angular_residual=None, phase=None, ...)` estimates the order-`N+1`
+envelopes on the samples (`kind="estimate"`) and computes the absolute
+moments on the samples it is given, so those samples must be the predicted
+population (or its absolute moments must be recomputed there, as README
+example (a) does).
 `phase=None` means `basis.phase`, so the probe describes the route the basis
 uses (a basis without a `phase` field falls back to the exact per-emitter
 phase); another route makes the probed `P` inputs describe that route. The
@@ -881,8 +897,8 @@ leaves `basis_remainder` `unbounded` and its note names the order and
 points to `errors=RemainderInputs(...)` or
 `from_samples(..., derivative_envelope=<array>)`. `basis_remainder` returns
 `unbounded` itself for a line-kernel basis with channel smoothness
-`< N + 1`. In the `app: depth moments` layout on a Taylor route the depth
-term uses `absolute_depth_coefficients` `(n_ch, n_a)` =
+`< N + 1`. In the `[extension]` depth-degree layout on a Taylor route the
+depth term uses `absolute_depth_coefficients` `(n_ch, n_a)` =
 `sum_m |c_{a,m} R_j(nu_m)|` when supplied (kind of the inputs) and
 otherwise the modulus of the phased `b = 0` coefficient (kind `estimate`).
 On a screen route `P` is `intrinsic_residual` with no depth-Taylor term; the
@@ -965,8 +981,9 @@ with `S({0..n}) = {n+1}` in one dimension. The path `p_k(t)` lies in the box,
 so the supremum over the box also bounds.
 
 * For total degree `|beta| <= N`, `S` is the shell `|beta| = N + 1`, the
-  multi-index form of `eq: local response remainder`; uncapped truncations
-  keep the manuscript's operator-norm form as the default.
+  multi-index form of the order-`N+1` Taylor remainder of
+  `eq: channel basis expansion`; uncapped truncations keep the `[extension]`
+  operator-norm form as the default.
 * `S` contains every minimal element of the complement of `Lambda` and can
   contain more. The minimal elements alone do not bound the remainder:
   for `Lambda = {0,1}^2` (for example `Truncation(., ., 2,
@@ -987,7 +1004,7 @@ inputs `H`, `absolute_moments` alone leave it `unbounded` with a note naming
 the missing inputs. `from_samples` fills `margin_H` from the path points
 `p_k(t)`, `t in {0} union segment_points` (an `estimate`; every order
 `|beta|` must be in `certified_orders`), `margin_moments` and, in the
-`app: depth moments` layout, the margin `intrinsic_residual`, whose `P`
+`[extension]` depth-degree layout, the margin `intrinsic_residual`, whose `P`
 entries are the `(z_gamma, z_B)` derivatives at the emitter depth. A
 supplied `derivative_envelope` then has shape `(n_ch, 3, n_lk, n_m)`. The
 numerical checks (`test_lower_set_truncation.py`,
@@ -1098,7 +1115,9 @@ when rank-deficient); `A = u[0]`, `theta = u[1:]/u[0]`; Fisher
 rank-deficient, rank reported).
 `bias_bound = |K| (|R| E + |delta R| (|S_hat| + E))` with
 `K = (G^T Sigma^-1 G)^+ G^T Sigma^-1`, `E` the declared discrepancy and
-`S_hat` the fitted channel Stokes (`extra eq: data error propagation`). It
+`S_hat` the fitted channel Stokes (`eq: estimator bias`, with the
+channel-envelope term `|R| E` of `sec: frequency order` and the
+response-error term stated after `eq: chromatic beam response`). It
 has the discrepancy's kind, or `estimate` when the plug-in
 `|delta R| |S_hat|` term is nonzero. It is `unbounded` when no valued
 discrepancy is declared, when a `response` is set without
@@ -1130,9 +1149,12 @@ lowest finite objective among the returned point, the recovered pre-step
 point and the start is kept), `fit_nodal(basis,
 data, nodes, *, iters=500, step=0.1, discretisation=None, tol=1e-8,
 diagnostics=True)` (exponentiated-gradient steps on the simplex with the
-amplitude profiled; `extra eq: nodal distribution`, `extra eq: nodal
-bound`). Both return a `FitResult`; its `converged` flag is the
-optimiser's own (BFGS success or the float64 precision floor; the nodal
+amplitude profiled; the weights are the nonnegative witness of
+`sec: linear fit`, with nodes in all six variables `[extension]`, and
+`discretisation` is the caller's `[extension]` envelope of the node
+discretisation, entering as a supplied channel envelope,
+`sec: frequency order`). Both return a `FitResult`; its `converged` flag is
+the optimiser's own (BFGS success or the float64 precision floor; the nodal
 simplex stationarity residual), not a global-optimum statement.
 
 `fit_bfgs` forms `bias_bound = |K| |delta|` over `z` with
@@ -1163,7 +1185,9 @@ per-parameter resolution and `weak(threshold)`. Singular values, modes,
 `null_basis` and resolution are in the scale-invariant equilibrated
 coordinates; `column_scales` holds `D`, and `D @ null_basis` gives the null
 directions in `u`. `feasibility_checks(moments, index,
-support)` tests necessary conditions only (`eq: joint moment feasible set`):
+support)` tests necessary conditions only for `m` to be the moments of one
+nonnegative, normalised distribution on the declared support
+(`sec: finite joint response`):
 `m[0] = 1`; PSD of the `(z_gamma, z_B)` block of `M0_{00}`; support bounds;
 `|M2_{00;000}| <= 1`; `|M2_{00;2s0}| <= M0_{00;2s0}` and the `z_B^2`
 analogue; `|<P_1^2 e^{2i phi}>| <= <P_1^2>`; Cauchy-Schwarz
@@ -1193,9 +1217,10 @@ defaults.
 components=None, include_ext=True)` appends the `len(index.h0_ext)` real
 `M0` rows with `b >= 1` to the `n_real` slots of `m`, giving the full
 coordinates `a = A (m, m0_ext)` with `A = N_src/N_*` (60 = 52 + 8 in the
-Section 5.3 example). Structural zeros are the extension slots and any row
-whose basis vanishes by `eq: angular parity`. `pad(C)`, `full_vector(moments,
-amplitude=1.0)`, `raw_scales` and `to_raw(a)` convert between the layouts.
+`[extension]` continuum SED example, the worked example below). Structural
+zeros are the extension slots and any row whose basis vanishes by
+`eq: angular parity`. `pad(C)`, `full_vector(moments, amplitude=1.0)`,
+`raw_scales` and `to_raw(a)` convert between the layouts.
 `coefficient_bounds(layout, support, *, amplitude_bound)` returns the `bound`
 `|a_j| <= A_max z_g^r z_B^s z_d^b`, with `z_v` the largest scaled distance of
 the declared `Support` from the reference. It holds for electrons inside the
@@ -1218,10 +1243,12 @@ sources are kept apart in `LinearRelation(weights, source, scope)`:
   c[r,s] = 0` with `eps_g = s_gamma/gamma0` and `eps_B = s_B/B0`, in every
   block `(h, part, l, k, b)`, for any `Truncation` accepted by `build_basis`,
   any channels, any `PhaseWeights` and any positive scales. At 20 %/20 %
-  scales it gives the four identities of main.tex Section 5.3. Uncapped
-  blocks of degree `D` keep `D + 1` groups, and the set is complete there
-  (the `D`-jet of `B Phi(B gamma^2)` is fixed by `D + 1` numbers). Capped
-  blocks are checked on listed cases by a jet-rank oracle.
+  scales it gives the four identities of the `[extension]` continuum SED
+  example; the general identity is the differential form of
+  `eq: field scaling`. Uncapped blocks of degree `D` keep `D + 1` groups,
+  and the set is complete there (the `D`-jet of `B Phi(B gamma^2)` is fixed
+  by `D + 1` numbers). Capped blocks are checked on listed cases by a
+  jet-rank oracle.
 * `declared`: a caller statement with a scope, checked to `check_rtol` and
   then treated as exact.
 * `approximate`: kept with `delta_C`. `find_column_relations(reduction_or_basis,
@@ -1234,7 +1261,8 @@ provenance names the `continuum` kernel; for `HarmonicKernel`,
 records why in `notes`. `relations="continuum"` raises `ValueError` for them,
 and `relations="none"` gives the ungrouped comparison. `representatives` is
 `"gamma"` (the `s = 0` columns) or a tuple of `(r, s, b)` most preferred first;
-`MANUSCRIPT_REPRESENTATIVES` of the example reproduces the manuscript `T`.
+`MANUSCRIPT_REPRESENTATIVES` of the example reproduces the `T` of the
+2026-09-26 draft.
 The choice changes only `H`, `T` and the labels. The relative residual of a
 relation is `||C w||_inf / sum_j |w_j| ||C_j||_inf`. For an exact reduction
 `max|C - H T| / max|C|` must stay within the residual limit propagated
@@ -1325,9 +1353,11 @@ independent fitted numbers. It is not a moment vector and is not checked for
 feasibility; a zero projection in a null slot is neither a physical zero nor
 a bound.
 
-**Worked example.** `scripts/sed_reconstruction_example.py` ports main.tex
-Section 5.3 (Appendix C.1) to these functions in five steps: the reduction
-before any data (`relations="continuum"` with the manuscript's
+**Worked example.** `scripts/sed_reconstruction_example.py` ports the
+`[extension]` continuum SED example (a smooth correlated population in 72
+channels over 0.4-3 GHz, from the 2026-09-26 manuscript draft) to these
+functions in five steps: the reduction before any data
+(`relations="continuum"` with the 2026-09-26 draft's
 representatives, which the example defines as `MANUSCRIPT_REPRESENTATIVES`;
 the package does not export them), the truth through
 `JointMoments.from_samples` and in closed form, mock data from an
@@ -1375,10 +1405,12 @@ without the manuscript repository. Sections 12.1 to 12.9 describe the
 
 Reproduction of the manuscript's smooth-channel example (Section 5.3.1):
 `gamma0 = 20`, `B0 = 1` G, three bump channels at `y_j = 2, 4, 8` with 65 %
-half-widths, the correlated population of `eq: channel toy population`,
-`HarmonicKernel(m_max=40)` (`required_m_max` is 40, so the harmonic-tail
-term is a zero bound), `Truncation(L, L, N)`, pinned against the saved
-`finite_IQUV` and `direct_IQUV` rows of the manuscript's
+half-widths, the correlated population of `population` in
+`tests/model/reference/validation/full_response.py` at widths 0.5 and 1.0
+(main.tex `sec: finite joint response` describes the width-1.0 case in
+words), `HarmonicKernel(m_max=40)` (`required_m_max` is 40, so the
+harmonic-tail term is a zero bound), `Truncation(L, L, N)`, pinned against
+the saved `finite_IQUV` and `direct_IQUV` rows of the manuscript's
 `validation/full_response_results.json`, read from the verbatim copy in
 `tests/model/reference/validation` (hash-checked, Section 12.10; units
 converted by
@@ -1417,7 +1449,7 @@ the full-resolution population (1,048,576 samples) at `N = 2, L = 8`:
 | `test_moments.py` | 43 | `from_samples` against explicit NumPy sums on the toy population; `from_vector`, `get`, `to_raw_displacements` |
 | `test_bounds.py`, `test_remainder_probe.py` | 15 + 4 | the manuscript bound helpers against closed forms; the probe `H`, absolute moments and angular residual against NumPy oracles on a polynomial kernel; the covering inequality `\|predict - direct\| <= basis_remainder` |
 | `test_basis.py`, `test_basis_build.py`, `test_basis_convergence.py` | 5 + 5 + 8 | column algebra exact on the polynomial kernel; benchmark coefficients; refusal rules on both sides (`required_m_max`, smoothness, `L_mu > 0`, phase degree); the per-column `numerical` envelope `(4 n_ch, n_real)` |
-| `test_screens.py` | 42 | `LaplaceScreen` and `GammaScreen` weights against SciPy quadrature of the screen densities (Gamma shapes 0.7, 4, 25, both signs); the closed forms and the residual position angle of `eq: illustrated screens`; forced records; the `direct_channel_average` route and the `build_basis`/`predict` route (`depth_degree = 0`) against a per-atom NumPy channel sum to 1e-12, with `screen_exponent` a zero `bound` and the forced assumptions `unbounded` |
+| `test_screens.py` | 42 | `LaplaceScreen` and `GammaScreen` weights against SciPy quadrature of the screen densities (Gamma shapes 0.7, 4, 25, both signs); the closed forms of `fig: screen shapes` and the residual position angle `-t + 2 arctan(t/2)` (half the phase of the caption's closed form, plotted in its second row); forced records; the `direct_channel_average` route and the `build_basis`/`predict` route (`depth_degree = 0`) against a per-atom NumPy channel sum to 1e-12, with `screen_exponent` a zero `bound` and the forced assumptions `unbounded` |
 | `test_predict.py`, `test_predict_routes.py` | 8 + 3 | `predict` equals `direct_channel_average` and a NumPy oracle to 1e-12 on the polynomial kernel; every budget slot's kind; `propagate`; `filter_jit` and `grad` |
 | `test_adapters.py` | 5 | `to_joint_faraday` reproduces `predict` through `faraday.joint_faraday_average` (< 1e-12 with 1e-13-relative-width channels); Burn sign pin; both measured remainders of `fixed_harmonic_comparison` |
 | `test_jit_ad.py` | 6 | one trace per static configuration; `grad` with respect to `m0`, closure hyper-parameters and `gamma0` against Richardson differences; `vmap` over a batch of moments |
@@ -1521,13 +1553,14 @@ most 9e-5).
 `test_boundaries_depth.py` sweeps the phase routes: `depth_ref in {0, 1e2,
 1e4}` rad/m^2 (reference phases up to 9e10 rad), `tau Delta_depth in
 {1e-3, 1, 10, 100}` across `depth_degree in {0, 1, 2, 4}` (the measured
-Taylor error grows as `|tau|^{N+1}` and is covered by the `eq: local
-response remainder` bound and by the package's `basis_remainder` in both
-index layouts where the probe order is validated; `GaussianScreen` stays
-exact at `tau sigma = 100` where the Taylor route diverges), and the
-`N in {0..3}` x `L in {0, 4, 8}` grid (exact on the polynomial oracle;
-shared columns agree across truncations on the harmonic kernel; the
-`N = 3`, large-`L` shared-column case runs only under `-m slow`).
+Taylor error grows as `|tau|^{N+1}` and is covered by the `[extension]`
+truncation bound of `eq: channel residual average` and by the package's
+`basis_remainder` in both index layouts where the probe order is
+validated; `GaussianScreen` stays exact at `tau sigma = 100` where the
+Taylor route diverges), and the `N in {0..3}` x `L in {0, 4, 8}` grid
+(exact on the polynomial oracle; shared columns agree across truncations
+on the harmonic kernel; the `N = 3`, large-`L` shared-column case runs
+only under `-m slow`).
 `test_boundaries_fit.py` covers the statistics side: the `is_affine`
 dispatch (affine maps obey superposition and reproduce `affine_pieces`;
 non-affine maps violate it and refuse `affine_pieces`), `noise -> 0` down
@@ -1862,8 +1895,8 @@ cells of `test_ad_transform_matrix.py`, 18 Hessian pins in
     may fail and raise.
   * `max_sigma`, `rank_tol` and `cluster_rtol` are declared conventions. The
     retained set also depends on the noise model, masks, response, metric and
-    reference scales. In the Section 5.3 example the numerical rank sits
-    5.8 % above its cutoff (historical run).
+    reference scales. In the `[extension]` continuum SED example (Section
+    10.1) the numerical rank sits 5.8 % above its cutoff (historical run).
   * Inside a cluster only the subspace is determined and the basis is a
     convention. The `beta` of a cluster are correlated by at most
     `(rho^2 - 1)/2`, `rho <= 1 + (m - 1) cluster_rtol s_max / s_min` for `m`

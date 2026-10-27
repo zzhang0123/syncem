@@ -1,6 +1,6 @@
 """Direct discrete-population channel average (private helper of ``predict``).
 
-LABEL: ``eq: smooth channel kernel``, ``extra eq: faraday channel kernel``,
+LABEL: ``eq: channel kernel``, ``eq: full channel average``,
 ``eq: joint emission depth``. ``direct_channel_average`` sums the kernel's
 channel modes over a ``PopulationSamples`` measure with the sky factor
 ``exp(2 i phi_n)`` on ``P`` and the exact per-emitter, per-line phase
@@ -138,14 +138,14 @@ def excluded_tail_term(support, excluded_tail, n_ch, samples):
 
 
 def _screen_term(route, per_sample, w, channels, amplitude):
-    """``eq: screen exponent error`` for a cumulant screen: ``A <|P_j|> (e^eps5 - 1)`` (estimate)."""
+    """``R_5`` bound of ``eq: independent gaussian screen`` for a cumulant screen: ``A <|P_j|> (e^eps5 - 1)`` (estimate)."""
     if not isinstance(route, CumulantScreen):
         return ErrorTerm.not_applicable("no cumulant screen on the direct average")
     eps = route.exponent_remainder(_tau_max(channels))
     if eps is None:
         return ErrorTerm.unbounded(
             "cumulant screen without g5_bound: exponent remainder unbounded",
-            "eq: screen exponent error",
+            "R_5 bound of eq: independent gaussian screen",
         )
     modulus = jnp.hypot(per_sample[..., 1], per_sample[..., 2])  # (S, n_ch)
     P = amplitude * (w @ modulus) * jnp.expm1(eps)
@@ -155,7 +155,7 @@ def _screen_term(route, per_sample, w, channels, amplitude):
         "estimate",
         "A <|P_j|> (exp(eps5) - 1) with eps5 = |tau_max|^5 g5/5! at the lower support "
         "edge and |P_j| the modulus of the phased line sum (below the absolute sum)",
-        "eq: screen exponent error",
+        "R_5 bound of eq: independent gaussian screen",
     )
 
 

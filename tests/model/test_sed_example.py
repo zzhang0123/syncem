@@ -1,15 +1,16 @@
 """The SED reconstruction example (``scripts/sed_reconstruction_example.py``).
 
-The example ports the smooth correlated continuum population of main.tex
-Appendix C.1 to the public API (``reduce_response``, ``fit_combinations``)
-with an independent NumPy/SciPy full-population integration for the mock
-data (``scripts/sed_reconstruction_direct.py``). The fast tests run the
-``--quick`` configuration (18 centres, 6 fitted), which is not comparable
-with the historical numbers. The ``slow`` test runs the full configuration
-and checks the numbers of the historical research reference
-(``validation/sed_reconstruction_results.json`` of the manuscript, package
-b39cf0c) with the tolerances of the T-006 design, Section 9.5. Every check is
-a finite check of one configuration and seed.
+The example ports the ``[extension]`` continuum SED example (smooth
+correlated population, 72 channels over 0.4-3 GHz, from the 2026-09-26
+manuscript draft) to the public API (``reduce_response``,
+``fit_combinations``) with an independent NumPy/SciPy full-population
+integration for the mock data (``scripts/sed_reconstruction_direct.py``).
+The fast tests run the ``--quick`` configuration (18 centres, 6 fitted),
+which is not comparable with the historical numbers. The ``slow`` test runs
+the full configuration and checks the numbers of the historical research
+reference (``validation/sed_reconstruction_results.json`` of the manuscript,
+package b39cf0c) with the tolerances of the T-006 design, Section 9.5. Every
+check is a finite check of one configuration and seed.
 """
 
 import ast

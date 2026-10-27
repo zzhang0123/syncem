@@ -2,12 +2,14 @@
 
 LABEL: ``eq: independent screen moments`` (``{depth} | rest``), ``eq:
 independent gaussian screen`` (Gaussian depth closure on the Taylor route),
-``detail-eq: angular factorisation error`` (``{phi} | rest``, constant
-conditional circular moment), ``extra eq: pitch angle expansion``
-(``uniform_mu`` zeroes every ``l >= 1`` coefficient), ``extra eq: nodal
-distribution`` (weights on fixed nodes), ``eq: uncoupled moments``
-(``angles_independent``, ``known_angles``: constant ``a_lk`` of ``eq:
-conditional legendre coefficients``); other partitions, the symmetry
+``[extension]`` constant conditional circular moment over all other
+variables (``{phi} | rest``; its energy-moment case is the single azimuth
+factor of ``sec: classical forward``), ``eq: conditional legendre
+coefficients`` (``uniform_mu`` zeroes every ``l >= 1`` coefficient),
+``sec: linear fit`` (weights on fixed nodes, the nonnegative witness; nodes
+in all six variables are ``[extension]``), ``eq: uncoupled moments``
+(``angles_independent``, ``known_angles``: constant ``a_lk`` of
+``eq: conditional legendre coefficients``); other partitions, the symmetry
 closures ``pitch_symmetric``, ``field_reversal_symmetric`` and
 ``uniform_field_direction``, ``uniform_azimuth``, ``known_field`` are
 ``[extension]``.
@@ -16,8 +18,9 @@ A ``ParameterMap`` is a map ``theta -> m`` from free parameters to the
 ``(n_real,)`` moment vector of ``eq: explicit joint moments``; it never switches the
 physics. Under a factorisation (partition of ``VARS``) every retained moment
 is a product of group marginals; closures replace a marginal by a fixed
-table. Moments are stored in the displacements ``z`` of ``eq: local response
-remainder``; depth closures take rad/m^2 and convert with the reference.
+table. Moments are stored in the displacements ``z``, the offsets of
+``eq: channel basis expansion`` divided by fixed positive scales
+(``[extension]``); depth closures take rad/m^2 and convert with the reference.
 Free counts at ``(2, 2, 2)``: 153, 115, 113, 88, 75, 57, 12, 115, 129 for the
 named constructors in order; 33, 25, 57, 53, 86 for ``angles_independent``,
 ``known_angles``, ``uniform_field_direction``, ``uniform_azimuth`` and
@@ -98,7 +101,7 @@ class Parameters(eqx.Module):
     the log source column. Not checked for feasibility.
     """
 
-    LABEL: ClassVar[str] = "extra eq: finite fit model"
+    LABEL: ClassVar[str] = "sec: linear fit"
     log_amplitude: jax.Array | None = None
     tables: tuple = ()
     hyper: tuple = ()
@@ -334,22 +337,30 @@ def field_independent(index) -> ParameterMap:
 
 def azimuth_separable(index) -> ParameterMap:
     """``{phi} | rest``: ``M2 = m_phi M0_ext`` with ``m_phi = <e^{2i phi}>``
-    (``detail-eq: angular factorisation error``; weaker than independence). Declares the separability; nothing verifies it.
+    (``[extension]`` constant conditional circular moment over all other
+    variables; the energy-moment case is the single azimuth factor of
+    ``sec: classical forward``; weaker than independence). Declares the
+    separability; nothing verifies it.
     """
     factorisation = Factorisation((_REST["phi"], ("phi",)), "azimuth_separable")
     return ParameterMap.build(
-        index, factorisation, label="detail-eq: angular factorisation error"
+        index,
+        factorisation,
+        label=(
+            "sec: classical forward; "
+            "[extension] constant conditional circular moment"
+        ),
     )
 
 
 def isotropic_pitch(index) -> ParameterMap:
     """``{mu} | rest`` with ``uniform_mu``: rows with ``l >= 1`` are zero
-    (``extra eq: pitch angle expansion``). Declares isotropic pitch; nothing verifies it.
+    (``eq: conditional legendre coefficients``). Declares isotropic pitch; nothing verifies it.
     """
     factorisation = Factorisation((_REST["mu"], ("mu",)), "isotropic_pitch")
     closure = Closure(("mu",), "uniform_mu")
     return ParameterMap.build(
-        index, factorisation, (closure,), label="extra eq: pitch angle expansion"
+        index, factorisation, (closure,), label="eq: conditional legendre coefficients"
     )
 
 
@@ -383,14 +394,18 @@ def _symmetric(index, kind):
 
 
 def nodal(index, nodes: PopulationSamples) -> ParameterMap:
-    """Nonnegative weights ``softmax(logits)`` on fixed nodes
-    (``extra eq: nodal distribution``); discretisation error is an input. Nothing certifies that the nodes resolve the population.
+    """Nonnegative weights ``softmax(logits)`` on fixed nodes (the nonnegative
+    witness of ``sec: linear fit``, with nodes in all six variables ``[extension]``);
+    discretisation error is an input. Nothing certifies that the nodes resolve the population.
     """
     if not isinstance(nodes, PopulationSamples):
         raise ValueError("nodes must be a PopulationSamples")
     factorisation = Factorisation((VARS,), "nodal")
     return ParameterMap.build(
-        index, factorisation, nodes=nodes, label="extra eq: nodal distribution"
+        index,
+        factorisation,
+        nodes=nodes,
+        label="sec: linear fit; [extension] joint nodes",
     )
 
 

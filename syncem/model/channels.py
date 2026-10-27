@@ -1,15 +1,16 @@
 """Compactly supported channel responses ``R_j(nu)`` for the finite joint response.
 
-LABEL ``"extra eq: channel kernel"`` (extended discussion, Sec. channels) and
-main.tex ``eq: smooth channel kernel``: the Dirac-line harmonic spectrum is
-evaluated only after pairing with a smooth response of compact support away
-from zero frequency. Section 5.3.1 of main.tex defines the ``bump`` family
-``R = exp[1 - 1/(1 - t^2)]``, ``t = (nu - c)/w``, ``|t| < 1``, used in the
-acceptance benchmark.
+LABEL ``eq: channel kernel``: the Dirac-line harmonic spectrum is evaluated
+only after pairing with a smooth response of compact support away from zero
+frequency. The ``bump`` family ``R = exp[1 - 1/(1 - t^2)]``, ``t = (nu - c)/w``,
+``|t| < 1``, used in the acceptance benchmark, has the shape of main.tex
+``eq: forward response families`` with ``k = 1``; the package parametrises it
+by the support half-width ``w`` and scales it to unit peak by default
+(``"unit_integral"`` gives the unit area of main.tex).
 
 Units: frequencies in Hz. ``R`` is dimensionless for ``normalisation="unit_peak"``
-(the manuscript's height-normalised responses; outputs are band-integrated
-powers) and has units 1/Hz for ``"unit_integral"`` (``int R dnu = 1``). No
+(height-normalised, as in the acceptance benchmark; outputs are
+band-integrated powers) and has units 1/Hz for ``"unit_integral"`` (``int R dnu = 1``). No
 ``2 pi`` enters anywhere: ``from_table(..., argument="omega")`` converts by
 ``R_nu(nu) = R_omega(2 pi nu)``.
 
@@ -103,7 +104,7 @@ class Channels(eqx.Module):
     n_nu: int = eqx.field(static=True, default=64)
     table: tuple | None = eqx.field(static=True, default=None)
     support_sigma: float = eqx.field(static=True, default=6.0)
-    LABEL: ClassVar[str] = "extra eq: channel kernel"
+    LABEL: ClassVar[str] = "eq: channel kernel"
 
     # ------------------------------------------------------------ constructors
     @classmethod

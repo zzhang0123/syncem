@@ -8,7 +8,10 @@ a screen, whose finite response does not Taylor-expand the depth.
 ``lower_set_margin`` is the margin ``S(Lambda)`` of the lower-set Taylor
 remainder used for capped truncations (re-exported by ``syncem.model.index``);
 ``margin_columns`` evaluates that form from the probed or supplied inputs
-and ``appendix_c`` the ``eq: joint screen remainder`` column of ``P``.
+and ``appendix_c`` the ``P`` column of the ``[extension]`` depth-Taylor bound
+``<|r_in|> + sum_a |c_a| tau_max^{L+1}/(L+1)! <|chi_a| |depth - depth_ref|^{L+1}>``
+of the residual (of the form of ``eq: channel residual average``, for the
+depth-degree set).
 Units follow ``syncem.model.bounds``; nothing here verifies the supplied
 envelopes.
 """
@@ -72,8 +75,9 @@ def is_screen_route(basis) -> bool:
 def lower_set_margin(lower_set) -> tuple[tuple[int, ...], ...]:
     """Telescoped margin ``S(Lambda)`` of a finite lower set of ``d``-tuples.
 
-    Result (``[extension]`` of ``eq: local response remainder``): for ``f``
-    of class ``C^{|beta|}`` on the box spanned by ``0`` and ``z``,
+    Result (``[extension]`` of the total-degree Taylor remainder of
+    ``eq: channel basis expansion``): for ``f`` of class ``C^{|beta|}`` on the
+    box spanned by ``0`` and ``z``,
 
         ``|f(z) - T_Lambda f(z)| <= sum_{beta in S} |z^beta| / beta!
         sup_{t in [0,1]} |d^beta f(p_k(t))|``,
@@ -91,7 +95,8 @@ def lower_set_margin(lower_set) -> tuple[tuple[int, ...], ...]:
     T_{Lambda_j} h_j)`` and the induction hypothesis on each ``h_j``
     telescopes the rest. Hence ``S = {(0,..,0,J+1)} union_j S(Lambda_j) x {j}``
     and ``S({0..n}) = {n+1}`` in one dimension. For total degree ``|beta| <= N``
-    this is the shell ``|beta| = N + 1``, the manuscript's multi-index form.
+    this is the shell ``|beta| = N + 1``, the multi-index form of the
+    order-``N+1`` Taylor remainder of ``eq: channel basis expansion``.
     ``S`` contains every minimal element of the complement and can contain
     more (for ``{0,1}^2``: ``(2,1)``); the minimal elements alone do not bound
     (``tests/model/test_lower_set_truncation.py`` shows a counterexample).
@@ -147,14 +152,15 @@ def margin_columns(rho, margin_H, margin_moments, basis):
 
 
 MARGIN_NOTE = (
-    "lower-set margin form of eq: local response remainder (capped truncation): "
+    "[extension] lower-set margin form of the truncation bound of eq: channel "
+    "residual average (capped truncation): "
     "<rho_ang> + sum_lk sum_{beta in S} H_lk,beta <|P_l P_k| |z^beta|> / beta!, "
     "S = truncation.margin_rows()"
 )
 
 
 def appendix_c(inputs, basis, depth_coefficients, residual, note):
-    """``(P, note, kind)`` of ``eq: joint screen remainder`` on the Taylor route.
+    """``(P, note, kind)`` of the ``[extension]`` depth-Taylor bound on the Taylor route.
 
     ``P = residual + tau_max^{L+1}/(L+1)! sum_a A_a depth_tail_a`` with ``A``
     the supplied absolute line sums (kind of ``inputs``) or ``|c_a|`` of the
@@ -189,7 +195,8 @@ def appendix_c(inputs, basis, depth_coefficients, residual, note):
     tau = _tau_max(basis.channels)
     P = residual + tau ** (L + 1) / math.factorial(L + 1) * (weights @ tail)
     note += (
-        f"; P from eq: joint screen remainder with tau_max^{L + 1}/({L + 1})! "
+        f"; P from the [extension] depth-Taylor bound with "
+        f"tau_max^{L + 1}/({L + 1})! "
         f"sum_a A_a depth_tail_a (tau_max at the channel's lower support edge), "
         f"A = {source}"
     )

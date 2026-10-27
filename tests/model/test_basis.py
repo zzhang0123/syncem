@@ -1,7 +1,8 @@
 """Tests of ``syncem.model.basis``: exactness on the polynomial oracle, nested
-derivatives against finite differences and the manuscript Section 5.3.1 benchmark
-coefficients (refusals, JIT/AD, provenance and convergence: ``test_basis_build``
-and ``test_basis_convergence``)."""
+derivatives against finite differences and the saved coefficients of the
+main.tex ``sec: finite joint response`` smooth-channel benchmark (refusals,
+JIT/AD, provenance and convergence: ``test_basis_build`` and
+``test_basis_convergence``)."""
 
 import itertools
 import math
@@ -226,7 +227,7 @@ def test_third_order_columns_match_richardson_of_second_order():
         assert_allclose(I_b[:, pos], fd * even, atol=1e-6 * scale)
 
 
-# -- manuscript benchmark (Section 5.3.1 coefficients) ---------------------------------
+# -- smooth-channel benchmark: saved coefficients (reference/validation) [extension] ---
 
 
 @pytest.fixture(scope="module")

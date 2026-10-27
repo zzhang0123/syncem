@@ -27,10 +27,10 @@ class Modes(NamedTuple):
     ``Q`` modes times the phase weights, without ``exp(2 i phi)``.
     Units: per-electron channel Stokes (erg/s/sr for ``unit_peak`` channels,
     per Hz for ``unit_integral``). Assumes the kernel's own physical model;
-    not certified beyond it (``eq: smooth channel kernel``).
+    not certified beyond it (``eq: channel kernel``).
     """
 
-    LABEL = "eq: smooth channel kernel"
+    LABEL = "eq: channel kernel"
     I: jax.Array
     V: jax.Array
     P: jax.Array

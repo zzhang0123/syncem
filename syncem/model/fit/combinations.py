@@ -1,8 +1,10 @@
 """Identifiable-combination fits (``syncem.model.fit.combinations``).
 
-LABEL: ``extra eq: finite fit model`` (``d = R C a + delta + n`` with the
-full coordinates ``a`` of a ``ResponseReduction``), ``extra eq: data error
-propagation`` (``|K| delta``) and ``[extension]``.
+LABEL: ``eq: svd estimator`` (the retained combinations of
+``d = R C a + delta + n`` in the full coordinates ``a`` of a
+``ResponseReduction``), ``eq: estimator bias`` (``|K| delta``) and
+``[extension]`` (the response reduction and the ``max_sigma`` retention
+rule).
 
 :func:`fit_combinations` fits the reduced model ``R H T a`` in the unknowns
 ``x`` (``a = a_off + J x``): the full coordinates themselves by default
@@ -58,7 +60,7 @@ from .combination_result import CombinationFit, Subspaces
 from .linear import _check_amplitude, _declared_chi2_note
 from .reduction import ResponseReduction, reduce_response
 
-LABEL = ("extra eq: finite fit model", "extra eq: data error propagation")
+LABEL = ("eq: svd estimator", "eq: estimator bias")
 POLICIES = ("bias_bound", "inflate")
 CLUSTER_RTOL = 1e-10
 SYMMETRY_RTOL = 1e-12

@@ -1,10 +1,12 @@
 """Solver and bias bound of :func:`~syncem.model.fit.linear.fit_linear` (private).
 
 ``solve`` is the rank-revealing least-squares solve on the column-equilibrated
-whitened design; ``bias_bound`` is ``|K| |delta|`` with the two terms of
-``extra eq: data error propagation``; ``linearised_bias`` is the same
-quantity for ``fit_bfgs`` with ``K = J^+ L^-1`` from the whitened Jacobian at
-the optimum (an ``estimate``: the model is linearised there);
+whitened design; ``bias_bound`` is ``|K| |delta|`` (``eq: estimator bias``)
+with the channel-envelope term of ``sec: frequency order`` and the
+response-error term stated after ``eq: chromatic beam response``;
+``linearised_bias`` is the same quantity for ``fit_bfgs`` with
+``K = J^+ L^-1`` from the whitened Jacobian at the optimum (an ``estimate``:
+the model is linearised there);
 ``inflated`` builds the noise model of ``discrepancy_policy="inflate"``.
 Nothing here is public API; the contracts are stated in the ``fit_linear``
 and ``fit/result.py`` module docstrings.
@@ -82,9 +84,9 @@ def _response_part(data, stokes_hat):
         return None, "; response_uncertainty declared zero (R exact)"
     envelope = jnp.abs(jnp.asarray(stokes_hat)) + _stokes_envelope(data)
     note = (
-        "; plus |delta R| (|S_hat| + E), the delta R S_hat term of extra eq: data "
-        "error propagation with the fitted channel Stokes S_hat (a plug-in value, "
-        "so the result is an estimate, not a bound)"
+        "; plus |delta R| (|S_hat| + E), the response-error term stated after eq: "
+        "chromatic beam response, with the fitted channel Stokes S_hat (a plug-in "
+        "value, so the result is an estimate, not a bound)"
     )
     return data.select(dR @ envelope), note
 
@@ -112,8 +114,8 @@ def bias_bound(pinv, Linv, data, stokes_hat, *, rank, unknowns="u"):
         if getattr(data, "response_uncertainty", None) is None:
             return ErrorTerm.unbounded(
                 "data.response is set without response_uncertainty (delta R): the "
-                "|delta R S_hat| term of extra eq: data error propagation is not "
-                "bounded (pass zeros to declare the response exact)",
+                "|delta R S_hat| response-error term (stated after eq: chromatic beam "
+                "response) is not bounded (pass zeros to declare the response exact)",
                 target,
             )
         part, extra = _response_part(data, stokes_hat)

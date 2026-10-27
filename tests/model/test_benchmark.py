@@ -1,6 +1,8 @@
-"""Manuscript Section 5.3.1 benchmark (``fig: full channel response``) with the package.
+"""Smooth-channel benchmark of main.tex ``sec: finite joint response`` (Section 4.2) with the package.
 
-Configuration (main.tex ``eq: channel toy population``, FINAL_DESIGN Section 11):
+Configuration (``population`` of ``validation/full_response.py`` at widths 0.5
+and 1.0; main.tex ``sec: finite joint response`` describes the width-1.0 case;
+FINAL_DESIGN Section 11):
 ``gamma0 = 20``, ``B0 = 1`` G, three bump channels at ``y_j = 2, 4, 8`` with
 65 % half-widths, ``HarmonicKernel(m_max=40)`` (``required_m_max`` is 40, so
 the harmonic-truncation term is a zero bound), ``Truncation(L, L, N)``,
@@ -35,7 +37,8 @@ Two variants:
 
 Every discrepancy is recorded with ``record_property``. These are finite
 comparisons against one saved population; they certify neither a global
-remainder nor the Galactic harmonic regime (manuscript Section 5.3.1).
+remainder nor the Galactic harmonic regime (main.tex ``sec: finite joint
+response``, Section 4.2).
 """
 
 import os
@@ -148,7 +151,8 @@ def test_saved_table_is_the_manuscript_configuration(results):
     assert config["grids"] == [[160, 12], [256, 16]]
     assert config["basis_product_grids"] == [96, 128]
     assert len(results["rows"]) == 18
-    # Numbers quoted in main.tex Section 5.3.1.
+    # Width 1.0 is the ensemble of main.tex ``sec: finite joint response``
+    # (0.175 % at N = 2, L = 8); width 0.5 is ``[extension]``.
     assert (
         abs(
             H.saved_row(results, 0.5, 2, 8)["max_abs_stokes_error_over_channel_I"]

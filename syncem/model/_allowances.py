@@ -2,10 +2,10 @@
 
 ``assumption_allowances={name: ErrorTerm}`` replaces the budget term of a
 named assumption record, basis-forced (phase-route screens, the continuum
-kernel's ``isotropic_pitch``) or moment-level, in ``eq: channel error
-budget``. An allowance is in Stokes units (the amplitude included, as
-``bounds.screen_factorisation_bound(..., amplitude=N_src)`` returns it), with
-a value that broadcasts to ``(n_ch, 4)``, and of a valued kind or
+kernel's ``isotropic_pitch``) or moment-level, in :class:`ErrorBudget`
+(``sec: frequency order``). An allowance is in Stokes units (the amplitude
+included, as ``bounds.screen_factorisation_bound(..., amplitude=N_src)``
+returns it), with a value that broadcasts to ``(n_ch, 4)``, and of a valued kind or
 ``unbounded``; the term keeps the supplied kind and value, and its note
 records that the caller supplied it. An unknown name, a non-``ErrorTerm``, a
 wrong shape or the kind ``not_applicable`` (the assumption does arise on

@@ -1,9 +1,8 @@
 """Host-only, fixed-point evaluation of densely spaced harmonic channel modes.
 
-LABEL: ``eq: smooth channel kernel`` and ``extra eq: channel kernel``;
-``[extension]`` denotes the numerical range evaluator. Frequencies have
-units Hz, ``B`` Gauss, and powers erg/s/sr per electron. Output shapes are
-``I,V: (n_ch,)`` and ``P: (n_weights,n_ch)``.
+LABEL: ``eq: channel kernel``; ``[extension]`` denotes the numerical range
+evaluator. Frequencies have units Hz, ``B`` Gauss, and powers erg/s/sr per
+electron. Output shapes are ``I,V: (n_ch,)`` and ``P: (n_weights,n_ch)``.
 
 This is a provisional value and first-derivative backend for the vacuum
 helical-orbit reference. ``build_high_order_basis`` uses it in an eager
@@ -54,7 +53,7 @@ _SMOOTH_ACCELERATED_FAMILIES = ("bump",)
 class HostModes(NamedTuple):
     """NumPy ``I,V,P`` channel modes for the provisional host route.
 
-    LABEL: ``eq: smooth channel kernel`` [extension]. Shapes are ``(n_ch,)``
+    LABEL: ``eq: channel kernel`` [extension]. Shapes are ``(n_ch,)``
     for real ``I,V`` and ``(n_weights,n_ch)`` for complex ``P``. Units follow
     the supplied channel normalisation. Not certified: the numerical error;
     see :class:`HighOrderChannelResult`.
@@ -69,7 +68,7 @@ class HostModes(NamedTuple):
 class HighOrderChannelResult:
     """One fixed-point channel calculation with explicit numerical status.
 
-    LABEL: ``eq: smooth channel kernel`` [extension].
+    LABEL: ``eq: channel kernel`` [extension].
 
     ``modes`` has ``I,V`` shape ``(n_ch,)`` and complex ``P`` shape
     ``(n_weights,n_ch)``. ``quadrature`` is a fine-minus-coarse *estimate*

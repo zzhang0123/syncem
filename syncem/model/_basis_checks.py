@@ -27,7 +27,7 @@ UNITS = (
 )
 ISOTROPIC = AssumptionRecord(
     "isotropic_pitch",
-    "extra eq: pitch angle expansion [required by ContinuumKernel]",
+    "eq: conditional legendre coefficients [required by ContinuumKernel]",
     (("gamma", "B", "eta", "phi", "depth"), ("mu",)),
     "uniform_mu",
     (),

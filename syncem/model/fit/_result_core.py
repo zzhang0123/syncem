@@ -85,14 +85,16 @@ def moment_uncertainty(m_of, x, covariance, *, bias_bound, bias_note=None) -> Er
 
     The noise part is the one-sigma ``sqrt(diag(J cov J^T))``, ``J = dm/dx``
     (linearised). ``bias_bound`` (a term over ``x``: ``u`` for ``fit_linear``,
-    ``z`` for ``fit_bfgs``) adds ``|J| bias_bound`` (``eq: channel error
-    budget`` defines ``Delta_a`` by ``|m_a - m_hat_a| <= Delta_a``, so the
-    moment bias from the declared discrepancy belongs here). ``bias_note``
-    says how exact that propagation is (default: the ``fit_linear`` text,
-    exact with a fixed amplitude, linearised through ``theta = u[1:]/u[0]``
-    otherwise). An ``unbounded`` or missing (``None``) bias makes the term
-    ``unbounded`` (the noise part is quoted in the note). Returns an
-    ``estimate`` term ``(n_real,)`` that ``predict`` contracts as ``A |C| Delta``.
+    ``z`` for ``fit_bfgs``) adds ``|J| bias_bound`` (``eq: estimator bias``:
+    a componentwise discrepancy envelope ``|epsilon| <= E`` biases the
+    estimate by at most ``|K| E``, propagated as in ``sec: frequency order``;
+    the moment bias from the declared discrepancy therefore belongs here).
+    ``bias_note`` says how exact that propagation is (default: the
+    ``fit_linear`` text, exact with a fixed amplitude, linearised through
+    ``theta = u[1:]/u[0]`` otherwise). An ``unbounded`` or missing (``None``)
+    bias makes the term ``unbounded`` (the noise part is quoted in the
+    note). Returns an ``estimate`` term ``(n_real,)`` that ``predict``
+    contracts as ``A |C| Delta``.
     """
     J = jax.jacfwd(m_of)(x)
     var = jnp.sum((J @ covariance) * J, axis=1)
@@ -202,7 +204,9 @@ def prediction_of(
     """``predict(basis, moments, amplitude=)`` with the fit's statistical input.
 
     ``discretisation`` (nodal fits) replaces the ``unbounded`` assumption term
-    of the nodal record by the supplied ``extra eq: nodal bound`` term.
+    of the nodal record by the supplied term (``[extension]``: a
+    caller-supplied discretisation envelope of the nodal population,
+    propagated as a supplied channel envelope, ``sec: frequency order``).
     ``hyper_note`` (the fitted hyper-parameter values, whose record holds NaN
     placeholders) is appended to the prediction's provenance notes.
     """
@@ -221,7 +225,7 @@ def prediction_of(
         term = ErrorTerm(
             discretisation.value,
             discretisation.kind,
-            "extra eq: nodal bound (supplied discretisation term): "
+            "[extension] supplied nodal bound (discretisation term): "
             + discretisation.note,
             "E_phys",
         )

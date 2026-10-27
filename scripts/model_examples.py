@@ -5,9 +5,9 @@ Run from the package root with ``PYTHONPATH=. python scripts/model_examples.py``
 numbers are pasted into ``README.md``; rerun this script after any change to
 ``syncem.model`` and update the README when the output changes.
 
-(a) the manuscript's smooth-channel benchmark regime (main.tex Section 5.3.1)
-    with the harmonic kernel, ``independent_screen`` declared and
-    ``discrepancy="measured"`` (this file);
+(a) the smooth-channel check described in main.tex
+    ``sec: finite joint response`` (Section 4.2) with the harmonic kernel,
+    ``independent_screen`` declared and ``discrepancy="measured"`` (this file);
 (b) the continuum kernel in the Galactic regime (``gamma0 = 3000``,
     ``B0 = 5 uG``, bump channels between 0.1 and 3 GHz), where
     ``isotropic_pitch`` is required and ``physical_kernel`` stays unbounded
@@ -69,7 +69,7 @@ UNITS = E_ESU**2 * (E_ESU * B0 / (M_E * C_CGS)) ** 2 / (2 * np.pi * C_CGS)
 
 
 def toy_population(width=1.0, latent_nodes=16, angular_nodes=64) -> PopulationSamples:
-    """Discrete measure of ``eq: channel toy population`` (validation/full_response.py)."""
+    """Discrete measure of ``population`` in ``validation/full_response.py``."""
     nodes, weights = leggauss(angular_nodes)
     latent, lw = leggauss(latent_nodes)
     u = latent[:, None, None, None]

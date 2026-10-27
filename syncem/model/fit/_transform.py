@@ -82,7 +82,7 @@ class Transform(eqx.Module):
     with; nothing certified about the fit that uses it.
     """
 
-    LABEL: ClassVar[str] = "extra eq: finite fit model"
+    LABEL: ClassVar[str] = "[extension] unconstrained fit coordinates"
     parameter_map: ParameterMap
     amplitude: bool = eqx.field(static=True)
     kinds: tuple[str, ...] = eqx.field(static=True)

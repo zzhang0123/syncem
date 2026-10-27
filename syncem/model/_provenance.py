@@ -67,8 +67,9 @@ class AssumptionRecord:
     map; ``discrepancy_kind`` the kind of the discrepancy allowance that
     was supplied. Hashable. ``hyper`` values are in the closure's units
     (rad/m^2 for depth closures). The record documents a declared assumption; it does not
-    certify that the population satisfies it (the discrepancy allowance of
-    ``eq: channel error budget`` is a separate input). ``[extension]``.
+    certify that the population satisfies it (the discrepancy allowance in the
+    channel envelope of ``sec: frequency order`` is a separate input).
+    ``[extension]``.
     """
 
     LABEL: ClassVar[str] = "[extension] assumption record"

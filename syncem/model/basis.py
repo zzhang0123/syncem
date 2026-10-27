@@ -4,8 +4,8 @@ LABEL: ``eq: channel derivative coefficients`` (the columns
 ``X~_{j;lk;rsb} = d_z^r d_z^s [w_b H_{X,j;lk}] / (r! s!)`` at the reference,
 ``b!`` inside the phase weight), ``eq: finite joint response`` (the
 contraction ``S_j = A sum_a C_{ja} m_a`` that :meth:`SpectralBasis.response_matrix`
-prepares), ``extra eq: finite fit model`` (the real layout of ``C``), ``eq:
-angular parity`` (``I`` columns on ``l+k`` even, ``V`` on odd rows).
+prepares), ``eq: linear basis`` (the real layout of ``C``),
+``eq: angular parity`` (``I`` columns on ``l+k`` even, ``V`` on odd rows).
 
 :func:`build_basis` is an eager function: it validates concrete inputs with
 NumPy, records :class:`~syncem.model.errors.Provenance`, and calls the
@@ -27,7 +27,8 @@ Validated against finite differences / exact checks here (finite checks, not
 certificates): the algebra of the columns (exact on the polynomial test
 kernel), nested derivatives of orders 0..3 against finite differences on the
 harmonic kernel (``certified_orders``, a name kept for compatibility), and the
-manuscript Section 5.3.1 coefficients to 1e-6 of the largest coefficient per
+``[extension]`` saved coefficients of the smooth-channel benchmark
+(``tests/model/reference/validation``) to 1e-6 of the largest coefficient per
 Stokes. Not certified:
 quadrature error of the angular projection (the ``numerical`` term, the
 route refined against itself, is an estimate, not a bound), derivative orders above 3, the physical
@@ -71,20 +72,21 @@ _TERMS = ("physical_kernel", "harmonic_truncation", "numerical", "screen_exponen
 
 
 class KernelTerms(eqx.Module):
-    """Per-electron kernel-side slots of ``eq: channel error budget``.
+    """Per-electron kernel-side slots of :class:`ErrorBudget` (``sec: frequency order``).
 
     ``physical_kernel`` (``E_phys``), ``harmonic_truncation`` (omitted lines,
     ``E_num``), ``numerical`` (refined-rule estimate plus, for the continuum
     kernel, the ``F``/``G`` tail bound; ``E_num``) and ``screen_exponent``
-    (``eq: screen exponent error``). Values are ``(n_ch, 4)`` per electron,
-    except ``numerical``: a per-column envelope ``(4 n_ch, n_real)`` that
-    ``predict`` contracts with ``|m|``; ``predict`` scales all by the amplitude.
+    (``R_5`` bound of ``eq: independent gaussian screen``). Values are
+    ``(n_ch, 4)`` per electron, except ``numerical``: a per-column envelope
+    ``(4 n_ch, n_real)`` that ``predict`` contracts with ``|m|``; ``predict``
+    scales all by the amplitude.
     Units: the per-electron channel Stokes units of the basis. Each term
     carries its own kind; ``physical_kernel`` is a declaration, never a
     package certificate.
     """
 
-    LABEL: ClassVar[str] = "eq: channel error budget"
+    LABEL: ClassVar[str] = "sec: frequency order"
     physical_kernel: ErrorTerm
     harmonic_truncation: ErrorTerm
     numerical: ErrorTerm
@@ -130,7 +132,7 @@ class SpectralBasis(eqx.Module):
     LABEL: ClassVar[tuple[str, ...]] = (
         "eq: channel derivative coefficients",
         "eq: finite joint response",
-        "extra eq: finite fit model",
+        "eq: linear basis",
     )
 
     def __check_init__(self):
@@ -162,7 +164,7 @@ class SpectralBasis(eqx.Module):
         """``(C P, C c, labels)`` of an affine map, ``m = P theta + c``.
 
         The per-electron response is then ``C m = (C P) theta + C c``
-        (``extra eq: finite fit model``): shapes ``(4 n_ch, n_free)``,
+        (``eq: linear basis``): shapes ``(4 n_ch, n_free)``,
         ``(4 n_ch,)`` and ``n_free`` labels. Give a ``ParameterMap`` on this
         index or ``assumptions`` (names for ``assumptions.declare``), not
         both. ``ValueError`` for a non-affine map (``fit_bfgs``;

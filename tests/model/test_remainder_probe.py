@@ -1,8 +1,8 @@
 """``RemainderInputs.from_samples`` (``syncem.model._remainder_probe``) against
 NumPy oracles on the ``PolynomialTestKernel``: Frobenius norms of the order-``N+1``
 derivative tensors at the probe points, absolute moments, the measured angular
-residual, the ``app: depth moments`` inputs, and the covering inequality against the
-direct average.
+residual, the inputs of the ``[extension]`` depth-Taylor bound (depth-degree
+layout), and the covering inequality against the direct average.
 """
 
 from itertools import product as _product

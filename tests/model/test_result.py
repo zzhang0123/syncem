@@ -216,7 +216,7 @@ def nodal_setup(n_nodes=5, n_ch=6, seed=7):
 def test_fit_nodal_returns_fit_result_with_closed_form_fisher():
     index, basis, C, pop, X, w_true, A_true, data, d = nodal_setup()
     nodes = samples_of(pop)
-    term = ErrorTerm(jnp.full((6, 4), 1e-3), "bound", "extra eq: nodal bound test")
+    term = ErrorTerm(jnp.full((6, 4), 1e-3), "bound", "test nodal bound envelope")
     result = fit_nodal(basis, data, nodes, iters=5000, step=0.1, discretisation=term)
     assert isinstance(result, FitResult) and result.method == "nodal"
     assert result.converged and result.discretisation is term

@@ -1,7 +1,8 @@
 """Non-Gaussian independent Faraday screens with exact characteristic functions.
 
-LABEL ``eq: illustrated screens`` (main text, independent-screen limit), used
-through ``eq: independent screen response``: for a depth distribution that is
+LABEL ``fig: screen shapes`` (closed forms in the Fig. 7 caption;
+``sec: independent screen limit``), used through
+``eq: independent screen response``: for a depth distribution that is
 statistically independent of the emitting population, the observed complex
 polarisation is the emitted one times ``C_scr(tau) = <exp(i tau depth)>``,
 applied per line at ``tau_m = 2 (c/nu_m)^2`` inside the channel sum.
@@ -24,8 +25,9 @@ assumptions ``independent_screen`` and ``<shape>_screen`` with unbounded
 discrepancy: independence of screen and emitters and the screen shape are
 declared model inputs. Nothing here certifies either for a real sightline;
 the difference between a real population and the declared screen belongs in
-``E_phys`` (main text, combined spectral error). Zero covariance between depth
-and emission does not justify the factorisation.
+``E_phys``, the ``[extension]`` physical-kernel discrepancy term of the error
+budget. Zero covariance between depth and emission does not justify the
+factorisation.
 """
 
 from __future__ import annotations
@@ -40,9 +42,20 @@ import numpy as np
 from .errors import AssumptionRecord
 from .phase import SCREEN_GROUPS, _finite, _independent_record, _real
 
-ILLUSTRATED_LABEL = "eq: illustrated screens"
+ILLUSTRATED_LABEL = "fig: screen shapes"
+GAMMA_EXTENSION_LABEL = (
+    "[extension] shifted-Gamma screen with shape or sign other than "
+    "fig: screen shapes"
+)
+ILLUSTRATED_GAMMA = (4.0, 1)
 
-__all__ = ["LaplaceScreen", "GammaScreen", "ILLUSTRATED_LABEL"]
+__all__ = [
+    "LaplaceScreen",
+    "GammaScreen",
+    "ILLUSTRATED_LABEL",
+    "GAMMA_EXTENSION_LABEL",
+    "ILLUSTRATED_GAMMA",
+]
 
 
 def _moments(mean, sigma):
@@ -51,9 +64,9 @@ def _moments(mean, sigma):
     return mean, eqx.error_if(sigma, sigma < 0, "sigma must be nonnegative")
 
 
-def _shape_record(name, closure_kind, hyper) -> AssumptionRecord:
+def _shape_record(name, label, closure_kind, hyper) -> AssumptionRecord:
     return AssumptionRecord(
-        name, ILLUSTRATED_LABEL, SCREEN_GROUPS, closure_kind, hyper, 0, "unbounded"
+        name, label, SCREEN_GROUPS, closure_kind, hyper, 0, "unbounded"
     )
 
 
@@ -94,7 +107,7 @@ class LaplaceScreen(eqx.Module):
         hyper = self._hyper()
         return (
             _independent_record("laplace_depth", hyper),
-            _shape_record("laplace_screen", "laplace_depth", hyper),
+            _shape_record("laplace_screen", self.LABEL, "laplace_depth", hyper),
         )
 
     def max_b(self) -> int:
@@ -105,8 +118,12 @@ class GammaScreen(eqx.Module):
     """Shifted Gamma depth density: ``depth = mean + sign sigma (Y - k)/sqrt(k)``.
 
     ``Y ~ Gamma(k, 1)``; ``shape = k > 0`` and ``sign = +1`` or ``-1`` are
-    static. Mean ``mean``, standard deviation ``sigma`` [rad/m^2]; skewness
-    ``sign 2/sqrt(k)``, excess kurtosis ``6/k``.
+    static. The defaults ``k = 4``, ``sign = +1`` give the shifted-Gamma
+    screen of ``fig: screen shapes``; other ``shape`` and ``sign`` values are
+    ``[extension]``, and ``LABEL`` (an instance property) and the
+    ``gamma_screen`` record then read ``GAMMA_EXTENSION_LABEL`` instead of
+    ``ILLUSTRATED_LABEL``. Mean ``mean``, standard deviation ``sigma`` [rad/m^2];
+    skewness ``sign 2/sqrt(k)``, excess kurtosis ``6/k``.
     ``w_0 = exp(i tau mean) exp(-i s t sqrt(k)) (1 - i s t/sqrt(k))^(-k)``,
     ``t = tau sigma``, principal logarithm (``Re(1 - i s t/sqrt(k)) = 1 > 0``,
     so the branch is continuous in ``tau``). Shape ``(1, *tau.shape)``.
@@ -121,8 +138,12 @@ class GammaScreen(eqx.Module):
     shape: float = eqx.field(static=True, default=4.0)
     sign: int = eqx.field(static=True, default=1)
     n_weights: ClassVar[int] = 1
-    LABEL: ClassVar[str] = ILLUSTRATED_LABEL
     name: ClassVar[str] = "gamma_screen"
+
+    @property
+    def LABEL(self) -> str:  # noqa: N802 (same attribute as the other routes)
+        illustrated = (float(self.shape), int(self.sign)) == ILLUSTRATED_GAMMA
+        return ILLUSTRATED_LABEL if illustrated else GAMMA_EXTENSION_LABEL
 
     def __check_init__(self):
         if not (np.isfinite(self.shape) and self.shape > 0):
@@ -165,7 +186,7 @@ class GammaScreen(eqx.Module):
         hyper = self._hyper()
         return (
             _independent_record("gamma_depth", hyper),
-            _shape_record("gamma_screen", "gamma_depth", hyper),
+            _shape_record("gamma_screen", self.LABEL, "gamma_depth", hyper),
         )
 
     def max_b(self) -> int:

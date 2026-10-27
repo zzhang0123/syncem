@@ -1,4 +1,4 @@
-"""Laplace and shifted-Gamma screens (main text ``eq: illustrated screens``).
+"""Laplace and shifted-Gamma screens (main text ``fig: screen shapes``).
 
 Oracles are independent of the JAX code: SciPy quadrature of the screen
 densities, the closed forms printed in the manuscript, and an explicit
@@ -17,7 +17,12 @@ import syncem  # noqa: F401
 from syncem.model.channels import Channels
 from syncem.model.phase import GaussianScreen
 from syncem.model.predict import direct_channel_average
-from syncem.model.screens import GammaScreen, LaplaceScreen
+from syncem.model.screens import (
+    GAMMA_EXTENSION_LABEL,
+    ILLUSTRATED_LABEL,
+    GammaScreen,
+    LaplaceScreen,
+)
 
 from _predict_helpers import (
     B0,
@@ -121,6 +126,13 @@ def test_records_validation_and_autodiff():
             r.discrepancy_kind == "unbounded" for r in route.forced_assumptions()
         )
         assert hash(route.describe()) is not None
+    assert lap.forced_assumptions()[1].label == "fig: screen shapes"
+    assert gam.LABEL == GAMMA_EXTENSION_LABEL
+    assert gam.forced_assumptions()[1].label == GAMMA_EXTENSION_LABEL
+    for shape, sign in ((4.0, 1), (4.0, -1), (2.0, 1)):
+        route = GammaScreen(jnp.asarray(0.0), jnp.asarray(1.0), shape=shape, sign=sign)
+        want = ILLUSTRATED_LABEL if (shape, sign) == (4.0, 1) else GAMMA_EXTENSION_LABEL
+        assert route.LABEL == want == route.forced_assumptions()[1].label
     for bad in (dict(shape=0.0), dict(shape=np.inf), dict(sign=0)):
         with pytest.raises(ValueError):
             GammaScreen(jnp.asarray(0.0), jnp.asarray(1.0), **bad)

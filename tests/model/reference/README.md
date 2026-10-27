@@ -1,9 +1,10 @@
 # Manuscript reference (verbatim copy)
 
 `validation/` holds the manuscript's independent NumPy/SciPy implementation of
-the Section 5.3.1 smooth-channel benchmark and its saved results, copied
-byte for byte from the manuscript repository on 2026-09-25 so that the
-benchmark tests run from this repository alone.
+the smooth-channel check described in main.tex `sec: finite joint response`
+(Section 4.2) and its saved results, copied byte for byte from the manuscript
+repository on 2026-09-25 so that the benchmark tests run from this repository
+alone.
 
 | file | sha256 |
 |---|---|

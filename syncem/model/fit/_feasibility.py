@@ -9,7 +9,8 @@ expanded back onto the retained rows with the Legendre linearisation
 moment matrices ``<conj(f_i) f_j>`` of a candidate list of functions are
 assembled over the largest prefix-greedy subset whose products are all
 retained. Nothing here certifies feasibility; the inequalities it evaluates
-are necessary conditions on ``eq: joint moment feasible set``.
+are necessary conditions for membership of the feasible set of
+``sec: finite joint response``.
 """
 
 from __future__ import annotations
@@ -141,8 +142,9 @@ def f_label(row: Row) -> str:
 def f_rows(index) -> tuple[Row, ...]:
     """All ``(l, k, r, s, b)`` monomials of the truncation, both parities.
 
-    Rows follow the ``P`` cutoff (``r+s+b <= N`` or the ``app: depth moments`` layout)
-    over every ``(l, k)`` pair with ``l <= L_mu, k <= L_eta``.
+    Rows follow the ``P`` cutoff (``r+s+b <= N`` or the ``[extension]``
+    depth-degree layout ``r+s <= N, b <= L``) over every ``(l, k)`` pair with
+    ``l <= L_mu, k <= L_eta``.
     """
     t = index.truncation
     rows = []

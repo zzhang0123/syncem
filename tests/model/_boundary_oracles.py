@@ -226,7 +226,7 @@ def depth_reference(depth_ref, delta):
 
 
 def taylor_remainder(x, degree, absolute_moment):
-    """``|x|^{D+1}/(D+1)! <|u|^{D+1}>``: the Taylor bound of ``eq: local response remainder``."""
+    """``|x|^{D+1}/(D+1)! <|u|^{D+1}>``: the ``[extension]`` Taylor bound of ``eq: channel residual average``."""
     return abs(x) ** (degree + 1) / math.factorial(degree + 1) * absolute_moment
 
 

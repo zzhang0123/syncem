@@ -1,11 +1,12 @@
 """Identifiability and feasibility diagnostics for spectral fits.
 
-LABEL: ``extra eq: finite fit model`` (the whitened design ``L^-1 R C [c | P]``
-whose null space makes admissible moments indistinguishable, extended
-discussion: "moments separated by ``v`` with ``C v = 0`` are
-indistinguishable; if other parameters are fitted, use the full response
-Jacobian") and ``eq: joint moment feasible set`` (necessary conditions on
-``m in conv{psi(x): x in D}``).
+LABEL: ``eq: svd estimator`` (the SVD of the whitened design
+``L^-1 R C [c | P]``; directions it does not resolve are not measured, as
+stated after ``eq: estimator bias``) and ``sec: finite joint response``
+(necessary conditions for ``m`` to be the moments of one nonnegative,
+normalised distribution on the declared support). ``[extension]``: the
+column equilibration ``G D``, the relative ``tol`` that defines the null
+space, and the Jacobian columns of a nonlinear map at a supplied ``theta``.
 
 ``identifiability`` takes the SVD of the whitened design restricted to the
 free directions of a ``ParameterMap``: for an affine map ``m = P theta + c``
@@ -55,8 +56,8 @@ from ._feasibility_rules import (
 from ._identifiability import equilibrate, parameter_columns, whitened_design
 from .._provenance import strict_json
 
-LABEL_IDENTIFIABILITY = "extra eq: finite fit model"
-LABEL_FEASIBILITY = "eq: joint moment feasible set"
+LABEL_IDENTIFIABILITY = "eq: svd estimator"
+LABEL_FEASIBILITY = "sec: finite joint response"
 
 
 # -- identifiability ---------------------------------------------------------
@@ -203,7 +204,7 @@ class FeasibilityReport(eqx.Module):
     supply. ``statement`` says that the conditions are necessary only.
     Margins are dimensionless (moments in ``z`` units). Assumes the declared
     ``support``; passing every check is not certified as membership of the
-    feasible set ``eq: joint moment feasible set``.
+    feasible set of ``sec: finite joint response``.
     """
 
     checks: tuple[tuple[str, bool, float], ...] = eqx.field(static=True)
@@ -263,7 +264,8 @@ def feasibility_checks(moments, index, support, *, tol=1e-9) -> FeasibilityRepor
         f"{len(checks) - len(failed)} passed, {len(failed)} failed"
         + (": " + ", ".join(failed) if failed else "")
         + f"; {len(col.missing)} entries not computable from the supplied moments. "
-        "Passing does not certify membership of conv{psi(x): x in D}."
+        "Passing does not certify that one nonnegative distribution on the support "
+        "has these moments."
     )
     return FeasibilityReport(checks, tuple(col.missing), statement, tol)
 

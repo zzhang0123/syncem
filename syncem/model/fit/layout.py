@@ -1,6 +1,6 @@
 """Full coefficient coordinates of a response reduction (``syncem.model.fit.layout``).
 
-LABEL: ``extra eq: finite fit model`` (the real layout ``m = concat(M0[h0],
+LABEL: ``eq: linear basis`` (the real layout ``m = concat(M0[h0],
 Re M2[h2], Im M2[h2])`` of ``C``) and ``eq: explicit joint moments`` (the
 ``b >= 1`` rows of ``M0`` in ``MomentIndex.h0_ext``).
 
@@ -42,7 +42,7 @@ from .._provenance import strict_json
 from ..errors import ErrorTerm
 from ..index import Entry, MomentIndex
 
-LABEL = ("extra eq: finite fit model", "eq: explicit joint moments")
+LABEL = ("eq: linear basis", "eq: explicit joint moments")
 REFERENCE_KEYS = ("gamma0", "B0", "depth_ref", "s_gamma", "s_B", "s_depth")
 _EXT_REASON = (
     "M0 row with b >= 1: I and V use b = 0 only (eq: finite joint response), so the "

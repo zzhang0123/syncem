@@ -1,7 +1,8 @@
 """Regression tests for review findings on ``fit_linear`` and its result builders.
 
-R02/R03: the ``delta R S_hat`` term of ``extra eq: data error propagation``
-enters the bias bound (unbounded without ``response_uncertainty``).
+R02/R03: the ``delta R S_hat`` response-error term (stated after
+``eq: chromatic beam response``) enters the bias bound (unbounded without
+``response_uncertainty``).
 R08: a rank-deficient design leaves the bias of ``u`` unbounded.
 R09: the rank decision is invariant under a rescaling of the design columns.
 R21: ``tol`` reaches the identifiability report and the provenance notes;

@@ -26,7 +26,8 @@ class Prediction(eqx.Module):
     ``propagate(R, response_uncertainty=)`` applies a linear observing
     response ``R`` ``(n_data, 4 n_ch)`` acting on the channel-major flattened
     ``(I, Q, U, V)`` vector: ``|R| @ envelope + |delta R| @ |stokes|``
-    (``extra eq: data error propagation``); the second term is ``unbounded``
+    (``sec: frequency order``; the response-error term follows
+    ``eq: chromatic beam response``); the second term is ``unbounded``
     unless ``response_uncertainty`` is supplied (``0`` declares the response
     exact). ``to_dict`` is JSON-ready (``total.value`` is ``null`` when any
     term is unbounded); ``summary`` is a short text report. Both are eager.

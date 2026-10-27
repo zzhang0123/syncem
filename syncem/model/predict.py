@@ -1,12 +1,13 @@
 """Channel predictions with their error budget (``syncem.model.predict``).
 
-LABEL: ``eq: finite joint response`` and ``extra eq: finite fit model``
+LABEL: ``eq: finite joint response`` and ``eq: linear basis``
 (``stokes = N_src reshape(C m)`` with the response matrix ``C`` of the basis
-and the real moment vector ``m``), ``eq: channel error budget`` (the
-:class:`ErrorBudget` of every :class:`Prediction`), ``eq: local response
-remainder`` (``basis_remainder`` through ``RemainderInputs``), ``extra eq:
-data error propagation`` (:meth:`Prediction.propagate`), ``eq: smooth
-channel kernel`` and ``extra eq: faraday channel kernel``
+and the real moment vector ``m``), ``sec: frequency order`` (the
+:class:`ErrorBudget` of every :class:`Prediction`, and
+:meth:`Prediction.propagate`, whose response-error term follows
+``eq: chromatic beam response``), the ``[extension]`` truncation bound of
+``eq: channel residual average`` (``basis_remainder`` through
+``RemainderInputs``), ``eq: channel kernel`` and ``eq: full channel average``
 (:func:`direct_channel_average`: the discrete-population average with the
 per-emitter, per-line Faraday phase and the sky factor ``exp(2 i phi)``).
 
@@ -96,7 +97,8 @@ def _basis_remainder(errors, basis, amplitude):
         return errors
     if errors is None:
         return ErrorTerm.unbounded(
-            "no RemainderInputs supplied (eq: local response remainder)",
+            "no RemainderInputs supplied ([extension] truncation bound of "
+            "eq: channel residual average)",
             "N_src <rho_nu>",
         )
     if not isinstance(errors, RemainderInputs):

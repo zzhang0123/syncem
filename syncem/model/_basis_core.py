@@ -268,7 +268,7 @@ def numerics_record(kernel, channels, reference, route) -> tuple:
 
 
 def screen_exponent_term(kernel, channels, reference, phase, quadrature) -> ErrorTerm:
-    """Per-electron ``screen_exponent`` slot of ``eq: channel error budget``.
+    """Per-electron ``screen_exponent`` slot of :class:`ErrorBudget` (``sec: frequency order``).
 
     Taylor route: ``not_applicable``. Gaussian and empirical screens: a zero
     ``bound`` (their characteristic functions are exact within the declared
@@ -292,15 +292,16 @@ def screen_exponent_term(kernel, channels, reference, phase, quadrature) -> Erro
             jnp.zeros((n_ch, 4)),
             "bound",
             f"{name}: exact characteristic function of the declared screen; no "
-            "exponent remainder (eq: screen exponent error does not arise)",
-            "eq: screen exponent error",
+            "exponent remainder (R_5 of eq: independent gaussian screen does not "
+            "arise)",
+            "R_5 bound of eq: independent gaussian screen",
         )
     tau_max = 2.0 * (C_SI_M / jnp.asarray(channels.support)[:, 0]) ** 2
     eps = phase.exponent_remainder(tau_max)
     if eps is None:
         return ErrorTerm.unbounded(
             "cumulant screen without g5_bound: exponent remainder R_5 unknown",
-            "eq: screen exponent error",
+            "R_5 bound of eq: independent gaussian screen",
         )
     average = kernel.angular_projection(
         channels,
@@ -317,9 +318,10 @@ def screen_exponent_term(kernel, channels, reference, phase, quadrature) -> Erro
     return ErrorTerm(
         jnp.stack([zero, polarised, polarised, zero], axis=1),
         "estimate",
-        "eq: screen exponent error at the reference point: <H_I>_angles max|w_0| "
-        "(exp(tau_max^5 g5/5!) - 1) per channel; not a population average",
-        "eq: screen exponent error",
+        "R_5 bound of eq: independent gaussian screen at the reference point: "
+        "<H_I>_angles max|w_0| (exp(tau_max^5 g5/5!) - 1) per channel; not a "
+        "population average",
+        "R_5 bound of eq: independent gaussian screen",
     )
 
 

@@ -1,6 +1,6 @@
 """Pre-fit response reduction ``C = H T`` (``syncem.model.fit.reduction``).
 
-LABEL: ``extra eq: finite fit model`` (the padded response ``C`` of the full
+LABEL: ``eq: linear basis`` (the padded response ``C`` of the full
 coordinates ``a``), ``eq: channel derivative coefficients`` (the columns the
 continuum relations act on) and ``[extension]`` (the reduction itself).
 
@@ -53,7 +53,7 @@ from . import _reduction_checks as chk
 from . import _relations as rel
 from .layout import CoefficientLayout
 
-LABEL = ("extra eq: finite fit model", "eq: channel derivative coefficients")
+LABEL = ("eq: linear basis", "eq: channel derivative coefficients")
 RELATIONS = chk.RELATIONS
 CHECK_RTOL = 1e-10
 

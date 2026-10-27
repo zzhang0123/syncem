@@ -1,8 +1,9 @@
-"""Depth-model term of ``eq: channel error budget`` (private helper of ``bounds``).
+"""Depth-model term of :class:`ErrorBudget` (private helper of ``bounds``).
 
-``depth_error_bound`` implements ``N_src tau <|K_P| |delta varphi|>`` of the
-manuscript's perturbation bounds (main.tex app: perturbation bounds); it is
-re-exported by ``syncem.model.bounds``, whose module docstring states the
+``depth_error_bound`` implements the ``[extension]`` depth-perturbation bound
+``N_src tau_max <|K_P| |delta depth|>``, a rotation-angle error of the kind
+``sec: frequency order`` leaves unevaluated; its term is tagged ``E_phys``. It
+is re-exported by ``syncem.model.bounds``, whose module docstring states the
 units, shapes and what is not certified.
 """
 
@@ -27,7 +28,7 @@ def depth_error_bound(
     absolute_channel_sum=None,
     batch_size=1024,
 ) -> ErrorTerm:
-    """``amplitude tau_max <|K_P| |delta depth|>`` per channel (``eq: channel error budget``).
+    """``amplitude tau_max <|K_P| |delta depth|>`` per channel (``[extension]`` depth perturbation).
 
     ``delta_depth`` (rad/m^2) is a scalar or ``(S,)`` per-emitter depth
     error; ``tau_max = 2 (c/nu_lo)^2`` is the largest phase coordinate on
@@ -59,8 +60,9 @@ def depth_error_bound(
         absolute = _kernel_modulus(samples, kernel, channels, phase, batch_size)
         kind = "estimate"
         note = (
-            "eq: channel error budget depth term tau_max <|K_P| |delta depth|> with |K_P| the "
-            "modulus of the phased channel line sum (below sum_m |Q_m R_j|): estimate"
+            "[extension] depth-perturbation term tau_max <|K_P| |delta depth|> with "
+            "|K_P| the modulus of the phased channel line sum (below "
+            "sum_m |Q_m R_j|): estimate"
         )
     else:
         absolute = _as_float(absolute_channel_sum, "absolute_channel_sum")
@@ -71,8 +73,8 @@ def depth_error_bound(
         absolute = _nonnegative(absolute, "absolute_channel_sum")
         kind = "bound"
         note = (
-            "eq: channel error budget depth term tau_max <sum_m |Q_m R_j| |delta depth|> "
-            "with the supplied absolute channel sum"
+            "[extension] depth-perturbation term tau_max "
+            "<sum_m |Q_m R_j| |delta depth|> with the supplied absolute channel sum"
         )
     average = (w * jnp.abs(delta)) @ absolute
     value = _amplitude(amplitude) * _stokes(channels.n_ch, P=tau * average)

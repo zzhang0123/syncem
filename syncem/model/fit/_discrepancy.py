@@ -3,8 +3,9 @@
 ``data_discrepancy`` reproduces the composition inside
 ``_linear_core.bias_bound`` without editing it: ``data.discrepancy_vector()``
 plus, with an observing response, ``_linear_core._response_part`` (the
-``|delta R| (|S_hat| + E)`` term of ``extra eq: data error propagation``,
-which makes the result an ``estimate``). A drift test
+response-error term ``|delta R| (|S_hat| + E)``, stated after ``eq: chromatic
+beam response`` for a response that acts on channel-integrated Stokes, which
+makes the result an ``estimate``). A drift test
 (``tests/model/test_combinations_errors.py``) checks it against
 ``fit_linear``. Nothing here is public API.
 """
@@ -33,8 +34,8 @@ def data_discrepancy(data, stokes_hat):
                 "unbounded",
                 "",
                 "data.response is set without response_uncertainty (delta R): the "
-                "|delta R S_hat| term of extra eq: data error propagation is not "
-                "bounded (pass zeros to declare the response exact)",
+                "|delta R S_hat| response-error term (stated after eq: chromatic beam "
+                "response) is not bounded (pass zeros to declare the response exact)",
             )
         part, extra = _response_part(data, stokes_hat)
         if part is not None:

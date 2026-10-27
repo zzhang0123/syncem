@@ -1,6 +1,6 @@
-"""Figure for Sec. 6 (polarised radiative transfer).
+"""Figure for the ``[extension]`` polarised radiative transfer.
 
-Three panels, one per structural claim of the section:
+Three panels, one per structural claim:
 
 (a) Kirchhoff closure -- the absorbed spectrum built from the emissivity
     moments (M0, M1, M2) plus <1/gamma> alone, against the direct quadrature

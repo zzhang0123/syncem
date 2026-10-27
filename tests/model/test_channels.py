@@ -353,7 +353,7 @@ def test_width_ratio_peak_scale_and_describe_are_concrete_and_hashable():
     fields = dict(described)
     assert fields["family"] == "bump" and fields["n_ch"] == 3
     assert fields["smoothness"] == 99 and fields["normalisation"] == "unit_peak"
-    assert Channels.LABEL == "extra eq: channel kernel"
+    assert Channels.LABEL == "eq: channel kernel"
     assert_allclose(np.asarray(channels.peak_scale()), 1.0)
     for j in range(3):
         assert_allclose(np.asarray(channels(CENTRES[j]))[j], 1.0)

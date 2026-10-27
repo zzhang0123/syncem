@@ -283,7 +283,7 @@ def test_basis_remainder_matches_explicit_sum(truncation):
     assert_allclose(
         term.value, 2.0 * remainder_oracle(rho, H, absolute, truncation.N), rtol=1e-14
     )
-    assert "local response remainder" in term.note
+    assert "truncation bound of eq: channel residual average" in term.note
     estimate = RemainderInputs(
         rho_ang=rho, H=H, absolute_moments=absolute, kind="estimate"
     )
@@ -364,7 +364,7 @@ def test_basis_remainder_appendix_c_layout():
     I = rho[:, 0] + H[:, 0] @ absolute[0] / 2
     V = rho[:, 2] + H[:, 2] @ absolute[0] / 2
     assert_allclose(term.value, 1.5 * np.stack([I, P, P, V], axis=1), rtol=1e-13)
-    assert "joint screen remainder" in term.note
+    assert "depth-Taylor bound" in term.note
     missing = RemainderInputs(
         rho_ang=rho, H=H, absolute_moments=absolute
     ).basis_remainder(basis, 1.0, depth_coefficients=coefficients)

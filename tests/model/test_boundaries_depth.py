@@ -3,12 +3,12 @@
 ``depth_ref in {0, 1e2, 1e4}`` (reference phases up to ``9e10`` rad),
 ``tau Delta_depth in {1e-3, 1, 10, 100}`` across ``depth_degree in {0, 1, 2, 4}``
 (the measured Taylor error grows as ``|tau|^{N+1}`` and is covered by the
-``eq: local response remainder`` bound, by the package's ``basis_remainder`` in
-both index layouts where the probe order is certified, and the
-``GaussianScreen`` stays exact at ``tau sigma = 100`` where the Taylor route
-diverges), and the ``N in {0..3}`` x ``L in {0, 4, 8}`` grid on the
-polynomial oracle (exact) and on the harmonic kernel (shared columns agree
-across truncations). Both sides of every switch are evaluated directly.
+``[extension]`` truncation bound of ``eq: channel residual average``, by the
+package's ``basis_remainder`` in both index layouts where the probe order is
+certified, and the ``GaussianScreen`` stays exact at ``tau sigma = 100`` where
+the Taylor route diverges), and the ``N in {0..3}`` x ``L in {0, 4, 8}`` grid
+on the polynomial oracle (exact) and on the harmonic kernel (shared columns
+agree across truncations). Both sides of every switch are evaluated directly.
 """
 
 import itertools
@@ -152,7 +152,7 @@ def test_taylor_remainder_covers_direct_error_and_grows_as_x_to_N_plus_1(
     """For every ``x = tau Delta``: the finite response is finite, its error
     against the direct average is at most the remainder bound
     ``|c_Q| x^{D+1}/(D+1)! <|u|^{D+1}>`` (equality up to ``O(x^{D+2})`` at
-    small ``x``), the ``app: depth moments`` layout ``depth_degree = D`` and the
+    small ``x``), the ``[extension]`` depth-degree layout ``depth_degree = D`` and the
     main-text layout ``N = D`` agree, and the measured growth exponent
     between ``x = 1e-3`` and ``x = 1`` is ``D + 1`` within 0.15."""
     errors = {}
@@ -194,7 +194,8 @@ def test_package_basis_remainder_covers_direct_error_in_both_layouts(degree, x):
     """``RemainderInputs.from_samples`` (probe order ``D + 1 <= 3``, certified)
     gives a ``basis_remainder`` that covers the measured error in both
     layouts; the main-text layout reproduces the oracle bound to ``1e-9`` and
-    the ``app: depth moments`` layout is looser by ``(nu_c/nu_lo)^{2(D+1)}`` (``tau_max``).
+    the ``[extension]`` depth-degree layout is looser by ``(nu_c/nu_lo)^{2(D+1)}``
+    (``tau_max``).
     """
     delta = x / TAU
     samples, absolute, _ = _asymmetric_population(2.0, delta)

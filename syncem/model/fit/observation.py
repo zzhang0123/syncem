@@ -1,11 +1,12 @@
 """Channel Stokes data with noise, mask, observing response and discrepancy.
 
-LABEL: ``extra eq: finite fit model`` (``d = A C m + delta + eta``) and
-``extra eq: data error propagation`` (``|R| @ envelope`` for a Stokes-space
-discrepancy). :class:`StokesData` is the data side of ``fit_linear``,
-``fisher``, ``LogDensity`` and ``identifiability``: it whitens the retained
-data rows with the Cholesky factor of their noise covariance and applies the
-optional linear observing response to a model column space.
+LABEL: ``eq: linear basis`` with the noise of ``sec: linear fit``
+(``d = A C m + delta + eta``) and ``sec: frequency order`` (``|R| @ envelope``
+for a Stokes-space discrepancy). :class:`StokesData` is the data side of
+``fit_linear``, ``fisher``, ``LogDensity`` and ``identifiability``: it
+whitens the retained data rows with the Cholesky factor of their noise
+covariance and applies the optional linear observing response to a model
+column space.
 
 Layout and units
 ----------------
@@ -24,11 +25,12 @@ Layout and units
   and the kept rows as a static tuple.
 * ``response``: ``(n_data, 4 n_ch)`` real matrix ``R`` mapping the flattened
   channel Stokes to the data; ``response_uncertainty`` is ``|delta R|`` of
-  the same shape (nonnegative). ``fit_linear`` adds ``|delta R| (|S_hat| +
-  E)`` (the second term of ``extra eq: data error propagation``, with its
-  fitted channel Stokes ``S_hat``) to ``discrepancy_vector()`` in its bias
-  bound, and reports that bound ``unbounded`` when a response is set
-  without ``response_uncertainty`` (zeros declare the response exact).
+  the same shape (nonnegative). ``fit_linear`` adds the response-error term
+  ``|delta R| (|S_hat| + E)`` (stated after ``eq: chromatic beam response``
+  for a response that acts on channel-integrated Stokes, with its fitted
+  channel Stokes ``S_hat``) to ``discrepancy_vector()`` in its bias bound,
+  and reports that bound ``unbounded`` when a response is set without
+  ``response_uncertainty`` (zeros declare the response exact).
 * ``discrepancy``: an :class:`ErrorTerm` bounding ``|delta|`` either in
   Stokes space (``(n_ch, 4)``, ``(4,)`` or scalar; propagated by ``|R|``)
   or in data space (``(n_data,)``).
@@ -40,10 +42,10 @@ definite covariance block, negative response uncertainty) use
 and ``discrepancy_vector`` are ``jax.jit`` and autodiff safe.
 
 Not certified: that ``noise`` describes the actual measurement errors, that
-the response is exact (a missing ``response_uncertainty`` leaves the second
-term of ``extra eq: data error propagation`` unbounded, and ``fit_linear``
-then reports an ``unbounded`` bias bound), or that the discrepancy term
-bounds the true model error.
+the response is exact (a missing ``response_uncertainty`` leaves the
+response-error term ``|delta R| |S|``, stated after ``eq: chromatic beam
+response``, unbounded, and ``fit_linear`` then reports an ``unbounded`` bias
+bound), or that the discrepancy term bounds the true model error.
 """
 
 from __future__ import annotations
@@ -99,7 +101,7 @@ class StokesData(eqx.Module):
     ``response_uncertainty`` are caller declarations, not certified here.
     """
 
-    LABEL: ClassVar[str] = "extra eq: finite fit model"
+    LABEL: ClassVar[str] = "sec: linear fit"
     stokes: jax.Array
     noise: jax.Array
     mask: jax.Array | None = None
@@ -212,7 +214,9 @@ class StokesData(eqx.Module):
         ``L`` is the lower Cholesky factor of the kept covariance block (the
         square roots of the variances when ``noise`` is one-dimensional), so
         ``(L^-1)^T L^-1 = Sigma_kept^-1`` and ``||L^-1 (d - G u)||^2`` is the
-        chi-square of ``extra eq: finite fit model``.
+        full linear likelihood of ``sec: linear fit``
+        (``|Sigma^-1/2 [d - C a(theta)]|^2``, stated after the compressed
+        likelihood).
         """
         Linv = self._whitening()
         return Linv @ self.select(self.data_vector()), Linv
@@ -226,9 +230,10 @@ class StokesData(eqx.Module):
         """``|delta|`` on the kept rows ``(n_kept,)``; ``None`` without a valued term.
 
         A Stokes-space term (``(n_ch, 4)``, ``(4,)`` or scalar) is
-        propagated by ``|R|`` (the first term of ``extra eq: data error
-        propagation``); a data-space term ``(n_data,)`` is used as is. The
-        second term ``|delta R S_hat|`` needs a Stokes estimate and is added
+        propagated by ``|R|`` (the channel-envelope term ``|R| E``,
+        ``sec: frequency order``); a data-space term ``(n_data,)`` is used as
+        is. The response-error term ``|delta R S_hat|`` (stated after
+        ``eq: chromatic beam response``) needs a Stokes estimate and is added
         by ``fit_linear`` from ``response_uncertainty``, not here.
         """
         term = self.discrepancy

@@ -1,9 +1,9 @@
 """Exact discrete-population oracles for ``syncem.model.moments``.
 
 Oracles are NumPy/SciPy (``eval_legendre``, explicit weighted sums) written
-independently of the JAX path. The manuscript toy population of
-``eq: channel toy population`` is rebuilt from ``validation/full_response.py``
-(latent 16 x 16 Gauss-Legendre nodes, 64 x 64 angular nodes).
+independently of the JAX path. The manuscript toy population is rebuilt from
+``population`` in ``validation/full_response.py`` (latent 16 x 16
+Gauss-Legendre nodes, 64 x 64 angular nodes).
 """
 
 import equinox as eqx
@@ -522,7 +522,7 @@ def test_to_dict_layout(index_111):
     assert d["reference"]["gamma0"] == 5.2
 
 
-# -- manuscript toy population (eq: channel toy population) -------------------
+# -- manuscript toy population (validation/full_response.py) ------------------
 
 
 def toy_population(width, latent_nodes=16, angular_nodes=64, B0=1.0):

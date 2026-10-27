@@ -8,9 +8,10 @@ so the record (a static field of ``JointMoments``) does not depend on
 ``theta``: moments of different fitted values difference, stack and share
 one ``filter_jit`` trace; the fitted values live in ``theta`` and in the
 ``FitResult`` provenance notes. R27: the free-parameter count of
-``fully_independent`` in the docstring holds in the ``app: depth moments``
-layout. Oracles: exact weighted sums of ``JointMoments.from_samples`` on a
-discrete population, and an independent parameter count.
+``fully_independent`` in the docstring holds in the ``[extension]``
+depth-degree layout. Oracles: exact weighted sums of
+``JointMoments.from_samples`` on a discrete population, and an independent
+parameter count.
 """
 
 import equinox as eqx

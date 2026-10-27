@@ -562,7 +562,7 @@ def _gauss_hermite_ensemble(
 
 
 def test_convergence_is_fourth_order_in_the_width():
-    """Sec. 4.7: for a Gaussian the leading neglected term is 4th order.
+    """[extension]: for a Gaussian the leading neglected term is 4th order.
 
     Checks the expected fourth-order law for the normalized response; the paper separately checks physical fixed-B derivatives.
     """
@@ -587,7 +587,7 @@ def test_convergence_is_fourth_order_in_the_width():
 
 
 def test_pitch_angle_is_the_binding_direction():
-    """Sec. 4.7: the pitch-angle width constrains the expansion, not the energy.
+    """[extension]: the pitch-angle width constrains the expansion, not the energy.
 
     The paper previously attributed a ~10% error at n=20 to a 6% energy spread;
     it is in fact the 0.1 rad pitch-angle spread. This pins the separation.
@@ -618,7 +618,7 @@ def test_pitch_angle_is_the_binding_direction():
 
 
 def test_mildly_relativistic_claims_of_section_5_4():
-    """Pins the numbers quoted in Sec. 5.4 (isotropic pitch angles, theta=pi/3).
+    """Pins the [extension] harmonic-sum ratios for isotropic pitch angles at theta=pi/3.
 
     These were previously stated for an unspecified pitch angle and did not
     reproduce; V_n/I_n at a single harmonic is fixed by geometry (full
@@ -647,7 +647,7 @@ def test_mildly_relativistic_claims_of_section_5_4():
     v2, f2, n90_2 = out[2.0]
     v5, f5, _ = out[5.0]
     assert abs(v2 - 0.46) < 0.05  # <V>/<I> at gamma=2
-    assert abs(v5 - 0.20) < 0.03  # matches the gamma=5 value of Sec. 5.3
+    assert abs(v5 - 0.20) < 0.03  # <V>/<I> at gamma=5 ([extension] harmonic sum)
     assert abs(2.0 * v2 - 1.0) < 0.15  # the 1/gamma law, unit coefficient
     assert abs(5.0 * v5 - 1.0) < 0.15
     assert abs(f2 - 0.046) < 0.01  # fundamental carries ~4.6% at gamma=2

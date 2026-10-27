@@ -7,12 +7,13 @@ weight. The variables ``VARS = (gamma, B, mu, eta, phi, depth)`` carry the
 exponents ``(r, s, l, k, h, b)`` respectively, and every retained moment is
 the average of the product monomial
 ``z_gamma^r z_B^s P_l(mu) P_k(eta) e^{i h phi} z_depth^b``
-(``eq: explicit joint moments`` in the dimensionless displacements of
-``eq: local response remainder``). A factorisation (partition of ``VARS``)
-turns each row into a product of group marginals; this module enumerates the
-distinct nonconstant projections of the rows of ``m`` (``h0`` and ``h2``)
-onto every group and the static gathers that rebuild every retained row,
-including the ``h0_ext`` rows when their projections are covered.
+(``eq: explicit joint moments`` in the dimensionless displacements, the
+offsets of ``eq: channel basis expansion`` divided by fixed positive scales,
+``[extension]``). A factorisation (partition of ``VARS``) turns each row into
+a product of group marginals; this module enumerates the distinct
+nonconstant projections of the rows of ``m`` (``h0`` and ``h2``) onto every
+group and the static gathers that rebuild every retained row, including the
+``h0_ext`` rows when their projections are covered.
 
 Closure tables are evaluated in the same displacement coordinates: depth
 closures take their hyper-parameters in rad/m^2 and are converted with the

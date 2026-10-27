@@ -1,10 +1,12 @@
 """Reference point, declared support and discrete population samples.
 
 Private helper of ``syncem.model.moments`` (split to keep files short); the
-public names are re-exported there. LABEL: the displacement coordinates of
-``eq: local response remainder`` (``Reference.z``), the declared support of
-``eq: channel error budget`` (``Support``) and the discrete electron-number
-measure of ``eq: joint emission depth`` (``PopulationSamples``).
+public names are re-exported there. LABEL: the displacement coordinates
+(``Reference.z``; the offsets of ``eq: channel basis expansion`` divided by
+fixed positive scales, ``[extension]``), the declared support (``Support``;
+``sec: frequency order``, paragraph 'Energy range and distribution width')
+and the discrete electron-number measure of ``eq: joint emission depth``
+(``PopulationSamples``).
 
 Units: ``gamma`` dimensionless (``> 1``), ``B`` Gauss (``> 0``), ``depth``
 rad/m^2, ``mu, eta`` in ``[-1, 1]``, ``phi`` radians; scales carry the units
@@ -63,13 +65,14 @@ class Reference(eqx.Module):
     ``scales = (s_gamma, s_B, s_depth)``; all traced scalar leaves. Value
     checks use ``equinox.error_if``. ``describe`` needs concrete values.
     ``z(gamma, B, depth)`` returns ``(..., 3)`` dimensionless displacements
-    (``eq: local response remainder``); ``gamma`` dimensionless, ``B`` in
-    Gauss, ``depth`` in rad/m^2. Assumes nothing about the population;
-    the choice of reference and scales is the caller's, and nothing here
-    certifies that the population is local to it.
+    (the offsets of ``eq: channel basis expansion`` divided by the scales,
+    ``[extension]``); ``gamma`` dimensionless, ``B`` in Gauss, ``depth`` in
+    rad/m^2. Assumes nothing about the population; the choice of reference
+    and scales is the caller's, and nothing here certifies that the
+    population is local to it.
     """
 
-    LABEL: ClassVar[str] = "eq: local response remainder"
+    LABEL: ClassVar[str] = "eq: channel basis expansion"
     gamma0: jax.Array
     B0: jax.Array
     depth_ref: jax.Array
@@ -118,17 +121,18 @@ class Support(eqx.Module):
     """Declared population support ``gamma in (lo, hi)``, ``B``, ``depth``.
 
     ``gamma`` lies above 1 and ``B`` above 0 (Gauss); ``depth`` in rad/m^2.
-    ``truncated`` is a static tri-state for the excluded-tail term of
-    ``eq: channel error budget``: ``None`` (unknown, ``excluded_tail``
-    unbounded), ``False`` (declared complete, ``declared_zero``) and ``True``
-    (a tail bound is a required input and the amplitude counts only the
-    retained column). Nothing here verifies that a population lies inside.
+    ``truncated`` is a static tri-state for the excluded-tail term (the
+    omitted-electron bound of ``sec: frequency order``): ``None`` (unknown,
+    ``excluded_tail`` unbounded), ``False`` (declared complete,
+    ``declared_zero``) and ``True`` (a tail bound is a required input, and the
+    amplitude counts only the source column retained inside the support, an
+    ``[extension]`` rule). Nothing here verifies that a population lies inside.
     Shapes: three ``(lo, hi)`` pairs of scalar leaves. Assumes only what
     ``truncated`` declares; the excluded tail ``E_tail`` is never computed
     by the package.
     """
 
-    LABEL: ClassVar[str] = "eq: channel error budget"
+    LABEL: ClassVar[str] = "sec: frequency order"
     gamma: tuple[jax.Array, jax.Array]
     B: tuple[jax.Array, jax.Array]
     depth: tuple[jax.Array, jax.Array]

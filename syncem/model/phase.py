@@ -1,17 +1,18 @@
 """Faraday-phase routes: per-line weights ``w_b(tau)`` multiplying ``Q_m R_j(nu_m)``.
 
-LABEL ``eq: smooth channel kernel`` (the phase ``exp(2 i (c/nu_m)^2 varphi)`` is
+LABEL ``eq: channel kernel`` (the phase ``exp(2 i (c/nu_m)^2 varphi)`` is
 applied line by line inside the channel sum), ``eq: channel derivative
 coefficients`` (Taylor route, ``b = 0..degree``), ``eq: independent gaussian
-screen`` and ``eq: independent screen response`` (screen routes),
-``eq: screen exponent error`` (``CumulantScreen.exponent_remainder``).
+screen`` and ``eq: independent screen response`` (screen routes), and the
+``R_5`` bound stated after ``eq: independent gaussian screen``
+(``CumulantScreen.exponent_remainder``).
 
 The phase coordinate is ``tau = 2 lambda^2`` with ``lambda = C_SI_M / nu`` in
 metres, so ``tau`` has units m^2 and ``tau * varphi`` is in radians for a depth
 ``varphi`` in rad/m^2. ``phase_coordinate(nu_hz)`` computes it; the harmonic
 kernel evaluates it at every line ``nu_m`` and the continuum kernel at every
-frequency node, never at a nominal channel frequency (main.tex: "the channel
-phase cannot be factored at a central frequency").
+frequency node, never at a nominal channel frequency (main.tex ``eq: channel
+kernel``: "Each harmonic retains its own channel weight and Faraday phase").
 
 Routes (all satisfy :class:`PhaseWeights`; ``__call__`` returns a complex
 array ``(n_weights, *tau.shape)`` and is ``jit``/``grad`` safe):
@@ -96,7 +97,7 @@ def _independent_record(closure_kind, hyper, discrepancy_kind="unbounded"):
 
 @runtime_checkable
 class PhaseWeights(Protocol):
-    """Per-line phase weights (``eq: smooth channel kernel``); contract in the module docstring.
+    """Per-line phase weights (``eq: channel kernel``); contract in the module docstring.
 
     ``__call__(tau, depth_ref=, s_depth=)`` returns ``(n_weights, *tau.shape)``
     complex weights for ``tau = 2 lambda^2`` in m^2 and depths in rad/m^2.
@@ -127,7 +128,8 @@ class TaylorPhase(eqx.Module):
     assumption is forced. ``tau * depth_ref`` must be finite (``eqx.error_if``).
     ``tau`` is in m^2, so ``tau * depth`` is a phase in radians. Not
     certified: the truncation of the phase series at ``degree``; its
-    remainder is the depth part of ``eq: local response remainder``.
+    remainder is the depth part of the ``[extension]`` Taylor bound of
+    ``eq: channel residual average``.
     """
 
     degree: int = eqx.field(static=True)
@@ -268,7 +270,7 @@ class CumulantScreen(eqx.Module):
         return _finite(jnp.exp(exponent), "cumulant screen weight")[None]
 
     def exponent_remainder(self, tau) -> jax.Array | None:
-        """``epsilon_5(tau) = |tau|^5 g5_bound / 120`` (``eq: screen exponent error``), or None."""
+        """``epsilon_5(tau) = |tau|^5 g5_bound / 120`` (Taylor bound of ``R_5`` in ``eq: independent gaussian screen``), or None."""
         if self.g5_bound is None:
             return None
         g5 = _real(self.g5_bound, "g5_bound", scalar=True)

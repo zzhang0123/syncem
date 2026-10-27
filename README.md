@@ -359,16 +359,15 @@ physical support, admissible moment set and likelihood. The Gaussian
 
 `syncem.model` predicts channel-integrated Stokes spectra from a finite set of
 joint population moments (`eq: finite joint response`, `eq: channel derivative
-coefficients`) and fits those moments to channel data (`extra eq: finite fit
-model`). The population is never factorised unless an assumption object is
+coefficients`) and fits those moments to channel data (`sec: linear fit`).
+The population is never factorised unless an assumption object is
 declared, and every output carries an `ErrorBudget` whose terms are `bound`,
 `estimate`, `measured`, `unbounded` or `not_applicable`; a missing input is
 `unbounded`, never zero. `docs/DESIGN.md` describes the object model, the
 index layout, the free-parameter counts and the acceptance run. The four
 examples below are the printed output of `scripts/model_examples.py`
-(`PYTHONPATH=. python scripts/model_examples.py`, 1 min 43 s wall time with
-JAX 0.10.0 and 1 min 50 s with JAX 0.10.2 on an otherwise idle machine,
-most of it example (a); examples (b) to
+(`PYTHONPATH=. python scripts/model_examples.py`, 1 min 52 s wall time with
+JAX 0.10.0 on an otherwise idle machine, most of it example (a); examples (b) to
 (d) live in `scripts/model_examples_continuum.py` and
 `scripts/model_examples_fit.py`); rerun it after any change and replace
 the quoted numbers. Example (a) compares with the manuscript's saved
@@ -377,12 +376,14 @@ tests use too.
 
 #### Example (a): harmonic kernel, the manuscript's smooth-channel benchmark
 
-The setting of main-text Section 5.3.1: `gamma0 = 20`, `B0 = 1` G, three bump
-channels at `y_j = 2, 4, 8` (`y = nu / nu_*`, `nu_* = e B0 / (2 pi gamma0 m_e c)`)
-with 65 % support half-widths, the correlated population of
-`eq: channel toy population` on its full 16 x 16 latent and 64 x 64 angular
-grid (1,048,576 samples), harmonics through `m = 40`, and the truncation
-`N = 2`, `L = 8` (1306 real moments).
+The setting of the smooth-channel check described in main.tex
+`sec: finite joint response` (Section 4.2): `gamma0 = 20`, `B0 = 1` G, three
+bump channels at `y_j = 2, 4, 8` (`y = nu / nu_*`, `nu_* = e B0 / (2 pi gamma0 m_e c)`)
+with 65 % support half-widths, the correlated low-energy population
+(`population` in `tests/model/reference/validation/full_response.py`, width
+1.0, which that section describes in words) on its full 16 x 16 latent and
+64 x 64 angular grid (1,048,576 samples), harmonics through `m = 40`, and the
+truncation `N = 2`, `L = 8` (1306 real moments).
 
 ```python
 from syncem.model.assumptions import independent_screen
@@ -407,23 +408,25 @@ pred = predict(basis, screened, amplitude=1.0)
 print(pred.summary()); print(pred.budget.total().kind); print(pred.budget.unbounded())
 ```
 
-`S_DEPTH = 1 / (2 (c / nu_*)^2)` converts the manuscript's depth coordinate
-`zeta` to rad/m^2. With the joint moments the prediction reproduces the
+`S_DEPTH = 1 / (2 (c / nu_*)^2)` converts the depth coordinate `zeta` of
+`full_response.py` to rad/m^2. With the joint moments the prediction reproduces the
 manuscript's saved finite response and its direct average:
 
 ```text
 required_m_max(support, channels) = 40
-index: n0=486 n2=410 n_real=1306  build time 18.2 s
-numerics: {'n_nodes': 256, 'm_range': (1, 26), 'width_ratio_min': 1.2999999999999998, 'cells': 64, 'route': 'product'}
+index: n0=486 n2=410 n_real=1306  build time 21.9 s
+numerics: {'n_nodes': 256, 'm_range': (1, 26), 'width_ratio_min': 1.3000000000000003, 'cells': 64, 'route': 'product', 'computed_mode_intervals': ((1, 40),), 'computed_channel_mode_intervals': (((1, 11),), ((1, 21),), ((1, 40),))}
 population size: 1048576
 joint moments:  max |pred - manuscript finite| / I_direct per channel: [1.52748222e-06 5.14411821e-07 1.39817674e-06]
 joint moments:  max |pred - manuscript direct| / I_direct per channel: [0.00175259 0.00053129 0.00021887]
 ```
 
-The second line is the manuscript's 1.75e-3 (Figure `fig: full channel
-response`, width 1.0, `N = 2`, `L = 8`). The build time includes the one
-`convergence="angular"` rebuild (the same route at doubled nodes for the
-`numerical` envelope). The product-versus-tensor route check is opt-in
+The largest entry of the second `joint moments` line, 1.75e-3, is the 0.175 %
+that main.tex `sec: finite joint response` (Sec. 4.2) quotes for `N = 2`,
+`L = 8`; main.tex reports only the width-1.0 case (`gamma` within 20 % of
+20). The build time includes the one `convergence="angular"` rebuild (the
+same route at doubled nodes for the `numerical` envelope). The
+product-versus-tensor route check is opt-in
 (`build_basis(..., cross_route=True)` or `convergence="full"`) and is
 recorded as a named finite check, not a budget term.
 With `independent_screen` declared and `discrepancy="measured"` the moments
@@ -447,6 +450,7 @@ Prediction (eq: finite joint response): 3 channels, units per-electron channel S
     amplitude: unbounded -
     assumption:independent_screen: measured 2.776e-20
   assumptions: independent_screen
+  note: harmonic support pruning uses the declared gamma/B support; floating-point line evaluation error is not certified
   note: incident polarisation not modelled
   note: moment-level discrepancy of kind 'measured' propagated as N_src |C| Delta (assumption)
 budget.total().kind = unbounded
@@ -468,14 +472,16 @@ remainder inputs come from two measures. The order-3 derivative envelope `H`
 (at the reference point only) and the angular residual `rho_ang` are
 probed with `RemainderInputs.from_samples` on a separate 2-node (16-atom)
 Gauss-Legendre discretisation of the same toy model, which is not a subset
-of the population; this takes 35 s (147 s in 0.2.0, before the probe used
+of the population; this takes 39 s (147 s in 0.2.0, before the probe used
 `HarmonicKernel.angular_taylor`). The absolute moments
-`<|P_l P_k| ||z||^3>` of `eq: local response remainder` are recomputed on
-the predicted population itself (weighted sums, under a second); the
-16-atom probe underestimates their row sums by the factors printed:
+`<|P_l P_k| ||z||^3>` of the `[extension]` truncation bound
+`<rho_ang> + sum_lk H_lk <|P_l P_k| ||z||^{N+1}>/(N+1)!` of the residual in
+`eq: channel residual average` are recomputed on the predicted population
+itself (weighted sums, under a second); the 16-atom probe underestimates
+their row sums by the factors printed:
 
 ```text
-remainder probe (H at the reference, rho_ang on the 16-atom discretisation, absolute moments on the 1048576 population samples): 35.1 s, kind estimate
+remainder probe (H at the reference, rho_ang on the 16-atom discretisation, absolute moments on the 1048576 population samples): 39.3 s, kind estimate
 absolute-moment row sums, population / 16-atom probe (z_2, z_3): [1.732 1.589]
 Prediction (eq: finite joint response): 3 channels, units per-electron channel Stokes per unit z-moment: erg/s/sr (unit_peak) or erg/s/sr/Hz (unit_integral); z = ((gamma-gamma0)/s_gamma, (B-B0)/s_B, (depth-depth_ref)/s_depth), Gauss, Hz, rad/m^2, amplitude 1
   channel 0: I=3.586096e-19 Q=1.882597e-20 U=-9.944719e-20 V=8.295205e-20
@@ -493,21 +499,24 @@ Prediction (eq: finite joint response): 3 channels, units per-electron channel S
     amplitude: bound 0.000e+00
     assumption:independent_screen: measured 2.776e-20
   assumptions: independent_screen
+  note: harmonic support pruning uses the declared gamma/B support; floating-point line evaluation error is not certified
   note: incident polarisation not modelled
   note: moment-level discrepancy of kind 'measured' propagated as N_src |C| Delta (assumption)
 budget.total().kind = estimate
 budget.unbounded() = ()
 envelope covers |pred_screen - manuscript direct|: True
+total time 82.1 s
 ```
 
 Every slot is now valued and the total is an `estimate`, but the envelope
 is 384 times channel `I` while the measured finite-vs-direct error is
-1.75e-3 of `I`: the `eq: local response remainder` envelope sums absolute
-contributions over the 81 Legendre pairs with the Frobenius norm of the
-third-order tensor and the absolute moments (the depth displacement reaches
-`|z_depth| = 3` in the manuscript's scale), so at `L = 8` it exceeds the
-actual error by five orders of magnitude. `H` is evaluated at one point
-and `rho_ang` on the 16-atom measure, not the predicted population; neither
+1.75e-3 of `I`: the envelope of the `[extension]` truncation bound of
+`eq: channel residual average` sums absolute contributions over the 81
+Legendre pairs with the Frobenius norm of the third-order tensor and the
+absolute moments (the depth displacement reaches `|z_depth| = 3` in units
+of `S_DEPTH`), so at `L = 8` it exceeds the actual error by five
+orders of magnitude. `H` is evaluated at one point and `rho_ang` on the
+16-atom measure, not the predicted population; neither
 is a supremum over the support. The `amplitude` slot is a zero `bound`:
 `amplitude_uncertainty=0` declares the amplitude exact. `E_phys` and the
 excluded tail are declared by the caller. `predict(samples=population,
@@ -560,12 +569,12 @@ Burn factor exp(-2 sigma^2 lambda^4) at the channel centres:
   [0.0000e+000 6.7602e-252 1.0801e-036 7.0752e-006 1.8302e-001 7.8414e-001
  9.6578e-001 9.9503e-001]
 HarmonicKernel refused: required_m_max=2043405178518 lies outside the harmonic design regime (m <~ 16368); use ContinuumKernel with isotropic_pitch
-index: components=('I', 'Q') n0=12 n2=12 n_real=36  build time 3.0 s
+index: components=('I', 'Q') n0=12 n2=12 n_real=36  build time 3.7 s
 forced assumptions: ['independent_screen', 'gaussian_screen', 'isotropic_pitch']
 notes: ('V not modelled [ContinuumKernel]', 'incident polarisation not modelled')
 L_mu > 0 refused: ContinuumKernel requires the uniform_mu closure (isotropic pitch): use L_mu = 0
 population size: 4096
-remainder probe on 8 samples: 8.5 s, kind estimate
+remainder probe on 8 samples: 10.0 s, kind estimate
 Prediction (eq: finite joint response): 8 channels, units per-electron channel Stokes per unit z-moment: erg/s/sr (unit_peak) or erg/s/sr/Hz (unit_integral); z = ((gamma-gamma0)/s_gamma, (B-B0)/s_B, (depth-depth_ref)/s_depth), Gauss, Hz, rad/m^2, amplitude 1e+20
   channel 0: I=2.321612e-01 Q=0.000000e+00 U=0.000000e+00 V=0.000000e+00
   channel 1: I=2.990974e-01 Q=-7.074508e-100 U=2.470894e-99 V=0.000000e+00
@@ -602,6 +611,7 @@ polarisation fraction |P|/I per channel: [0.000e+00 0.000e+00 0.000e+00 1.000e-0
 max |pred - direct| / I per channel: [0.03 0.02 0.01 0.04 0.12 0.25 0.42 0.59]
 sum of the valued terms / I per channel: [0.03 0.03 0.01 0.04 0.13 0.32 1.   4.37]
 valued terms cover |pred - direct|: True
+total time 16.9 s
 ```
 
 Four things to read off. `physical_kernel` stays `unbounded`: the continuum
@@ -638,20 +648,24 @@ for supported channels, error statuses and a reusable-matrix example.
 #### Non-Gaussian independent screens
 
 `LaplaceScreen(mean, sigma)` and `GammaScreen(mean, sigma, shape=4.0, sign=1)`
-(`syncem.model.screens`) are the illustrated screens of the manuscript
-(`eq: illustrated screens`). Each is an exact characteristic function with the
-same depth mean and standard deviation as `GaussianScreen`, applied line by
-line inside the channel sum, with `depth_degree=0`. At `mean=0`, `sigma=1` and
-`t = tau*sigma`, the three weights are `exp(-t**2/2)`, `1/(1 + t**2/2)` and
+(`syncem.model.screens`) are the screens of main.tex `fig: screen shapes`
+(closed forms in the Fig. 7 caption; `sec: independent screen limit`); other
+`GammaScreen` `shape` and `sign` values are `[extension]`. Each is an exact
+characteristic function with the same depth mean and standard deviation as
+`GaussianScreen`, applied line by line inside the channel sum, with
+`depth_degree=0`. At `mean=0`, `sigma=1` and `t = tau*sigma`, the three
+weights are `exp(-t**2/2)`, `1/(1 + t**2/2)` and
 `exp(-2j*t)*(1 - 1j*t/2)**-4`. The Gamma screen adds the residual position
-angle `-t + 2*arctan(t/2)`. Each screen records `independent_screen` plus
-`laplace_screen` or `gamma_screen`, all with unbounded discrepancy: the screen
-shape is a declared input, and zero covariance between depth and emission does
-not justify the factorisation. In `predict` these forced assumptions stay
-`unbounded` even when the moments carry a measured discrepancy, unless the
-caller passes an allowance through `assumption_allowances` (example (d));
-without one a screen-route total is `unbounded`. `tests/model/test_screens.py` checks the
-weights against SciPy integrals of the screen densities, and the
+angle `-t + 2*arctan(t/2)` (half the phase of the caption's closed form;
+second row of `fig: screen shapes`). Each screen records
+`independent_screen` plus `laplace_screen` or `gamma_screen`, all with
+unbounded discrepancy: the screen shape is a declared input, and zero
+covariance between depth and emission does not justify the factorisation.
+In `predict` these forced assumptions stay `unbounded` even when the
+moments carry a measured discrepancy, unless the caller passes an allowance
+through `assumption_allowances` (example (d)); without one a screen-route
+total is `unbounded`. `tests/model/test_screens.py` checks the weights
+against SciPy integrals of the screen densities, and the
 `build_basis`/`predict` route and `direct_channel_average` against a
 per-atom NumPy channel sum.
 
@@ -680,19 +694,19 @@ feasibility = feasibility_checks(result.moments, basis.index, support)
 rank=3 chi2=22.099 dof=33 converged=True amplitude=9.995439e+19
 max |m_fit - m_true| = 6.164e-04; covariance is None: False
 identifiability: rank=3 null_dim=0 weak(0.5)=()
-feasibility: Necessary conditions only (eq: joint moment feasible set): 5 passed, 0 failed; 4 entries not computable from the supplied moments. Passing does not certify membership of conv{psi(x): x in D}.
+feasibility: Necessary conditions only (sec: finite joint response): 5 passed, 0 failed; 4 entries not computable from the supplied moments. Passing does not certify that one nonnegative distribution on the support has these moments.
   failed: ()
 bias_bound kind: unbounded | prediction statistical_input kind: unbounded
 -- Truncation(L_mu=0, L_eta=0, N=1, depth_degree=0): n_real=9, free=8, data rows kept 36 of 48
 rank=6 chi2=28.914 dof=30 converged=True amplitude=9.974895e+19
 max |m_fit - m_true| = 3.131e-02; covariance is None: True
 identifiability: rank=6 null_dim=3 weak(0.5)=('<z_B>', 'Re <z_B e^{2i phi}>', 'Im <z_B e^{2i phi}>')
-  null direction 0: (('amplitude', -0.08805817557044662), ('Re <e^{2i phi}>', -0.008213623149586166), ('<z_B>', 0.6412648032524726))
-  null direction 1: (('amplitude', -0.048810333453748564), ('Re <e^{2i phi}>', -0.004821811624159282), ('<z_B>', 0.3554507991579424))
-feasibility: Necessary conditions only (eq: joint moment feasible set): 4 passed, 3 failed: hermitian_psd[1,e^{2i phi}], support_bound[M2], abs_bound[f=1]; 6 entries not computable from the supplied moments. Passing does not certify membership of conv{psi(x): x in D}.
+  null direction 0: (('amplitude', 0.09075683525053536), ('Re <e^{2i phi}>', -0.02655017497464951), ('<z_B>', -0.6609172143725855))
+  null direction 1: (('amplitude', 0.013262272705542316), ('Re <e^{2i phi}>', -0.004041099647243805), ('<z_B>', -0.09657966045863085))
+feasibility: Necessary conditions only (sec: finite joint response): 4 passed, 3 failed: hermitian_psd[1,e^{2i phi}], support_bound[M2], abs_bound[f=1]; 6 entries not computable from the supplied moments. Passing does not certify that one nonnegative distribution on the support has these moments.
   failed: ('hermitian_psd[1,e^{2i phi}]', 'support_bound[M2]', 'abs_bound[f=1]')
 bias_bound kind: unbounded | prediction statistical_input kind: unbounded
-total time 5.6 s
+total time 6.7 s
 ```
 
 The two printed null directions belong to an orthonormal basis of a
@@ -732,9 +746,11 @@ setting is that of example (b) with two rays of equal mass: the field is
 on the other, so emission and screen are correlated. The screen is the
 exact `EmpiricalScreen` of the two depths, which leaves `independent_screen`
 as the only screen assumption. Its allowance is
-`bounds.screen_factorisation_bound` (`detail-eq: screen factorisation
-error`) in its per-line form, with the channel quadrature nodes `nu_n` as
-the lines: `sigma_{j,n} = w_n |R_j(nu_n)| sigma_P(nu_n)`, where
+`bounds.screen_factorisation_bound` (the `[extension]` bound
+`sigma_P sqrt(1 - |Phi_R|^2)` on the covariance omitted by an
+independent-screen factorisation) in its per-line form, with the channel
+quadrature nodes `nu_n` as the lines:
+`sigma_{j,n} = w_n |R_j(nu_n)| sigma_P(nu_n)`, where
 `sigma_P(nu_n)` is the ray standard deviation of the incident polarisation
 `<K_Q e^{2i phi}>` of each ray, and `Phi_{j,n} = |<exp(i tau_n depth)>|` over
 the rays. Each ray is uniform in `mu` by construction, so the continuum
@@ -762,13 +778,13 @@ pred = predict(basis, moments, amplitude=1e20, statistical_input=0.0,
 forced assumptions: ['independent_screen', 'isotropic_pitch']
 without allowances: budget.unbounded() = ('basis_remainder', 'physical_kernel', 'excluded_tail', 'depth_model', 'assumption:independent_screen', 'assumption:isotropic_pitch')
 with allowances:    budget.unbounded() = ('basis_remainder', 'physical_kernel', 'excluded_tail', 'depth_model')
-  assumption:independent_screen: bound; note: allowance supplied by caller: detail-eq: screen factorisatio...
+  assumption:independent_screen: bound; note: allowance supplied by caller: [extension] screen factorisati...
   assumption:isotropic_pitch: bound; note: allowance supplied by caller: declared zero: each ray is uni...
 screen error |direct exact - direct screen| / I: [0.007 0.011 0.    0.001 0.015 0.115 0.141 0.093]
 screen_factorisation_bound / I: [0.03  0.045 0.064 0.104 0.181 0.252 0.165 0.094]
 bound covers the screen error: True
 direct screen route: assumption:independent_screen is bound
-total time 3.7 s
+total time 4.0 s
 ```
 
 Both assumption terms are now `bound`s with the note "allowance supplied
@@ -802,13 +818,13 @@ p_k(t) = (z_1, ..., z_{k-1}, t z_k, 0, ..., 0),  k = first nonzero coordinate of
 ```
 
 It follows from one-dimensional Taylor steps, one variable at a time; for
-the total-degree set, `S` is the shell `|beta| = N + 1` of `eq: local
-response remainder`. `S` contains the minimal elements of the complement of
-`Lambda` and can contain more, and the minimal elements alone do not bound
-the remainder: for `Lambda = {0,1}^2` and `f = (x - x^2)(y - y^2)` at
-`(1, 1)` the remainder is 1 while the sum over `(2,0)` and `(0,2)` with the
-supremum over the box is 0.5 (`S` adds `(2,1)`). `RemainderInputs.from_samples`
-probes the per-multi-index envelopes `margin_H` at finitely many path
+the total-degree set, `S` is the shell `|beta| = N + 1` of the Taylor
+remainder of `eq: channel basis expansion`. `S` contains the minimal
+elements of the complement of `Lambda` and can contain more, and the
+minimal elements alone do not bound the remainder: for `Lambda = {0,1}^2`
+and `f = (x - x^2)(y - y^2)` at `(1, 1)` the remainder is 1 while the sum
+over `(2,0)` and `(0,2)` with the supremum over the box is 0.5 (`S` adds
+`(2,1)`). `RemainderInputs.from_samples` probes the per-multi-index envelopes `margin_H` at finitely many path
 points, so the probed term is an `estimate`; with both envelopes supplied
 as arrays it is a `bound` for those inputs.
 
@@ -926,10 +942,11 @@ unconstrained term is `unbounded`. The fitted representative `a_hat` has
 only as many independent numbers as retained modes; it is not a moment
 vector and is not checked for realisability.
 
-`scripts/sed_reconstruction_example.py` runs the continuum example of
-main.tex Section 5.3 (about 25 s): 60 full coordinates, 52 active columns
-and 30 groups before any data; numerical rank 26, whose smallest counted
-singular value is 1.058 times the cutoff; 9 combinations retained at
+`scripts/sed_reconstruction_example.py` runs the `[extension]` continuum SED
+example (smooth correlated population, 72 channels over 0.4-3 GHz, from the
+2026-09-26 manuscript draft; about 25 s): 60 full coordinates, 52 active
+columns and 30 groups before any data; numerical rank 26, whose smallest
+counted singular value is 1.058 times the cutoff; 9 combinations retained at
 `max_sigma = 0.1`; `chi2 = 55.24` on 63 degrees of freedom. The mock data
 come from an independent NumPy/SciPy population integration. The rank, the
 retained set and `beta` depend on the channels, noise, masks, metric and

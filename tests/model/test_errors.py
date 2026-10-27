@@ -225,7 +225,7 @@ def test_all_unbounded():
     total = b.total()
     assert total.kind == "unbounded" and total.value is None
     assert b.envelope() is None
-    assert b.total().manuscript_term == "eq: channel error budget"
+    assert b.total().manuscript_term == "sec: frequency order"
 
 
 def test_total_is_unbounded_if_any_term_is():

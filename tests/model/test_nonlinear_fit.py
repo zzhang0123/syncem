@@ -257,7 +257,7 @@ def test_fit_nodal_recovers_weights_on_true_nodes():
 
 def test_fit_nodal_starts_from_node_weights_and_passes_discretisation():
     index, basis, pop, w_true, A_true, data = nodal_setup(seed=9)
-    term = ErrorTerm(jnp.zeros((6, 4)), "bound", "extra eq: nodal bound test")
+    term = ErrorTerm(jnp.zeros((6, 4)), "bound", "test nodal bound envelope")
     nodes = samples_of(pop, w_true)  # start at the truth
     out = fit_nodal(basis, data, nodes, iters=50, discretisation=term)
     assert out.discretisation is term

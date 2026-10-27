@@ -1,10 +1,11 @@
 """Nonlinear spectral fits: transforms, log density, BFGS and nodal fits.
 
-LABEL: ``extra eq: finite fit model`` (the chi-square of
-``d = A C m(theta) + delta + eta`` for a general :class:`ParameterMap`),
-``extra eq: nodal distribution`` and ``extra eq: nodal bound``
-(:func:`fit_nodal`: nonnegative, normalised weights on fixed nodes with the
-discretisation error supplied as an input).
+LABEL: ``sec: linear fit`` (the full linear likelihood, here the chi-square
+of ``d = A C m(theta) + delta + eta`` for a general :class:`ParameterMap`,
+and the nonnegative witness of :func:`fit_nodal`: nonnegative, normalised
+weights on fixed nodes) and ``[extension]`` (nodes in all six variables,
+with the discretisation error a caller-supplied envelope that enters as a
+supplied channel envelope, ``sec: frequency order``).
 
 Coordinates. :class:`Transform` maps the ``Parameters`` of a map to one
 real unconstrained vector ``z`` and back (class in ``_transform.py``):
@@ -116,7 +117,7 @@ class LogDensity(eqx.Module):
     ``m(theta)``, and the data discrepancy, which is not in the density.
     """
 
-    LABEL: ClassVar[str] = "extra eq: finite fit model"
+    LABEL: ClassVar[str] = "sec: linear fit"
     basis: Any
     data: Any
     parameter_map: ParameterMap
@@ -313,7 +314,10 @@ def fit_nodal(
     tol=1e-8,
     diagnostics=True,
 ) -> "FitResult":  # noqa: F821  (defined in fit/result.py)
-    """Nonnegative normalised weights on fixed ``nodes`` (``extra eq: nodal distribution``).
+    """Nonnegative normalised weights on fixed ``nodes`` (``sec: linear fit``).
+
+    The weights are the nonnegative witness of ``sec: linear fit``; nodes in
+    all six variables are ``[extension]``.
 
     Solves ``min_{w >= 0, sum w = 1, A >= 0} ||L^-1 (d - R A C X^T w)||^2``
     by monotone exponentiated-gradient updates with the amplitude profiled
@@ -322,15 +326,17 @@ def fit_nodal(
     cap, ``tol`` the simplex stationarity tolerance
     ``max_i w_i |g_i - <g, w>| / (1 + max |g|)`` (``converged``). Nodes with
     zero weight in ``nodes`` start at zero and stay there (the updates are
-    multiplicative); uniform weights are the neutral start. ``discretisation`` is
-    the caller's ``ErrorTerm`` for ``extra eq: nodal bound`` (``None`` leaves
-    it unbounded downstream); it is validated and passed through. Returns a
-    :class:`_FitOutcome` with ``theta = Parameters(log_amplitude, logits=log w)``
-    for the map ``nodal(basis.index, nodes)``, ``weights = w`` and ``fun``
-    the final half chi-square. The optimum is not certified beyond
-    ``converged``. Assumes the population is supported on ``nodes`` (the
-    discretisation error is the caller's ``discretisation`` term) and the
-    Gaussian noise model; weights are dimensionless, ``fun`` in data units.
+    multiplicative); uniform weights are the neutral start. ``discretisation``
+    is the caller's ``ErrorTerm`` for the node discretisation (``[extension]``;
+    it enters as a supplied channel envelope, ``sec: frequency order``;
+    ``None`` leaves it unbounded downstream); it is validated and passed
+    through. Returns a :class:`_FitOutcome` with
+    ``theta = Parameters(log_amplitude, logits=log w)`` for the map
+    ``nodal(basis.index, nodes)``, ``weights = w`` and ``fun`` the final half
+    chi-square. The optimum is not certified beyond ``converged``. Assumes
+    the population is supported on ``nodes`` (the discretisation error is
+    the caller's ``discretisation`` term) and the Gaussian noise model;
+    weights are dimensionless, ``fun`` in data units.
     """
     if not isinstance(nodes, PopulationSamples):
         raise ValueError("nodes must be a PopulationSamples")

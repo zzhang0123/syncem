@@ -1,5 +1,75 @@
 # Changelog
 
+## Unreleased (0.7.0)
+
+### Changed
+
+- The manuscript labels that SyncEM reports at run time now name labels of
+  the current paper. They reach `describe()`, provenance records,
+  `to_dict()`, the fit JSON and the notes of `ErrorBudget` terms. Code
+  that matches these strings must be updated; no computation, signature or
+  number changed. Labels that pointed into working notes outside the paper
+  (`extra eq:`, `detail-eq:`, `app: depth moments`) now read `[extension]`
+  with a one-clause description. The main changes:
+  - `HarmonicKernel.LABEL`, `Modes.LABEL`, `Channels.LABEL` and the second
+    entry of `ContinuumKernel.LABEL`: `eq: channel kernel` (was
+    `eq: smooth channel kernel`, `extra eq: channel kernel` or
+    `extra eq: channel basis integration`). `HarmonicKernel.LABEL` has two
+    entries instead of four.
+  - `ErrorTerm.LABEL`, `ErrorBudget.LABEL`, `KernelTerms.LABEL`,
+    `Support.LABEL` and the `manuscript_term` of `propagate()`:
+    `sec: frequency order` (was `eq: channel error budget` or
+    `extra eq: data error propagation`).
+  - The screen-exponent `manuscript_term`:
+    `R_5 bound of eq: independent gaussian screen` (was
+    `eq: screen exponent error`).
+  - `RemainderInputs.LABEL` and the remainder notes:
+    `[extension] truncation bound of eq: channel residual average` (was
+    `eq: local response remainder`). `Reference.LABEL`:
+    `eq: channel basis expansion`.
+  - Fit labels, all formerly `extra eq: finite fit model`: `FitResult`,
+    `StokesData`, `LogDensity` and `Parameters` give `sec: linear fit`;
+    `fit_linear` and `IdentifiabilityReport` give `eq: svd estimator`;
+    `fit_combinations` and `CombinationFit` give `eq: svd estimator` and
+    `eq: estimator bias`; `SpectralBasis`, `MomentIndex`, `Entry`, the
+    layout and the reduction give `eq: linear basis`; `Transform` gives
+    `[extension] unconstrained fit coordinates`.
+  - `FeasibilityReport.label`: `sec: finite joint response` (was
+    `eq: joint moment feasible set`). Its statement ends "Passing does not
+    certify that one nonnegative distribution on the support has these
+    moments."
+  - Assumption records: `isotropic_pitch` and the record forced by
+    `ContinuumKernel` cite `eq: conditional legendre coefficients`;
+    `azimuth_separable` reads
+    `sec: classical forward; [extension] constant conditional circular
+    moment`; `nodal` reads
+    `sec: linear fit; [extension] joint nodes`.
+  - `LaplaceScreen`, `GammaScreen` and their assumption records:
+    `fig: screen shapes` (was `eq: illustrated screens`). `GammaScreen.LABEL`
+    is now an instance property: only the default `shape=4.0`, `sign=1`
+    (the screen in that figure) gives `fig: screen shapes`; any other shape
+    or sign gives `GAMMA_EXTENSION_LABEL`, which reads `[extension]`, in
+    `LABEL` and in the `gamma_screen` record.
+  - The factorisation allowances, the depth-perturbation estimate and the
+    supplied nodal bound read `[extension] ...` in their notes, and two
+    `ValueError` messages say "depth-degree layout" instead of
+    `app: depth moments`.
+
+### Documentation
+
+- Docstrings, `README.md`, `docs/DESIGN.md`, the guide, the scripts and
+  test comments cite labels of the current `main.tex`. Section and figure
+  numbers follow the current paper (the smooth-channel example is
+  Section 4.2); the continuum SED example, which the paper no longer
+  carries, is marked `[extension]`. `docs/DESIGN.md` keeps the 0.2.0
+  acceptance record under its original heading.
+- The README output blocks of examples (a) to (d) are regenerated from
+  `scripts/model_examples.py`. Blocks (a) and (b) had been stale since
+  0.6.0: timings, two `numerics` keys and the harmonic-support-pruning
+  note.
+- `studies/classical-models` is unchanged and still cites the labels it
+  was run with.
+
 ## 0.6.0 (2026-10-27)
 
 ### Renamed

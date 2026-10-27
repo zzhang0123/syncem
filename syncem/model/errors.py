@@ -1,10 +1,16 @@
 """Error terms, budgets and provenance (``syncem.model.errors``).
 
-LABEL: ``eq: channel error budget`` (the nine slots of :class:`ErrorBudget`),
-``eq: local response remainder`` (``basis_remainder``), ``eq: screen exponent
-error`` (``screen_exponent``), ``eq: joint screen remainder`` (``depth_model``
-in the ``app: depth moments`` layout), ``extra eq: data error propagation`` (consumers of
-:meth:`ErrorBudget.envelope`).
+LABEL: ``sec: frequency order`` (the componentwise channel envelope ``E^ch``
+of Sec. 6, which may sum numerical, representation and omitted-physics terms,
+and its propagation by consumers of :meth:`ErrorBudget.envelope`). The nine
+slots of :class:`ErrorBudget` and the names ``E_num``, ``E_phys``, ``E_tail``
+are ``[extension]``: the package's split of that envelope into typed terms.
+``basis_remainder`` is the ``[extension]`` truncation bound of
+``eq: channel residual average``; in the depth-degree layout on a Taylor
+phase route its ``P`` column is the ``[extension]`` depth-Taylor bound with
+inputs ``depth_tail`` and ``intrinsic_residual``. ``screen_exponent`` is the
+``R_5`` bound of ``eq: independent gaussian screen``; ``depth_model`` is the
+``[extension]`` depth-perturbation bound.
 
 An :class:`ErrorTerm` is a nonnegative envelope ``value`` in the units of the
 quantity it bounds (channel Stokes, ``(n_ch, 4)`` or broadcastable) with a
@@ -18,8 +24,8 @@ otherwise the sum of the valued terms with the weakest kind present
 (``bound < measured < estimate``). ``not_applicable`` terms are skipped.
 
 Nothing here certifies a value: a ``bound`` is only as good as the inputs the
-producing module documents, and the manuscript states that ``E_phys`` and
-``E_tail`` are never bounded by the package itself.
+producing module documents, and ``E_phys`` and ``E_tail`` are bounded only
+from caller-supplied inputs.
 """
 
 from __future__ import annotations
@@ -44,7 +50,7 @@ MANUSCRIPT_TERMS = {
     "harmonic_truncation": "E_num",
     "excluded_tail": "E_tail",
     "numerical": "E_num",
-    "screen_exponent": "eq: screen exponent error",
+    "screen_exponent": "R_5 bound of eq: independent gaussian screen",
     "depth_model": "N_src tau <|K_P| |delta varphi|>",
     "amplitude": "amplitude uncertainty",
     "assumption": "E_phys",
@@ -64,7 +70,8 @@ class ErrorTerm(eqx.Module):
     otherwise it is a float array, usually ``(n_ch, 4)`` in channel Stokes
     units, or any shape that broadcasts to it. ``note`` says where the number
     came from and under which hypotheses; ``manuscript_term`` names the term
-    of ``eq: channel error budget`` it belongs to (``"E_num"``, ...).
+    it belongs to (an ``[extension]`` budget symbol such as ``"E_num"``, or a
+    manuscript label).
     Value checks use ``equinox.error_if`` (JIT and AD safe).
 
     Assumes the caller's envelope holds under the hypotheses of its note;
@@ -73,7 +80,7 @@ class ErrorTerm(eqx.Module):
     envelopes) are external declarations.
     """
 
-    LABEL: ClassVar[str] = "eq: channel error budget"
+    LABEL: ClassVar[str] = "sec: frequency order"
     value: jax.Array | None
     kind: str = eqx.field(static=True)
     note: str = eqx.field(static=True, default="")
@@ -148,13 +155,14 @@ def _check_term(term, name):
 
 
 class ErrorBudget(eqx.Module):
-    """The nine slots of ``eq: channel error budget`` plus named assumption terms.
+    """The nine ``[extension]`` slots of the ``sec: frequency order`` envelope plus named assumption terms.
 
     Slots (all :class:`ErrorTerm`, channel Stokes units ``(n_ch, 4)`` or
-    broadcastable): ``basis_remainder`` (``eq: local response remainder``),
-    ``statistical_input`` (``A sum_a |S_a| Delta_a``), ``physical_kernel``
-    (``E_phys``), ``harmonic_truncation`` and ``numerical`` (both part of the
-    manuscript's ``E_num``), ``excluded_tail`` (``E_tail``),
+    broadcastable): ``basis_remainder`` (``[extension]`` truncation bound of
+    ``eq: channel residual average``), ``statistical_input``
+    (``A sum_a |S_a| Delta_a``), ``physical_kernel`` (``E_phys``),
+    ``harmonic_truncation`` and ``numerical`` (both part of the ``[extension]``
+    term ``E_num``), ``excluded_tail`` (``E_tail``),
     ``screen_exponent``, ``depth_model``, ``amplitude``. ``assumption`` is a
     tuple of ``(name, ErrorTerm)`` pairs, one per declared factorisation or
     closure; the names are plain strings inside a pytree, so a budget with
@@ -187,7 +195,7 @@ class ErrorBudget(eqx.Module):
         "depth_model",
         "amplitude",
     )
-    LABEL: ClassVar[str] = "eq: channel error budget"
+    LABEL: ClassVar[str] = "sec: frequency order"
 
     def __check_init__(self):
         for slot in self.SLOTS:

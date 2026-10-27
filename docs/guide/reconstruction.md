@@ -5,8 +5,9 @@
 joint moments that a finite-band channel SED constrains, and report the rest
 as unconstrained. The design, the formulas and the test record are in
 Section 10.1 of [the design document](../DESIGN.md). This page describes the
-worked example of manuscript Section 5.3 (Appendix C.1) and what its numbers
-mean.
+`[extension]` continuum SED example (smooth correlated population, 72
+channels over 0.4-3 GHz, from the 2026-09-26 manuscript draft) and what its
+numbers mean.
 
 ## Running the example
 

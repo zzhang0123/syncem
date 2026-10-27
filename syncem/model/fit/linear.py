@@ -1,8 +1,13 @@
 """Linear least-squares spectral fits and Fisher matrices (``syncem.model.fit.linear``).
 
-LABEL: ``extra eq: finite fit model`` (``d = A C m + delta + eta`` with the
-observing response ``R`` inside ``C``) and ``extra eq: data error
-propagation`` (the declared discrepancy ``delta`` that the bias bound uses).
+LABEL: ``eq: svd estimator`` applied to the design ``G = R C [c | P]`` of an
+affine ``ParameterMap`` (unknowns ``u = (A, A theta)``; data
+``d = A C m + delta + eta`` of ``sec: linear fit``; the observing response
+``R`` inside ``C`` as in ``sec: frequency order``) and ``eq: estimator bias``
+(the declared discrepancy ``delta`` that the bias bound uses).
+``[extension]``: the column equilibration ``G D`` and the relative ``tol``,
+which replace the fixed coefficient scales and the UPRE rank of
+``sec: linear fit``.
 
 :func:`fit_linear` needs an affine ``ParameterMap`` (``m = P theta + c``,
 ``ParameterMap.is_affine()``), given as ``parameter_map`` or declared by name
@@ -20,18 +25,19 @@ rank-deficient). It reports ``A = u[0]``, ``theta = u[1:] / u[0]``, the
 Fisher matrix ``G^T Sigma^-1 G``, its inverse as ``covariance`` (``None``
 when rank-deficient), ``chi2``, ``dof = n_kept - rank`` and
 ``bias_bound = |K| |delta|`` with ``K = (G^T Sigma^-1 G)^+ G^T Sigma^-1`` the
-estimator matrix (``u_hat = K d``). ``delta`` follows ``extra eq: data error
-propagation``: the declared ``data.discrepancy`` on the kept rows (``|R| E``
-for a Stokes-space term) plus, with an observing response,
-``|delta R| (|S_hat| + E)`` from ``data.response_uncertainty`` and the fitted
-channel Stokes ``S_hat``. The kind follows the discrepancy's kind, and is
-``estimate`` when the plug-in ``S_hat`` term is nonzero. ``bias_bound`` is
-``unbounded`` without a valued discrepancy, with a response but no
-``response_uncertainty`` (pass zeros to declare ``R`` exact), and when the
-design is rank deficient (the null-space component of ``u`` is not
-identified). The prediction's ``statistical_input`` adds the moment bias
-``|dm/du| bias_bound`` to the one-sigma noise term (``unbounded`` when the
-bias is). ``discrepancy_policy="inflate"`` adds ``diag(delta^2)`` (declared
+estimator matrix (``u_hat = K d``). ``delta`` follows ``sec: frequency
+order``: the declared ``data.discrepancy`` on the kept rows (``|R| E`` for a
+Stokes-space term) plus, with an observing response, the response-error term
+``|delta R| (|S_hat| + E)`` (stated after ``eq: chromatic beam response``)
+from ``data.response_uncertainty`` and the fitted channel Stokes ``S_hat``.
+The kind follows the discrepancy's kind, and is ``estimate`` when the
+plug-in ``S_hat`` term is nonzero. ``bias_bound`` is ``unbounded`` without
+a valued discrepancy, with a response but no ``response_uncertainty`` (pass
+zeros to declare ``R`` exact), and when the design is rank deficient (the
+null-space component of ``u`` is not identified). The prediction's
+``statistical_input`` adds the moment bias ``|dm/du| bias_bound`` to the
+one-sigma noise term (``unbounded`` when the bias is).
+``discrepancy_policy="inflate"`` adds ``diag(delta^2)`` (declared
 discrepancy only) to the noise covariance before solving; this is a
 heuristic (noted in the provenance): the Fisher matrix, covariance,
 ``chi2`` and the identifiability report then describe the inflated weights,
@@ -76,7 +82,7 @@ from ._transform import _flatten
 from ._result_build import from_linear
 from .result import FitResult
 
-LABEL = "extra eq: finite fit model"
+LABEL = "eq: svd estimator"
 POLICIES = ("bias_bound", "inflate")
 COORDINATES = ("natural", "linear")
 

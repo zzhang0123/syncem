@@ -4,8 +4,10 @@ Usage:
   PYTHONPATH=. python scripts/sed_reconstruction_example.py [--quick] [--out DIR]
       [--no-figure] [--historical PATH]
 
-Ports the example of main.tex Section 5.3 / Appendix C.1 (research reference
-``validation/sed_reconstruction.py`` of the manuscript, package b39cf0c):
+Ports the ``[extension]`` continuum SED example (smooth correlated population,
+72 channels over 0.4-3 GHz, from the 2026-09-26 manuscript draft; research
+reference ``validation/sed_reconstruction.py`` of the manuscript, package
+b39cf0c):
 
 1. Before any data: ``reduce_response`` groups the 60 full coordinates
    (52 active response columns + 8 zero-response depth rows) into 30 exact
@@ -188,7 +190,9 @@ def _configuration(cfg):
     return {
         **asdict(cfg),
         "note": (
-            QUICK_NOTE if cfg.quick else "full configuration of main.tex Section 5.3"
+            QUICK_NOTE
+            if cfg.quick
+            else "full configuration of the continuum SED example"
         ),
         "reference": {
             "gamma0": direct.GAMMA0,

@@ -25,12 +25,20 @@ SCRIPTS = [
 # Companion demonstration figures; the manuscript uses separate independent
 # generators. Regenerate these whenever their implementation or inputs change.
 FIGURES = [
-    "plot_derivative_spectra.py",  # figures/derivative_spectra.pdf   (Sec. 4.4)
-    "compare_moment_cumulant.py",  # figures/moment_vs_cumulant.pdf   (Sec. 4.2)
-    "application_foreground.py",  # figures/foreground_demo.pdf      (Sec. 5.5)
-    "plot_transfer.py",  # figures/transfer.pdf             (Sec. 6)
+    # figures/derivative_spectra.pdf (``sec: derivative spectra``, Section 4.3)
+    "plot_derivative_spectra.py",
+    # figures/moment_vs_cumulant.pdf ([extension] Gamma-distribution MGF
+    # truncation comparison)
+    "compare_moment_cumulant.py",
+    # figures/foreground_demo.pdf ([extension] illustrative global 21-cm
+    # foreground)
+    "application_foreground.py",
+    # figures/transfer.pdf ([extension] polarised radiative transfer)
+    "plot_transfer.py",
     # figures/sed_moment_reconstruction.{pdf,png} and its JSON/NPZ/CSV data
-    # (Sec. 5.3): public-API reduce_response + fit_combinations example
+    # ([extension] continuum SED example, 72 channels over 0.4-3 GHz, from the
+    # 2026-09-26 manuscript draft): public-API reduce_response +
+    # fit_combinations example
     "sed_reconstruction_example.py",
 ]
 

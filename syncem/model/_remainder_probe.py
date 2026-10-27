@@ -4,7 +4,8 @@ Implements ``RemainderInputs.from_samples``: the order-``N+1`` derivative
 envelopes ``H`` of the kernel's Legendre projections in ``z = (z_gamma, z_B,
 z_depth)``, the absolute moments
 ``<|P_l P_k| ||z||^{N+1}>``, the angular residual ``<|K - K_L|>`` measured on
-the samples, and the ``app: depth moments`` inputs. For a capped truncation
+the samples, and the inputs ``depth_tail`` and ``intrinsic_residual`` of the
+``[extension]`` depth-Taylor bound (depth-degree layout). For a capped truncation
 (``Truncation.is_capped()``) ``margin_envelope`` and ``margin_moments`` give
 the per-multi-index inputs of the lower-set margin form
 (``_remainder_route.lower_set_margin``). Derivatives (``method``):
@@ -160,8 +161,9 @@ def derivative_envelope(
     Probe points: ``z = 0`` and ``t z_n`` for every sample ``n`` and every
     ``t`` in ``segment_points``; ``H`` is the maximum Frobenius norm of the
     order-``N+1`` tensor in ``z_3`` (``I, V`` do not depend on ``z_depth``);
-    ``H_2d`` restricts the ``P`` tensor to ``(z_gamma, z_B)`` (``app: depth
-    moments``). ``method``: see :func:`probe_method`.
+    ``H_2d`` restricts the ``P`` tensor to ``(z_gamma, z_B)`` (``[extension]``
+    depth-degree layout ``r+s <= N, b <= L``). ``method``: see
+    :func:`probe_method`.
     """
     order = basis.index.truncation.N + 1
     route, sample_depth = _probe_route(phase)
@@ -190,7 +192,7 @@ def derivative_envelope(
 def _path_points(z, k, ts, depth_layout):
     """``p_k(t) = (z_1..z_{k-1}, t z_k, 0..)`` per sample and ``t``, ``(len(ts) S, 3)``.
 
-    In the ``app: depth moments`` layout the depth coordinate stays at the
+    In the ``[extension]`` depth-degree layout the depth coordinate stays at the
     sample (the 2D margin acts at the emitter depth).
     """
     points = []
@@ -357,12 +359,12 @@ def angular_residual(samples, basis, kernel, *, phase, batch_size):
 
 
 def depth_rows(index):
-    """``app: depth moments`` row list ``a = (l, k, r, s)``: the ``h2`` rows with ``b = 0``."""
+    """``[extension]`` depth-degree row list ``a = (l, k, r, s)``: the ``h2`` rows with ``b = 0``."""
     return tuple(row for row in index.h2 if row[4] == 0)
 
 
 def depth_tail(samples, basis):
-    """``<|chi_a| |depth - depth_ref|^{L+1}>`` over the ``app: depth moments`` rows, ``(n_a,)``."""
+    """``<|chi_a| |depth - depth_ref|^{L+1}>`` ``(n_a,)`` of the ``[extension]`` depth-Taylor bound."""
     index = basis.index
     L = index.truncation.depth_degree
     rows = np.asarray(depth_rows(index), dtype=int).reshape(-1, 5)

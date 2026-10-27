@@ -4,7 +4,7 @@ Split out of :mod:`syncem.model.fit.diagnostics` to keep that file short.
 Each rule adds ``(name, passed, margin)`` triples to a ``_Collector`` or
 records why a check is not computable from the retained moment rows; the
 inequalities are the necessary conditions listed in the diagnostics module
-docstring (``eq: joint moment feasible set``). Nothing here is public API.
+docstring (``sec: finite joint response``). Nothing here is public API.
 """
 
 from __future__ import annotations

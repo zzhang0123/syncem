@@ -1,9 +1,11 @@
 """Configuration and helpers of the SED reconstruction example (public API only).
 
-Constants of main.tex Section 5.3 (noise, seed, precision threshold, the
-manuscript representatives), the grid sizes of the full and ``--quick`` runs,
-and the basis, truth, mock-data and fit helpers shared by
-``sed_reconstruction_example.py`` and ``sed_reconstruction_checks.py``.
+Constants of the ``[extension]`` continuum SED example (smooth correlated
+population, 72 channels over 0.4-3 GHz, from the 2026-09-26 manuscript draft):
+noise, seed, precision threshold and the manuscript representatives. Also the
+grid sizes of the full and ``--quick`` runs, and the basis, truth, mock-data
+and fit helpers shared by ``sed_reconstruction_example.py`` and
+``sed_reconstruction_checks.py``.
 Units: package units for Stokes data (``NORM`` times the direct SED).
 """
 

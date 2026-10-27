@@ -1,9 +1,12 @@
 """Factorisation bounds of the channel budget (private helper of ``bounds``).
 
-``screen_factorisation_bound`` (``detail-eq: screen factorisation error``)
-and ``azimuth_factorisation_bound`` (``detail-eq: angular factorisation
-error``); re-exported by ``syncem.model.bounds``, whose module docstring
-states the units and what is not certified.
+``screen_factorisation_bound`` (the ``[extension]`` bound
+``sigma_P sqrt(1 - |Phi_R|^2)`` on the covariance omitted by an
+independent-screen factorisation) and ``azimuth_factorisation_bound`` (the
+``[extension]`` bound ``sigma_F sqrt(1 - |m_phi|^2)`` on the covariance
+omitted by a constant circular moment); re-exported by
+``syncem.model.bounds``, whose module docstring states the units and what is
+not certified.
 """
 
 from __future__ import annotations
@@ -44,7 +47,7 @@ def _variance_bound(sigma, modulus, sigma_name, modulus_name, *, per_line=False)
 def screen_factorisation_bound(
     sigma_P_in, Phi_R_abs_min, *, amplitude=1.0
 ) -> ErrorTerm:
-    """Bound on ``|C_scr|`` per channel (``detail-eq: screen factorisation error``).
+    """Bound on ``|C_scr|`` per channel (``[extension]`` screen factorisation error).
 
     The channel error is ``sum_m Cov_ray(R_j(nu_m) P_m, exp(i tau_m R))`` over
     the lines ``m`` inside channel ``j``, and the source inequality holds per
@@ -75,7 +78,7 @@ def screen_factorisation_bound(
     return ErrorTerm(
         value=value,
         kind="bound",
-        note="detail-eq: screen factorisation error: sum over lines of "
+        note="[extension] screen factorisation error: sum over lines of "
         "sigma_{P_m} sqrt(1-|Phi_R(tau_m)|^2), independent-screen "
         "factorisation of the polarised channel",
         manuscript_term="E_phys",
@@ -83,13 +86,13 @@ def screen_factorisation_bound(
 
 
 def azimuth_factorisation_bound(sigma_F, m_phi_abs, *, amplitude=1.0) -> ErrorTerm:
-    """``sigma_F sqrt(1 - |m_phi|^2)`` per channel (``detail-eq: angular factorisation error``).
+    """``sigma_F sqrt(1 - |m_phi|^2)`` per channel (``[extension]`` angular factorisation error).
 
     ``sigma_F`` ``(n_ch,)`` is the standard deviation of the natural-basis
     polarised channel kernel under the population measure; ``m_phi_abs`` is
     ``|<exp(2 i phi)>|`` (scalar or ``(n_ch,)``). Zeros in ``I, V``.
     Units: those of ``sigma_F`` times ``amplitude``. Assumes the
-    constant-conditional-circular-moment model of that equation; the
+    constant-conditional-circular-moment model of that bound; the
     inputs are the caller's and are not certified here.
     """
     value = _variance_bound(sigma_F, m_phi_abs, "sigma_F", "m_phi_abs")
@@ -97,7 +100,7 @@ def azimuth_factorisation_bound(sigma_F, m_phi_abs, *, amplitude=1.0) -> ErrorTe
     return ErrorTerm(
         value=value,
         kind="bound",
-        note="detail-eq: angular factorisation error: sigma_F sqrt(1-|m_phi|^2), "
+        note="[extension] angular factorisation error: sigma_F sqrt(1-|m_phi|^2), "
         "azimuth-separable approximation of the polarised channel",
         manuscript_term="E_phys",
     )

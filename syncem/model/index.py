@@ -3,9 +3,9 @@
 LABEL: ``eq: explicit joint moments`` (rows ``(l, k, r, s, b)`` of the moment
 tensors ``M^{(0)}``, ``M^{(2)}``), ``eq: finite joint response`` (cutoffs
 ``r+s <= N`` for ``I, V`` and ``r+s+b <= N`` for ``P``), ``eq: angular
-parity`` (``P`` rows with ``l+k`` odd dropped), ``app: depth moments``
-(``depth_degree=L`` layout ``r+s <= N, b <= L``), ``extra eq: finite fit
-model`` (real flattening ``m = concat(M0[h0], Re M2[h2], Im M2[h2])``);
+parity`` (``P`` rows with ``l+k`` odd dropped), the ``[extension]``
+depth-degree layout ``r+s <= N, b <= L`` (``depth_degree=L``),
+``eq: linear basis`` (real flattening ``m = concat(M0[h0], Re M2[h2], Im M2[h2])``);
 ``[extension]`` per-variable caps ``max_orders=(N_gamma, N_B, N_depth)``
 intersect the cutoffs with ``r <= N_gamma, s <= N_B, b <= N_depth`` (a
 lower set; its remainder margin is ``lower_set_margin``).
@@ -50,21 +50,24 @@ class Truncation(eqx.Module):
     ``eta = cos(theta)``; ``N``: total Taylor degree in the displacements
     ``z = (z_gamma, z_B, z_depth)``. ``depth_degree=None`` uses the main-text
     cutoff ``r+s+b <= N`` for the ``P`` block (``eq: finite joint response``);
-    ``depth_degree=L`` uses the ``app: depth moments`` layout ``r+s <= N, b <= L``
-    (``app: depth moments``). ``I, V`` rows always use ``r+s <= N, b = 0``.
+    ``depth_degree=L`` uses the ``[extension]`` depth-degree layout
+    ``r+s <= N, b <= L``. ``I, V`` rows always use ``r+s <= N, b = 0``.
     ``max_orders=(N_gamma, N_B, N_depth)`` (keyword addition ``[extension]``;
     each a static int or ``None``) also requires ``r <= N_gamma``,
     ``s <= N_B``, ``b <= N_depth``. The retained ``(r, s, b)`` set is then a
     lower set whose Taylor remainder is the margin sum of
     :func:`lower_set_margin` (``bounds.RemainderInputs`` uses it when
     :meth:`is_capped`). Caps that remove no row are dropped, so a
-    non-binding ``max_orders`` equals the default; in the ``app: depth
-    moments`` layout ``N_depth < depth_degree`` raises ``ValueError`` (set
+    non-binding ``max_orders`` equals the default; in the depth-degree
+    layout ``N_depth < depth_degree`` raises ``ValueError`` (set
     ``depth_degree`` instead). All fields are static and hashable; the
     module has no array leaves. Dimensionless. Assumes nothing about the
     population; the orders are declared cutoffs, and nothing here certifies
-    that they are sufficient (the remainder terms of ``eq: channel error
-    budget`` do that).
+    that they are sufficient (``basis_remainder`` evaluates the
+    ``[extension]`` truncation bound of ``eq: channel residual average`` from
+    supplied ``RemainderInputs``; its kind is bound, estimate or unbounded
+    according to those inputs and the basis, and the manuscript gives no
+    general bound).
     """
 
     LABEL: ClassVar[str] = "eq: finite joint response"
@@ -105,7 +108,7 @@ class Truncation(eqx.Module):
 
         Main-text layout: ``S`` of the ``(r, s, b)`` set of the ``P`` rows (the
         ``I, V`` set is its ``b = 0`` section, whose margin is the ``b = 0``
-        part of this one). ``app: depth moments`` layout: ``S`` of the
+        part of this one). ``[extension]`` depth-degree layout: ``S`` of the
         ``(r, s)`` set with ``b = 0`` (the depth is bounded by the depth tail).
         """
         if self.depth_degree is None:
@@ -124,8 +127,8 @@ def _binding_caps(max_orders, N, depth_degree):
     limits = (N, N, N if depth_degree is None else depth_degree)
     if depth_degree is not None and caps[2] is not None and caps[2] < depth_degree:
         raise ValueError(
-            f"N_depth={caps[2]} < depth_degree={depth_degree}: in the app: depth "
-            "moments layout set the depth order with depth_degree"
+            f"N_depth={caps[2]} < depth_degree={depth_degree}: in the depth-degree "
+            "layout set the depth order with depth_degree"
         )
     caps = tuple(None if c is None or c >= l else c for c, l in zip(caps, limits))
     return None if caps == (None, None, None) else caps
@@ -137,11 +140,11 @@ class Entry(NamedTuple):
     ``h in {0, 2}`` is the azimuthal Fourier weight, ``part`` is ``"real"``
     for ``M0`` rows and ``"re"``/``"im"`` for the two real slots of an ``M2``
     row, ``slot`` is the position in ``m`` and ``label`` the printed name.
-    Dimensionless bookkeeping (``extra eq: finite fit model``); no physical
+    Dimensionless bookkeeping (``eq: linear basis``); no physical
     content and nothing certified.
     """
 
-    LABEL = "extra eq: finite fit model"
+    LABEL = "eq: linear basis"
 
     h: int
     l: int
@@ -189,8 +192,8 @@ class MomentIndex(eqx.Module):
       (they weight only the ``V`` basis, ``eq: angular parity``).
     * ``h2``: ``M2`` rows (complex), ``l+k`` even when ``parity=True``
       (default; the odd bases vanish identically), all pairs when
-      ``parity=False`` ``[extension]``; ``r+s+b <= N`` or the ``app: depth moments``
-      cutoff.
+      ``parity=False`` ``[extension]``; ``r+s+b <= N`` or the ``[extension]``
+      depth-degree cutoff ``r+s <= N, b <= L``.
     * ``h0_ext``: real ``M0`` rows with ``b >= 1`` over the ``h2`` pair set
       and cutoff. Not part of ``m``; used by parameter maps (azimuth
       separability needs ``M0`` with ``b > 0``) and by sample moments.
@@ -212,7 +215,7 @@ class MomentIndex(eqx.Module):
 
     LABEL: ClassVar[tuple[str, ...]] = (
         "eq: explicit joint moments",
-        "extra eq: finite fit model",
+        "eq: linear basis",
     )
     truncation: Truncation = eqx.field(static=True)
     parity: bool = eqx.field(static=True)

@@ -1,6 +1,7 @@
 """Tests of ``syncem.model.adapters`` against the existing package routines:
-``faraday.joint_faraday_average`` (``app: depth moments`` contraction), ``expansion``
-(fixed-harmonic quadratic average) and ``rm.burn_depolarisation``.
+``faraday.joint_faraday_average`` (the nominal-``tau_j`` contraction of
+``eq: finite joint response`` in the ``[extension]`` depth-degree layout),
+``expansion`` (fixed-harmonic quadratic average) and ``rm.burn_depolarisation``.
 
 Oracles are NumPy sums over discrete populations and SciPy Bessel functions
 (``_harmonic_oracles``); the spectral basis is the ``_basis_stub`` stand-in.
@@ -127,7 +128,7 @@ def test_to_joint_faraday_reproduces_predict(galactic_basis):
             np.sum(w * np.abs(chi) * np.abs(dd) ** 4),
             rtol=1e-12,
         )
-    # The error envelope is the ``app: depth moments`` depth tail of the manuscript at the nominal tau.
+    # The error envelope is the [extension] depth-Taylor bound at the nominal tau.
     expected = (
         amplitude
         * G_TAU**4

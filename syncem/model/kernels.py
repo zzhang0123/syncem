@@ -1,10 +1,10 @@
 """Kernel models of the finite joint response (``syncem.model.kernels``).
 
-LABEL: ``eq: smooth channel kernel`` and ``eq: channel derivative
-coefficients`` (the ``KernelModel`` contract: channel-integrated natural-basis
-modes and their Legendre projections, which ``build_basis`` differentiates),
+LABEL: ``eq: channel kernel`` and ``eq: channel derivative coefficients``
+(the ``KernelModel`` contract: channel-integrated natural-basis modes and
+their Legendre projections, which ``build_basis`` differentiates),
 ``eq: legendre spectral response`` (the ``(2l+1)(2k+1)/4`` projection weights),
-``eq: directional continuum`` and ``extra eq: channel basis integration``
+``eq: directional continuum`` and ``eq: channel kernel``
 (:class:`ContinuumKernel`, in ``_continuum.py``). :class:`PolynomialTestKernel`
 (``_polynomial.py``) is an ``[extension, test oracle]`` with no manuscript
 counterpart. :class:`syncem.model.harmonic.HarmonicKernel` is the Dirac-line

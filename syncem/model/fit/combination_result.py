@@ -1,7 +1,7 @@
 """Result types of ``fit_combinations`` (``syncem.model.fit.combination_result``).
 
-LABEL: ``extra eq: finite fit model`` (the fitted combinations of ``d = R C a
-+ delta + n``), ``extra eq: data error propagation`` (the propagated
+LABEL: ``eq: svd estimator`` (the fitted combinations of
+``d = R C a + delta + n``), ``eq: estimator bias`` (the propagated
 discrepancy) and ``[extension]`` (combination fits).
 
 A :class:`CombinationFit` reports, in the fit coordinates ``x`` (``a = a_off
@@ -47,8 +47,8 @@ from ._combination_json import fit_json, observable_json, truth_json
 from .reduction import ResponseReduction
 
 LABEL = (
-    "extra eq: finite fit model",
-    "extra eq: data error propagation",
+    "eq: svd estimator",
+    "eq: estimator bias",
     "[extension]",
 )
 

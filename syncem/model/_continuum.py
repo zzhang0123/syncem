@@ -1,6 +1,7 @@
 """Ultra-relativistic continuum kernel (private; re-exported by ``kernels``).
 
-LABEL: ``eq: directional continuum``, ``extra eq: channel basis integration``.
+LABEL: ``eq: directional continuum``, ``eq: channel kernel`` (channel integral
+of the continuum kernel).
 See :class:`ContinuumKernel` for units, assumptions and what is not certified.
 """
 
@@ -46,8 +47,8 @@ class ContinuumKernel(eqx.Module):
     already pitch-averaged), so ``components = ("I", "Q")``,
     ``required_closures = ("uniform_mu",)``, and the ``l > 0`` Legendre
     projections vanish. ``channel_modes`` sums ``w_n R_j(nu_n) K_S(nu_n)
-    w_b(tau_n)`` over the channel's Gauss-Legendre nodes (``extra eq: channel
-    basis integration``); units erg/s/sr per electron for ``unit_peak``.
+    w_b(tau_n)`` over the channel's Gauss-Legendre nodes (the integral in
+    ``eq: channel kernel``); units erg/s/sr per electron for ``unit_peak``.
 
     ``x < x_min`` at a node with ``B_perp > 0`` is an ``equinox.error_if``
     (``F`` has a divergent slope at zero); ``B_perp = 0`` gives zero kernel.
@@ -83,7 +84,7 @@ class ContinuumKernel(eqx.Module):
     name: ClassVar[str] = "continuum"
     LABEL: ClassVar[tuple[str, ...]] = (
         "eq: directional continuum",
-        "extra eq: channel basis integration",
+        "eq: channel kernel",
     )
     components: ClassVar[tuple[str, ...]] = ("I", "Q")
     required_closures: ClassVar[tuple[str, ...]] = ("uniform_mu",)

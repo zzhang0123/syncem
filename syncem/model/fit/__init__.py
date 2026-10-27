@@ -1,8 +1,10 @@
 """Spectral fits of channel Stokes data (``syncem.model.fit``).
 
-Implements the finite fitting model of the extended discussion
-(``eq: finite fit model``): data ``d = A R C m + delta + eta`` with a supplied
-observing response ``R``, noise covariance and optional discrepancy envelope.
+Implements the fit of ``sec: linear fit``: data ``d = A R C m + delta + eta``
+(``eq: linear basis`` with noise) with a supplied observing response ``R``
+acting on channel-integrated Stokes (the case of ``eq: chromatic beam
+response`` without a frequency-dependent beam), noise covariance and optional
+discrepancy envelope.
 
 * ``StokesData``: data, noise, mask, observing response and discrepancy.
 * ``fit_linear``: closed-form weighted least squares for affine parameter maps.

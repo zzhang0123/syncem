@@ -1,9 +1,10 @@
-"""Helpers of the manuscript Section 5.3.1 benchmark (not collected).
+"""Helpers of the smooth-channel check of main.tex ``sec: finite joint response`` (not collected).
 
-The population is ``eq: channel toy population`` on the latent Gauss-Legendre
-grid of ``validation/full_response.py``: for every latent node pair ``(u, v)``
-the conditional angular measure is normalised to one on its own tensor
-Gauss-Legendre grid, and the latent weights ``lw_u lw_v / 4`` sum to one.
+The population is the correlated toy population of
+``validation/full_response.py`` (``population``) on its latent Gauss-Legendre
+grid: for every latent node pair ``(u, v)`` the conditional angular measure is
+normalised to one on its own tensor Gauss-Legendre grid, and the latent
+weights ``lw_u lw_v / 4`` sum to one.
 Moments are accumulated block by block over latent pairs so that the
 ``16 x 16 x 256 x 256`` population never has to be materialised at once.
 

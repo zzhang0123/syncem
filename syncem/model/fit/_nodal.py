@@ -1,7 +1,8 @@
 """Nodal (fixed-node, nonnegative-weight) fit core for ``fit_nodal``.
 
-Private helper of :mod:`syncem.model.fit.nonlinear`. Implements
-``extra eq: nodal distribution`` as a linear model in the node weights:
+Private helper of :mod:`syncem.model.fit.nonlinear`. Implements the
+nonnegative witness of ``sec: linear fit``, with nodes in all six variables
+(``[extension]``), as a linear model in the node weights:
 ``m(w) = X^T w`` with ``X`` the ``(S, n_real)`` matrix of row monomials
 ``P_l(mu_i) P_k(eta_i) z_gamma^r z_B^s z_depth^b`` (and the real/imaginary
 parts of the ``e^{2i phi}`` rows) of every node, in the ``to_vector`` layout

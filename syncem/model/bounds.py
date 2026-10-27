@@ -1,11 +1,23 @@
-"""Manuscript error-bound helpers for the channel budget (``syncem.model.bounds``).
+"""Error-bound helpers for the channel budget (``syncem.model.bounds``).
 
-LABEL: ``eq: local response remainder`` (``RemainderInputs.basis_remainder``,
-main-text layout), ``eq: joint screen remainder`` (``app: depth moments`` layout inputs
-``depth_tail``, ``intrinsic_residual``), ``detail-eq: screen factorisation
-error`` (``screen_factorisation_bound``), ``detail-eq: angular factorisation
-error`` (``azimuth_factorisation_bound``) and the depth-model term of
-``eq: channel error budget`` (``depth_error_bound``, implemented in
+LABEL: the ``[extension]`` truncation bound
+``<rho_ang> + sum_lk H_lk <|P_l P_k| ||z||^{N+1}>/(N+1)!`` of the residual in
+``eq: channel residual average`` (``epsilon_{X,j}`` of
+``eq: XV joint response`` for ``I, V``), with ``rho_ang`` bounding the
+angular remainder of ``eq: angular channel remainder``
+(``RemainderInputs.basis_remainder``, main-text layout); the inputs
+``depth_tail`` and ``intrinsic_residual`` of the ``[extension]`` depth-Taylor
+bound
+``<|r_in|> + sum_a |c_a| tau_max^{L+1}/(L+1)! <|chi_a| |depth - depth_ref|^{L+1}>``
+of the residual (of the form of ``eq: channel residual average``, for the
+depth-degree set); the ``[extension]`` bound ``sigma_P sqrt(1 - |Phi_R|^2)``
+on the covariance omitted by an independent-screen factorisation
+(``screen_factorisation_bound``); the ``[extension]`` bound
+``sigma_F sqrt(1 - |m_phi|^2)`` on the covariance omitted by a constant
+circular moment (``azimuth_factorisation_bound``); and the ``[extension]``
+depth-perturbation bound ``N_src tau_max <|K_P| |delta depth|>``
+(``depth_error_bound``, a rotation-angle error of the kind
+``sec: frequency order`` leaves unevaluated; implemented in
 ``_depth_bound.py`` and re-exported here).
 
 Every helper returns an ``ErrorTerm`` with value shape ``(n_ch, 4)`` in the
@@ -20,12 +32,13 @@ Not certified: the truth of the supplied envelopes (``rho_ang``, ``H``,
 absolute moments, ``sigma``, ``|Phi|``), which are external inputs; sampling
 error of a discrete population; and, for ``depth_error_bound`` without an
 absolute channel sum, the gap between ``|H_P|`` and ``sum_m |Q_m R_j|``
-(kind ``estimate``); for the ``app: depth moments`` layout without
-``absolute_depth_coefficients``, the gap between ``|c_a|`` and the absolute
-line sum (kind ``estimate``). ``RemainderInputs.from_samples`` probes
-envelopes at finitely many points (``estimate``), not a supremum over the
-reference-to-support segments. A line-kernel basis whose channel smoothness
-is below ``N + 1`` has an unbounded ``basis_remainder``. A capped truncation
+(kind ``estimate``); for the ``[extension]`` depth-degree layout
+``r+s <= N, b <= L`` without ``absolute_depth_coefficients``, the gap between
+``|c_a|`` and the absolute line sum (kind ``estimate``).
+``RemainderInputs.from_samples`` probes envelopes at finitely many points
+(``estimate``), not a supremum over the reference-to-support segments. A
+line-kernel basis whose channel smoothness is below ``N + 1`` has an
+unbounded ``basis_remainder``. A capped truncation
 (``Truncation(max_orders=...)``) uses the lower-set margin form
 (``index.lower_set_margin``) with per-multi-index inputs ``margin_H``,
 ``margin_moments``; the operator-norm inputs do not bound it.
@@ -65,7 +78,7 @@ _KINDS = ("bound", "estimate")
 
 
 class RemainderInputs(eqx.Module):
-    """External inputs of ``eq: local response remainder``.
+    """External inputs of the ``[extension]`` truncation bound of ``eq: channel residual average``.
 
     ``rho_ang`` ``(n_ch, 3)``: population-averaged angular residual bounds
     per natural component ``I, Q, V``. ``H`` ``(n_ch, 3, n_lk)``: operator
@@ -75,23 +88,24 @@ class RemainderInputs(eqx.Module):
     ``absolute_moments`` ``(2, n_lk)``: row 0 is ``<|P_l P_k| ||z_2||^{N+1}>``
     over ``(z_gamma, z_B)`` (used by ``I, V``), row 1 the same with
     ``z_3 = (z_gamma, z_B, z_depth)`` (used by ``P``). ``depth_tail``
-    ``(n_a,)`` and ``intrinsic_residual`` ``(n_ch,)`` are the ``app: depth moments``
-    inputs ``<|chi_a| |depth - depth_ref|^{L+1}>`` and ``<|r_in|>`` of
-    ``eq: joint screen remainder``. ``kind`` is ``"bound"`` or
-    ``"estimate"`` and labels the returned term. ``absolute_depth_coefficients``
-    ``(n_ch, n_a)`` (keyword addition) is ``sum_m |c_{a,m} R_j(nu_m)|`` over
-    the lines of each channel (``int |R_j c_a(nu)| dnu`` for a continuum);
-    without it the depth term uses the modulus of the phased channel
-    coefficient and is an ``estimate``. Capped truncations (keyword
+    ``(n_a,)`` and ``intrinsic_residual`` ``(n_ch,)`` are the inputs
+    ``<|chi_a| |depth - depth_ref|^{L+1}>`` and ``<|r_in|>`` of the
+    ``[extension]`` depth-Taylor bound (depth-degree layout). ``kind`` is
+    ``"bound"`` or ``"estimate"`` and labels the returned term.
+    ``absolute_depth_coefficients`` ``(n_ch, n_a)`` (keyword addition) is
+    ``sum_m |c_{a,m} R_j(nu_m)|`` over the lines of each channel
+    (``int |R_j c_a(nu)| dnu`` for a continuum); without it the depth term
+    uses the modulus of the phased channel coefficient and is an
+    ``estimate``. Capped truncations (keyword
     additions ``[extension]``) replace ``H`` and ``absolute_moments`` by
     ``margin_H`` ``(n_ch, 3, n_lk, n_m)``, the path supremum of
     ``|d^beta K_{X;lk}|`` for every ``beta`` of ``truncation.margin_rows()``
     (``n_m`` rows; ``lower_set_margin`` gives the paths), and
     ``margin_moments`` ``(n_lk, n_m)``, ``<|P_l P_k| |z^beta|>``; in the
-    ``app: depth moments`` layout the ``P`` entries are the ``(z_gamma, z_B)``
-    derivatives at the emitter depth. All arrays are nonnegative.
-    Units: ``rho_ang``, ``H`` and ``absolute_depth_coefficients`` in the
-    per-electron channel Stokes units of the basis (erg/s/sr or
+    ``[extension]`` depth-degree layout the ``P`` entries are the
+    ``(z_gamma, z_B)`` derivatives at the emitter depth. All arrays are
+    nonnegative. Units: ``rho_ang``, ``H`` and ``absolute_depth_coefficients``
+    in the per-electron channel Stokes units of the basis (erg/s/sr or
     erg/s/sr/Hz), moments dimensionless. Assumes the
     supplied envelopes dominate the true remainder on the reference-to-sample
     segments; the package does not verify supplied arrays, and probed
@@ -107,7 +121,9 @@ class RemainderInputs(eqx.Module):
     margin_H: jax.Array | None = None
     margin_moments: jax.Array | None = None
     kind: str = eqx.field(static=True, default="bound")
-    LABEL: ClassVar[str] = "eq: local response remainder"
+    LABEL: ClassVar[str] = (
+        "[extension] truncation bound of eq: channel residual average"
+    )
 
     def __init__(
         self,
@@ -182,11 +198,12 @@ class RemainderInputs(eqx.Module):
         (no depth dependence). Passing another route than ``basis.phase``
         makes the probed ``P`` inputs describe that route, not the basis.
         ``absolute_moments`` are exact weighted sums; with ``depth_degree``
-        the ``app: depth moments`` ``depth_tail`` and (when ``rho_ang`` is known)
-        ``intrinsic_residual`` are filled (``basis_remainder`` ignores
-        ``depth_tail`` on a screen route). ``absolute_depth_coefficients``
-        is passed through. The ``"probe"`` envelope differentiates to order
-        ``N + 1``; it is refused (``ValueError``) unless
+        the inputs ``depth_tail`` and (when ``rho_ang`` is known)
+        ``intrinsic_residual`` of the ``[extension]`` depth-Taylor bound are
+        filled (``basis_remainder`` ignores ``depth_tail`` on a screen
+        route). ``absolute_depth_coefficients`` is passed through. The
+        ``"probe"`` envelope differentiates to order ``N + 1``; it is refused
+        (``ValueError``) unless
         ``N + 1`` is in ``basis.certified_orders``, the orders validated
         by finite-difference tests (0..3 on the harmonic kernel, so
         ``N <= 2``; finite checks, not certificates). A supplied ``derivative_envelope`` needs no probe and is
@@ -283,8 +300,9 @@ class RemainderInputs(eqx.Module):
 
         Main-text layout (``depth_degree is None``): every column is
         ``amplitude [rho_ang + sum_lk H_lk absolute_lk / (N+1)!]`` with
-        absolute-moment row 0 for ``I, V`` and row 1 for ``P``. ``app: depth
-        moments`` layout: ``I, V`` as above; on a Taylor phase route ``P`` is
+        absolute-moment row 0 for ``I, V`` and row 1 for ``P``.
+        ``[extension]`` depth-degree layout ``r+s <= N, b <= L``: ``I, V`` as
+        above; on a Taylor phase route ``P`` is
         ``amplitude [intrinsic_residual + tau_max^{L+1}/(L+1)! sum_a A_a
         depth_tail_a]`` with ``tau_max = 2 (c/nu_lo)^2`` per channel and
         ``A`` either ``absolute_depth_coefficients`` or ``|c_a|`` from
@@ -304,7 +322,8 @@ class RemainderInputs(eqx.Module):
         reason = nonsmooth_reason(basis)
         if reason is not None:
             return ErrorTerm.unbounded(
-                note=f"{reason} (eq: local response remainder)",
+                note=f"{reason} ([extension] truncation bound of eq: channel "
+                "residual average)",
                 manuscript_term="basis remainder",
             )
         index, n_ch = basis.index, basis.channels.n_ch
@@ -327,7 +346,7 @@ class RemainderInputs(eqx.Module):
         if missing:
             return ErrorTerm.unbounded(
                 note=f"basis remainder inputs missing: {', '.join(missing)} "
-                "(eq: local response remainder)"
+                "([extension] truncation bound of eq: channel residual average)"
             )
         if capped:
             I, P_full, V = margin_columns(
@@ -382,7 +401,10 @@ class RemainderInputs(eqx.Module):
         I = rho[:, 0] + taylor * (H[:, 0] @ absolute[0])
         V = rho[:, 2] + taylor * (H[:, 2] @ absolute[0])
         P = rho[:, 1] + taylor * (H[:, 1] @ absolute[1])
-        note = "eq: local response remainder: <rho_ang> + sum_lk H_lk <|P_l P_k| ||z||^{N+1}>/(N+1)!"
+        note = (
+            "[extension] truncation bound of eq: channel residual average: "
+            "<rho_ang> + sum_lk H_lk <|P_l P_k| ||z||^{N+1}>/(N+1)!"
+        )
         return I, P, V, note
 
 
