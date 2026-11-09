@@ -484,3 +484,86 @@ These bounds become uninformative at large phase spread and control only screen 
 - Values that the paper states are not repeated in the table: the E1 index 2.5976 ± 0.0032 (Table 6), the JP–KP match 7.7e-5 I_j (Sec. 5.2) and the E1M χ² of 51.2 for 56 degrees of freedom (Table 4).
 
 **Paper.** Sec. 5.3 states "The joint fit recovers 24.1°" and the 10–11 violated bins of the seeded realisation; Sec. 5.4 states "with s free, some fits fail to converge and the uncertainty of p_1 grows", the compressed-against-full agreement within 0.3% for R ≥ 7, σ(ln B) ≈ 2e5, the fixed-support ridge (0.012 over a factor 2.2 in B; −0.11 to +0.25 with noise; up to 0.42 standard deviations) and the E1M invariant at 0.5% (0.17 standard deviations). README only: every value in the table above.
+
+### 13. Expansion order and reference points (Sec. 5.2)
+
+**Produced by.** `sensitivity.py` → `sensitivity_results.json → sensitivity` (one record per ensemble, order N and reference offset q) and `checks`.
+
+**Settings.**
+- E1, E2 and E4-JP with the parameters of group 6, intensity only, in the 41 paper channels with 48 quadrature nodes per channel (`sensitivity_results.json → config`).
+- Taylor orders N = 0, …, 4. The reference point of cell b is γ_b e^{q h}, with γ_b the cell centre, h the cell width in ln γ and q ∈ {−1/2, 0, +1/2}, so q = ±1/2 moves it by ±h_b/2. The true moments about the moved points are integrated from the density and checked against the binomial shift of the centred moments to a relative 3e-12.
+- The forward error is max_j |(C a)_j − I_j|/I_j over the 41 channels, with the true moments.
+- Fits use the 21 fitted intensities with noise sd 0.01 I_j and noise-whitened TSVD at the UPRE rank, searched over R ≤ 14 (`baseline_models.R_CAP`). There is one noise-free fit and there are 200 noise realisations of seed 20261102. The withheld error is the rms of (fit − direct)/I_j over the 20 withheld channels. Moving the reference points changes the columns and with them the TSVD metric, so these fits compare bases as well as orders.
+- The direct spectra change by at most 3.3e-10 I_j when the quadrature is refined to 96 channel nodes, 24 η nodes, 32 field-strength nodes and 48 energy nodes per panel (`checks.<name>_refinement_max_fraction`). The intensity columns agree with `basis.kbar` to 3.8e-16 of their largest value (`checks.intensity_vs_existing_kbar_scaled`).
+
+**Forward error and fitted withheld error** (checked). Forward errors in per cent of I_j for N = 0 to 4, and the range over N = 0 to 4 of the median withheld rms over the 200 realisations, in per cent.
+
+| Ensemble | q | N = 0 | N = 1 | N = 2 | N = 3 | N = 4 | Median withheld rms |
+|---|---|---|---|---|---|---|---|
+| E1 | −1/2 | 16.3 | 3.51 | 0.504 | 0.121 | 0.0608 | 0.61–0.67 |
+| | 0 | 2.68 | 2.67 | 0.0863 | 0.0480 | 0.00883 | 0.59–0.66 |
+| | +1/2 | 25.6 | 6.02 | 1.04 | 0.269 | 0.147 | 0.57–0.65 |
+| E2 | −1/2 | 19.2 | 5.12 | 0.691 | 0.160 | 0.0818 | 0.57–0.62 |
+| | 0 | 3.91 | 3.99 | 0.0917 | 0.0571 | 0.0117 | 0.54–0.61 |
+| | +1/2 | 33.1 | 9.08 | 1.25 | 0.313 | 0.200 | 0.57–0.61 |
+| E4-JP | −1/2 | 30.9 | 18.5 | 4.29 | 0.410 | 0.235 | 0.60–0.70 |
+| | 0 | 18.5 | 16.6 | 0.364 | 0.194 | 0.0447 | 0.60–0.69 |
+| | +1/2 | 92.7 | 40.5 | 6.39 | 1.34 | 0.922 | 0.59–0.68 |
+
+- With q = 0 the forward errors agree with the forward table of group 6 to its rounding. That table takes the maximum over I, Q and U and uses the default quadrature.
+- Over all orders and reference points the median withheld rms spans 0.542–0.618% for E2 and 0.590–0.698% for E4-JP. The noise-free fits have withheld rms 0.04–0.35% (`noiseless_held_rms`), and the median UPRE rank is 5–9 (`median_rank`).
+- Source: `sensitivity_results.json → sensitivity[*].forward_max` and `.noisy_held_rms_percentiles[1]`. Every entry agrees to the digits shown. Category: numerical check, for these ensembles, reference points and realisations.
+
+**Paper.** In Sec. 5.2, "Moving each reference point from the cell centre by ±h_b/2 raises the N = 4 error from 0.012% to 0.08–0.20% for E2 and from 0.045% to 0.23–0.92% for E4-JP", and the median withheld rms between 0.54% and 0.62% for E2 and between 0.59% and 0.70% for E4-JP for every order from N = 0 to 4 and every reference point. README only: the E1 rows, the entries at N = 0 to 3, the noise-free fits, the ranks and the quadrature checks.
+
+### 14. Prescribed scalar absorption (Sec. 5.4)
+
+**Produced by.** `sensitivity.py` → `sensitivity_results.json → absorption` and `checks.slab_tau<τ>_refinement`.
+
+**Settings.**
+- E1 seen through a passive homogeneous slab, I^slab = I^thin (1 − e^−τ_ν)/τ_ν with τ_ν = τ_0.1 (ν/0.1 GHz)^−2.1 and the factor set to 1 at τ_ν = 0, for τ_0.1 ∈ {0, 0.1, 1, 10}. The factor is applied at each channel quadrature node, before channel integration. No noise is added.
+- Free-coefficient fit: the N = 2 intensity basis at the centred reference points, fitted to the 21 fitted intensities by TSVD at the UPRE rank, with weights from a noise sd of 0.01 I_j.
+- Nonnegative fit: `scipy.optimize.nnls` on direct channel kernels at 192 or 384 log-spaced energies on [300, 1e5], with the same weights and a free normalisation for each energy column. This tests a finite nonnegative grid, not all nonnegative electron distributions.
+- At τ_0.1 = 0 the slab spectrum equals the E1 spectrum of group 13 bit for bit. The refined quadrature of group 13 changes every slab spectrum by at most 3.0e-10 I_j.
+
+**Emission-only fits to the attenuated spectrum** (checked). rms of (fit − direct)/I_j in per cent, over the 20 withheld channels unless the column says fitted.
+
+| τ_0.1 | UPRE rank | Free basis, fitted | Free basis, withheld | NNLS 192, withheld | NNLS 384, withheld | NNLS 384, fitted |
+|---|---|---|---|---|---|---|
+| 0 | 7 | 0.296 | 0.266 | 9.1e-5 | 9.2e-5 | 1.3e-14 |
+| 0.1 | 7 | 0.239 | 0.214 | 1.9e-4 | 2.0e-4 | 1.5e-5 |
+| 1 | 8 | 0.161 | 0.158 | 0.594 | 0.596 | 0.778 |
+| 10 | 7 | 0.397 | 0.399 | 16.894 | 16.877 | 18.9 |
+
+- At τ_0.1 = 10, 192 energies in place of 384 change the withheld rms by 0.017 percentage points.
+- Source: `sensitivity_results.json → absorption[*]` (`rank`, `free_train_rms`, `free_held_rms`, `nnls192_held_rms`, `nnls384_held_rms`, `nnls384_train_rms`). Every entry agrees to the digits shown. Category: numerical check, for this slab, this ensemble and these grids.
+
+**Paper.** In Sec. 5.4, the slab equation and, at τ_0.1 = 10, 0.40% withheld rms error for the free-coefficient fit, 16.9% for nonnegative least squares at 384 log-spaced energies on [300, 1e5] with free column normalisation, and a change of 0.02 percentage points with 192 energies. README only: the other optical depths, the ranks and the fitted-channel values.
+
+### 15. Spectrum error along the E2 field–energy ridge (Sec. 5.4)
+
+**Produced by.** `ridge_sed.py` with `paramlib.py` and `params_degeneracy.py` → `ridge_sed_results.json` (`rows`, `summary`, `checks`). The script reads `params_results.json` and stops without writing if its N = 2 fits differ from `params_results.json → degeneracy.E2_ridge` by more than 1e-8 in relative χ² or in φ. In the run recorded here they agree exactly on all 11 points (`checks`).
+
+**Settings.**
+- The E2 data and the SBPL_s2 family (ln A, p_1, p_2, ln γ_br, with s = 2) of the E2 ridge in `params.py` (group 12): full linear likelihood, noise sd 0.01 I_j, fits started at the transformed truth, for the noise-free data and for the seeded realisation of `params.py`.
+- Fields uniform on [4λ, 6λ] µG at 17 points ln λ = Δln B = −0.40, −0.35, …, +0.40. The energy support is either scaled as λ^−1/2 ("scaled", `transformed` in the JSON) or fixed at [300, 1e5]. Orders N = 2, 3 and 4.
+- The spectrum error is max over the 41 channels and I, Q, U of |C a(φ̂) − S|/I_j at the fitted parameters φ̂. The 1σ band is the largest sqrt(diag(J cov Jᵀ))/I_j of the fit.
+- The χ² minimum along the ridge is the vertex of the parabola through the smallest noise-free grid value and its two neighbours. The curvature c at the true field is the second difference of the noise-free χ² divided by 2h², with h = 0.05, so that χ² ≈ χ²(0) + c (Δln B)² near the true field and σ(ln B) = c^−1/2.
+
+**Spectrum error along the ridge** (checked). Ranges over the 17 points, in per cent of I_j. With the support scaled every point gives the same value to the digits shown, and the noise-free χ² is flat, so it has no minimum.
+
+| Support | N | Noise-free | Seeded | 1σ band, seeded | χ² minimum at Δln B |
+|---|---|---|---|---|---|
+| scaled | 2 | 0.0408 | 0.928 | 0.714 | – |
+| | 3 | 0.0394 | 0.929 | 0.713 | – |
+| | 4 | 0.0111 | 0.941 | 0.713 | – |
+| fixed | 2 | 0.0384–0.0732 | 0.927–0.969 | 0.710–0.716 | +0.144 |
+| | 3 | 0.0311–0.0867 | 0.925–0.972 | 0.711–0.716 | −0.129 |
+| | 4 | 0.0111–0.0632 | 0.922–0.961 | 0.711–0.717 | +0.014 |
+
+- At the true field the noise-free error is 0.0408% at N = 2, 0.0394% at N = 3 and 0.0111% at N = 4, for both supports. With the support fixed, the N = 4 error rises to 0.0632% at Δln B = −0.4.
+- With the support fixed, the N = 4 curvature at the true field is c = 0.0723, so σ(ln B) = 3.72 at 1% noise. σ(ln B) is proportional to the noise sd, so σ(ln B) = 0.1 needs a noise sd of 0.027% of I_j. At N = 2 and 3 the true field is not at the minimum and the curvature there is negative. With the support scaled the curvature is below 3e-13 in magnitude, since the scaling symmetry holds for every λ.
+- All 204 fits converged (17 points, 2 supports, 3 orders, 2 data sets).
+- Source: `ridge_sed_results.json → summary` (`<support>/N<N>/<data>/sed_max_range`, `.../sed_max`, `.../sed_band_1sigma_max_range`, `.../noisefree/chi2_min_dlnB_parabola`, `.../noisefree/chi2_curvature_per_lnB2_at_truth`, `.../all_fits_converged`). Every entry agrees to the digits shown. Category: numerical check, for this grid, these data and this seed. The χ² minimum is interpolated between grid points 0.05 apart in ln B.
+
+**Paper.** In Sec. 5.4, with the support fixed, the N = 2 ranges 0.038–0.073% (noise-free) and 0.93–0.97% (noisy), the χ² minima at Δln B = +0.14, −0.13 and +0.01 for N = 2, 3 and 4, the errors 0.041% (N = 2) and 0.011% (N = 4) at the true field, 0.063% at Δln B = −0.4, "stays at 0.011% with the support scaled", σ(ln B) ≈ 3.7 at 1% noise and a noise of about 0.03% of I_j for σ(ln B) = 0.1. The paper plots the N = 2 and N = 4 errors in the lower panel of its field–energy ridge figure, which `make_figures.py` in this directory does not draw. README only: the N = 3 rows, the seeded values with the support scaled and the 1σ bands.
