@@ -1,4 +1,4 @@
-"""Display data for the classical-model figures and tables (Figs. 8-10, tables/*.tex).
+"""Display data for the classical-model figures and tables (figures/*, tables/*.tex).
 
 Everything quoted in a figure or table is read from the saved results of the analysis
 runs (fits, forward, params, baselines, cost, verify_fits).  This module computes only the
@@ -57,14 +57,15 @@ INPUTS = {
     "kp_pseudo": HERE / "kp_pseudotruth_results.json",
     "kp_pseudo_npz": HERE / "kp_pseudotruth.npz",
     "baselines_npz": HERE / "baselines_plotdata.npz",
+    "ridge_sed": HERE / "ridge_sed_results.json",
 }
 # Producing scripts whose recorded SHA-256 is compared with the file on disk.
 PRODUCERS = {"fits": "fits.py", "forward": "forward.py", "params": "params.py",
              "baselines": "baselines.py", "cost": "cost.py", "verify_fits": "verify_fits.py",
-             "kp_pseudo": "kp_pseudotruth.py"}
+             "kp_pseudo": "kp_pseudotruth.py", "ridge_sed": "ridge_sed.py"}
 
 ENSEMBLES = ("E1", "E2", "E3", "E4-JP", "E4-KP", "E5", "E1M")
-GALLERY = ("E1", "E2", "E4-KP", "E5")  # Fig. 9 rows (E3 stays in the tables)
+GALLERY = ("E1", "E2", "E4-KP", "E5")  # moment_fit_gallery rows (E3 stays in the tables)
 PSEUDO = "E4-KP"  # plotted against the JP(t_eff) pseudo-truth moments (kp_pseudotruth.py)
 GALPROP_R_HIGH = 12  # second moment-basis rank drawn in galprop_fit (the first is the MC median R*)
 GALPROP_LAWS = ("logcubic", "eSBPL")  # four-parameter law and electron family drawn in galprop_fit
@@ -99,7 +100,7 @@ def load_inputs() -> tuple[dict, dict, dict]:
     return data, shas, hashes
 
 
-# ----------------------------------------------------------------------------- Fig. 8
+# ----------------------------------------------------------------------------- reference_ensembles
 def kp_effective_density(kp, gammas, n_eta=64) -> np.ndarray:
     """N_eff(gamma) = (1/eta_max) int_0^eta_max 2 N(gamma, eta) deta (E4-KP, beaming limit).
 
@@ -201,7 +202,7 @@ def intrinsic_spectra(fwd: dict, fwd_npz: dict) -> dict:
     return {"fraction": frac, "checks": checks}
 
 
-# ----------------------------------------------------------------------------- Fig. 9
+# ----------------------------------------------------------------------------- moment_fit_gallery
 def fit_bands(fits_npz: dict, fits: dict, kp_npz: dict) -> dict:
     """Seeded UPRE fit, true-moment prediction and their 1-sigma bands (I and |P|).
 
@@ -245,7 +246,7 @@ def fit_bands(fits_npz: dict, fits: dict, kp_npz: dict) -> dict:
             "held_idx": fits_npz["held_idx"], "checks": checks}
 
 
-# ----------------------------------------------------------------------------- Fig. 10
+# ----------------------------------------------------------------------------- moments_and_parameters
 def degenerate_pairs(s: np.ndarray, R: int) -> list[tuple[int, int]]:
     """Index pairs (i, i+1) inside the first R modes with s_i = s_{i+1} to PAIR_RTOL."""
     pairs, i = [], 0

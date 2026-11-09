@@ -1,14 +1,17 @@
 """Drawing code for the classical-model figures (house style, final text width).
 
-Fig. 8  reference_ensembles     electron spectra, channel intensities, intrinsic polarisation
-Fig. 9  moment_fit_gallery      seeded UPRE fits of E1, E2, E4-KP, E5 (E4-KP reference: JP(t_eff) moments)
-Fig. 10 moments_and_parameters  E2 moments, retained combinations, parameters, B-gamma ridge
-        galprop_fit             noise-free fits to the GALPROP |b| >= 60 deg spectrum (external test)
+reference_ensembles     electron spectra, channel intensities, intrinsic polarisation
+moment_fit_gallery      seeded UPRE fits of E1, E2, E4-KP, E5 (E4-KP reference: JP(t_eff) moments)
+moments_and_parameters  E2 moments, retained combinations, parameters, B-gamma ridge
+galprop_fit             noise-free fits to the GALPROP |b| >= 60 deg spectrum (external test)
 
-Compact variants with the panels shown in Figs. 8-10 of the paper (same panel functions, fewer panels):
-        reference_ensembles_compact     old panels (a) and (b) in one row
-        moment_fit_gallery_compact      rows GALLERY_COMPACT (E2, E4-KP, E5)
-        moments_and_parameters_compact  old panels (a) and (d) in one row, relabelled (a) and (b)
+Compact variants (same panel functions, fewer panels):
+reference_ensembles_compact     old panels (a) and (b) in one row (Fig. 5 of the paper)
+moment_fit_gallery_compact      rows GALLERY_COMPACT (E2, E4-KP, E5) (Fig. 7 of the paper)
+moments_and_parameters_compact  old panels (a) and (d) in one row, relabelled (a) and (b)
+
+field_energy_ridge      contours of old panel (d) above, SED error along the ridge at N = 2 and 4 below
+                        (ridge_sed_results.json), unlettered (Fig. 8 of the paper)
 
 All arrays come from figure_data.build_all() and the loaded results; no number is typed here.
 """
@@ -59,7 +62,7 @@ def panel(ax, text, x=0.0, y=1.03, ha="left"):
     ax.text(x, y, text, transform=ax.transAxes, ha=ha, va="bottom")
 
 
-# ----------------------------------------------------------------------------- Fig. 8
+# ----------------------------------------------------------------------------- reference_ensembles
 REF_ORDER = ("E1", "E2", "E3", "E4-JP", "E4-KP", "E5")  # ensembles drawn in (a), (c); (b) adds E1M
 
 
@@ -176,7 +179,7 @@ def fig_reference_ensembles_compact(D: dict, data: dict):
     return fig
 
 
-# ----------------------------------------------------------------------------- Fig. 9
+# ----------------------------------------------------------------------------- moment_fit_gallery
 def _power_law_reference(nu, I):
     c = np.polyfit(np.log(nu), np.log(I), 1)
     return np.exp(np.polyval(c, np.log(nu)))
@@ -307,7 +310,7 @@ def fig_moment_fit_gallery(D: dict, data: dict, rows: tuple[str, ...] | None = N
     return fig
 
 
-# ----------------------------------------------------------------------------- Fig. 10
+# ----------------------------------------------------------------- moments_and_parameters, field_energy_ridge
 def _range(*arrays, pad=0.08):
     v = np.concatenate([np.ravel(a) for a in arrays])
     lo, hi = float(np.min(v)), float(np.max(v))
@@ -432,7 +435,26 @@ def _panel_contours(ax, D):
     panel(ax, r"(c) E2 parameters: 68\% and 95\% regions")
 
 
+RIDGE_LEGEND = dict(loc="upper right", frameon=False, handlelength=1.6, borderaxespad=0.1)
+RIDGE_LINE_HANDLE = dict(color=GREY, ls=":", lw=0.6, label=r"$\gamma_{\rm br}\propto B^{-1/2}$")
+
+
 def _panel_ridge(ax2, ax1, D, data, letter="d"):
+    """Ridge contours above and Delta chi2 along the ridge below (fig_moments_and_parameters)."""
+    _ridge_contours(ax2, D, data, letter)
+    _ridge_delta_chi2(ax1, data)
+    handles = [Line2D([], [], color=COLOR["E2"], lw=1.1, label=r"support scales with $B$"),
+               Line2D([], [], color="black", ls="--", lw=0.9, label="support fixed"),
+               Line2D([], [], **RIDGE_LINE_HANDLE)]
+    ax2.legend(handles=handles, **RIDGE_LEGEND)
+    ax1.legend(handles=[Line2D([], [], color="0.3", lw=0.9, label="noise-free"),
+                        Line2D([], [], marker="o", ls="", ms=2.6, mfc="white", mec="0.3", label="noisy data")],
+               loc="center left", bbox_to_anchor=(0.0, 0.62), ncol=2, frameon=False, handlelength=1.6,
+               borderaxespad=0.1, columnspacing=1.0)
+
+
+def _ridge_contours(ax2, D, data, letter):
+    """68% noise-free chi2 contours of the E2 ridge for the scaled and the fixed energy support."""
     rg = data["params"]["degeneracy"]["E2_ridge"]
     lnl = np.asarray(rg["ln_lambda_grid"])
     dl = np.asarray(rg["dln_gamma_b_grid_(absolute_offset_from_truth)"])
@@ -451,7 +473,14 @@ def _panel_ridge(ax2, ax1, D, data, letter="d"):
     ax2.yaxis.set_major_locator(FixedLocator([-0.4, 0.0, 0.4, 0.8]))
     ax2.set_ylabel(r"$\Delta\ln\gamma_{\rm br}$")
     ax2.tick_params(labelbottom=False)
-    panel(ax2, rf"({letter}) E2 field--energy ridge, 68\%")
+    panel(ax2, (rf"({letter}) " if letter else "") + r"E2 field--energy ridge, 68\%")
+    ax2.set_xlim(lnl[0] - 0.02, lnl[-1] + 0.02)
+
+
+def _ridge_delta_chi2(ax1, data):
+    """Delta chi2 along the ridge, noise-free (lines) and seeded (markers), N = 2."""
+    rg = data["params"]["degeneracy"]["E2_ridge"]
+    lnl = np.asarray(rg["ln_lambda_grid"])
     sm = rg["summary"]
     ax1.axhline(1.0, color=GREY, lw=0.6, ls=":")
     ax1.axhline(0.0, color="0.7", lw=0.5)
@@ -462,16 +491,45 @@ def _panel_ridge(ax2, ax1, D, data, letter="d"):
     ax1.set_ylim(-0.45, 1.3)
     ax1.set_xlabel(r"$\Delta\ln B$")
     ax1.set_ylabel(r"$\Delta\chi^2$ on ridge")
-    for ax in (ax1, ax2):
-        ax.set_xlim(lnl[0] - 0.02, lnl[-1] + 0.02)
-    handles = [Line2D([], [], color=COLOR["E2"], lw=1.1, label=r"support scales with $B$"),
-               Line2D([], [], color="black", ls="--", lw=0.9, label="support fixed"),
-               Line2D([], [], color=GREY, ls=":", lw=0.6, label=r"$\gamma_{\rm br}\propto B^{-1/2}$")]
-    ax2.legend(handles=handles, loc="upper right", frameon=False, handlelength=1.6, borderaxespad=0.1)
-    ax1.legend(handles=[Line2D([], [], color="0.3", lw=0.9, label="noise-free"),
-                        Line2D([], [], marker="o", ls="", ms=2.6, mfc="white", mec="0.3", label="noisy data")],
-               loc="center left", bbox_to_anchor=(0.0, 0.62), ncol=2, frameon=False, handlelength=1.6,
-               borderaxespad=0.1, columnspacing=1.0)
+    ax1.set_xlim(lnl[0] - 0.02, lnl[-1] + 0.02)
+
+
+RIDGE_SED_ORDERS = {"2": dict(lw_scale=1.0, alpha=1.0), "4": dict(lw_scale=0.75, alpha=0.5)}
+
+
+def _ridge_sed(ax1, data):
+    """Largest SED error of the ridge fits over all channels and I, Q, U, in per cent of I_j.
+
+    Lines: noise-free fits at N = 2 (full weight) and N = 4 (lighter), labelled directly.
+    Markers: fits to the seeded 1% noise draw at N = 2.  Line style gives the energy support,
+    as in the contour panel above.
+    """
+    rs = data["ridge_sed"]
+    x = np.asarray(rs["ln_lambda_grid"])
+    sm = rs["summary"]
+    lines = {"transformed": dict(color=COLOR["E2"], ls="-", lw=1.1),
+             "fixed": dict(color=DIRECT, ls="--", lw=0.9)}
+    marks = {"transformed": dict(marker="o", color=COLOR["E2"], mew=0.8),
+             "fixed": dict(marker="s", color=DIRECT, mew=0.7)}
+    for N, look in RIDGE_SED_ORDERS.items():
+        for sup, st in lines.items():
+            ax1.plot(x, 100 * np.asarray(sm[f"{sup}/N{N}/noisefree/sed_max"]), color=st["color"], ls=st["ls"],
+                     lw=st["lw"] * look["lw_scale"], alpha=look["alpha"])
+    for start, (sup, mk) in enumerate(marks.items()):  # alternate points: the two sets nearly coincide
+        y = 100 * np.asarray(sm[f"{sup}/N2/seeded/sed_max"])
+        ax1.plot(x[start::2], y[start::2], ls="", ms=2.6, mfc="white", **mk)
+    ax1.axhline(100 * PAPER.noise_frac, color=GREY, lw=0.6, ls=":")
+    ax1.set_yscale("log")
+    ax1.set_ylim(0.006, 2.5)
+    log_ticks(ax1, ticks=(0.01, 0.1, 1.0))
+    i0 = list(x).index(0.0)
+    for N, xl in (("2", -0.12), ("4", -0.3)):
+        y0 = 100 * sm[f"transformed/N{N}/noisefree/sed_max"][i0]
+        ax1.text(xl, y0 * 1.25, rf"$N={N}$", ha="center", va="bottom", color=DIRECT)
+    ax1.text(x[0], 100 * PAPER.noise_frac * 1.12, "noise", va="bottom", ha="left", color=DIRECT)
+    ax1.set_xlabel(r"$\Delta\ln B$")
+    ax1.set_ylabel(r"SED error [\% of $I_j$]")
+    ax1.set_xlim(x[0] - 0.02, x[-1] + 0.02)
 
 
 def _moment_axes(fig, cell) -> list:
@@ -510,6 +568,29 @@ def fig_moments_and_parameters_compact(D: dict, data: dict):
                              bottom=0.4 / height, wspace=0.3)
     _panel_moments(_moment_axes(fig, outer[0, 0]), D, data, letter="a")
     _panel_ridge(*_ridge_axes(fig, outer[0, 1]), D, data, letter="b")
+    return fig
+
+
+def fig_field_energy_ridge(D: dict, data: dict):
+    """Ridge contours (N = 2) above and the SED error along the ridge (N = 2 and 4) below, at text width.
+
+    The legend marks each energy support with the marker of its seeded fits in the panel below.
+    """
+    width, height = 6.1, 3.2
+    fig = plt.figure(figsize=(width, height))
+    outer = fig.add_gridspec(1, 1, left=0.6 / width, right=1 - 0.09 / width, top=1 - 0.2 / height,
+                             bottom=0.4 / height)
+    sd = outer[0, 0].subgridspec(2, 1, height_ratios=[1.3, 1], hspace=0.1)
+    ax2 = fig.add_subplot(sd[0])
+    ax1 = fig.add_subplot(sd[1], sharex=ax2)
+    _ridge_contours(ax2, D, data, letter=None)
+    handles = [Line2D([], [], color=COLOR["E2"], lw=1.1, marker="o", ms=2.6, mfc="white", mew=0.8,
+                      label=r"support $\propto B^{-1/2}$"),
+               Line2D([], [], color=DIRECT, ls="--", lw=0.9, marker="s", ms=2.6, mfc="white", mew=0.7,
+                      label="support fixed"),
+               Line2D([], [], **RIDGE_LINE_HANDLE)]
+    ax2.legend(handles=handles, **RIDGE_LEGEND)
+    _ridge_sed(ax1, data)
     return fig
 
 

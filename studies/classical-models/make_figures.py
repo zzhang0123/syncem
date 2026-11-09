@@ -1,11 +1,12 @@
-"""Regenerate the classical-model figures (Figs. 8-10, galprop_fit) and LaTeX tables from saved results.
+"""Regenerate the classical-model figures (Figs. 5, 7 and 8 of the paper, and more) and LaTeX tables from saved results.
 
 Run: python make_figures.py
 
 Inputs (read only, SHA-256 recorded): fits_results.json, fits_products.npz,
 forward_results.json, forward_spectra.npz, params_results.json, baselines_results.json,
 cost_results.json, verify_fits_results.json, kp_pseudotruth_results.json, kp_pseudotruth.npz,
-baselines_plotdata.npz.  The producing scripts' recorded hashes are compared with the files on disk.
+baselines_plotdata.npz, ridge_sed_results.json.  The producing scripts' recorded hashes are compared with the
+files on disk.
 galprop_fit recomputes one curve (moment basis at R = 12, not saved) with baselines.py's functions;
 see figure_data.galprop_fit and the galprop/* checks.
 
@@ -14,11 +15,13 @@ Needs verify_fits_results.json (python verify_fits.py) besides the producing scr
 Outputs (this directory only):
   figures/{reference_ensembles,moment_fit_gallery,moments_and_parameters,galprop_fit}.{pdf,png}
   figures/{reference_ensembles,moment_fit_gallery,moments_and_parameters}_compact.{pdf,png}
-      (fewer panels, same panel functions; the panels shown in Figs. 8-10 of the paper,
-       while the full figures have all panels)
+      (fewer panels, same panel functions. Figs. 5 and 7 of the paper are the first two. The full figures
+       have all panels.)
+  figures/field_energy_ridge.{pdf,png}
+      (Fig. 8 of the paper: the ridge contours of moments_and_parameters above and the SED error along
+       the ridge at N = 2 and 4 below, from ridge_sed_results.json)
   tables/{ensembles,fit_summary,parameter_recovery,baselines,cost}.tex
-  tables/{fit_summary,baselines}_compact.tex (the layout of Tables 4 and 5 of the paper, to cross-check
-      their entries)
+  tables/{fit_summary,baselines}_compact.tex (cross-checks of the entries of Tables 3 and 4 of the paper)
   make_figures_results.json (provenance, every consistency check, output hashes)
   make_figures_data.npz     (the derived display arrays drawn in the figures)
 
@@ -65,6 +68,8 @@ CHECK_LIMITS = {  # (substring of the check name, largest allowed |value|)
     "rms_held_minus_json": 1e-12, "max_held_minus_json": 1e-12, "legend_rms_minus_json": 1e-12,
     "recomputed_minus_saved": 1e-12,
     "dense_at_nodes": 1e-12, "median_rank": 0, "plotdata_sha256_mismatch": 0, "rank_json_minus_npz": 0,
+    # ridge_sed.py at N = 2 against params_results.json E2_ridge (same data, start and code path)
+    "N2_vs_params_E2_ridge": 1e-8,
 }
 
 
@@ -169,7 +174,9 @@ def main() -> None:
     configure()
     data, input_shas, hashes = FD.load_inputs()
     D = FD.build_all(data)
-    status = assert_checks({**flatten_checks(D), **galprop_json_checks(D["galprop"], data["baselines"])}, hashes)
+    ridge = {f"ridge_sed/{k}": float(v) for k, v in data["ridge_sed"]["checks"].items() if k.startswith("N2_vs")}
+    status = assert_checks({**flatten_checks(D), **galprop_json_checks(D["galprop"], data["baselines"]), **ridge},
+                           hashes)
     outputs = {"reference_ensembles": save(FP.fig_reference_ensembles(D, data), "reference_ensembles"),
                "moment_fit_gallery": save(FP.fig_moment_fit_gallery(D, data), "moment_fit_gallery"),
                "moments_and_parameters": save(FP.fig_moments_and_parameters(D, data), "moments_and_parameters"),
@@ -178,6 +185,7 @@ def main() -> None:
                "moment_fit_gallery": lambda: FP.fig_moment_fit_gallery(D, data, rows=FP.GALLERY_COMPACT),
                "moments_and_parameters": lambda: FP.fig_moments_and_parameters_compact(D, data)}
     outputs.update({f"{k}_compact": save(draw(), f"{k}_compact") for k, draw in compact.items()})
+    outputs["field_energy_ridge"] = save(FP.fig_field_energy_ridge(D, data), "field_energy_ridge")
     tables = {}
     for name, tex in FT.all_tables(data, D["modes"]).items():
         path = OUT_TAB / f"{name}.tex"
@@ -193,10 +201,11 @@ def main() -> None:
     lib_inputs.append(HERE / "lib" / "figure_style.py")
     prov = provenance(__file__, t0, inputs=[*map(Path, input_shas), *lib_inputs])
     write_json(HERE / "make_figures_results.json", {
-        "description": "Figures 8-10, galprop_fit and LaTeX tables of the classical-model section, drawn from saved "
-                       "results (galprop_fit: moment basis at R = 12 recomputed, see galprop/* checks). The *_compact "
-                       "figures have the panels shown in Figs. 8-10 of the paper; the *_compact tables have the "
-                       "layout of Tables 4 and 5 of the paper.",
+        "description": "Figures and LaTeX tables of the classical-model section, drawn from saved results "
+                       "(galprop_fit: moment basis at R = 12 recomputed, see galprop/* checks). "
+                       "reference_ensembles_compact, moment_fit_gallery_compact and field_energy_ridge are Figs. 5, "
+                       "7 and 8 of the paper. The *_compact tables cross-check the entries of Tables 3 and 4 of "
+                       "the paper.",
         "figures": outputs, "tables": tables, "data_npz": relative(HERE / "make_figures_data.npz"),
         "producer_script_hashes": hashes, "checks": status, "e5_mode_pairs": modes,
         "e2_contour_levels_delta_chi2": D["e2"]["levels_2d"], "provenance": prov})

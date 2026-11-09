@@ -21,7 +21,7 @@ The modules import each other by bare name (`kernels`, `config`, `basis`, `ensem
 - Moments: a_br = (1/w_b) ∫_bin x_b^r dN, with `cfg.w_b` the reference bin masses of p0 ∝ γ^−2.6 (sum 1). Moment arrays have shape `(12, N+1)`.
 - Column index: `b*(N+1) + r`. For N = 2 this is the harmonic pipeline's 3b + r.
 - Derivatives: `kbar(..., order=n)[r]` is d^r K̄/d(ln γ)^r. The columns use D_{j;br} = (h^r/r!) d^r K̄/d(ln γ)^r = (1/r!) ∂^r_{x_b} K̄ at x_b = 0.
-- Equation labels: some docstrings cite LaTeX labels of the paper. They correspond to these equations:
+- Equation labels: some docstrings cite LaTeX labels of the paper. They correspond to these equations of the manuscript of 2026-11-09:
 
 | Label | Equation |
 |---|---|
@@ -30,8 +30,8 @@ The modules import each other by bare name (`kernels`, `config`, `basis`, `ensem
 | `eq: harmonic prefactor` | (2.3) |
 | `eq: In` | (2.4a) |
 | `eq: Vn` | (2.4b) |
-| `eq: beaming limit` | (2.7) |
-| `eq: directional continuum` | (2.8) |
+| `eq: beaming limit` | (4.14), now labelled `eq: beaming factorisation` |
+| `eq: directional continuum` | (4.12) |
 
 ## `config.py`
 
@@ -146,7 +146,7 @@ Parametric families (vectorised; `theta` has shape `(n_theta, k)` or `(k,)`; the
 - `two_zone_moments(cfg, theta, factors, N) -> (a, M2)`, θ = (A_a, p_a, A_b, p_b).
 - `FAMILIES = {"E1", "E2", "E3", "E4-JP", "E1M"}` maps names to these functions.
 
-Each 1-D ensemble's `theta` reproduces its quadrature moments to ≤ 1.3e-14 (`forward_results.json` → `family_checks`). One call with 1000 θ at N = 2 took 3.8–25.2 ms in the distributed run (`forward_results.json` → `family_checks.<name>.seconds_per_1000_theta_N2`) and 4.2–28.0 ms in the original run of the study, on the machine named in `README.md`; Sec. 5.4 of the paper quotes 4–28 ms.
+Each 1-D ensemble's `theta` reproduces its quadrature moments to ≤ 1.3e-14 (`forward_results.json` → `family_checks`). One call with 1000 θ at N = 2 took 3.8–25.2 ms in the distributed run (`forward_results.json` → `family_checks.<name>.seconds_per_1000_theta_N2`) and 4.2–28.0 ms in the original run of the study, on the machine named in `README.md`; Sec. 5.3 of the paper quotes 4–28 ms.
 
 ## `provenance.py`
 

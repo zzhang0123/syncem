@@ -62,7 +62,7 @@ VERIFIERS = (
 FIGURE_INPUTS = ("fits_results.json", "fits_products.npz", "forward_results.json",
                  "forward_spectra.npz", "params_results.json", "baselines_results.json",
                  "baselines_plotdata.npz", "cost_results.json", "kp_pseudotruth_results.json",
-                 "kp_pseudotruth.npz", "verify_fits_results.json")
+                 "kp_pseudotruth.npz", "verify_fits_results.json", "ridge_sed_results.json")
 FIGURES = (("make_figures.py", FIGURE_INPUTS),)
 STAGES = (("producing scripts", PRODUCERS), ("verify scripts", VERIFIERS), ("figures", FIGURES))
 

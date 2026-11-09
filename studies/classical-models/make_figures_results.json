@@ -1,5 +1,5 @@
 {
- "description": "Figures 8-10, galprop_fit and LaTeX tables of the classical-model section, drawn from saved results (galprop_fit: moment basis at R = 12 recomputed, see galprop/* checks). The *_compact figures have the panels shown in Figs. 8-10 of the paper; the *_compact tables have the layout of Tables 4 and 5 of the paper.",
+ "description": "Figures and LaTeX tables of the classical-model section, drawn from saved results (galprop_fit: moment basis at R = 12 recomputed, see galprop/* checks). reference_ensembles_compact, moment_fit_gallery_compact and field_energy_ridge are Figs. 5, 7 and 8 of the paper. The *_compact tables cross-check the entries of Tables 3 and 4 of the paper.",
  "figures": {
   "reference_ensembles": {
    "files": {
@@ -70,6 +70,16 @@
     6.1,
     3.0
    ]
+  },
+  "field_energy_ridge": {
+   "files": {
+    "figures/field_energy_ridge.pdf": "01cfcb52eebd5424086a2968c717fe7122ea6516885680a16fe0f4a47fd05f0b",
+    "figures/field_energy_ridge.png": "53f4920b751b7c411823e64907c2e104c5761d482805dd20600261e84c96d388"
+   },
+   "size_inches": [
+    6.1,
+    3.2
+   ]
   }
  },
  "tables": {
@@ -116,6 +126,11 @@
   "kp_pseudotruth.py": {
    "recorded": "e844f52c5a847863b89dbbb2e6affcc65529b630f8e84ba963db335f6407de54",
    "on_disk": "e844f52c5a847863b89dbbb2e6affcc65529b630f8e84ba963db335f6407de54",
+   "match": true
+  },
+  "ridge_sed.py": {
+   "recorded": "ce3ed6c01fb243027a2df8f81bb2fcf45360bf137db4ed6b980bfd8c72f042aa",
+   "on_disk": "ce3ed6c01fb243027a2df8f81bb2fcf45360bf137db4ed6b980bfd8c72f042aa",
    "match": true
   }
  },
@@ -439,6 +454,16 @@
    "value": 0.0,
    "limit": 1e-12,
    "ok": true
+  },
+  "ridge_sed/N2_vs_params_E2_ridge_max_rel_chi2": {
+   "value": 0.0,
+   "limit": 1e-08,
+   "ok": true
+  },
+  "ridge_sed/N2_vs_params_E2_ridge_max_abs_phi": {
+   "value": 0.0,
+   "limit": 1e-08,
+   "ok": true
   }
  },
  "e5_mode_pairs": {
@@ -531,7 +556,7 @@
  ],
  "provenance": {
   "script": "make_figures.py",
-  "script_sha256": "cda9816d453d95a968c1c6a960509881d15a9bc91b9ad741a6344c431280cc7d",
+  "script_sha256": "8fc76c48e9f50e3950b65977315f806133b691690470072ada48c605a50b6bcd",
   "lib_sha256": {
    "kernels.py": "b0983233f8fee93b12b10c299c0ea0d0011d72a106884029ec46107ba4121570",
    "config.py": "f5577f60bd12158c413ffb1f8edc9361b1c202f66bc25d9cf812d466816831c6",
@@ -551,8 +576,9 @@
    "kp_pseudotruth_results.json": "d6f71b26cc3f8fc42a09659bf72831ca93b1a54dbcb4d54f55cdb21555e1f8b9",
    "kp_pseudotruth.npz": "c4d4ee507134cec2175363f7329c16f2d11953ab341adbd1d80e9cf89be3813c",
    "baselines_plotdata.npz": "ac8074f55d8aac633acb893a3d815115640f06beb852802a378d21307ecc2e12",
-   "figure_data.py": "06edc7069fa17ee9aa126cb7efcf7ed16c4ac17611637ca6eaeecfe379404344",
-   "figure_plots.py": "fb22e2431109baaa9fe66a524be6ed57c6826b44083bb0bacdea6ba378aa1848",
+   "ridge_sed_results.json": "14dbf5e501cd0e48872bfab6eb20c5825891d38eab0c829e2a2ebfe993f9f99e",
+   "figure_data.py": "656c3b3df0be7dd5b3d75f2d7883d80461c6e88fea45ccccbc0f3860bc03119d",
+   "figure_plots.py": "f91d03e5cb766b6caf63d6dc514a3d0a3ad37afc9f02113e489ef4e4ec943625",
    "figure_tables.py": "635f69ddc558974fbf2f11ce403669e6e5b7c6e7fef7f17dcba5b688b014e0cc",
    "paramlib.py": "523da25c34f774acf6c4e21f6af5b43ece5429af6b00fed58f632818e80ab437",
    "baselines.py": "dfcefc02ad857c507f793864c10a2d9fcbea4a837fb9efb0456e80f6c4de623e",
@@ -565,7 +591,7 @@
    "scipy": "1.16.3",
    "matplotlib": "3.10.8"
   },
-  "wall_clock_s": 17.34565305709839,
-  "finished": "2026-10-27T16:07:26+0000"
+  "wall_clock_s": 22.99794292449951,
+  "finished": "2026-11-09T22:08:21+0000"
  }
 }
