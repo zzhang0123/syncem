@@ -68,6 +68,8 @@ from ._basis_checks import (
     check_kernel,
     check_phase,
     check_reference,
+    check_tensor_references,
+    check_tensor_route,
     check_types,
     resolve_cross_route,
     truncation_record,
@@ -246,6 +248,10 @@ def build_basis(
     if E_phys is not None and not isinstance(E_phys, ErrorTerm):
         raise ValueError("E_phys must be an ErrorTerm or None")
     if channels.family == "basis":
+        route = (
+            getattr(kernel, "quadrature", None) if quadrature is None else quadrature
+        )
+        check_tensor_references(kernel, channels, reference, route)
         reference_basis = build_basis(
             kernel,
             channels.reference_channels,
@@ -287,6 +293,7 @@ def build_basis(
         notes.append(f"V not modelled [{type(kernel).__name__}]")
     notes.append("incident polarisation not modelled")
     route = getattr(kernel, "quadrature", None) if quadrature is None else quadrature
+    check_tensor_route(kernel, channels, reference, route, notes)
     I_basis, V_basis, P_basis = _build_core(
         kernel, channels, reference, phase, index=index, quadrature=quadrature
     )
@@ -363,9 +370,13 @@ def _with_convergence(basis, kernel, *, full, cross_route) -> SpectralBasis:
     if other is not None:
         delta = basis_convergence(basis, kernel, factor=2, full=full, cross_route=True)
         ratio = _core.column_ratio(delta.value, basis.response_matrix())
+        tensor_note = _core.tensor_route_note(
+            other[0], basis.channels, basis.reference, other[2]
+        )
         checks += (
             f"route check ({other[3]} vs the basis): max_a max_j |dC_ja| / "
-            f"max_j |C_ja| = {ratio:.3g}; scale-invariant, not part of the budget",
+            f"max_j |C_ja| = {ratio:.3g}; scale-invariant, not part of the budget"
+            + tensor_note,
         )
     provenance = Provenance(
         **{
@@ -445,7 +456,7 @@ def basis_convergence(
     note = (
         f"|C({text}) - C| per column, (4 n_ch, n_real); contracted with |m| "
         "(invariant under Reference.scales)"
-    )
+    ) + _core.tensor_route_note(alt_kernel, alt_channels, basis.reference, alt_route)
     tail = _core.continuum_tail(kernel, basis.channels, basis.reference)
     if tail is not None:
         value = _core.on_mass_column(value, basis.index, jnp.asarray(tail.value))

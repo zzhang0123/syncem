@@ -8,6 +8,8 @@ contract these checks enforce and what it does not certify.
 
 from __future__ import annotations
 
+import numpy as np
+
 from . import _basis_core as _core
 from .channels import Channels
 from .errors import AssumptionRecord
@@ -157,6 +159,64 @@ def check_kernel(kernel, channels, truncation, support, reference, allow, notes)
                 )
 
 
+def check_tensor_route(kernel, channels, reference, route, notes):
+    """Refuse a tensor-route harmonic build that is blind to a channel.
+
+    Blind means ``_basis_core.tensor_blind_channels``: no node of the
+    ``n_mu x n_eta`` grid places a selected line inside the channel support at
+    the reference, so the channel's columns would be exactly zero. Narrow
+    channels (``_basis_core.tensor_narrow_channels``, a sampled threshold)
+    get a note instead.
+    """
+    if route != "tensor":
+        return
+    blind = _core.tensor_blind_channels(kernel, channels, reference)
+    if blind:
+        raise ValueError(
+            f"tensor route: no node of the {kernel.n_mu} x {kernel.n_eta} angular "
+            f"grid places a harmonic line inside the support of channel(s) "
+            f"{list(blind)} at the reference, so their columns would be exactly "
+            "zero while lines meet these supports on a set of positive angular "
+            "measure. Use quadrature='product', whose cells are bounded by the "
+            "channel support, or raise n_mu and n_eta"
+        )
+    note = _core.tensor_route_note(kernel, channels, reference, route)
+    if note:
+        notes.append("tensor route: " + note.removeprefix(". "))
+
+
+def check_tensor_references(kernel, channels, reference, route):
+    """:func:`check_tensor_route` for the reference channels of ``Channels.from_basis``.
+
+    Runs before ``build_basis`` recurses on the reference channels, so the
+    refusal names reference indices. It covers every reference channel,
+    including one with a zero coefficient in every row, and names those so
+    that they can be dropped from the reference.
+    """
+    if route != "tensor" or channels.family != "basis":
+        return
+    gamma0 = _core.concrete(reference.gamma0, "reference.gamma0")
+    if not gamma0 > 1.0 or not _core.concrete(reference.B0, "reference.B0") > 0.0:
+        return  # check_reference refuses it in the reference build
+    blind = _core.tensor_blind_channels(kernel, channels.reference_channels, reference)
+    if not blind:
+        return
+    used = np.any(np.asarray(channels.coefficients) != 0.0, axis=0)
+    unused = [k for k in blind if not used[k]]
+    raise ValueError(
+        f"tensor route: no node of the {kernel.n_mu} x {kernel.n_eta} angular grid "
+        f"places a harmonic line inside reference channel(s) {list(blind)} of "
+        "Channels.from_basis at the reference, so their columns would be exactly "
+        "zero. Use quadrature='product' or raise n_mu and n_eta"
+        + (
+            f". Reference channel(s) {unused} have a zero coefficient in every row "
+            "and can be dropped from the reference"
+            if unused
+            else ""
+        )
+    )
+
+
 def truncation_record(index) -> tuple:
     """Hashable ``(key, value)`` record of the index layout for ``Provenance``.
 
@@ -191,5 +251,7 @@ __all__ = [
     "check_reference",
     "check_phase",
     "check_kernel",
+    "check_tensor_route",
+    "check_tensor_references",
     "truncation_record",
 ]

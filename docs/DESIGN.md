@@ -379,6 +379,70 @@ product-versus-tensor route check (`build_basis(..., cross_route=True)` or
 `convergence="full"`), recorded in `provenance.finite_checks`; it converges
 slowly for derivative bases.
 
+Narrow channels on the tensor route. The tensor nodes do not depend on the
+channel support, and `Channels` masks its response outside the open
+support. A channel with no node line `nu_m(mu_i, eta_k)` inside its
+support at the reference therefore gets exactly zero columns, derivative
+columns included, while lines meet that support on a set of positive
+angular measure. This is strict, from the node geometry, up to rounding of
+`nu_m` at a support edge. For a `bump` of centre `c` it holds for
+half-widths `w <= w0 = min_{m,i,k} |nu_m(mu_i, eta_k) - c|`. `build_basis`
+refuses the tensor route for such a channel
+(`_basis_core.tensor_blind_channels`), and a rebuild on the tensor route
+(the `numerical` estimate of a tensor basis, the route check of a product
+basis) names it in its note. For `Channels.from_basis` the check covers
+every reference channel, including one with a zero coefficient in every
+row, and the refusal names such references so that they can be dropped. A line just inside an edge can still give a
+response that underflows to zero, which the geometric test does not
+detect.
+
+Above `w0` the columns are nonzero but can be far from the product route.
+The sweep below compares the two routes directly at `N = 0`
+(`gamma0 = 20`, `B0 = 1` G, `c = 2 nu_B`, 22 log-spaced `w/c` from 1e-6
+to 0.9, so each entry is resolved to a factor 1.9). The reference is the
+product route at 32 outer and inner nodes, which agrees with 64 nodes to
+1.5e-4 per column. The last two columns give the smallest `w/c` from which
+the mass-column error stays below 10% and below 1e-3 for every larger
+width:
+
+| `n_mu x n_eta` | `w0 / c` | below 10% from | below 1e-3 from |
+|---|---|---|---|
+| 8 x 8 | 2.7e-3 | 0.47 | not reached |
+| 16 x 16 | 8.9e-3 | 0.13 | not reached |
+| 24 x 24 | 4.1e-3 | 0.066 | not reached |
+| 32 x 32 | 6.8e-4 | 0.066 | 0.9 |
+| 48 x 48 | 1.0e-3 | 0.034 | 0.47 |
+| 64 x 64 | 5.9e-4 | 0.034 | 0.13 |
+| 96 x 96 | 1.5e-4 | 0.018 | 0.066 |
+| 128 x 128 | 2.7e-6 | 0.018 | 0.066 |
+| 192 x 192 | 3.1e-5 | 0.0093 | 0.034 |
+| 24 x 48 | 7.2e-4 | 0.066 | not reached |
+| 12 x 96 | 1.0e-3 | 0.13 | not reached |
+
+`w0` is irregular in the node counts. It is about `2.4 c / n^2` when the
+`m = 2` line at `mu eta = x_min^2` is the nearest (`x_min` the smallest
+positive node), and much smaller when a node product places another
+harmonic near `c` (128 x 128). The 10% threshold sits at `n w/c = 1.5` to
+2.3 with `n = min(n_mu, n_eta)`, and the 1e-3 threshold at `n w/c = 6` to 8
+for `n >= 64`. Channels centred at `1.5 nu_B` and `3.3 nu_B` (24, 48 and 96
+nodes) gave no mass-column error above 10% for `n w/c >= 1.5`. `build_basis`
+on the tensor route therefore notes channels with `(nu_hi - nu_lo)/centre <
+TENSOR_MIN_WIDTH / min(n_mu, n_eta)`, with `TENSOR_MIN_WIDTH = 4` (`w/c <
+2/n` for a bump, `_basis_core.tensor_narrow_channels`). Every mass-column
+error above 10% in these sweeps lay below that threshold. Below it, the
+`numerical` estimate (the tensor route at 2x nodes) fell short of the
+all-column error by up to a factor 2e4 (128 x 128 at `w/c = 3.7e-6`, where
+a few node lines sit inside the support). Above it, wherever the
+all-column error exceeded 1e-3, the estimate lay between 0.62 and 1.56
+times that error (38 cells). These figures are sampled at one reference
+and three centres, not bounds. Derivative columns converge more slowly. At
+`N = 1` the all-column error stayed above 10% at every width for
+`min(n_mu, n_eta) <= 32`, and it is not monotone in `w` for 48 to 96 nodes
+(1.4 at 64 x 64 for `w/c = 0.47`, where the support edges map to lines
+near `mu eta = 0`). `tests/model/test_tensor_route_blind.py` pins both
+sides of `w0`, the extreme widths and the note threshold. The sweep itself
+is not part of the suite.
+
 Bessel functions: `harmonic_lines` needs `J_{m-1}`, `J_{m+1}` and `J_m'`
 at `x = m beta sin(theta) / D`. `syncem.bessel.bessel_jn_neighbours`
 evaluates all three with one periodic trapezoid rule on the order-`m`
@@ -1138,8 +1202,14 @@ build on the other angular route records
 `max_a max_j |dC_ja| / max_j |C_ja|` as a named `route check` in
 `provenance.finite_checks` (not a budget term; a large ratio can reflect
 the tensor route's own error on derivative columns), and the `numerical`
-term is unchanged. `provenance.quadrature` names the `numerical_route` and
-the `check_route` (`None` when the check did not run).
+term is unchanged. A column that is zero in the basis and nonzero in the
+other route gives the ratio `inf`. `provenance.quadrature` names the
+`numerical_route` and the `check_route` (`None` when the check did not
+run). On the tensor route
+`build_basis` refuses a channel that no node line reaches and notes one
+narrower than `4/min(n_mu, n_eta)` in `(nu_hi - nu_lo)/centre` (Section
+6.1). The route check and the `numerical` note name such channels when
+the rebuild is on the tensor route.
 `basis_convergence(basis, kernel, *, factor=2, full=False,
 cross_route=False)` computes the envelope directly.
 
@@ -1538,6 +1608,7 @@ the full-resolution population (1,048,576 samples) at `N = 2, L = 8`:
 | `test_channel_compose.py` | 24 | `from_basis` equals `c @` the reference response; `from_basis` columns equal the columns of the same combination integrated directly on the tensor route to 1e-12 (and on the product route for single-reference rows); kernel terms are `\|c\| @` the reference terms; `from_callable` reproduces the `bump` values, derivatives to third order and basis (1e-13); refusal of supports outside `(0, inf)` and of a declared smoothness whose edge derivatives do not vanish; a callable remainder is a `bound` only with a declared `sup\|R^(N+1)\|`; `combine_basis` refuses a reference basis on other callables or tables with the same `describe()`; `fit_bandpass` recovers an exact combination and its covering dominates the residual; `propagate` takes an `ErrorTerm` and reads a valueless one as unbounded |
 | `test_channel_compose_boundaries.py` | 10 | boundary of `from_basis` at reference width `w = W (1 + delta)`, `delta` from 0.3 to 0, for `W/c = 0.05` and 0.4: agreement with the direct channel to 1e-12 at `delta = 0`, monotone in `delta`, below 20 times the representation residual; the covering bounds `\|S(R_table) - S(sum c phi)\|` of `direct_channel_average` on a 12-atom population in every Stokes component |
 | `test_channel_compose_extremes.py` | 50 (10 `slow`) | the two methods of each composed route compared directly, bypassing the `build_basis` dispatch, at `w/c = 1e-3, 0.3, 0.9` and a support edge at `1e-6 c`, `N = 0, 3` (tensor) and `N = 0, 1` (product; `N = 3` `slow`): `combine_basis` equals a direct `from_callable` build of the same combination to `1e-12` on the tensor route, and for single-reference rows on the product route; a callable bump equals `Channels.bump` (columns to `1e-12`, values bit for bit); `fit_bandpass` on a table in the span of tent references returns the table values (`1e-14` of the peak) and a residual below `1e-13`; `slow`: both product-route methods converge to the same columns (`1e-3` at 128 nodes) |
+| `test_tensor_route_blind.py` | 33 (1 `slow`) | the tensor and product routes compared directly through `_build_core`, bypassing the `build_basis` refusal: at `w/c = 1e-3` on 24 x 24 nodes the tensor columns are exactly zero for `N = 0..3` and every product column is nonzero (`N = 3` `slow`); on both sides of the blind half-width `w0` from a NumPy node oracle (`w0 (1 - 1e-6)` zero and refused, `1.05 w0` nonzero, mass error above 0.1 and noted) for 8 x 8, 24 x 24, 64 x 64, 128 x 128, 24 x 48 and 12 x 96 nodes; `w/c = 1e-6` zero and refused and `w/c = 0.9` within 10% of the product route without a note on every grid; the narrow note on both sides of `4/min(n_mu, n_eta)`; the route check of a product basis names the blind 48 x 48 grid; `column_ratio` is `inf` for a zero basis column (also with a NaN delta); the node-line count equals a brute-force NumPy count for four channels on five grids (one odd); the refusal names only the blind channel of two and the reference channels of `Channels.from_basis` (used or with zero coefficients); `ContinuumKernel` is never blind or narrow |
 | `test_phase.py` | 20 | Taylor weights, `GaussianScreen` against `rm.burn_depolarisation`, `EmpiricalScreen` against `rm.screen_polarisation`, `CumulantScreen` remainder |
 | `test_stokes_nodes.py` | 6 | `stokes_harmonic(n_nodes=)` reproduces the historical output bit for bit at `n_nodes=None` |
 | `test_kernels.py`, `test_continuum.py` | 11 + 9 | `PolynomialTestKernel` exactness; `ContinuumKernel` against `ultrarel.F/G` quadrature, mu-independence, `x_min` guard |
@@ -1802,6 +1873,13 @@ cells of `test_ad_transform_matrix.py`, 18 Hessian pins in
   continuum kernel there does not bound its discrepancy from the harmonic
   reference, and its measured assumption terms cannot see pitch-angle
   dependence (Section 12.3).
+* The tensor angular route resolves a narrow channel only when node lines
+  fall inside it. `build_basis` refuses a channel that no node line reaches
+  (strict, from the node geometry) and notes channels narrower than
+  `4/min(n_mu, n_eta)` in `(nu_hi - nu_lo)/centre`. That threshold, and the
+  reliability of the `numerical` estimate above it, are sampled (Section 6.1).
+  A line just inside a support edge can give an underflowed zero response
+  that the geometric test does not detect.
 * Finite refinement checks and the refined-rule `numerical` envelope are
   `estimate` terms, not certificates; the remainder probe evaluates `H` at finitely
   many points and is an `estimate` unless envelopes are supplied.

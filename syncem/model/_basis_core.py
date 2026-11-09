@@ -34,6 +34,10 @@ from .index import Truncation
 
 # Beyond this required harmonic no HarmonicKernel can be built (auto_nodes > 65536).
 M_REGIME = (65536 - 64) // 4
+# Tensor route: (nu_hi - nu_lo)/centre * min(n_mu, n_eta) below which the mass
+# column error exceeded 10% in the sampled sweep of docs/DESIGN.md (gamma0 = 20,
+# B0 = 1 G, centres 1.5, 2 and 3.3 nu_B, 8 to 192 nodes). Sampled, not a bound.
+TENSOR_MIN_WIDTH = 4.0
 
 
 def package_version() -> str:
@@ -195,10 +199,13 @@ def on_mass_column(envelope, index, value):
 def column_ratio(delta, C) -> float:
     """``max_a max_j |dC_ja| / max_j |C_ja|`` over nonzero columns (eager).
 
-    Invariant under ``Reference.scales``, which rescale whole columns.
+    Invariant under ``Reference.scales``, which rescale whole columns. A
+    column that is zero in ``C`` and nonzero or NaN in ``delta`` gives ``inf``.
     """
     delta, C = np.abs(np.asarray(delta)), np.abs(np.asarray(C))
     top = np.max(C, axis=0)
+    if np.any((top == 0) & ~(np.max(delta, axis=0) <= 0)):  # NaN counts as nonzero
+        return float("inf")
     keep = top > 0
     if not np.any(keep):
         return 0.0
@@ -237,6 +244,94 @@ def harmonic_activity(kernel, channels, reference):
     if active.size == 0:
         return None, 0
     return (int(orders[active[0]]), int(orders[active[-1]])), cells
+
+
+def tensor_node_lines(kernel, channels, reference):
+    """``(counts, active)`` per channel for the tensor route at the reference (eager NumPy).
+
+    ``counts[j]`` is the number of pairs (selected harmonic ``m``, node
+    ``(mu_i, eta_k)`` of the ``n_mu x n_eta`` Gauss-Legendre grid) whose line
+    ``nu_m = m nu_B / (1 - beta mu_i eta_k)`` at ``(gamma0, B0)`` lies strictly
+    inside the support ``(nu_lo, nu_hi)`` of channel ``j``. ``active[j]`` says
+    whether a selected line meets that support for some ``(mu, eta)`` in
+    ``[-1, 1]^2``, that is on a set of positive angular measure.
+    """
+    gamma0 = concrete(reference.gamma0, "reference.gamma0")
+    B0 = concrete(reference.B0, "reference.B0")
+    beta = math.sqrt(1.0 - 1.0 / gamma0**2)
+    nu_B = E_ESU * B0 / (2.0 * math.pi * gamma0 * M_E * C_CGS)
+    support = np.asarray(channels.support, dtype=float)
+    m = np.asarray(kernel.harmonics(), dtype=float)[:, None]
+    x_mu, _ = np.polynomial.legendre.leggauss(kernel.n_mu)
+    x_eta, _ = np.polynomial.legendre.leggauss(kernel.n_eta)
+    t = np.sort(np.multiply.outer(x_mu, x_eta).ravel())
+    with np.errstate(divide="ignore"):
+        lo = support[None, :, 0]
+        lower = np.where(lo > 0, (1.0 - m * nu_B / lo) / beta, -np.inf)
+        upper = (1.0 - m * nu_B / support[None, :, 1]) / beta  # (m, n_ch)
+    inside = np.searchsorted(t, upper, side="left") - np.searchsorted(
+        t, lower, side="right"
+    )
+    counts = np.sum(np.maximum(inside, 0), axis=0)
+    active = np.any(np.maximum(lower, -1.0) < np.minimum(upper, 1.0), axis=0)
+    return counts, active
+
+
+def tensor_blind_channels(kernel, channels, reference) -> tuple[int, ...]:
+    """Channels with ``active`` lines and no tensor node line inside (``tensor_node_lines``).
+
+    ``Channels`` masks its response outside the open support, so every
+    tensor-route column of such a channel, derivative columns included, is
+    zero, while the exact projection integrates the lines that meet the
+    support. This is a sufficient condition for zero columns, exact up to
+    rounding of ``nu_m`` at a support edge. A line just inside an edge can
+    still give a response that underflows to zero, which this test does not
+    detect. Empty for kernels other than ``HarmonicKernel``.
+    """
+    if not isinstance(kernel, HarmonicKernel) or kernel.selected_mode_count() == 0:
+        return ()
+    counts, active = tensor_node_lines(kernel, channels, reference)
+    return tuple(int(j) for j in np.flatnonzero(active & (counts == 0)))
+
+
+def tensor_narrow_channels(kernel, channels) -> tuple[int, ...]:
+    """Channels with ``(nu_hi - nu_lo) / centre < TENSOR_MIN_WIDTH / min(n_mu, n_eta)``.
+
+    A sampled threshold, not a bound (``TENSOR_MIN_WIDTH``). Empty for
+    kernels other than ``HarmonicKernel``.
+    """
+    if not isinstance(kernel, HarmonicKernel):
+        return ()
+    limit = TENSOR_MIN_WIDTH / min(kernel.n_mu, kernel.n_eta)
+    return tuple(int(j) for j in np.flatnonzero(channels.width_ratio() < limit))
+
+
+def tensor_route_note(kernel, channels, reference, route) -> str:
+    """``""``, or a note on the channels that ``route="tensor"`` cannot resolve.
+
+    Names the blind channels (``tensor_blind_channels``, zero columns) and
+    the narrow ones (``tensor_narrow_channels``, a sampled threshold).
+    """
+    if route != "tensor":
+        return ""
+    blind = tensor_blind_channels(kernel, channels, reference)
+    narrow = [j for j in tensor_narrow_channels(kernel, channels) if j not in blind]
+    note = ""
+    if blind:
+        note += (
+            f". The {kernel.n_mu} x {kernel.n_eta} tensor nodes place no line "
+            f"inside channel(s) {list(blind)}, whose tensor columns are therefore zero"
+        )
+    if narrow:
+        note += (
+            f". Channel(s) {narrow} have (nu_hi - nu_lo)/centre below "
+            f"{TENSOR_MIN_WIDTH:g}/min(n_mu, n_eta) = "
+            f"{TENSOR_MIN_WIDTH / min(kernel.n_mu, kernel.n_eta):.3g}. In the sweep "
+            "of docs/DESIGN.md every tensor mass column error above 10% lay below "
+            "this threshold, and there the numerical estimate fell short of the "
+            "column error by up to four orders of magnitude (sampled, not a bound)"
+        )
+    return note
 
 
 def resolution(kernel):
@@ -344,6 +439,11 @@ __all__ = [
     "on_mass_column",
     "column_ratio",
     "harmonic_activity",
+    "tensor_node_lines",
+    "tensor_blind_channels",
+    "tensor_narrow_channels",
+    "tensor_route_note",
+    "TENSOR_MIN_WIDTH",
     "numerics_record",
     "screen_exponent_term",
 ]

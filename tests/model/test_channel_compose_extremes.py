@@ -21,7 +21,8 @@ and ``N = 3`` on the product route in the ``slow`` tier.
 On the tensor route the angular nodes do not depend on the channel support,
 so (a) holds to rounding for any combination. The narrow channel is left out
 there: no tensor node places a line inside a channel of relative width 2e-3,
-and both methods return zero columns. On the product route the cells are
+so its tensor columns are zero and ``build_basis`` refuses that route
+(``test_tensor_route_blind.py``). On the product route the cells are
 bounded by the channel support, so (a) holds to rounding for rows with one
 reference each. For general rows the direct build integrates one cell over
 the hull, across the flat zeros of the inner references; it converges to the

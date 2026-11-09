@@ -1,5 +1,29 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- `build_basis(..., quadrature="tensor")` refuses a channel that no node of
+  the `n_mu x n_eta` angular grid reaches, for example a `bump` with
+  `w/c = 1e-3` at 24 x 24 nodes. Such a channel got exactly zero columns,
+  derivative columns included, while the product route resolves it, and
+  the `numerical` estimate and the route check then reported zero error.
+  The condition is strict, from the node geometry at the reference. For
+  `Channels.from_basis` it covers every reference channel and names the
+  references with a zero coefficient in every row, which can be dropped.
+- The route-check ratio is `inf` for a column that is zero in the basis and
+  nonzero in the other route. Such columns used to be skipped, so the
+  ratio could read 0.
+
+### Changed
+
+- On the tensor route `build_basis` notes channels with
+  `(nu_hi - nu_lo)/centre < 4/min(n_mu, n_eta)` in `provenance.notes`, and
+  the route check and `numerical` note of a tensor-route rebuild name blind
+  or narrow channels. The threshold is sampled (`docs/DESIGN.md`, Section
+  6.1), not a bound.
+
 ## 0.7.0 (2026-11-09)
 
 ### Added

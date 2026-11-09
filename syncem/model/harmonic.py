@@ -44,8 +44,20 @@ differentiable (``product_cells``); there AD is not the derivative of the
 computed values, and either way a derivative carries a quadrature error of
 its own (estimated by ``numerical``, not bounded).
 Secondary route ``quadrature="tensor"``: ``n_mu x n_eta``
-Gauss-Legendre in ``(mu, eta)``; it converges slowly near the ``mu eta = 0``
-resonance and serves the finite route check of ``basis.py``.
+Gauss-Legendre in ``(mu, eta)``. It converges slowly near the ``mu eta = 0``
+resonance and serves the finite route check of ``basis.py``. Its nodes do
+not depend on the channel support. When no node line ``nu_m(mu_i, eta_k)``
+lies inside a channel support at the reference, every column of that
+channel, derivative columns included, is exactly zero although lines meet
+that support on a set of positive angular measure, and ``build_basis``
+refuses the route
+(``_basis_core.tensor_blind_channels``). For a ``bump`` of centre ``c``
+this holds for half-widths ``w <= min_{m,i,k} |nu_m - c|``, which is
+irregular in the node counts (``4.1e-3 c`` at 24 x 24 nodes and
+``c = 2 nu_B``). Wider channels can still be under-resolved. In the sampled
+sweep of ``docs/DESIGN.md`` every mass-column error above 10% lay below
+``w/c = 2/min(n_mu, n_eta)``, and ``build_basis`` notes channels with
+``(nu_hi - nu_lo)/centre < 4/min(n_mu, n_eta)`` (sampled, not a bound).
 
 Shapes: scalar ``(gamma, B, mu, eta)``; ``Modes`` ``(n_ch,)``/``(n_weights, n_ch)``;
 ``ProjectedModes`` over ``MomentIndex.pairs``. Units: Gauss, Hz, m^2 for ``tau``.
