@@ -39,7 +39,7 @@ harmonic tails when ``allow_truncated=True``.
 Channels from ``Channels.from_basis`` (``R_j = sum_k c_jk phi_k``) are built
 through the reference responses: ``build_basis`` builds the reference basis
 and :func:`combine_basis` returns ``C_j = sum_k c_jk C_k`` with the kernel
-terms ``|c| @`` the reference terms (``_basis_combine``); no radiation
+terms ``|c| @`` the reference terms (``_basis_combine``). No radiation
 integral of the combined responses is evaluated.
 """
 
@@ -234,7 +234,7 @@ def build_basis(
     evaluation of the projection through order ``N``, one
     convergence rebuild, and one more with the route check. Channels from
     ``Channels.from_basis`` are built through their reference channels (all
-    of the above applies to them) and combined by :func:`combine_basis`;
+    of the above applies to them) and combined by :func:`combine_basis`.
     ``E_phys`` then refers to the instrument channels. Units and
     what is not certified: see :class:`SpectralBasis` and the module
     docstring; ``E_phys`` and ``allow_truncated`` are caller declarations.

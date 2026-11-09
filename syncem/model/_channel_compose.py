@@ -13,14 +13,15 @@ checks evaluate it on the Gauss-Legendre nodes, on ``N_CHECK`` interior
 points and one floating-point step inside each edge: finite real values of
 the input's shape, a nonzero peak, a first derivative that JAX can trace,
 vanishing edge values of ``R^(k)`` for ``k = 0 .. min(smoothness,
-EDGE_ORDERS)`` (``|R^(k)| w^k`` at most ``EDGE_TOLERANCE`` of the sampled
-peak, ``w`` the support half-width; the extension by zero of a ``C^k``
-response has these derivatives zero at the edges), and every declared
-``derivative_bound`` (``{order: sup|R^(order)|}`` in Hz^-order times the
-response units) at least the sampled ``|R^(order)|``. These checks can
-refute a declaration; passing them does not verify it, because a sampled
-maximum is not a supremum and an edge value one step inside is not the
-one-sided limit.
+EDGE_ORDERS)``, and every declared ``derivative_bound``
+(``{order: sup|R^(order)|}`` in Hz^-order times the response units) at
+least the sampled ``|R^(order)|``. An edge value counts as vanishing when
+``|R^(k)| w^k`` is at most ``EDGE_TOLERANCE`` of the sampled peak, with
+``w`` the support half-width. The extension by zero of a ``C^k`` response
+has these derivatives zero at the edges. These checks can refute a
+declaration. Passing them does not verify it, because a sampled maximum is
+not a supremum and an edge value one step inside is not the one-sided
+limit.
 """
 
 from __future__ import annotations
@@ -43,7 +44,7 @@ N_CHECK = 2048
 
 
 def basis_parts(reference, coefficients):
-    """``(reference, c (n_ch, n_ref), lo, hi)``; ``ValueError`` on bad input."""
+    """``(reference, c (n_ch, n_ref), lo, hi)``, or ``ValueError`` on bad input."""
     try:
         c = np.asarray(coefficients)
     except Exception as exc:  # a tracer cannot fix the static support
@@ -188,11 +189,12 @@ def _check_traceable(fns, lo, hi):
 
 
 def _check_edges(fns, inner, half, peak, smoothness):
-    """Relative edge value; refute ``smoothness`` by ``|R^(k)|`` one step inside each edge.
+    """Relative edge value, or ``ValueError`` when the edges refute ``smoothness``.
 
-    A ``C^s`` response extended by zero has ``R^(k) = 0`` at the edges for
-    ``k = 0 .. s``; orders ``0 .. min(s, EDGE_ORDERS)`` are checked when
-    ``s >= 1``. ``smoothness = 0`` allows a jump and only records it.
+    ``|R^(k)|`` is evaluated one step inside each edge. A ``C^s`` response
+    extended by zero has ``R^(k) = 0`` at the edges for ``k = 0 .. s``.
+    Orders ``0 .. min(s, EDGE_ORDERS)`` are checked when ``s >= 1``.
+    ``smoothness = 0`` allows a jump and only records it.
     """
     edge = 0.0
     for order in range(min(smoothness, EDGE_ORDERS) + 1):
@@ -228,7 +230,7 @@ def check_points(lo, hi, n_nu):
 
 
 def check_callable(fns, lo, hi, smoothness, bounds, n_nu) -> float:
-    """Eager refutation checks (module docstring); returns the relative edge value."""
+    """Eager refutation checks (module docstring). Returns the relative edge value."""
     points = check_points(lo, hi, n_nu)
     values = evaluate(fns, points)
     peak = np.max(np.abs(values), axis=1)

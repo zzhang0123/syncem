@@ -38,9 +38,9 @@ absolute channel sum, the gap between ``|H_P|`` and ``sum_m |Q_m R_j|``
 ``RemainderInputs.from_samples`` probes envelopes at finitely many points
 (``estimate``), not a supremum over the reference-to-support segments. A
 line-kernel basis whose channel smoothness is below ``N + 1`` has an
-unbounded ``basis_remainder``; on a ``Channels.from_callable`` response
-without a declared ``sup|R^(N+1)|`` (``derivative_bound``) it is an
-``estimate`` even from supplied envelopes. A capped truncation
+unbounded ``basis_remainder``. On a ``Channels.from_callable`` response
+without a declared ``sup|R^(N+1)|`` (``derivative_bound``) the remainder is
+an ``estimate`` even from supplied envelopes. A capped truncation
 (``Truncation(max_orders=...)``) uses the lower-set margin form
 (``index.lower_set_margin``) with per-multi-index inputs ``margin_H``,
 ``margin_moments``; the operator-norm inputs do not bound it.
@@ -319,7 +319,7 @@ class RemainderInputs(eqx.Module):
         margin_moments / beta!`` (``lower_set_margin``) in place of the
         ``H``/``(N+1)!`` sums and needs ``margin_H``, ``margin_moments``.
         A line-kernel basis with channel smoothness below ``N + 1`` returns
-        an unbounded term with the reason; on a callable channel response
+        an unbounded term with the reason. On a callable channel response
         without a declared ``sup|R^(N+1)|`` a ``bound`` becomes an
         ``estimate`` (``Channels.derivative_bound_reason``). Missing inputs
         give an unbounded term naming them.

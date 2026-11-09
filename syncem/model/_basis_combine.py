@@ -37,7 +37,7 @@ def combine_columns(coefficients, I_basis, V_basis, P_basis):
 
 
 def combine_term(term, coefficients, n_ref, n_real):
-    """``|c| @ term`` over the reference channels; valueless terms unchanged."""
+    """``|c| @ term`` over the reference channels (valueless terms unchanged)."""
     if term.value is None:
         return term
     absc = jnp.abs(jnp.asarray(coefficients))
@@ -69,21 +69,22 @@ def combine_basis(reference_basis, channels, *, E_phys=None):
 
     ``reference_basis`` is a :class:`SpectralBasis` on the reference
     channels ``phi``: ``channels.reference_channels`` must equal
-    ``reference_basis.channels`` under ``equinox.tree_equal`` (the same
-    arrays and static fields, callables compared by identity and tables by
-    value; eager). The columns are ``c @`` the reference columns
-    (``eq: channel kernel`` is linear in ``R_j``), shapes ``(n_ch, n0)``,
-    ``(n_ch, n2)``; each kernel term is ``|c| @`` the reference term, which
-    keeps its kind (a per-column envelope ``(4 n_ref, n_real)`` becomes
-    ``(4 n_ch, n_real)``); ``E_phys`` (an ``ErrorTerm`` for the instrument
-    channels) replaces the combined physical term. Index, reference,
-    support, phase and ``certified_orders`` (orders validated by
-    finite-difference tests) are the reference basis's; the
-    provenance records the combined channels and a note. Units: those of
-    the reference basis. A kernel-level ``E_phys`` (declared on the kernel)
-    is read per reference channel and combined by ``|c|``; pass ``E_phys=``
-    for values that refer to the instrument channels. The ``numerical``
-    term of the result is ``|c| @`` the reference estimate.
+    ``reference_basis.channels`` under ``equinox.tree_equal`` (an eager
+    check: the same arrays and static fields, callables compared by
+    identity and tables by value). The columns are ``c @`` the reference
+    columns (``eq: channel kernel`` is linear in ``R_j``), shapes
+    ``(n_ch, n0)``, ``(n_ch, n2)``. Each kernel term is ``|c| @`` the
+    reference term, which keeps its kind (a per-column envelope
+    ``(4 n_ref, n_real)`` becomes ``(4 n_ch, n_real)``). ``E_phys`` (an
+    ``ErrorTerm`` for the instrument channels) replaces the combined
+    physical term. Index, reference, support, phase and
+    ``certified_orders`` (orders validated by finite-difference tests) are
+    the reference basis's. The provenance records the combined channels and
+    a note. Units: those of the reference basis. A kernel-level ``E_phys``
+    (declared on the kernel) is read per reference channel and combined by
+    ``|c|``. Pass ``E_phys=`` for values that refer to the instrument
+    channels. The ``numerical`` term of the result is ``|c| @`` the
+    reference estimate.
     ``basis_convergence`` of the result, and ``RemainderInputs.from_samples``
     probes on it, integrate the combined responses directly over the hull
     support. On the product route that rule converges more slowly than the
@@ -101,7 +102,7 @@ def combine_basis(reference_basis, channels, *, E_phys=None):
     if not isinstance(channels, Channels) or channels.family != "basis":
         raise ValueError("channels must come from Channels.from_basis")
     # describe() names a callable by __qualname__ and a table by its length,
-    # so it cannot tell two different references apart; compare the trees.
+    # so it cannot tell two different references apart. Compare the trees.
     if not bool(eqx.tree_equal(channels.reference_channels, reference_basis.channels)):
         raise ValueError(
             "channels.reference_channels must be the channels of reference_basis"

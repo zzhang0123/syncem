@@ -342,12 +342,12 @@ def propagate_envelope(total, stokes, R, response_uncertainty):
     predicted magnitude plus the budget envelope.
     Labels: ``sec: frequency order``; the response-error term follows
     ``eq: chromatic beam response``. ``response_uncertainty`` is ``None``
-    (unbounded), a scalar or an array of ``R``'s shape (caller
-    declarations; the result keeps the budget's kind), or an ``ErrorTerm``
-    with such a value (for example ``BandpassFit.response_uncertainty()``):
-    the result then has the weaker of the two kinds. A valueless term
-    (``unbounded`` or ``not_applicable``) makes the result unbounded; it is
-    never read as an exact response.
+    (unbounded), a scalar or an array of ``R``'s shape, or an ``ErrorTerm``
+    with such a value (for example ``BandpassFit.response_uncertainty()``).
+    A scalar or an array is a caller declaration, and the result keeps the
+    budget's kind. With an ``ErrorTerm`` the result has the weaker of the
+    two kinds. A valueless term (``unbounded`` or ``not_applicable``) makes
+    the result unbounded and is never read as an exact response.
     """
     n_ch = stokes.shape[0]
     R = jnp.asarray(R)

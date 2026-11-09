@@ -35,23 +35,23 @@ the reference's, its support per row the hull of the references with
 ``c_jk != 0``, and ``build_basis`` computes the reference columns once and
 returns ``C_j = sum_k c_jk C_k`` (the kernel columns are linear in ``R_j``).
 ``from_callable(fn, support, smoothness, derivative_bound=None)`` takes a
-JAX-differentiable ``fn(nu)`` on a declared support in ``(0, inf)``; the
+JAX-differentiable ``fn(nu)`` on a declared support in ``(0, inf)``. The
 derivatives ``R^(r)`` the kernels need come from JAX autodiff. A line-kernel
 ``basis_remainder`` on a callable response is a ``bound`` only when
-``derivative_bound`` declares ``sup|R^(N+1)|`` (``derivative_bound_reason``);
-otherwise it is reported as an ``estimate``. Both families use the response
+``derivative_bound`` declares ``sup|R^(N+1)|`` (``derivative_bound_reason``).
+Otherwise it is reported as an ``estimate``. Both families use the response
 as supplied: ``normalisation`` names its units (dimensionless for
 ``"unit_peak"``, 1/Hz for ``"unit_integral"``) and no rescaling is applied.
 ``bandpass.fit_bandpass`` writes a measured bandpass table in a reference
 set and reports the representation residual as a response error.
 
 Not certified: the physical adequacy of any response as a model of a real
-bandpass; the quadrature accuracy of ``nodes``/``weights`` for ``planck_taper``
-with a small ``taper`` (the rule converges slowly across the taper, increase
-``n_nu``); interpolation error of ``from_table`` between its samples; the declared
-smoothness and ``derivative_bound`` of ``from_callable`` (the eager checks on
-sampled points can refute them, not verify them). The shape functions live in
-``syncem.model._channel_shapes``.
+bandpass, the quadrature accuracy of ``nodes``/``weights`` for ``planck_taper``
+with a small ``taper`` (the rule converges slowly across the taper, so increase
+``n_nu``), the interpolation error of ``from_table`` between its samples, and
+the declared smoothness and ``derivative_bound`` of ``from_callable`` (the
+eager checks on sampled points can refute them, not verify them). The shape
+functions live in ``syncem.model._channel_shapes``.
 """
 
 from __future__ import annotations
@@ -112,7 +112,7 @@ class Channels(eqx.Module):
     ``0 < nu_lo < nu_hi``. Arrays are traced leaves; ``family``, ``normalisation``,
     ``smoothness``, ``taper``, ``n_nu``, ``table`` and ``support_sigma`` are static.
     ``from_basis`` adds the leaves ``reference_channels`` (a ``Channels``) and
-    ``coefficients`` ``(n_ch, n_ref)``; ``from_callable`` adds the static
+    ``coefficients`` ``(n_ch, n_ref)``. ``from_callable`` adds the static
     ``response_fn`` (one callable per channel), ``derivative_bound`` and
     ``edge`` (the sampled relative edge value).
 
@@ -387,10 +387,10 @@ class Channels(eqx.Module):
         """``R_j = sum_k c_jk phi_k`` in the reference responses ``phi_k``.
 
         ``reference`` is a ``Channels`` (a reference that is itself a basis
-        is flattened); ``coefficients`` is ``(n_ch, n_ref)`` or ``(n_ref,)``,
+        is flattened). ``coefficients`` is ``(n_ch, n_ref)`` or ``(n_ref,)``,
         real, finite and concrete, each row with a nonzero entry. The support
         of row ``j`` is the hull of the supports of the references with
-        ``c_jk != 0``, fixed at construction; smoothness and normalisation
+        ``c_jk != 0``, fixed at construction. The smoothness and normalisation
         (the units) are the reference's, and the response is not rescaled.
         ``n_nu`` (default: the reference's) sets the nodes on that support,
         used by direct routes. ``build_basis`` builds the reference columns
@@ -399,9 +399,9 @@ class Channels(eqx.Module):
         ``weights`` follow their nonzero pattern at construction: a
         replaced coefficient array (for example through ``eqx.tree_at``)
         must keep that pattern, or the direct routes integrate the wrong
-        interval; build a new ``from_basis`` instead. ``describe()`` and
-        ``edge_jump()`` need concrete coefficients. Not certified:
-        how well the combination represents an instrument
+        interval. A new pattern needs a new ``from_basis``. ``describe()``
+        and ``edge_jump()`` need concrete coefficients. Not certified: how
+        well the combination represents an instrument
         (``bandpass.fit_bandpass`` reports that residual).
         """
         if not isinstance(reference, Channels):
@@ -435,23 +435,23 @@ class Channels(eqx.Module):
 
         ``fn`` maps an array of frequencies [Hz] to the response of the same
         shape, elementwise, and must be JAX-traceable and differentiable to
-        the orders the kernel uses; a sequence gives one callable per
+        the orders the kernel uses. A sequence gives one callable per
         channel. ``support`` is ``(2,)`` or ``(n_ch, 2)`` with
         ``0 < nu_lo < nu_hi`` finite (``ValueError`` otherwise), stored
-        exactly; ``__call__`` is ``fn`` inside the open support and exactly
+        exactly. ``__call__`` is ``fn`` inside the open support and exactly
         zero outside it. ``smoothness`` is the declared class.
         ``derivative_bound`` is ``None`` or ``{order: sup|R^(order)|}`` with
-        scalar or ``(n_ch,)`` values (Hz^-order times the response units); a
+        scalar or ``(n_ch,)`` values (Hz^-order times the response units). A
         ``basis_remainder`` of kind ``bound`` on a line kernel needs the
         order ``N + 1`` (``derivative_bound_reason``). The response is used
-        as supplied; ``normalisation`` names its units. Eager checks that
+        as supplied, and ``normalisation`` names its units. Eager checks that
         can refute the declarations (``_channel_compose``): finite real
         values of the input's shape, a JAX trace of ``fn'``, vanishing
         ``R^(k)`` one floating-point step inside each edge for
         ``k = 0 .. min(smoothness, 4)`` when ``smoothness >= 1``, and every
         declared bound at least the sampled ``|R^(order)|``. Passing them
         does not verify the smoothness or the bounds. ``derivative_bound``
-        decides the kind only; its value enters no computed envelope, so
+        decides the kind only. Its value enters no computed envelope, so
         supplied ``RemainderInputs`` must be derived from it. ``response_fn``
         is a static field: parameters closed over by ``fn`` are constants,
         so a basis cannot be differentiated in them, and every new closure is
@@ -550,7 +550,7 @@ class Channels(eqx.Module):
         """Largest unit-peak response value at a support edge (0 when continuous).
 
         ``basis``: the reference's value times the largest row sum of
-        ``|c_jk|`` (a bound on any jump inside the hull); ``callable``: the
+        ``|c_jk|`` (a bound on any jump inside the hull). ``callable``: the
         sampled edge value relative to the sampled peak.
         """
         if self.family == "basis":
@@ -612,9 +612,10 @@ class Channels(eqx.Module):
 
         ``None`` for the built-in families, whose formulas fix the
         derivatives, and for a ``callable`` whose ``derivative_bound`` has
-        ``order``; a ``basis`` response asks its reference. A line-kernel
-        ``basis_remainder`` with a reason is an ``estimate``, never a
-        ``bound``. A declared value is a caller statement, not verified here.
+        ``order``. A ``basis`` response returns the reason of its reference
+        channels. A line-kernel ``basis_remainder`` with a reason is an
+        ``estimate``, never a ``bound``. A declared value is a caller
+        statement, not verified here.
         """
         if self.family == "basis":
             return self.reference_channels.derivative_bound_reason(order)

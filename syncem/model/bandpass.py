@@ -30,7 +30,7 @@ prediction in the reference channels, where ``operator()`` is
 ``c (x) 1_4``, ``(4 n_ch, 4 n_ref)``. ``propagate`` multiplies the term by
 ``|stokes| + envelope``, which covers the error of the predicted ``I_k``.
 
-Units: frequencies in Hz; the table in the units of the reference responses
+Units: frequencies in Hz, and the table in the units of the reference responses
 (dimensionless for ``unit_peak`` references), so the coefficients are
 dimensionless. Shapes: ``nu_hz`` ``(n_pts,)``, ``response`` ``(n_pts,)`` or
 ``(n_ch, n_pts)``.
@@ -42,11 +42,10 @@ reference reaches (``uncovered > 0``), or a table row that does not start
 and end at zero (the response beyond the grid is then not given), makes the
 term ``unbounded``. A large ``d_jk`` on an outer reference means that the
 residual near the edge of the reference set is covered only by that
-reference's tail; the covering is then valid but loose, and a wider
-reference set tightens it. Not
-certified: the measured table itself, the interpolation model, and the
-adequacy of the reference set; the beam, Stokes mixing and calibration parts
-of ``W_aj`` are outside this helper.
+reference's tail. The covering is then valid but loose, and a wider
+reference set tightens it. Not certified: the measured table itself, the
+interpolation model, and the adequacy of the reference set. The beam,
+Stokes mixing and calibration parts of ``W_aj`` are outside this helper.
 """
 
 from __future__ import annotations
@@ -67,19 +66,19 @@ COEFFICIENT_FLOOR = 1e-13  # relative to the row's largest coefficient
 
 
 class BandpassFit(eqx.Module):
-    """A measured bandpass written in reference responses; see the module docstring.
+    """A measured bandpass written in reference responses (see the module docstring).
 
-    ``channels`` is ``Channels.from_basis(reference, coefficients)``;
-    ``coefficients`` ``(n_ch, n_ref)``; ``check_grid`` ``(n_grid,)`` [Hz];
-    ``residual`` ``(n_ch, n_grid)`` is ``Delta R`` there; ``covering``
-    ``(n_ch, n_ref)`` the ``d_jk``; ``uncovered`` ``(n_ch,)`` the largest
-    ``|Delta R_j|`` where no reference reaches; ``relative_residual``
-    ``(n_ch,)`` the largest ``|Delta R_j|`` over the largest measured
-    ``|R_j|``; ``open_edges`` the channels whose table does not start and
-    end at zero. Units: the response units (``residual``, ``covering``,
-    ``uncovered``) and dimensionless coefficients. Not certified: the
-    covering between check points and the measured response between table
-    samples (an ``estimate``).
+    ``channels`` is ``Channels.from_basis(reference, coefficients)``, with
+    ``coefficients`` ``(n_ch, n_ref)``. ``residual`` ``(n_ch, n_grid)`` is
+    ``Delta R`` on ``check_grid`` ``(n_grid,)`` [Hz]. ``covering``
+    ``(n_ch, n_ref)`` holds the ``d_jk``. ``uncovered`` ``(n_ch,)`` is the
+    largest ``|Delta R_j|`` where no reference reaches, and
+    ``relative_residual`` ``(n_ch,)`` the largest ``|Delta R_j|`` over the
+    largest measured ``|R_j|``. ``open_edges`` lists the channels whose
+    table does not start and end at zero. Units: the response units
+    (``residual``, ``covering``, ``uncovered``) and dimensionless
+    coefficients. Not certified: the covering between check points and the
+    measured response between table samples (an ``estimate``).
     """
 
     reference: Channels
@@ -107,7 +106,7 @@ class BandpassFit(eqx.Module):
 
         Row ``4 j + X`` (``X`` in ``I, Q, U, V``) has ``d_jk`` in column
         ``4 k``, so ``|dR| @ |stokes_ref|`` is ``sum_k d_jk |I_k|`` for every
-        Stokes datum of channel ``j``. Kind ``estimate``; ``unbounded`` when
+        Stokes datum of channel ``j``. Kind ``estimate``, or ``unbounded`` when
         some residual is not covered by any reference (module docstring).
         Not certified: the covering between check points.
         """
@@ -201,11 +200,11 @@ def _nonnegative(phi, where):
 
 
 def fit_bandpass(reference, nu_hz, response, *, argument="nu", oversample=8):
-    """Least-squares ``c_jk`` of a measured bandpass table; see the module docstring.
+    """Least-squares ``c_jk`` of a measured bandpass table (see the module docstring).
 
     ``reference``: a ``Channels`` with nonnegative responses (``ValueError``
     otherwise). ``nu_hz`` ``(n_pts,)`` strictly increasing and positive
-    (``argument="omega"`` for angular frequency); ``response`` ``(n_pts,)``
+    (``argument="omega"`` for angular frequency). ``response`` ``(n_pts,)``
     or ``(n_ch, n_pts)``, finite, each row with a nonzero sample, in the
     units of the reference responses (used as supplied, not rescaled).
     ``oversample`` (int >= 1) check points per table interval. References

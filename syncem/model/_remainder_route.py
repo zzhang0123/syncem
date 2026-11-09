@@ -5,8 +5,9 @@ unconstrained (a line kernel whose channels have smoothness below
 ``N + 1``; ``_basis_checks.check_kernel`` records the same condition as a
 provenance note). ``derivative_gate`` returns why a line-kernel remainder on
 a ``Channels.from_callable`` response cannot be a ``bound`` (no declared
-``sup|R^(N+1)|``), or the note of a declared one. ``is_screen_route`` tells whether the basis phase route is
-a screen, whose finite response does not Taylor-expand the depth.
+``sup|R^(N+1)|``), or the note of a declared one. ``is_screen_route`` tells
+whether the basis phase route is a screen, whose finite response does not
+Taylor-expand the depth.
 ``lower_set_margin`` is the margin ``S(Lambda)`` of the lower-set Taylor
 remainder used for capped truncations (re-exported by ``syncem.model.index``);
 ``margin_columns`` evaluates that form from the probed or supplied inputs
@@ -69,7 +70,7 @@ def derivative_gate(basis) -> tuple[str | None, str | None]:
     """``(reason, note)`` for the order-``N+1`` channel derivative of a line kernel.
 
     ``reason`` is set when the channel response is a callable without a
-    declared ``sup|R^(N+1)|`` (the remainder is then an ``estimate``);
+    declared ``sup|R^(N+1)|`` (the remainder is then an ``estimate``).
     ``note`` records a declared bound, on which a ``bound`` is conditional.
     Both are ``None`` for other kernels and for the built-in families.
     """
