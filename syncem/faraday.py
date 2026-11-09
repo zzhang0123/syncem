@@ -4,7 +4,7 @@ The positive measure weights source electrons, not complex polarised flux.
 Each emitting element carries its intervening depth to the observer. Absorption,
 scattering, conversion and incident background light are excluded. The cold-
 plasma lambda-squared phase law is assumed. Geometry enters through the paired
-emission/depth inputs; neither independence nor a common intrinsic spectrum is
+emission/depth inputs. Neither independence nor a common intrinsic spectrum is
 assumed. Channel integration must act on the combined emitted/rotated spectrum.
 """
 
@@ -48,19 +48,19 @@ def emission_polarisation(
 ) -> jax.Array:
     """Return ``source_column * E[emission * exp(2j*depth*lam**2)]``.
 
-    ``depths``: nonempty real ``(n,)`` intervening depths in rad/m^2;
-    ``lam``: real wavelengths in metres, any shape;
+    ``depths``: nonempty real ``(n,)`` intervening depths in rad/m^2.
+    ``lam``: real wavelengths in metres, any shape.
     ``emission``: observer-basis per-source complex Q+iU, either scalar,
     ``(n,)`` (independent of frequency), or exactly ``(n, *lam.shape)``.
     The last form retains spectral variation correlated with depth. Output
     shape is ``lam.shape``. Supply the true source column as a finite nonnegative
-    scalar; the default gives the per-source average. Nonnegative relative
+    scalar. The default gives the per-source average. Nonnegative relative
     electron-number/quadrature weights are normalized internally. They must
     have positive total mass, even when source_column=0. No emissivity or complex
     phase factor is absorbed into or renormalized as a probability weight.
 
     Inputs must be finite. Supports JIT and differentiation. A scan avoids an
-    extra emitter-by-frequency phase array; reverse AD can retain intermediates.
+    extra emitter-by-frequency phase array. Reverse AD can retain intermediates.
     The supplied discrete sum has no statistical truncation, but population/path
     quadrature, numerical and physical-model errors remain external inputs.
     In particular, finite phases need not have accurate argument reduction.
@@ -105,12 +105,12 @@ def joint_faraday_moments(
     ``basis_values`` is finite ``(n, n_basis)`` (real or complex), with at least
     one basis function. Basis functions have no frequency dependence. Depths
     and relative electron-number weights follow ``emission_polarisation``.
-    ``degree`` is a nonnegative static integer; ``reference_depth`` is a finite
+    ``degree`` is a nonnegative static integer and ``reference_depth`` is a finite
     real scalar in rad/m^2. Use filter_jit or mark degree static in jax.jit.
 
     Returns the ``(n_basis, degree+1)`` moments and ``(n_basis,)`` absolute next
     moments ``E[|psi_a|*|depth-reference_depth|**(degree+1)]``. A complex zeroth
-    moment may vanish; it is never divided out. These are statistics of the
+    moment may vanish. It is never divided out. These are statistics of the
     supplied discrete measure, not a continuous-population certificate. The
     next absolute moment is additional information, not inferred from the
     retained moments or a Gaussian/independent closure. JIT/AD are supported.
@@ -153,16 +153,16 @@ def joint_faraday_average(
     """Finite joint source/depth response and an absolute truncation envelope.
 
     Represent the per-source intrinsic kernel as sum_a c_a(lam)*psi_a + r.
-    ``coefficients`` must have shape ``(*lam.shape, n_basis)``; ``moments`` has
+    ``coefficients`` must have shape ``(*lam.shape, n_basis)``, and ``moments`` has
     shape ``(n_basis, degree+1)`` and is normalized as in joint_faraday_moments.
     It may be fitted directly. No samples or conditional coefficient functions
     are needed in this contraction. The same moments serve every wavelength.
 
     Required error inputs: ``absolute_next`` is a nonnegative ``(n_basis,)``
-    upper envelope for ``E[|psi_a|*|depth-reference_depth|**(degree+1)]``;
+    upper envelope for ``E[|psi_a|*|depth-reference_depth|**(degree+1)]``.
     ``source_error`` is a nonnegative scalar or ``lam.shape`` envelope for ``E|r|``,
     both per source under the same positive measure. They must be externally
-    justified for the represented population; setting source_error=0 asserts
+    justified for the represented population. Setting source_error=0 asserts
     an exact intrinsic basis. Return (prediction, error), both ``lam.shape``::
 
         P = N*exp(it*reference)*sum_ab c_a*(it)^b/b!*M_ab,
@@ -174,8 +174,8 @@ def joint_faraday_average(
     Moment realizability, support/tail assumptions, statistical-input uncertainty,
     numerical error and physical-model discrepancy are not certified here.
     Integrate the emitted/rotated prediction and the absolute-response-weighted
-    envelope together for a finite channel; rotating a channel average is not
-    equivalent. JIT and differentiation are supported; degree is set by shape.
+    envelope together for a finite channel. Rotating a channel average is not
+    equivalent. JIT and differentiation are supported. The degree is set by shape.
     """
     t = _phase_coordinate(lam)
     reference = _real(reference_depth, "reference_depth", scalar=True)

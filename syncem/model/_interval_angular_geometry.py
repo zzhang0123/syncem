@@ -65,7 +65,7 @@ def prepare_angular_geometry(ctx, gamma, B) -> AngularFixedGeometry:
 
     ``gamma > 1`` and ``B > 0`` are required. Zero-emissivity cases should be
     handled before building angular cells. Pass the same ``ctx`` to each cell
-    operation; a separate context may have a different working precision.
+    operation. A separate context may have a different working precision.
     """
     gamma = _binary_float(gamma, "gamma")
     B = _binary_float(B, "B")
@@ -89,7 +89,7 @@ def angular_box_geometry(ctx, fixed, mu_box, eta_box):
 
     The tuple matches the fixed-point ``_certified_sparse_harmonic._geometry``
     used by the internal interval harmonic routes. A box touching ``|mu|=1``
-    or ``|eta|=1`` may have ``z.a == 0``; callers that divide by ``z`` must
+    or ``|eta|=1`` may have ``z.a == 0``. Callers that divide by ``z`` must
     subdivide or use an axis-compatible branch. The physical identity
 
     ``D² - beta²(1-mu²)(1-eta²) = (eta-beta*mu)² + gamma^-2(1-eta²) >= 0``

@@ -9,9 +9,9 @@ unit solid angle) and absorption coefficient are
     g(gamma) = - gamma^2 d/dgamma [ N(gamma) / gamma^2 ]          (Kirchhoff)
 
 in reduced units. The distinct physical prefactors do NOT cancel in the
-source function; ``cgs_coefficients_from_moments`` restores them. Absorption
+source function. ``cgs_coefficients_from_moments`` restores them. Absorption
 probes the *derivative-
-weighted* distribution g rather than N itself; for a power law N ~ gamma^-p,
+weighted* distribution g rather than N itself. For a power law N ~ gamma^-p,
 g = (p+2) N / gamma, giving the standard alpha ~ nu^-(p+4)/2 and
 S_nu ~ nu^(5/2).
 
@@ -26,7 +26,7 @@ kernel P = F(nu/nu_c) is evaluated by the jitted JAX ``F``. Do NOT wrap these
 grid functions in ``jax.jit``/``jax.grad``. The scalar kernel derivatives and
 ``*_from_moments`` contractions ARE differentiable JAX functions. Their
 second-order Taylor truncation needs a remainder or direct-integration error
-test; finite moments do not by themselves justify that kernel truncation.
+test. Finite moments do not by themselves justify that kernel truncation.
 """
 
 from __future__ import annotations
@@ -75,7 +75,7 @@ def emissivity(N, gamma_grid, nu, nu_c_ref):
 
 
 def derivative_weighted(N, gamma_grid, *, relativistic=False):
-    """Finite-difference -h(N/h)' on a finite grid; endpoint jumps excluded.
+    """Finite-difference -h(N/h)' on a finite grid, excluding endpoint jumps.
 
     Default h=gamma^2 is the ultra-relativistic approximation. Set
     relativistic=True for h=gamma*sqrt(gamma^2-1), requiring gamma>1.
@@ -138,9 +138,9 @@ def moment_expansion_absorption(g, gamma_grid, gamma0, P0, P1, P2, nu):
 # plus the *inverse* moment <1/gamma> = int N/gamma dgamma:
 #
 #     D0 = 2<1/g>,  D1 = 3 M0 - 2 g0 <1/g>,
-#     D2 = 4 M1 - 2 g0 M0 + 2 g0^2 <1/g>.                        (UR identity; vanishing endpoints)
+#     D2 = 4 M1 - 2 g0 M0 + 2 g0^2 <1/g>.                        (UR identity, vanishing endpoints)
 #
-# The inverse moment is not determined by the integer moments; for a narrow
+# The inverse moment is not determined by the integer moments. For a narrow
 # distribution it is given by the geometric series
 #
 #     <1/gamma> = M0/g0 - M1/g0^2 + M2/g0^3 + ...                (approx.)
@@ -150,7 +150,7 @@ def moment_expansion_absorption(g, gamma_grid, gamma0, P0, P1, P2, nu):
 def inverse_gamma_moment(M0, M1, M2, gamma0):
     """<1/gamma> = int N/gamma dgamma via the geometric-series expansion.
 
-    Valid for ``|gamma - gamma0| < gamma0``; truncated at the second moment.
+    Valid for ``|gamma - gamma0| < gamma0``, truncated at the second moment.
     """
     return M0 / gamma0 - M1 / gamma0**2 + M2 / gamma0**3
 
@@ -185,7 +185,7 @@ def absorption_from_moments(
 ):
     """alpha_nu from the emissivity moments via Kirchhoff closure.
 
-    ``inv_gamma`` = <1/gamma>; if None it is approximated by the geometric
+    ``inv_gamma`` = <1/gamma>. If None it is approximated by the geometric
     series (narrow-distribution limit).
     """
     if inv_gamma is None:
@@ -208,14 +208,14 @@ def absorbed_intensity_from_moments(
 
 # ---------------------------------------------------------------------------
 # Polarised absorption (Stokes Q): same Kirchhoff weight g, kernel G = x K_2/3.
-# The absorption moments D_k are kernel-INDEPENDENT (moments of g); only the
+# The absorption moments D_k are kernel-INDEPENDENT (moments of g). Only the
 # derivative spectra change (-G vs F). The thick polarisation follows the
 # two normal-mode source functions, not the ratio of Q and I source functions.
 # ---------------------------------------------------------------------------
 
 
 def single_particle_G(nu, gamma, nu_c_ref):
-    """Positive G kernel; the paper's signed Q kernel is MINUS this value."""
+    """Positive G kernel. The paper's signed Q kernel is MINUS this value."""
     x = nu / (nu_c_ref * gamma**2)
     return _G(x)
 
@@ -294,12 +294,12 @@ def cgs_coefficients_from_moments(
 
     M_k=int N(gamma)(gamma-gamma0)^k dgamma and inv_gamma=int N/gamma
     are local number-density moments [cm^-3], not normalized PDF moments.
-    j is erg/s/cm^3/Hz/sr; alpha is cm^-1. This is a SECOND-ORDER local
-    kernel Taylor approximation using the UR Kirchhoff weight; it is not a
+    j is erg/s/cm^3/Hz/sr and alpha is cm^-1. This is a SECOND-ORDER local
+    kernel Taylor approximation using the UR Kirchhoff weight. It is not a
     reconstruction of the electron PDF. Supply an independent inverse moment
     and finite-support endpoints. The zero endpoint default is a hypothesis.
-    Use only nu>0, gamma0>1 (physically gamma0>>1), B_perp>=0 and M0>=0;
-    remaining moment realizability and remainder checks belong to the caller.
+    Use only nu>0, gamma0>1 (physically gamma0>>1), B_perp>=0 and M0>=0.
+    Remaining moment realizability and remainder checks belong to the caller.
     """
     import equinox as eqx
 
@@ -314,7 +314,7 @@ def cgs_coefficients_from_moments(
         "cgs inputs require finite nu>0, gamma0>1, B_perp>=0, M0>=0",
     )
     nu_hz, gamma0, B_perp_gauss, M0, M1, M2, inv_gamma = values
-    # Safe internal frequency at B_perp=0; its physical amplitude is zero.
+    # Safe internal frequency at B_perp=0, where the physical amplitude is zero.
     safe_b = jnp.where(B_perp_gauss > 0, B_perp_gauss, 1.0)
     aB = 3 * E_ESU * safe_b / (4 * jnp.pi * M_E * C_CGS)
     amp = jnp.sqrt(3.0) * E_ESU**3 * B_perp_gauss / (4 * jnp.pi * M_E * C_CGS**2)

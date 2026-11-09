@@ -3,10 +3,10 @@
 Inputs: frequency Hz, thermal density cm^-3, magnetic field Gauss. The
 ``mueller_*`` functions return signed Stokes rates cm^-1 for dS/ds=eps-K S,
 Q=parallel-minus-perpendicular to projected B, and V=-2 Im(E_parallel E_perp*).
-In that natural basis conversion is rQ (U--V mixing); rU=0. At sky azimuth
+In that natural basis conversion is rQ (U--V mixing) and rU=0. At sky azimuth
 phi its components are rQ*cos(2phi), rQ*sin(2phi).
 
-``rotation_coefficient`` retains the position-angle rate for compatibility;
+``rotation_coefficient`` retains the position-angle rate for compatibility.
 ``conversion_coefficient`` returns rQ itself. There is no additional factor
 of two on the latter. These leading high-frequency cold-dielectric terms
 require plasma and cyclotron frequencies small compared with nu. Hot and
@@ -36,7 +36,7 @@ def conversion_coefficient(nu, n_e, B_perp):
 
 
 def conversion_rotation_ratio(nu, B_perp, B_par):
-    """Signed rQ/rV, independent of n_e; undefined when B_par=0."""
+    """Signed rQ/rV, independent of n_e and undefined when B_par=0."""
     return -(E_ESU * B_perp**2) / (4.0 * np.pi * M_E * C_CGS * nu * B_par)
 
 

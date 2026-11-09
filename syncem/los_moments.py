@@ -4,7 +4,7 @@ The reduced demonstration and physical CGS interface are deliberately explicit.
 Both use a local second-order energy-kernel Taylor approximation, whose error
 must be assessed independently. They do not implement the manuscript's positive
 finite-cumulant PDF reconstruction. The continuum wrappers assume isotropic UR
-pitch angles; intrinsic V and alphaV are omitted here. Their omission requires
+pitch angles. Intrinsic V and alphaV are omitted here. Their omission requires
 its own propagated error, while generic transfer.mueller_matrix retains alphaV.
 """
 
@@ -43,14 +43,14 @@ def moment_driven_slab(
     B_perp=None,
     polarised_absorption=False,
 ):
-    """Reduced-units demonstration; use moment_driven_slab_cgs for physical RT.
+    """Reduced-units demonstration. Use moment_driven_slab_cgs for physical RT.
 
     nu, nu_c_ref and L have the reduced coefficient units of kirchhoff.py.
     Physical Faraday parameters are rejected because those require Hz/cm/CGS
     emission and absorption too. With polarised_absorption=True, signed jQ
-    and alphaQ derive from the same moments; otherwise Q0,U0 are prescribed
+    and alphaQ derive from the same moments. Otherwise Q0,U0 are prescribed
     fractions. That switch and n_slabs are static configuration. n_slabs is
-    retained for API compatibility; a uniform slab needs one exponential.
+    retained for API compatibility. A uniform slab needs one exponential.
     Default absorption closure assumes vanishing energy endpoint terms.
     """
     if any(x is not None for x in (n_e, B_par, B_perp)):
@@ -99,10 +99,11 @@ def moment_driven_slab_cgs(
 ):
     """Physical directional continuum Stokes of one uniform slab in CGS.
 
-    nu_hz: Hz; fields: Gauss; thermal n_e and electron moments: cm^-3;
-    L_cm: cm; phi: projected-field azimuth in the fixed observer basis.
-    S0 and output: erg/s/cm^2/Hz/sr. The signed natural rQ mixes U and V;
-    rotating the projected field gives rQ*cos(2phi), rQ*sin(2phi).
+    Units: nu_hz in Hz, fields in Gauss, thermal n_e and electron moments in
+    cm^-3, L_cm in cm. phi is the projected-field azimuth in the fixed
+    observer basis.
+    S0 and output: erg/s/cm^2/Hz/sr. The signed natural rQ mixes U and V.
+    Rotating the projected field gives rQ*cos(2phi), rQ*sin(2phi).
     See kirchhoff.cgs_coefficients_from_moments for approximation/endpoints.
     Cold-plasma Faraday coefficients require high-frequency validity and are
     independent of the relativistic emitting-electron moments.

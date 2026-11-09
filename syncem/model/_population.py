@@ -1,18 +1,18 @@
 """Reference point, declared support and discrete population samples.
 
-Private helper of ``syncem.model.moments`` (split to keep files short); the
+Private helper of ``syncem.model.moments`` (split to keep files short). The
 public names are re-exported there. LABEL: the displacement coordinates
-(``Reference.z``; the offsets of ``eq: channel basis expansion`` divided by
-fixed positive scales, ``[extension]``), the declared support (``Support``;
+(``Reference.z``, the offsets of ``eq: channel basis expansion`` divided by
+fixed positive scales, ``[extension]``), the declared support (``Support``,
 ``sec: frequency order``, paragraph 'Energy range and distribution width')
 and the discrete electron-number measure of ``eq: joint emission depth``
 (``PopulationSamples``).
 
 Units: ``gamma`` dimensionless (``> 1``), ``B`` Gauss (``> 0``), ``depth``
-rad/m^2, ``mu, eta`` in ``[-1, 1]``, ``phi`` radians; scales carry the units
+rad/m^2, ``mu, eta`` in ``[-1, 1]``, ``phi`` radians. Scales carry the units
 of their variable. Weights are relative electron-number masses normalised as
 in ``syncem.rm._screen_samples``. Shape errors raise ``ValueError`` at trace
-time; value errors use ``equinox.error_if``. Nothing here certifies that a
+time. Value errors use ``equinox.error_if``. Nothing here certifies that a
 population lies inside its declared support or that a discrete measure
 approximates a continuous one.
 """
@@ -62,12 +62,12 @@ class Reference(eqx.Module):
     """Reference point and scales of the displacement coordinates ``z``.
 
     ``gamma0 > 1``, ``B0 > 0`` (Gauss), ``depth_ref`` (rad/m^2) and positive
-    ``scales = (s_gamma, s_B, s_depth)``; all traced scalar leaves. Value
+    ``scales = (s_gamma, s_B, s_depth)``, all traced scalar leaves. Value
     checks use ``equinox.error_if``. ``describe`` needs concrete values.
     ``z(gamma, B, depth)`` returns ``(..., 3)`` dimensionless displacements
     (the offsets of ``eq: channel basis expansion`` divided by the scales,
-    ``[extension]``); ``gamma`` dimensionless, ``B`` in Gauss, ``depth`` in
-    rad/m^2. Assumes nothing about the population; the choice of reference
+    ``[extension]``), with ``gamma`` dimensionless, ``B`` in Gauss, ``depth`` in
+    rad/m^2. Assumes nothing about the population. The choice of reference
     and scales is the caller's, and nothing here certifies that the
     population is local to it.
     """
@@ -120,7 +120,7 @@ class Reference(eqx.Module):
 class Support(eqx.Module):
     """Declared population support ``gamma in (lo, hi)``, ``B``, ``depth``.
 
-    ``gamma`` lies above 1 and ``B`` above 0 (Gauss); ``depth`` in rad/m^2.
+    ``gamma`` lies above 1 and ``B`` above 0 (Gauss), and ``depth`` is in rad/m^2.
     ``truncated`` is a static tri-state for the excluded-tail term (the
     omitted-electron bound of ``sec: frequency order``): ``None`` (unknown,
     ``excluded_tail`` unbounded), ``False`` (declared complete,
@@ -128,7 +128,7 @@ class Support(eqx.Module):
     amplitude counts only the source column retained inside the support, an
     ``[extension]`` rule). Nothing here verifies that a population lies inside.
     Shapes: three ``(lo, hi)`` pairs of scalar leaves. Assumes only what
-    ``truncated`` declares; the excluded tail ``E_tail`` is never computed
+    ``truncated`` declares. The excluded tail ``E_tail`` is never computed
     by the package.
     """
 
@@ -176,7 +176,7 @@ def _product_measure(values, weights, names):
 
     Each marginal is checked and normalised by ``_validated_samples``, the
     helper behind ``_screen_samples`` (same float64 arithmetic), so the masses
-    equal per-marginal normalisation; one compilation replaces one per marginal.
+    equal per-marginal normalisation. One compilation replaces one per marginal.
     """
     checked = [_validated_samples(*entry) for entry in zip(values, weights, names)]
     grids = jnp.meshgrid(*(v for v, _ in checked), indexing="ij")
@@ -209,13 +209,13 @@ def _checked_samples(arrays, weights):
 class PopulationSamples(eqx.Module):
     """Discrete electron-number measure on ``(gamma, B, mu, eta, phi, depth)``.
 
-    All six arrays are real ``(S,)``; ``gamma >= 1``, ``B >= 0``,
+    All six arrays are real ``(S,)``, with ``gamma >= 1``, ``B >= 0``,
     ``|mu|, |eta| <= 1``, ``phi`` in radians, ``depth`` in rad/m^2. Optional
-    ``weights`` ``(S,)`` are relative, nonnegative, with positive total mass;
-    they are normalised on use, so ``1e300``-scale weights are safe. Shape
-    errors raise ``ValueError``; value errors use ``equinox.error_if``.
+    ``weights`` ``(S,)`` are relative, nonnegative, with positive total mass.
+    They are normalised on use, so ``1e300``-scale weights are safe. Shape
+    errors raise ``ValueError``, and value errors use ``equinox.error_if``.
     ``B`` in Gauss, ``depth`` in rad/m^2, ``gamma`` dimensionless. A
-    discrete measure carries no assumption; averages over it are exact for
+    discrete measure carries no assumption. Averages over it are exact for
     the measure and are not certified as approximations of any continuous
     population (sampling and quadrature error are inputs). ``[extension]``.
     """
@@ -243,8 +243,8 @@ class PopulationSamples(eqx.Module):
             weights = _as_float(weights, "weights")
             if weights.shape != shape:
                 raise ValueError("weights must have the sample shape (S,)")
-        # The normalised weights are only checked (weights are stored raw);
-        # inside an outer JIT the unused check is dropped and runs on use.
+        # The normalised weights are only checked (weights are stored raw).
+        # Inside an outer JIT the unused check is dropped and runs on use.
         arrays, _ = _checked_samples(arrays, weights)
         for name, value in arrays.items():
             setattr(self, name, value)
@@ -264,7 +264,7 @@ class PopulationSamples(eqx.Module):
 
         Each of the six keywords is an array of values (uniform weights) or a
         tuple ``(values, weights)``. The result enumerates every combination
-        with product weights; it is a product measure by construction.
+        with product weights. It is a product measure by construction.
         """
         missing = [name for name in VARIABLES if name not in marginals]
         extra = [name for name in marginals if name not in VARIABLES]

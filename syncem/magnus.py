@@ -3,7 +3,7 @@
 For S'=-K S, Omega1=-sum A_i and Omega2=1/2 sum_{j>i}[A_j,A_i],
 A_i=K_i ds_i. Commutators are not statistical cumulants. Ensemble averages
 require two-position statistics and generally E[exp(Omega)] != exp(E[Omega]).
-Truncation is a small-depth approximation; int ||K||_2 ds < pi is a sufficient
+Truncation is a small-depth approximation. The condition int ||K||_2 ds < pi is a sufficient
 convergence condition for the full series, not an error bound for order two.
 """
 

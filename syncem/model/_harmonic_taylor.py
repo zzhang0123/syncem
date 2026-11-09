@@ -8,9 +8,9 @@ projection at ``(gamma, B) = lift(z)`` (no ``1/(r! s!)``). ``{(0, 0)}`` is
 the plain projection (``angular_projection``).
 
 Per angular point the factors ``q X_m R_j(nu_m) w_b(tau_m) dmu deta`` (the
-"streams", ``X = I, V, Q``; ``P`` complex) and, on the product route, the
+"streams", ``X = I, V, Q``, ``P`` complex) and, on the product route, the
 Legendre tables ``P_l(mu)``, ``P_k(eta)`` of the moving nodes are
-differentiated by nested forward passes in ``z`` (``point_taylor``); the
+differentiated by nested forward passes in ``z`` (``point_taylor``). The
 projection ``sum_p q_p P_l(mu_p) P_k(eta_p)`` is then assembled by the
 Leibniz rule ``D^a (A B) = sum_{b <= a} C(a, b) D^b A D^{a-b} B`` instead of
 differentiating the ``(L+1)^2``-wide contraction itself. With
@@ -18,7 +18,7 @@ differentiating the ``(L+1)^2``-wide contraction itself. With
 degree-``max |alpha|`` Taylor polynomial in ``h = x - x0`` about the node
 argument ``x0`` at ``z = 0`` (``_bessel_recurrence``):
 one quadrature band per point and no tangent through the ``n_nodes``
-integrand values; outer derivatives in ``lift``'s leaves stay exact. The
+integrand values. Outer derivatives in ``lift``'s leaves stay exact. The
 node motion of ``product_cells`` (both ``gamma`` and ``B`` move the cell
 bounds through ``nu_B`` and ``beta``) is differentiated as in the
 nested-``jacfwd`` path, so both are the same AD of the same program (node
@@ -34,14 +34,14 @@ bounded.
 
 Nested forward passes (``level_plan``): level ``i`` pushes the tangents of a
 direction set ``D_i`` (``(0, 1)`` = both, ``(0,)`` = ``z_gamma``, ``(1,)`` =
-``z_B``); the order-``n`` output holds ``d_{i_1} .. d_{i_n}`` with ``i_j`` in
+``z_B``). The order-``n`` output holds ``d_{i_1} .. d_{i_n}`` with ``i_j`` in
 ``D_j``, so ``(r, s)`` is reachable when the first ``n = r + s`` levels have
 at most ``r`` ``z_gamma``-only and at most ``s`` ``z_B``-only sets. The plan
 is the nesting of least forward-tangent count ``prod (1 + |D_i|)`` that
-reaches every needed index; for a total-degree set it is ``jacfwd`` in both
+reaches every needed index. For a total-degree set it is ``jacfwd`` in both
 directions at every level (``3^N`` tangents, as before), while per-variable
 caps (``Truncation.max_orders``) drop directions (e.g. ``(8, 8, 2)`` with
-``N_B = 1``: 6 instead of 9; ``N_B = 0``: 4). Units, shapes and what is not
+``N_B = 1``: 6 instead of 9, ``N_B = 0``: 4). Units, shapes and what is not
 certified: ``syncem.model.harmonic``.
 """
 
@@ -161,7 +161,7 @@ def _level(prev, dirs):
 def point_taylor(fn, alphas) -> dict:
     """``{(r, s): d^r_0 d^s_1 fn(0)}`` over the lower closure of ``alphas``.
 
-    ``fn: (2,) -> pytree``; ``alphas`` is an int (total degree) or a set of
+    ``fn: (2,) -> pytree``, and ``alphas`` is an int (total degree) or a set of
     ``(r, s)``. Nested forward passes of :func:`level_plan` (``jacfwd`` in
     both directions at every level for a total-degree set).
     """
@@ -188,7 +188,7 @@ def point_taylor(fn, alphas) -> dict:
 
 
 def _bessel(rule, m, x0_of, order, n_nodes):
-    """``harmonic_lines`` Bessel rule; ``"taylor"`` expands about ``x0_of()``."""
+    """``harmonic_lines`` Bessel rule. ``"taylor"`` expands about ``x0_of()``."""
     if rule != "taylor":
         return rule
     x0 = x0_of()
@@ -200,7 +200,7 @@ def _leibniz_product(D, alphas):
     """``D^a sum_p q_p P_l(mu_p) P_k(eta_p)`` for ``a`` in ``alphas``, every stream ``q``.
 
     ``D[a] = (streams, P_l table (P, L_mu+1), P_k table (P, L_eta+1))`` with
-    streams ``(..., P)`` (real or complex); returns ``{a: tuple of (...,
+    streams ``(..., P)`` (real or complex). Returns ``{a: tuple of (...,
     L_mu+1, L_eta+1)}``. ``D^a (q P_l P_k) = sum_b C(a, b) D^b (q P_l)
     D^{a-b} P_k`` and likewise for ``q P_l``.
     """
@@ -225,7 +225,7 @@ def _leibniz_product(D, alphas):
 
 
 def _prepare(kernel, alphas, points, rule):
-    """``(closure, order, n_nodes, (harmonics, block))``; only rules that push
+    """``(closure, order, n_nodes, (harmonics, block))``. Only rules that push
     tangents through the Bessel contour (not ``"taylor"``) count them."""
     closure = lower_closure(alphas)
     tangents = 1 if rule == "taylor" else level_cost(level_plan(closure))
@@ -236,7 +236,7 @@ def _prepare(kernel, alphas, points, rule):
 def project_product(
     kernel, channels, lift, phase, depth_ref, s_depth, degrees, alphas, rule
 ):
-    """Product-cell route (see ``harmonic.py``); returns ``{(r, s): (I, V, P)}``."""
+    """Product-cell route (see ``harmonic.py``), returning ``{(r, s): (I, V, P)}``."""
     L_mu, L_eta = degrees
     support = jnp.asarray(channels.support, dtype=float)
     size = 2 * kernel.n_outer * kernel.n_inner
@@ -251,7 +251,7 @@ def project_product(
 
         def one(m):
             def nodes(z, start):
-                """Block of the cell nodes at ``lift(z)``; a slice, not a gather."""
+                """Block of the cell nodes at ``lift(z)``, a slice, not a gather."""
                 gamma, B = lift(z)
                 cells = product_cells(
                     m, gamma, B, nu_lo, nu_hi, kernel.n_outer, kernel.n_inner
@@ -332,7 +332,7 @@ def project_product(
             None,
             args,
         )
-    # grids[a] = (I, V (n_ch, L+1, L+1), P (n_ch, n_w, L+1, L+1)); the mu < 0 half:
+    # grids[a] = (I, V (n_ch, L+1, L+1), P (n_ch, n_w, L+1, L+1)). The mu < 0 half:
     # I, Q even and V odd under (mu, eta) -> (-mu, -eta).
     return {
         alpha: (
@@ -347,7 +347,7 @@ def project_product(
 def project_tensor(
     kernel, channels, lift, phase, depth_ref, s_depth, degrees, alphas, rule
 ):
-    """Tensor Gauss-Legendre route; fixed nodes, so only the streams carry ``z``."""
+    """Tensor Gauss-Legendre route. The nodes are fixed, so only the streams carry ``z``."""
     L_mu, L_eta = degrees
     x_mu, w_mu = leggauss(kernel.n_mu)
     x_eta, w_eta = leggauss(kernel.n_eta)

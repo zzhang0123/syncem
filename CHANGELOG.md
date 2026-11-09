@@ -24,6 +24,13 @@
   or narrow channels. The threshold is sampled (`docs/DESIGN.md`, Section
   6.1), not a bound.
 
+### Documentation
+
+- Docstrings and comments under `syncem/` are written without semicolons.
+  Clauses became separate sentences, and index notation such as
+  `(h; l,k; r,s,b)` is unchanged. No claim, error kind or manuscript
+  label changed.
+
 ## 0.7.0 (2026-11-09)
 
 ### Added

@@ -1,4 +1,4 @@
-"""Ultra-relativistic continuum kernel (private; re-exported by ``kernels``).
+"""Ultra-relativistic continuum kernel (private, re-exported by ``kernels``).
 
 LABEL: ``eq: directional continuum``, ``eq: channel kernel`` (channel integral
 of the continuum kernel).
@@ -32,7 +32,7 @@ from ._kernel_helpers import (
 )
 from .errors import ErrorTerm
 
-# Above this argument F and G are below 1e-300 (F ~ sqrt(x) exp(-x)); clamping
+# Above this argument F and G are below 1e-300 (F ~ sqrt(x) exp(-x)). Clamping
 # keeps the K-integral finite when B_perp -> 0 sends x -> inf.
 _X_CLAMP = 1e4
 
@@ -48,13 +48,13 @@ class ContinuumKernel(eqx.Module):
     ``required_closures = ("uniform_mu",)``, and the ``l > 0`` Legendre
     projections vanish. ``channel_modes`` sums ``w_n R_j(nu_n) K_S(nu_n)
     w_b(tau_n)`` over the channel's Gauss-Legendre nodes (the integral in
-    ``eq: channel kernel``); units erg/s/sr per electron for ``unit_peak``.
+    ``eq: channel kernel``), in erg/s/sr per electron for ``unit_peak``.
 
     ``x < x_min`` at a node with ``B_perp > 0`` is an ``equinox.error_if``
-    (``F`` has a divergent slope at zero); ``B_perp = 0`` gives zero kernel.
+    (``F`` has a divergent slope at zero), and ``B_perp = 0`` gives zero kernel.
     ``x`` is clamped at 1e4 where ``F, G < 1e-300``. ``n_nodes_F`` and
     ``tail_cutoff`` are the static ``F``/``G`` quadrature controls of
-    ``syncem.ultrarel``; :meth:`tail_bound` reports the finite-tail bound of
+    ``syncem.ultrarel``. :meth:`tail_bound` reports the finite-tail bound of
     that quadrature for the ``numerical`` slot. ``n_eta`` (static, keyword)
     is the Gauss-Legendre count of the ``eta`` projection.
 
@@ -64,12 +64,12 @@ class ContinuumKernel(eqx.Module):
     :meth:`eta_block` (``2 n_ch n_nu n_nodes_F`` values per node), and
     :meth:`samples_per_step` caps the samples of a caller that vmaps
     ``channel_modes`` (``direct_channel_average``). One ``eta`` node or one
-    sample is the floor. Forward tangents multiply the working set; nested
+    sample is the floor. Forward tangents multiply the working set, and nested
     ``jacfwd`` callers divide the budget with :meth:`for_tangents`
     (``build_basis`` does). Blocking changes only the summation order.
 
     Not certified: the discrepancy from the harmonic reference (``physical_error``
-    is ``unbounded`` unless ``E_phys`` is supplied; main.tex sec: ultrarelativistic
+    is ``unbounded`` unless ``E_phys`` is supplied, and main.tex sec: ultrarelativistic
     states no uniform bound), the channel quadrature error (``n_nu`` of the
     channels) and the ``F``/``G`` discretisation error (only the tail is bounded).
     """
@@ -133,7 +133,7 @@ class ContinuumKernel(eqx.Module):
 
     def for_tangents(self, tangents: int) -> "ContinuumKernel":
         """Copy with ``chunk_budget // tangents`` (at least one) for nested
-        ``jacfwd`` callers; summation order only."""
+        ``jacfwd`` callers. It changes the summation order only."""
         budget = max(1, self.chunk_budget // max(1, int(tangents)))
         return dataclasses.replace(self, chunk_budget=budget)
 
@@ -218,7 +218,7 @@ class ContinuumKernel(eqx.Module):
 
         L_mu, L_eta = index.truncation.L_mu, index.truncation.L_eta
         legendre = legendre_table(eta_nodes, L_eta)  # (n_eta, L_eta+1)
-        # (2k+1)/2 int K P_k deta; the mu projection is delta_{l0} (kernel is mu-free).
+        # (2k+1)/2 int K P_k deta. The mu projection is delta_{l0} (kernel is mu-free).
         k_weights = eta_weights[:, None] * legendre * (2 * jnp.arange(L_eta + 1) + 1)
         k_weights = k_weights / 2.0
 

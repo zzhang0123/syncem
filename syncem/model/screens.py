@@ -1,6 +1,6 @@
 """Non-Gaussian independent Faraday screens with exact characteristic functions.
 
-LABEL ``fig: screen shapes`` (closed forms in the Fig. 7 caption;
+LABEL ``fig: screen shapes`` (closed forms in the Fig. 7 caption,
 ``sec: independent screen limit``), used through
 ``eq: independent screen response``: for a depth distribution that is
 statistically independent of the emitting population, the observed complex
@@ -14,7 +14,7 @@ compared with ``GaussianScreen`` at identical first two moments:
 * ``LaplaceScreen``: symmetric, excess kurtosis 3,
   ``C = exp(i tau mean) / (1 + (tau sigma)^2 / 2)``.
 * ``GammaScreen``: shifted Gamma of shape ``k``, skewness ``sign * 2/sqrt(k)``,
-  excess kurtosis ``6/k``;
+  excess kurtosis ``6/k``,
   ``C = exp(i tau mean) exp(-i s t sqrt(k)) (1 - i s t / sqrt(k))^(-k)``,
   ``t = tau sigma``, ``s = sign``. At ``k = 4``, ``s = +1`` this is the
   manuscript's ``exp(-2 i t) (1 - i t/2)^(-4)``.
@@ -23,8 +23,8 @@ Both are routes of ``build_basis``/``direct_channel_average`` with
 ``depth_degree = 0``, exactly like ``GaussianScreen``. Each records the
 assumptions ``independent_screen`` and ``<shape>_screen`` with unbounded
 discrepancy: independence of screen and emitters and the screen shape are
-declared model inputs. Nothing here certifies either for a real sightline;
-the difference between a real population and the declared screen belongs in
+declared model inputs. Nothing here certifies either for a real sightline.
+The difference between a real population and the declared screen belongs in
 ``E_phys``, the ``[extension]`` physical-kernel discrepancy term of the error
 budget. Zero covariance between depth and emission does not justify the
 factorisation.
@@ -75,7 +75,7 @@ class LaplaceScreen(eqx.Module):
 
     ``w_0(tau) = exp(i tau mean) / (1 + (tau sigma)^2 / 2)``, shape ``(1, *tau.shape)``,
     ``tau`` in m^2. The density is ``exp(-sqrt(2)|x|)/sqrt(2)`` in
-    ``x = (depth - mean)/sigma``. ``depth_ref``/``s_depth`` are ignored; forces
+    ``x = (depth - mean)/sigma``. ``depth_ref``/``s_depth`` are ignored, and it forces
     ``max_b() == 0``. Records ``independent_screen`` and ``laplace_screen``
     (discrepancy unbounded). The shape is a declared input, not inferred.
     Not certified: independence of screen and emitters, and the Laplace shape
@@ -117,18 +117,18 @@ class LaplaceScreen(eqx.Module):
 class GammaScreen(eqx.Module):
     """Shifted Gamma depth density: ``depth = mean + sign sigma (Y - k)/sqrt(k)``.
 
-    ``Y ~ Gamma(k, 1)``; ``shape = k > 0`` and ``sign = +1`` or ``-1`` are
+    ``Y ~ Gamma(k, 1)``, and ``shape = k > 0`` and ``sign = +1`` or ``-1`` are
     static. The defaults ``k = 4``, ``sign = +1`` give the shifted-Gamma
-    screen of ``fig: screen shapes``; other ``shape`` and ``sign`` values are
+    screen of ``fig: screen shapes``. Other ``shape`` and ``sign`` values are
     ``[extension]``, and ``LABEL`` (an instance property) and the
     ``gamma_screen`` record then read ``GAMMA_EXTENSION_LABEL`` instead of
-    ``ILLUSTRATED_LABEL``. Mean ``mean``, standard deviation ``sigma`` [rad/m^2];
+    ``ILLUSTRATED_LABEL``. Mean ``mean``, standard deviation ``sigma`` [rad/m^2],
     skewness ``sign 2/sqrt(k)``, excess kurtosis ``6/k``.
     ``w_0 = exp(i tau mean) exp(-i s t sqrt(k)) (1 - i s t/sqrt(k))^(-k)``,
     ``t = tau sigma``, principal logarithm (``Re(1 - i s t/sqrt(k)) = 1 > 0``,
     so the branch is continuous in ``tau``). Shape ``(1, *tau.shape)``.
     Records ``independent_screen`` and ``gamma_screen`` (discrepancy
-    unbounded). ``depth_ref``/``s_depth`` are ignored; forces ``max_b() == 0``.
+    unbounded). ``depth_ref``/``s_depth`` are ignored, and it forces ``max_b() == 0``.
     Not certified: independence of screen and emitters, and the shifted-Gamma
     shape for any real sightline (see the module docstring).
     """

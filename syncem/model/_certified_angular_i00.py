@@ -47,7 +47,7 @@ from .phase import TaylorPhase
 
 @dataclass(frozen=True)
 class AngularI00Certificate:
-    """MP enclosure and error; optional derivative magnitudes use the same cells."""
+    """MP enclosure and error. Optional derivative magnitudes use the same cells."""
 
     interval: object
     absolute_error: float
@@ -143,7 +143,7 @@ def certify_angular_i00(
     with work counters. The returned MP interval must be rounded outward
     separately if its endpoints are published as binary64. The optional
     ``first_derivatives`` branch accumulates coarse derivative magnitudes
-    on those angular cells; it does not certify a parameter-domain remainder.
+    on those angular cells. It does not certify a parameter-domain remainder.
     """
     if not isinstance(channels, Channels) or channels.n_ch != 1:
         raise ValueError("angular I00 requires one Channels channel")

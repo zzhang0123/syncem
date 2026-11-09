@@ -5,19 +5,19 @@ LABEL: the ``[extension]`` truncation bound
 ``eq: channel residual average`` (``epsilon_{X,j}`` of
 ``eq: XV joint response`` for ``I, V``), with ``rho_ang`` bounding the
 angular remainder of ``eq: angular channel remainder``
-(``RemainderInputs.basis_remainder``, main-text layout); the inputs
+(``RemainderInputs.basis_remainder``, main-text layout). LABEL also covers the inputs
 ``depth_tail`` and ``intrinsic_residual`` of the ``[extension]`` depth-Taylor
 bound
 ``<|r_in|> + sum_a |c_a| tau_max^{L+1}/(L+1)! <|chi_a| |depth - depth_ref|^{L+1}>``
 of the residual (of the form of ``eq: channel residual average``, for the
-depth-degree set); the ``[extension]`` bound ``sigma_P sqrt(1 - |Phi_R|^2)``
+depth-degree set), the ``[extension]`` bound ``sigma_P sqrt(1 - |Phi_R|^2)``
 on the covariance omitted by an independent-screen factorisation
-(``screen_factorisation_bound``); the ``[extension]`` bound
+(``screen_factorisation_bound``), the ``[extension]`` bound
 ``sigma_F sqrt(1 - |m_phi|^2)`` on the covariance omitted by a constant
-circular moment (``azimuth_factorisation_bound``); and the ``[extension]``
+circular moment (``azimuth_factorisation_bound``) and the ``[extension]``
 depth-perturbation bound ``N_src tau_max <|K_P| |delta depth|>``
 (``depth_error_bound``, a rotation-angle error of the kind
-``sec: frequency order`` leaves unevaluated; implemented in
+``sec: frequency order`` leaves unevaluated, implemented in
 ``_depth_bound.py`` and re-exported here).
 
 Every helper returns an ``ErrorTerm`` with value shape ``(n_ch, 4)`` in the
@@ -25,16 +25,17 @@ Stokes order ``I, Q, U, V`` and the units of the amplitude times the
 per-electron kernel (erg/s/sr per electron when ``amplitude=1``). A missing
 input gives ``kind="unbounded"`` with the missing names in the note, never a
 zero. The polarised bounds control ``|P| = |Q + iU|`` and are placed in both
-the ``Q`` and ``U`` columns; ``I, V`` columns are zero for terms that act on
+the ``Q`` and ``U`` columns. ``I, V`` columns are zero for terms that act on
 the polarised channel only.
 
 Not certified: the truth of the supplied envelopes (``rho_ang``, ``H``,
-absolute moments, ``sigma``, ``|Phi|``), which are external inputs; sampling
-error of a discrete population; and, for ``depth_error_bound`` without an
-absolute channel sum, the gap between ``|H_P|`` and ``sum_m |Q_m R_j|``
-(kind ``estimate``); for the ``[extension]`` depth-degree layout
-``r+s <= N, b <= L`` without ``absolute_depth_coefficients``, the gap between
-``|c_a|`` and the absolute line sum (kind ``estimate``).
+absolute moments, ``sigma``, ``|Phi|``), which are external inputs, and the
+sampling error of a discrete population. Also not certified, with kind
+``estimate``: for ``depth_error_bound`` without an absolute channel sum,
+the gap between ``|H_P|`` and ``sum_m |Q_m R_j|``, and for the
+``[extension]`` depth-degree layout ``r+s <= N, b <= L`` without
+``absolute_depth_coefficients``, the gap between ``|c_a|`` and the
+absolute line sum.
 ``RemainderInputs.from_samples`` probes envelopes at finitely many points
 (``estimate``), not a supremum over the reference-to-support segments. A
 line-kernel basis whose channel smoothness is below ``N + 1`` has an
@@ -43,7 +44,7 @@ without a declared ``sup|R^(N+1)|`` (``derivative_bound``) the remainder is
 an ``estimate`` even from supplied envelopes. A capped truncation
 (``Truncation(max_orders=...)``) uses the lower-set margin form
 (``index.lower_set_margin``) with per-multi-index inputs ``margin_H``,
-``margin_moments``; the operator-norm inputs do not bound it.
+``margin_moments``. The operator-norm inputs do not bound it.
 """
 
 from __future__ import annotations
@@ -97,21 +98,21 @@ class RemainderInputs(eqx.Module):
     ``"bound"`` or ``"estimate"`` and labels the returned term.
     ``absolute_depth_coefficients`` ``(n_ch, n_a)`` (keyword addition) is
     ``sum_m |c_{a,m} R_j(nu_m)|`` over the lines of each channel
-    (``int |R_j c_a(nu)| dnu`` for a continuum); without it the depth term
+    (``int |R_j c_a(nu)| dnu`` for a continuum). Without it the depth term
     uses the modulus of the phased channel coefficient and is an
     ``estimate``. Capped truncations (keyword
     additions ``[extension]``) replace ``H`` and ``absolute_moments`` by
     ``margin_H`` ``(n_ch, 3, n_lk, n_m)``, the path supremum of
     ``|d^beta K_{X;lk}|`` for every ``beta`` of ``truncation.margin_rows()``
-    (``n_m`` rows; ``lower_set_margin`` gives the paths), and
-    ``margin_moments`` ``(n_lk, n_m)``, ``<|P_l P_k| |z^beta|>``; in the
+    (``n_m`` rows, with paths from ``lower_set_margin``), and
+    ``margin_moments`` ``(n_lk, n_m)``, ``<|P_l P_k| |z^beta|>``. In the
     ``[extension]`` depth-degree layout the ``P`` entries are the
     ``(z_gamma, z_B)`` derivatives at the emitter depth. All arrays are
     nonnegative. Units: ``rho_ang``, ``H`` and ``absolute_depth_coefficients``
     in the per-electron channel Stokes units of the basis (erg/s/sr or
     erg/s/sr/Hz), moments dimensionless. Assumes the
     supplied envelopes dominate the true remainder on the reference-to-sample
-    segments; the package does not verify supplied arrays, and probed
+    segments. The package does not verify supplied arrays, and probed
     envelopes (``from_samples``) are estimates at finitely many points.
     """
 
@@ -180,13 +181,13 @@ class RemainderInputs(eqx.Module):
     ) -> "RemainderInputs":
         """Probe the remainder inputs of ``basis`` on ``samples`` (kind ``estimate``).
 
-        ``kernel`` (keyword addition; the kernel that built ``basis``) is
+        ``kernel`` (keyword addition, the kernel that built ``basis``) is
         required for the ``"probe"`` envelopes. ``derivative_envelope``:
         ``"probe"`` takes the maximum over the probe points ``z = 0`` and
         ``t z_n`` (``t`` in ``segment_points``) of the Frobenius norm of the
         order-``N+1`` derivative tensor of each projected channel kernel
         in ``z_3 = (z_gamma, z_B, z_depth)`` (``exp(i tau depth) K_Q`` for
-        ``P``); an array ``(n_ch, 3, n_lk)`` is used as supplied. The
+        ``P``). An array ``(n_ch, 3, n_lk)`` is used as supplied. The
         derivatives come from ``kernel.angular_taylor`` plus one phase-weight
         pass per depth order for a kernel with ``derivatives="analytic"``,
         and from nested ``jacfwd`` otherwise (``_remainder_probe``).
@@ -194,32 +195,32 @@ class RemainderInputs(eqx.Module):
         ``basis_remainder`` is then unbounded), ``"probe"`` measures
         ``<|K_X - K_{X,L}|>`` on the samples with exact ``(gamma, B)``
         dependence, an array ``(n_ch, 3)`` is used as supplied. ``phase`` is
-        the phase route the probe describes; ``None`` (default) means
+        the phase route the probe describes. ``None`` (default) means
         ``basis.phase``, the route the basis uses (a basis without a ``phase``
         field falls back to the Taylor route). A ``TaylorPhase`` means the
-        exact per-emitter phase ``exp(i tau depth_n)``; a screen is used as is
+        exact per-emitter phase ``exp(i tau depth_n)``, and a screen is used as is
         (no depth dependence). Passing another route than ``basis.phase``
         makes the probed ``P`` inputs describe that route, not the basis.
-        ``absolute_moments`` are exact weighted sums; with ``depth_degree``
+        ``absolute_moments`` are exact weighted sums. With ``depth_degree``
         the inputs ``depth_tail`` and (when ``rho_ang`` is known)
         ``intrinsic_residual`` of the ``[extension]`` depth-Taylor bound are
         filled (``basis_remainder`` ignores ``depth_tail`` on a screen
         route). ``absolute_depth_coefficients`` is passed through. The
-        ``"probe"`` envelope differentiates to order ``N + 1``; it is refused
+        ``"probe"`` envelope differentiates to order ``N + 1``. It is refused
         (``ValueError``) unless
         ``N + 1`` is in ``basis.certified_orders``, the orders validated
         by finite-difference tests (0..3 on the harmonic kernel, so
-        ``N <= 2``; finite checks, not certificates). A supplied ``derivative_envelope`` needs no probe and is
+        ``N <= 2``, finite checks, not certificates). A supplied ``derivative_envelope`` needs no probe and is
         not refused. ``kind`` is ``"bound"`` only when both envelopes are
         supplied arrays. For a capped truncation the probe fills ``margin_H``
         (maximum modulus of ``d^beta`` at ``p_k(t)``, ``t`` in ``{0} union
-        segment_points``; every order ``|beta|`` must be in
+        segment_points``, and every order ``|beta|`` must be in
         ``certified_orders``), ``margin_moments`` and, with ``depth_degree``,
-        the margin ``intrinsic_residual``; a supplied ``derivative_envelope``
-        then has shape ``(n_ch, 3, n_lk, n_m)``; ``H`` and
+        the margin ``intrinsic_residual``. A supplied ``derivative_envelope``
+        then has shape ``(n_ch, 3, n_lk, n_m)``, and ``H`` and
         ``absolute_moments`` stay ``None``.
         Frobenius norms at finitely many points are not a supremum over the
-        reference-to-support segments; sampling error is not assessed.
+        reference-to-support segments, and sampling error is not assessed.
         """
         index = basis.index
         N, capped = index.truncation.N, index.truncation.is_capped()
@@ -305,13 +306,13 @@ class RemainderInputs(eqx.Module):
         ``amplitude [rho_ang + sum_lk H_lk absolute_lk / (N+1)!]`` with
         absolute-moment row 0 for ``I, V`` and row 1 for ``P``.
         ``[extension]`` depth-degree layout ``r+s <= N, b <= L``: ``I, V`` as
-        above; on a Taylor phase route ``P`` is
+        above. On a Taylor phase route ``P`` is
         ``amplitude [intrinsic_residual + tau_max^{L+1}/(L+1)! sum_a A_a
         depth_tail_a]`` with ``tau_max = 2 (c/nu_lo)^2`` per channel and
         ``A`` either ``absolute_depth_coefficients`` or ``|c_a|`` from
         ``depth_coefficients`` ``(n_ch, n_a)``, the complex ``b = 0``
         coefficients (keyword addition). ``|c_a|`` is the modulus of the phased
-        line sum, which can be below the absolute line sum; that route returns
+        line sum, which can be below the absolute line sum, and that route returns
         kind ``estimate``. On a screen route the depth is not Taylor-expanded:
         ``P = amplitude intrinsic_residual`` and the emitter-depth/screen
         mismatch belongs to the ``independent_screen`` assumption term.
@@ -396,7 +397,7 @@ class RemainderInputs(eqx.Module):
         return residual
 
     def _operator_norm(self, basis):
-        """``(I, P, V, note)`` of the uncapped (operator-norm) form; shape checks."""
+        """``(I, P, V, note)`` of the uncapped (operator-norm) form, with shape checks."""
         n_ch, n_lk, N = basis.channels.n_ch, basis.index.n_lk, basis.index.truncation.N
         rho, H, absolute = self.rho_ang, self.H, self.absolute_moments
         if rho.shape != (n_ch, 3):

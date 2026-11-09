@@ -2,7 +2,7 @@
 
 ``depth_error_bound`` implements the ``[extension]`` depth-perturbation bound
 ``N_src tau_max <|K_P| |delta depth|>``, a rotation-angle error of the kind
-``sec: frequency order`` leaves unevaluated; its term is tagged ``E_phys``. It
+``sec: frequency order`` leaves unevaluated. Its term is tagged ``E_phys``. It
 is re-exported by ``syncem.model.bounds``, whose module docstring states the
 units, shapes and what is not certified.
 """
@@ -31,7 +31,7 @@ def depth_error_bound(
     """``amplitude tau_max <|K_P| |delta depth|>`` per channel (``[extension]`` depth perturbation).
 
     ``delta_depth`` (rad/m^2) is a scalar or ``(S,)`` per-emitter depth
-    error; ``tau_max = 2 (c/nu_lo)^2`` is the largest phase coordinate on
+    error, and ``tau_max = 2 (c/nu_lo)^2`` is the largest phase coordinate on
     each channel support. ``|K_P|`` is ``|Modes.P[0]|`` from
     ``kernel.channel_modes`` at each sample with ``depth_ref`` set to the
     sample's own depth and ``phase`` passed through (``None`` selects the
@@ -40,9 +40,9 @@ def depth_error_bound(
     ``absolute_channel_sum`` ``(S, n_ch)`` (``sum_m |Q_m R_j|`` or
     ``int |R_j K_P| dnu`` per sample) is supplied, which gives ``"bound"``.
     Zeros in ``I, V``. Samples are mapped in batches of ``batch_size``.
-    Units: ``amplitude`` times the per-electron channel Stokes units;
+    Units: ``amplitude`` times the per-electron channel Stokes units.
     ``tau_max`` in m^2 times ``delta_depth`` in rad/m^2 is a phase. Assumes
-    the per-emitter depth error is bounded by ``delta_depth``; not
+    the per-emitter depth error is bounded by ``delta_depth``. Not
     certified: that bound, and the sampling of the population.
     """
     w = samples.normalised_weights()

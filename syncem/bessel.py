@@ -7,18 +7,18 @@ the integral is invariant under that shift, so this differentiates the same
 analytic function rather than the arbitrary contour-selection algorithm.
 
 For a concrete order the default grid resolves ``|x| <= n`` (the harmonic domain).
-For a traced order the default is 2048 nodes; choose a larger static ``n_nodes``
+For a traced order the default is 2048 nodes. Choose a larger static ``n_nodes``
 when needed. Calls outside ``|n| + |x| <= n_nodes/2`` return NaN, rather than silently
 aliasing unresolved oscillations. This conservative resolution guard is not a
 roundoff or quadrature-error certificate. Compare increased resolution and an
 independent reference for a new domain, including the required derivatives.
 
-K uses one continuous cosh integral; there is no asymptotic switch at x=0.01.
+K uses one continuous cosh integral, with no asymptotic switch at x=0.01.
 Its finite upper limit has the explicit bound returned by ``bessel_kn_tail_bound``.
 The quadrature error is separate. Finite independent tests cover orders 0, 2/3,
-5/3 over x=1e-12..100 and integer J through n=3200; they do not establish uniform
-accuracy outside those cases. Order, node count and tail cutoff are static;
-positive arguments are differentiated. SciPy is used only in independent tests.
+5/3 over x=1e-12..100 and integer J through n=3200. They do not establish uniform
+accuracy outside those cases. Order, node count and tail cutoff are static.
+Positive arguments are differentiated. SciPy is used only in independent tests.
 """
 
 from __future__ import annotations
@@ -65,11 +65,11 @@ def _j_resolution(n, x, n_nodes):
 
 
 def bessel_jn_and_prime(n, x, *, n_nodes=None):
-    """Return integer-order (J_n(x), J_n'(x)); broadcast n and x.
+    """Return integer-order (J_n(x), J_n'(x)), broadcasting n and x.
 
     ``n >= 0`` must be integral. For JIT with a varying order, ``n_nodes`` is
-    a static resolution choice; unresolved inputs are NaN. At x=0 the analytic
-    function values are supplied; use a nonzero argument for autodiff.
+    a static resolution choice. Unresolved inputs are NaN. At x=0 the analytic
+    function values are supplied. Use a nonzero argument for autodiff.
     """
     count = _j_resolution(n, x, n_nodes)
     sin_t, cos_t, t = _periodic_grid(count)
@@ -113,7 +113,7 @@ def bessel_jn_and_prime(n, x, *, n_nodes=None):
 
 
 def bessel_jn(n, x, *, n_nodes=None):
-    """Integer J_n; see ``bessel_jn_and_prime`` for the resolution contract."""
+    """Integer J_n, with the resolution contract of ``bessel_jn_and_prime``."""
     return bessel_jn_and_prime(n, x, n_nodes=n_nodes)[0]
 
 
@@ -123,7 +123,7 @@ def bessel_jn_prime(n, x, *, n_nodes=None):
 
 
 def bessel_jn_neighbours(n, x, *, n_nodes=None):
-    """``(J_{n-1}(x), J_{n+1}(x), J_n'(x))`` from one quadrature; broadcast n and x.
+    """``(J_{n-1}(x), J_{n+1}(x), J_n'(x))`` from one quadrature, broadcasting n and x.
 
     Dimensionless. ``n >= 1`` must be integral (traced floats allowed, as in
     ``bessel_jn_and_prime``). One periodic trapezoidal rule on the contour
@@ -136,7 +136,7 @@ def bessel_jn_neighbours(n, x, *, n_nodes=None):
     ``cos(phi)``, ``sin(phi)`` and ``E`` (three transcendental evaluations per
     node instead of nine). The shift identity is exact for every integer
     order (the integrand is entire and ``2 pi``-periodic), so no fallback to
-    separate contours is needed; the precision of the neighbours on the
+    separate contours is needed. The precision of the neighbours on the
     order-``n`` contour is checked, not bounded, against SciPy over the
     harmonic resolution classes ``n <= 1008``, ``x`` from ``1e-8`` through
     the transition ``x ~ n`` to the resolution edge (relative differences
@@ -144,9 +144,9 @@ def bessel_jn_neighbours(n, x, *, n_nodes=None):
 
     Resolution guard: ``n + 1 + |x| <= n_nodes/2`` (the default count
     resolves ``|x| <= n + 1`` for a concrete order and is 2048 for a traced
-    one); unresolved inputs, ``n < 1`` and non-integral orders are NaN. This
+    one). Unresolved inputs, ``n < 1`` and non-integral orders are NaN. This
     guard is not an accuracy certificate. The contour is held fixed under
-    autodiff (see the module docstring); at ``x = 0`` the analytic values are
+    autodiff (see the module docstring). At ``x = 0`` the analytic values are
     returned with a zero derivative. ``bessel_jn_and_prime`` is unchanged.
 
     Autodiff accuracy: ``jax.jacfwd``/``jax.grad`` through this quadrature
@@ -155,13 +155,13 @@ def bessel_jn_neighbours(n, x, *, n_nodes=None):
     grows by about ``(2n/|x|)^k`` at derivative order ``k``. At ``n = 1``,
     ``x = 1e-6`` (default count, 128 nodes) the third derivatives of
     ``J_0`` and ``J_1'`` come out as -83 and 128 against SciPy's 3.8e-7
-    and 3.1e-7; the second derivative of ``J_0`` is off by 1.6e-4. For
+    and 3.1e-7, and the second derivative of ``J_0`` is off by 1.6e-4. For
     derivatives use the order recurrence ``J_n' = (J_{n-1} - J_{n+1})/2``
     on the same contour (``syncem.model._bessel_recurrence``:
     ``neighbours_recurrence``, ``derivative_coefficients``), which
-    ``HarmonicKernel(derivatives="analytic")`` uses; at the same point it
+    ``HarmonicKernel(derivatives="analytic")`` uses. At the same point it
     agrees with SciPy to 1e-15 through the third derivative
-    (``tests/test_bessel_autodiff_accuracy.py``; checked, not bounded).
+    (checked, not bounded, in ``tests/test_bessel_autodiff_accuracy.py``).
     """
     top = n
     if n_nodes is None and isinstance(n, (numbers.Real, np.ndarray, list, tuple)):
@@ -253,7 +253,7 @@ def _modified_tail_bound(nu, x, *, divide_cosh=False, tail_cutoff=50.0):
 
 
 def bessel_kn(nu, x, *, n_nodes=128, tail_cutoff=50.0):
-    """K_nu(x), x > 0; nonnegative static nu is sufficient for current uses.
+    """K_nu(x) for x > 0. Nonnegative static nu is sufficient for current uses.
 
     A continuous cosh integral with a parameter-dependent upper limit is used.
     K_nu(0)=infinity and negative x returns NaN. Node count and tail_cutoff must

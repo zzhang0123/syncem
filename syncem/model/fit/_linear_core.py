@@ -1,14 +1,14 @@
 """Solver and bias bound of :func:`~syncem.model.fit.linear.fit_linear` (private).
 
 ``solve`` is the rank-revealing least-squares solve on the column-equilibrated
-whitened design; ``bias_bound`` is ``|K| |delta|`` (``eq: estimator bias``)
+whitened design. ``bias_bound`` is ``|K| |delta|`` (``eq: estimator bias``)
 with the channel-envelope term of ``sec: frequency order`` and the
-response-error term stated after ``eq: chromatic beam response``;
+response-error term stated after ``eq: chromatic beam response``.
 ``linearised_bias`` is the same quantity for ``fit_bfgs`` with
 ``K = J^+ L^-1`` from the whitened Jacobian at the optimum (an ``estimate``:
-the model is linearised there);
+the model is linearised there).
 ``inflated`` builds the noise model of ``discrepancy_policy="inflate"``.
-Nothing here is public API; the contracts are stated in the ``fit_linear``
+Nothing here is public API. The contracts are stated in the ``fit_linear``
 and ``fit/result.py`` module docstrings.
 """
 
@@ -47,10 +47,10 @@ def solve(G, target, tol):
 
     The rank counts singular values of ``G D`` above ``tol`` times the
     largest, so it does not depend on the units of the unknowns.
-    ``pinv = D (G D)^+`` (equal to ``G^+`` at full rank; the solution of
-    minimum equilibrated norm ``||D^-1 u||`` otherwise); the covariance is
-    ``D (D G^T G D)^-1 D = (G^T G)^-1`` at full rank and ``None`` otherwise;
-    the Fisher matrix is ``G^T G``.
+    ``pinv = D (G D)^+`` (equal to ``G^+`` at full rank, and the solution of
+    minimum equilibrated norm ``||D^-1 u||`` otherwise). The covariance is
+    ``D (D G^T G D)^-1 D = (G^T G)^-1`` at full rank and ``None`` otherwise.
+    The Fisher matrix is ``G^T G``.
     """
     Ge, scales = equilibrate(G)
     U, s, Vt = jnp.linalg.svd(Ge, full_matrices=False)
@@ -78,7 +78,7 @@ def _stokes_envelope(data):
 
 
 def _response_part(data, stokes_hat):
-    """``(|delta R| (|S_hat| + E) on the kept rows | None, note)``; ``None`` if exact."""
+    """``(|delta R| (|S_hat| + E) on the kept rows | None, note)``, with ``None`` if exact."""
     dR = jnp.abs(jnp.asarray(data.response_uncertainty))
     if not float(jnp.max(dR)) > 0.0:
         return None, "; response_uncertainty declared zero (R exact)"
@@ -147,7 +147,7 @@ def linearised_bias(J, summary, data, stokes_hat):
     so the whitened model Jacobian is ``-J`` and ``K = (-J)^+ L^-1``, the
     Gauss-Newton response of the optimum to a data perturbation (prior and
     log-Jacobian curvature excluded). ``delta``, the response term and the
-    ``unbounded`` cases follow :func:`bias_bound` with ``G = -J``; a valued
+    ``unbounded`` cases follow :func:`bias_bound` with ``G = -J``. A valued
     result is downgraded to ``estimate`` because the model is linearised.
     """
     _, Linv = data.whitened()

@@ -8,15 +8,15 @@ A :class:`CoefficientLayout` extends the ``n_real`` public slots of ``m`` by
 the ``len(index.h0_ext)`` real ``M0`` rows with ``b >= 1`` (``include_ext``),
 giving the ``n_full`` coordinates ``a = A (m, m0_ext)`` with ``A = N_src/N_*``
 the source-column ratio. Slots ``0 .. n_real-1`` are ``index.entries()``
-unchanged; slot ``n_real + i`` is ``h0_ext[i]``. The extension slots and every
+unchanged, and slot ``n_real + i`` is ``h0_ext[i]``. The extension slots and every
 row whose basis vanishes by ``eq: angular parity`` (an ``h0`` row with
 neither ``I`` nor ``V`` modelled, an ``h2`` row with ``l + k`` odd) have an
-identically zero response column; they are listed in ``structural_zero`` with
+identically zero response column. They are listed in ``structural_zero`` with
 a reason each. :meth:`CoefficientLayout.pad` appends zero columns to a
 ``(n_rows, n_real)`` response, giving ``(n_rows, n_full)``.
 
 Units: ``a`` is dimensionless (``z``-moments times the dimensionless source
-ratio); :meth:`CoefficientLayout.to_raw` multiplies slot ``(r, s, b)`` by
+ratio). :meth:`CoefficientLayout.to_raw` multiplies slot ``(r, s, b)`` by
 ``s_gamma^r s_B^s s_depth^b`` (the raw displacement moments of the
 manuscript, in the units of those scales).
 
@@ -26,7 +26,7 @@ declared ``Support`` from the reference. It holds because every moment is a
 weighted average of ``P_l(mu) P_k(eta) z^...`` (times ``exp(2 i phi)`` for
 ``M2``) with ``|P_l| <= 1``. Not certified: that the population lies inside
 the declared ``Support`` (the excluded tail is not covered) or that
-``amplitude_bound`` bounds the actual source-column ratio; both are caller
+``amplitude_bound`` bounds the actual source-column ratio. Both are caller
 declarations. Everything here is eager NumPy on concrete values.
 """
 
@@ -84,7 +84,7 @@ def _structural(index, components):
 
 
 class CoefficientLayout(eqx.Module):
-    """Full coordinates ``a = A (m, m0_ext)`` of a reduction; all fields static.
+    """Full coordinates ``a = A (m, m0_ext)`` of a reduction, with all fields static.
 
     ``index`` (``MomentIndex``), ``include_ext``, ``entries`` (one
     ``Entry`` per slot, ``n_full``), ``structural_zero`` (slots with an
@@ -107,7 +107,7 @@ class CoefficientLayout(eqx.Module):
     def build(
         cls, index, reference, *, components=None, include_ext=True
     ) -> "CoefficientLayout":
-        """Layout of ``index`` at ``reference``; ``components`` defaults to ``index.components``."""
+        """Layout of ``index`` at ``reference``. ``components`` defaults to ``index.components``."""
         if not isinstance(index, MomentIndex):
             raise ValueError("index must be a MomentIndex")
         if not isinstance(include_ext, bool):
@@ -231,9 +231,9 @@ def coefficient_bounds(layout, support, *, amplitude_bound) -> ErrorTerm:
     """``|a_j| <= A_max z_g^r z_B^s z_d^b`` over ``(n_full,)``, a ``bound`` (module docstring).
 
     ``support`` is a ``Support`` (``None`` or a missing or infinite interval
-    gives ``unbounded``); ``amplitude_bound`` is the declared maximum of the
+    gives ``unbounded``). ``amplitude_bound`` is the declared maximum of the
     source-column ratio ``A`` (not a positive finite float: ``unbounded``).
-    Holds for electrons inside the declared support only; not certified:
+    Holds for electrons inside the declared support only. Not certified:
     the excluded tail and both declarations.
     """
     if not isinstance(layout, CoefficientLayout):

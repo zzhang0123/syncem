@@ -16,7 +16,7 @@ on the probability simplex with the amplitude profiled out at every step:
 chi-square at the profiled amplitude, the relative step ``eta`` grown on an
 accepted step and halved on a rejected one. It keeps ``w >= 0`` and
 ``sum w = 1`` at every iterate (a zero weight stays zero). Convergence is
-judged by the simplex stationarity residual; nothing here certifies that
+judged by the simplex stationarity residual. Nothing here certifies that
 the optimum is reached to a given accuracy beyond the reported flag.
 """
 
@@ -121,16 +121,16 @@ def simplex_fit(forward, adjoint, target, w0, *, iters, step, tol):
     """Monotone exponentiated-gradient fit of ``0.5 ||target - A forward(w)||^2``.
 
     ``forward(w) -> (n,)`` is linear in ``w`` and ``adjoint`` is its
-    transpose; ``A`` is profiled at every iterate (``<Gw, t>/<Gw, Gw>``) and
+    transpose. ``A`` is profiled at every iterate (``<Gw, t>/<Gw, Gw>``) and
     kept at its previous positive value when the profile is not positive,
     so the joint objective in ``(w, A)`` never increases. The update is
     ``w <- softmax(log w - eta g)`` with ``g`` the gradient at the profiled
-    amplitude; ``eta`` starts at ``step / (max g0 - min g0)`` (so ``step`` is
+    amplitude. ``eta`` starts at ``step / (max g0 - min g0)`` (so ``step`` is
     a fraction of the initial gradient range), grows by ``STEP_GROW`` after
     an accepted step and halves after a rejected one (``f`` may never
     increase). Returns ``(w, A, fun, n_iter, converged, kkt)`` with ``fun``
     the final half chi-square and ``kkt`` the simplex stationarity residual
-    ``max_i w_i |g_i - <g, w>| / (1 + max_i |g_i|)``; ``converged`` is
+    ``max_i w_i |g_i - <g, w>| / (1 + max_i |g_i|)``. ``converged`` is
     ``kkt <= tol``. The loop also stops when ``eta`` underflows
     ``STEP_MIN`` (no accepted step possible in floating point).
     """

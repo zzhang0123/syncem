@@ -19,7 +19,7 @@ def thin_limit(eps, ds):
 def self_absorbed_source_function(nu, p, B):
     """Power-law synchrotron source function S_nu ~ nu^(5/2) B^(-1/2).
 
-    Up to an overall constant; ``p`` only affects the (omitted) prefactor, not
+    Up to an overall constant. ``p`` only affects the (omitted) prefactor, not
     the scaling.
     """
     return nu**2.5 * B**-0.5
@@ -38,7 +38,7 @@ def power_law_absorption(nu, p, B):
 def uniform_source_intensity(nu, p, B, L, eps0=1.0, alpha0=1.0):
     """I_nu = S_nu (1 - e^-tau) for a uniform source of depth L.
 
-    Returns I_nu up to overall scale; ``eps0``/``alpha0`` set the relative
+    Returns I_nu up to overall scale. ``eps0``/``alpha0`` set the relative
     emissivity/absorption amplitude at nu=1.
     """
     eps = eps0 * power_law_emissivity(nu, p, B)
@@ -50,7 +50,7 @@ def uniform_source_intensity(nu, p, B, L, eps0=1.0, alpha0=1.0):
 def thin_rotation_depolarisation(Q0, U0, mean_rm, var_rm, lam):
     """Thin + Faraday rotation: complex polarisation after Gaussian RM.
 
-    Wrapper around :func:`syncem.rm.burn_depolarisation`; returns (Q, U).
+    Wrapper around :func:`syncem.rm.burn_depolarisation` that returns (Q, U).
     """
     P = burn_depolarisation(Q0 + 1j * U0, mean_rm, var_rm, lam)
     return P.real, P.imag

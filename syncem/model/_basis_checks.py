@@ -2,7 +2,7 @@
 
 Split out of ``syncem/model/basis.py`` to keep that file under 400 lines.
 Every check here runs on concrete inputs with NumPy and raises ``ValueError``
-at call time; nothing here is traced. See ``syncem.model.basis`` for the
+at call time. Nothing here is traced. See ``syncem.model.basis`` for the
 contract these checks enforce and what it does not certify.
 """
 
@@ -82,7 +82,7 @@ def check_reference(reference, support, notes):
 def resolve_cross_route(cross_route, convergence) -> bool:
     """Whether ``build_basis`` runs the product-vs-tensor route check.
 
-    ``None`` (default) runs it only with ``convergence="full"``; ``True`` or
+    ``None`` (default) runs it only with ``convergence="full"``, and ``True`` or
     ``False`` decide explicitly. ``ValueError`` for a non-boolean value or
     ``cross_route=True`` with ``convergence=False``.
     """
@@ -223,7 +223,7 @@ def truncation_record(index) -> tuple:
     ``max_orders`` is ``Truncation.max_orders``: ``None`` for the uncapped
     cutoff (non-binding caps normalise to ``None``) or the binding caps
     ``(N_gamma, N_B, N_depth)`` with ``None`` for an uncapped variable, so a
-    capped (lower-set) layout is identifiable from the record alone; in
+    capped (lower-set) layout is identifiable from the record alone. In
     strict JSON it is ``null`` or a three-entry list.
     """
     t = index.truncation

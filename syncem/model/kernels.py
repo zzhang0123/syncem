@@ -12,7 +12,7 @@ reference kernel. Shared algebra lives in ``_kernel_helpers.py``.
 
 A kernel returns :class:`Modes` at a scalar ``(gamma, B, mu, eta)`` point:
 ``I``, ``V`` of shape ``(n_ch,)`` in erg/s/sr per electron (band-integrated
-against the dimensionless ``unit_peak`` response; per Hz for
+against the dimensionless ``unit_peak`` response, per Hz for
 ``unit_integral``), and ``P`` of shape ``(n_weights, n_ch)`` complex, the
 natural-basis ``Q`` modes multiplied by the phase weights ``w_b(tau_m)`` of
 ``syncem.model.phase`` (``tau = 2 (C_SI_M/nu)^2`` in m^2) and excluding the
@@ -21,7 +21,7 @@ projections ``(2l+1)(2k+1)/4 int int (.) P_l(mu) P_k(eta) dmu deta`` for the
 ``(l, k)`` pairs of ``MomentIndex.pairs``. Units: Gauss, Hz, rad/m^2.
 
 ``phase`` may be ``None`` (one unit weight, no Faraday phase) and
-``depth_ref``/``s_depth`` default to ``0``/``1``; these keyword defaults are
+``depth_ref``/``s_depth`` default to ``0``/``1``. These keyword defaults are
 additive to the frozen interface.
 
 Not certified here: the physical adequacy of any kernel (``physical_error``
@@ -60,11 +60,11 @@ from .errors import ErrorTerm
 class KernelModel(Protocol):
     """Contract every kernel implements (see the module docstring for units).
 
-    ``channel_modes`` returns :class:`Modes` at one scalar point;
+    ``channel_modes`` returns :class:`Modes` at one scalar point,
     ``angular_projection`` returns :class:`ProjectedModes` for the pairs of
-    the index; ``physical_error`` and ``truncation_error`` return
+    the index, and ``physical_error`` and ``truncation_error`` return
     ``ErrorTerm`` ``(n_ch, 4)`` per electron. Each kernel states its own
-    assumptions in ``required_closures`` and ``LABEL``; what it does not
+    assumptions in ``required_closures`` and ``LABEL``. What it does not
     certify is in its docstring (``physical_error`` is unbounded unless
     declared).
     """
@@ -113,14 +113,14 @@ def required_m_max(support, channels) -> int:
     ``harmonic_cutoff``).
 
     ``support.gamma = (lo, hi)`` and ``support.B = (lo, hi)`` (Gauss) must be
-    concrete; ``nu_B,min = e B_min / (2 pi gamma_max m_e c)``. Eager only.
+    concrete. ``nu_B,min = e B_min / (2 pi gamma_max m_e c)``. Eager only.
     Lines with ``m`` above this value have zero channel weight because
-    ``nu_m = m nu_B / D`` with ``D >= 1 - beta``; the result is a support
+    ``nu_m = m nu_B / D`` with ``D >= 1 - beta``. The result is a support
     statement, not a tail estimate. ``ceil`` can be conservative by one: the
     returned harmonic itself need not meet a channel. Units: Hz for
-    frequencies, Gauss for ``B``; the result is a dimensionless integer.
+    frequencies, Gauss for ``B``. The result is a dimensionless integer.
     Assumes the population lies inside ``support`` (checked against concrete
-    samples by ``HarmonicKernel.truncation_error``, ``_support_check``); not
+    samples by ``HarmonicKernel.truncation_error``, ``_support_check``). Not
     certified: the support declaration itself when no samples are supplied.
     """
     gamma_max = _concrete(support.gamma[1], "support.gamma[1]")

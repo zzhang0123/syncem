@@ -1,6 +1,6 @@
 """Static table construction and closure evaluation for ``ParameterMap``.
 
-Private helper of :mod:`syncem.model.assumptions`; nothing here is public API.
+Private helper of :mod:`syncem.model.assumptions`. Nothing here is public API.
 
 Rows are 6-tuples ``(h, l, k, r, s, b)`` with ``h in {0, 2}`` the azimuthal
 weight. The variables ``VARS = (gamma, B, mu, eta, phi, depth)`` carry the
@@ -10,25 +10,25 @@ the average of the product monomial
 (``eq: explicit joint moments`` in the dimensionless displacements, the
 offsets of ``eq: channel basis expansion`` divided by fixed positive scales,
 ``[extension]``). A factorisation (partition of ``VARS``) turns each row into
-a product of group marginals; this module enumerates the distinct
+a product of group marginals. This module enumerates the distinct
 nonconstant projections of the rows of ``m`` (``h0`` and ``h2``) onto every
 group and the static gathers that rebuild every retained row, including the
 ``h0_ext`` rows when their projections are covered.
 
 Closure tables are evaluated in the same displacement coordinates: depth
 closures take their hyper-parameters in rad/m^2 and are converted with the
-reference ``depth_ref`` and ``s_depth``; a ``delta`` closure takes raw values
+reference ``depth_ref`` and ``s_depth``, and a ``delta`` closure takes raw values
 (``gamma``, Gauss, cosines, radians, rad/m^2). The uniform closures
 (``UNIFORM_KINDS``: ``uniform_mu``, ``uniform_eta``, ``uniform_phi``) close a
 singleton group with a uniform marginal and drop the rows with a nonzero
 exponent on it (``l > 0``, ``k > 0``, ``h = 2``). Symmetry closures
 (``SYMMETRY_KINDS``) have the empty group ``()``: they constrain the joint
 measure, close no marginal, and only drop rows (``pitch_symmetric``: odd
-``l``; ``field_reversal_symmetric``: odd ``l`` or odd ``k`` when ``mu`` and
-``eta`` lie in different groups, else odd ``l + k``; see :func:`drops_row`);
-a ``fixed_table`` under a symmetry takes the full table and ignores the
+``l``, ``field_reversal_symmetric``: odd ``l`` or odd ``k`` when ``mu`` and
+``eta`` lie in different groups, else odd ``l + k``, see :func:`drops_row`).
+A ``fixed_table`` under a symmetry takes the full table and ignores the
 entries the symmetry drops (:func:`symmetrised_tables`).
-Nothing here certifies that a closure describes the population; it only
+Nothing here certifies that a closure describes the population. It only
 evaluates the closure's moments.
 """
 
@@ -66,7 +66,7 @@ FLIPPED = {"pitch_symmetric": ("mu",), "field_reversal_symmetric": ("mu", "eta")
 def drops_row(kind, row, groups=(VARS,)):
     """True when a closure of ``kind`` sets the 6-tuple ``row`` to zero exactly.
 
-    ``uniform_mu``: ``l > 0``; ``uniform_eta``: ``k > 0``; ``uniform_phi``:
+    ``uniform_mu``: ``l > 0``, ``uniform_eta``: ``k > 0``, ``uniform_phi``:
     ``h = 2`` (a uniform marginal of a variable in its own group zeroes every
     nonconstant Legendre or circular factor of it). A symmetry ``g`` acts
     variable by variable: ``pitch_symmetric`` flips ``mu``,
@@ -78,7 +78,7 @@ def drops_row(kind, row, groups=(VARS,)):
     ``p o g = p`` holds iff every marginal is invariant. By ``P_l(-x) =
     (-1)^l P_l(x)`` a group factor whose flipped exponents have odd sum is
     then zero, and so is the row. With one group this is the joint rule
-    (odd ``l``; odd ``l + k``); with ``mu`` and ``eta`` in different groups
+    (odd ``l``, odd ``l + k``). With ``mu`` and ``eta`` in different groups
     field reversal drops odd ``l`` and odd ``k`` rows, so no free table keeps
     ``<P_odd(mu) ...>`` or ``<P_odd(eta) ...>``.
     """
@@ -105,7 +105,7 @@ def project_row(row, group):
 def canonical_partition(groups):
     """Validate a partition of ``VARS`` and return it in canonical order.
 
-    Variables inside a group follow ``VARS``; groups are ordered by their
+    Variables inside a group follow ``VARS``, and groups are ordered by their
     first variable. Raises ``ValueError`` for anything that is not a
     partition of ``VARS``.
     """
@@ -147,7 +147,7 @@ def build_tables(index, groups, closures):
     dropped or not covered), the static keep mask (rows whose closed factor
     is exactly zero, ``l > 0`` under ``uniform_mu``, ``k > 0`` under
     ``uniform_eta`` and ``h = 2`` under ``uniform_phi``, are dropped before
-    the tables are formed; also the rows with an odd group factor under the
+    the tables are formed, as are the rows with an odd group factor under the
     symmetry closures, see :func:`drops_row`) and whether every kept
     ``h0_ext`` row is covered.
     """
@@ -186,10 +186,10 @@ def symmetrised_tables(index, groups, closures, spec):
     A closure combined with a symmetry closure represents its symmetrised
     marginal. A ``fixed_table`` takes its table over the group's ``n_full``
     entries in the same partition without the symmetry closures (the shape
-    it has on the map that ``assume`` combines with the symmetry); only the
+    it has on the map that ``assume`` combines with the symmetry). Only the
     positions ``kept`` (those of ``spec``) enter. The others are ignored:
     entries the symmetry sets to zero (odd flipped exponents on the group,
-    :func:`drops_row`) and any entry no kept row uses; ``note`` names them
+    :func:`drops_row`) and any entry no kept row uses. ``note`` names them
     for errors and the record. ``None`` for other closures and when no entry
     is dropped.
     """
@@ -258,7 +258,7 @@ def variable_factor(variable, exponent, value, reference):
 
 
 def validate_closure(closure, groups, index):
-    """Static checks of a closure against the partition; ``ValueError`` on failure."""
+    """Static checks of a closure against the partition, with ``ValueError`` on failure."""
     if closure.kind not in CLOSURE_KINDS:
         raise ValueError(
             f"closure kind must be one of {CLOSURE_KINDS}, got {closure.kind!r}"

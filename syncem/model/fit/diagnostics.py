@@ -1,7 +1,7 @@
 """Identifiability and feasibility diagnostics for spectral fits.
 
 LABEL: ``eq: svd estimator`` (the SVD of the whitened design
-``L^-1 R C [c | P]``; directions it does not resolve are not measured, as
+``L^-1 R C [c | P]``, whose unresolved directions are not measured, as
 stated after ``eq: estimator bias``) and ``sec: finite joint response``
 (necessary conditions for ``m`` to be the moments of one nonnegative,
 normalised distribution on the declared support). ``[extension]``: the
@@ -10,12 +10,12 @@ space, and the Jacobian columns of a nonlinear map at a supplied ``theta``.
 
 ``identifiability`` takes the SVD of the whitened design restricted to the
 free directions of a ``ParameterMap``: for an affine map ``m = P theta + c``
-the columns are ``[c | P]`` (unknowns ``u = (A, A theta)``); for a nonlinear
+the columns are ``[c | P]`` (unknowns ``u = (A, A theta)``). For a nonlinear
 map the columns are the Jacobian of ``m`` at a supplied ``theta`` (a local
 statement only). The columns are equilibrated to unit norm first (``G D``,
 ``D = diag(1/||G_i||)``), so the rank does not depend on the units of the
-unknowns; singular values of ``G D`` below ``tol`` times the largest define
-the null space; the resolution of parameter ``a`` is ``sum_{i <= rank}
+unknowns. Singular values of ``G D`` below ``tol`` times the largest define
+the null space. The resolution of parameter ``a`` is ``sum_{i <= rank}
 V_ai^2`` (``V`` of ``G D``), in ``[0, 1]`` and scale invariant.
 
 ``feasibility_checks`` evaluates inequalities that every moment vector of a
@@ -27,13 +27,13 @@ squares expand onto retained rows. Checks that need ``M0`` rows with
 ``b > 0`` are computed only when ``m0_ext`` is present (``from_samples``) and
 are otherwise listed as not computable from the fitted vector.
 
-Shapes: the design is ``(n_kept, n_u)``; checks are ``(name, passed, margin)``.
-Units: moments are dimensionless in the displacement coordinates ``z``;
+Shapes: the design is ``(n_kept, n_u)`` and checks are ``(name, passed, margin)``.
+Units: moments are dimensionless in the displacement coordinates ``z``, and
 data and design rows carry the data units. Both functions are eager: the
 rank, the pass/fail flags and the margins are concrete Python values, so
 they are called outside ``jit`` (the SVD itself is a ``jax.numpy`` call).
 Not certified: passing every check does not establish feasibility (the
-conditions are necessary only); a full-rank design does not make a fit
+conditions are necessary only). A full-rank design does not make a fit
 unbiased (discrepancy ``delta`` and the noise model are separate inputs).
 """
 
@@ -67,19 +67,19 @@ class IdentifiabilityReport(eqx.Module):
     """SVD summary of the column-equilibrated whitened design ``G D``.
 
     ``column_scales`` ``(n_u,)`` is ``diag(D)`` (``1/||G_i||``, 1 for a zero
-    column); ``singular_values`` ``(min(n_data, n_u),)`` descending, of
-    ``G D``; ``modes`` ``(n_u, n_u)`` right singular vectors of ``G D`` as
-    columns (mode ``i`` belongs to ``singular_values[i]``); ``null_basis``
+    column). ``singular_values`` ``(min(n_data, n_u),)`` descending, of
+    ``G D``. ``modes`` ``(n_u, n_u)`` right singular vectors of ``G D`` as
+    columns (mode ``i`` belongs to ``singular_values[i]``). ``null_basis``
     ``(n_u, null_dim)`` orthonormal columns spanning the modes with
-    ``sigma <= tol sigma_max``; ``resolution`` ``(n_u,)`` in ``[0, 1]``.
+    ``sigma <= tol sigma_max``. ``resolution`` ``(n_u,)`` in ``[0, 1]``.
     Modes, null basis and resolution are in the equilibrated coordinates
     ``D^-1 u`` (scale invariant): ``D @ null_basis`` spans the null
     directions of the unknowns ``u`` (``G D w = 0``). ``labels`` names the unknowns
     (``"amplitude"`` first when the amplitude column is included, then
     ``ParameterMap.labels()``). ``note`` says whether the design is exact
     (affine map) or linearised at a supplied ``theta``. Singular values are
-    dimensionless (whitened design). Assumes the noise model of the data;
-    a null direction is a statement about the linear design at ``tol``,
+    dimensionless (whitened design). Assumes the noise model of the data.
+    A null direction is a statement about the linear design at ``tol``,
     not certified against nonlinear or prior information.
     """
 
@@ -148,15 +148,15 @@ def identifiability(
     """SVD of the whitened design ``L^-1 R C [c | P]`` (see the module docstring).
 
     ``basis`` supplies ``response_matrix()`` ``(4 n_ch, n_real)``, ``index``
-    and ``reference``; ``data`` supplies ``whitened()``, ``response`` and
-    ``mask``; ``parameter_map`` must use the basis index. ``tol`` is the
+    and ``reference``. ``data`` supplies ``whitened()``, ``response`` and
+    ``mask``. ``parameter_map`` must use the basis index. ``tol`` is the
     relative singular-value cutoff on the column-equilibrated design
-    (``sigma <= tol sigma_max`` is null; the same rule as ``fit_linear``).
-    ``theta`` is required for a nonlinear map; ``reference`` defaults to the
-    basis reference; ``amplitude=False`` drops the amplitude column (fixed
+    (``sigma <= tol sigma_max`` is null, the same rule as ``fit_linear``).
+    ``theta`` is required for a nonlinear map. ``reference`` defaults to the
+    basis reference. ``amplitude=False`` drops the amplitude column (fixed
     amplitude). Eager: the rank is concrete. Raises ``ValueError`` for
     mismatched indices or shapes. Dimensionless output. Assumes the data's
-    noise model; not certified: identifiability under priors or nonlinear
+    noise model. Not certified: identifiability under priors or nonlinear
     constraints, or beyond the linearisation point ``theta``.
     """
     if parameter_map.index != basis.index:
@@ -198,12 +198,12 @@ class FeasibilityReport(eqx.Module):
     """Necessary conditions on a moment vector, each as ``(name, passed, margin)``.
 
     ``margin`` is the slack of the inequality written as ``g >= 0`` (the
-    negative absolute deviation for the normalisation equality); a check
+    negative absolute deviation for the normalisation equality). A check
     passes when ``margin >= -tol * scale`` with ``scale`` the natural size of
     its bound. ``not_computable`` lists checks the retained rows cannot
     supply. ``statement`` says that the conditions are necessary only.
     Margins are dimensionless (moments in ``z`` units). Assumes the declared
-    ``support``; passing every check is not certified as membership of the
+    ``support``. Passing every check is not certified as membership of the
     feasible set of ``sec: finite joint response``.
     """
 
@@ -237,12 +237,12 @@ class FeasibilityReport(eqx.Module):
 def feasibility_checks(moments, index, support, *, tol=1e-9) -> FeasibilityReport:
     """Necessary conditions for ``moments`` to lie in the feasible set.
 
-    ``moments`` is a ``JointMoments`` on ``index`` (``ValueError`` otherwise);
+    ``moments`` is a ``JointMoments`` on ``index`` (``ValueError`` otherwise).
     ``support`` is a ``Support`` in raw units (converted to ``z`` with the
     moments' reference) or ``None`` (support checks listed as not
     computable). ``tol`` is the absolute slack allowed, scaled by the size
     of each bound. Eager: needs concrete moment values. Dimensionless
-    margins in ``z`` units. Assumes the declared support; a pass is
+    margins in ``z`` units. Assumes the declared support. A pass is
     necessary, not sufficient, for a nonnegative population.
     """
     if moments.index != index:

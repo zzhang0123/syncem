@@ -3,40 +3,40 @@
 LABEL: ``eq: independent screen moments`` (``{depth} | rest``), ``eq:
 independent gaussian screen`` (Gaussian depth closure on the Taylor route),
 ``[extension]`` constant conditional circular moment over all other
-variables (``{phi} | rest``; its energy-moment case is the single azimuth
+variables (``{phi} | rest``, whose energy-moment case is the single azimuth
 factor of ``sec: classical forward``), ``eq: conditional legendre
 coefficients`` (``uniform_mu`` zeroes every ``l >= 1`` coefficient),
-``sec: linear fit`` (weights on fixed nodes, the nonnegative witness; nodes
-in all six variables are ``[extension]``), ``eq: uncoupled moments``
+``sec: linear fit`` (weights on fixed nodes, the nonnegative witness, with nodes
+in all six variables ``[extension]``), ``eq: uncoupled moments``
 (``angles_independent``, ``known_angles``: constant ``a_lk`` of
-``eq: conditional legendre coefficients``); other partitions, the symmetry
+``eq: conditional legendre coefficients``). Other partitions, the symmetry
 closures ``pitch_symmetric``, ``field_reversal_symmetric`` and
 ``uniform_field_direction``, ``uniform_azimuth``, ``known_field`` are
 ``[extension]``.
 
 A ``ParameterMap`` is a map ``theta -> m`` from free parameters to the
-``(n_real,)`` moment vector of ``eq: explicit joint moments``; it never switches the
+``(n_real,)`` moment vector of ``eq: explicit joint moments``. It never switches the
 physics. Under a factorisation (partition of ``VARS``) every retained moment
-is a product of group marginals; closures replace a marginal by a fixed
+is a product of group marginals. Closures replace a marginal by a fixed
 table. Moments are stored in the displacements ``z``, the offsets of
 ``eq: channel basis expansion`` divided by fixed positive scales
-(``[extension]``); depth closures take rad/m^2 and convert with the reference.
+(``[extension]``). Depth closures take rad/m^2 and convert with the reference.
 Free counts at ``(2, 2, 2)``: 153, 115, 113, 88, 75, 57, 12, 115, 129 for the
-named constructors in order; 33, 25, 57, 53, 86 for ``angles_independent``,
+named constructors in order, and 33, 25, 57, 53, 86 for ``angles_independent``,
 ``known_angles``, ``uniform_field_direction``, ``uniform_azimuth`` and
-``known_field``. Free tables come from the rows of ``m`` (``h0``, ``h2``);
+``known_field``. Free tables come from the rows of ``m`` (``h0``, ``h2``).
 ``h0_ext`` is reconstructed when covered (``ext_ok``), else ``None``.
 ``declare(index, assumptions)`` builds a map from the names of
-``ASSUMPTIONS`` (``Assume(name, **params)`` for parameters); it backs the
+``ASSUMPTIONS`` (``Assume(name, **params)`` for parameters). It backs the
 ``assumptions=`` keyword of ``fit_linear``, ``fit_combinations``,
 ``LogDensity``, ``JointMoments.from_samples`` and
 ``SpectralBasis.constrained`` (``_registry``).
 
 Not certified: that an assumption holds for a population (a moment-level
 ``discrepancy`` or a measured value from ``JointMoments.from_samples`` is the
-only allowance; otherwise budgets list it ``unbounded``) and feasibility of
+only allowance, and otherwise budgets list it ``unbounded``) and feasibility of
 ``theta``. JIT and autodiff work through ``__call__`` in ``theta`` and the
-reference; ``record()`` is eager bookkeeping.
+reference. ``record()`` is eager bookkeeping.
 """
 
 from __future__ import annotations
@@ -62,7 +62,7 @@ class Factorisation(eqx.Module):
     """Static partition of ``VARS`` into independent groups, with a name.
 
     ``groups``: disjoint tuples covering ``VARS``. Declares a product measure
-    over the groups (dimensionless); nothing verifies it, and its discrepancy
+    over the groups (dimensionless). Nothing verifies it, and its discrepancy
     is an input of the budget. ``[extension]``.
     """
 
@@ -75,15 +75,15 @@ class Closure(eqx.Module):
     """Fixed marginal of one group. ``kind`` in ``CLOSURE_KINDS``.
 
     ``hyper``: ``()`` for ``uniform_mu``, ``uniform_eta`` (group
-    ``('eta',)``) and ``uniform_phi`` (``('phi',)``); ``(mean, sigma)``
-    rad/m^2 for ``gaussian_depth``; ``(kappa (K,),)`` rad/m^2 cumulants for
-    ``cumulant_depth``; one raw value per group variable for ``delta``;
+    ``('eta',)``) and ``uniform_phi`` (``('phi',)``), ``(mean, sigma)``
+    rad/m^2 for ``gaussian_depth``, ``(kappa (K,),)`` rad/m^2 cumulants for
+    ``cumulant_depth``, one raw value per group variable for ``delta``, and
     ``(table,)`` over the group's nonconstant entries for ``fixed_table``
-    (as without symmetries; a symmetry ignores the entries it sets to zero).
+    (as without symmetries: a symmetry ignores the entries it sets to zero).
     The symmetry kinds ``pitch_symmetric`` and ``field_reversal_symmetric``
     take the empty group ``()`` and no hyper: they constrain the joint
     measure and drop rows without closing a marginal. ``hyper`` are leaves.
-    A declared marginal or symmetry; nothing certifies it holds.
+    A declared marginal or symmetry. Nothing certifies it holds.
     """
 
     LABEL: ClassVar[str] = "[extension] closed marginal"
@@ -112,22 +112,22 @@ class ParameterMap(eqx.Module):
     """``theta -> JointMoments`` as a product of static gathers.
 
     Build with :meth:`build` or a named constructor. ``tables_spec[g]`` lists
-    the nonconstant projections of every row of ``m`` onto group ``g``;
+    the nonconstant projections of every row of ``m`` onto group ``g``.
     ``gathers[g]`` indexes ``[1, *table_g]`` for every retained row in
     ``(h0, h0_ext, h2)`` order (``-1``: dropped by a zero closed factor or
-    not covered); ``keep`` is the static zero-row mask; ``ext_ok`` says
+    not covered). ``keep`` is the static zero-row mask, and ``ext_ok`` says
     whether ``m0_ext`` is reconstructed. ``free_hyper`` names the closures
-    whose hyper-parameters come from ``theta.hyper``; ``nodes`` makes the
-    map nodal (``theta.logits``); ``symmetrised`` holds the trims of fixed
+    whose hyper-parameters come from ``theta.hyper``. ``nodes`` makes the
+    map nodal (``theta.logits``). ``symmetrised`` holds the trims of fixed
     tables under a symmetry (``_factor``). Only the uniform closures
     (``uniform_mu``, ``uniform_eta``, ``uniform_phi``) and the symmetry
-    closures drop rows statically; value-dependent zeros of other closures
+    closures drop rows statically. Value-dependent zeros of other closures
     are kept. Complex free tables keep only the real part of entries
     without ``e^{2i phi}``.
 
-    Moments are dimensionless in ``z``; depth closures take rad/m^2 and
+    Moments are dimensionless in ``z``. Depth closures take rad/m^2 and
     convert with the ``reference`` of ``__call__``. Assumes its factorisation
-    and closures and records them in every ``JointMoments`` it returns; not
+    and closures and records them in every ``JointMoments`` it returns. Not
     certified: that the population satisfies them (``discrepancy`` is an
     input or measured on supplied samples) or feasibility.
     """
@@ -192,7 +192,7 @@ class ParameterMap(eqx.Module):
 
     def n_free(self) -> int:
         """Real free parameters: table entries (two per complex entry), fitted
-        hyper-parameters and nodal logits; the unit moment is excluded."""
+        hyper-parameters and nodal logits, excluding the unit moment."""
         if self.nodes is not None:
             return int(self.nodes.size)
         free = self.free_groups()
@@ -212,7 +212,7 @@ class ParameterMap(eqx.Module):
 
     def flatten(self, theta: Parameters) -> jax.Array:
         """Real ``(n_free,)`` vector: per free group all real parts then the
-        imaginary parts of complex entries; then hyper; then logits."""
+        imaginary parts of complex entries, then hyper, then logits."""
         _p.check_theta(self, theta, Parameters)
         return _p.flatten(self, theta)
 
@@ -238,7 +238,7 @@ class ParameterMap(eqx.Module):
         return JointMoments(self.index, m0, m2, reference, m0_ext, record, delta)
 
     def __call__(self, theta: Parameters, reference) -> JointMoments:
-        """Moments of ``theta`` at ``reference``; ``m0_ext`` when covered."""
+        """Moments of ``theta`` at ``reference``, with ``m0_ext`` when covered."""
         if self.nodes is not None:
             _p.check_theta(self, theta, Parameters)
             return self._assemble(_p.nodal_moments(self, theta, reference), reference)
@@ -248,14 +248,14 @@ class ParameterMap(eqx.Module):
         return self._assemble(m_all, reference)
 
     def affine_pieces(self, *, reference=None) -> tuple[jax.Array, jax.Array]:
-        """``(P, c)`` with ``m = P @ flatten(theta) + c``; valid iff ``is_affine()``.
+        """``(P, c)`` with ``m = P @ flatten(theta) + c``, valid iff ``is_affine()``.
         ``reference`` is required when a closure converts rad/m^2 (depth or
         delta closures)."""
         return _p.affine_pieces(self, reference)
 
     def project(self, full: JointMoments, *, amplitude=None) -> Parameters:
         """Group marginals read off a full tensor (``m0_ext`` needed for depth
-        marginals); fitted hyper-parameters from the depth moments. Raises
+        marginals), and fitted hyper-parameters from the depth moments. Raises
         ``ValueError`` for a nodal map or a marginal outside the index."""
         return _p.project(self, full, amplitude, Parameters)
 
@@ -264,7 +264,7 @@ class ParameterMap(eqx.Module):
         return full.to_vector() - self(self.project(full), full.reference).to_vector()
 
     def assume(self, *others) -> "ParameterMap":
-        """Common refinement of the partitions; closures are merged and must
+        """Common refinement of the partitions. Closures are merged and must
         agree on any shared group (``ValueError`` on conflict, on a split
         closed group, or on a nodal map)."""
         maps = (self, *others)
@@ -281,8 +281,8 @@ class ParameterMap(eqx.Module):
     def record(self) -> AssumptionRecord:
         """Hashable record for provenance, independent of ``theta``. A fitted
         closure is recorded with its kind suffixed ``" (fitted)"`` and NaN
-        placeholders for its hyper-parameters (the values live in ``theta``;
-        ``FitResult`` provenance notes quote them); traced constructor hyper
+        placeholders for its hyper-parameters (the values live in ``theta``,
+        and ``FitResult`` provenance notes quote them). Traced constructor hyper
         values are NaN too. A symmetrised ``fixed_table`` keeps its full
         table and its kind names the dropped entries."""
         return _record(self, AssumptionRecord)
@@ -292,14 +292,14 @@ class ParameterMap(eqx.Module):
 
 
 def no_assumption(index) -> ParameterMap:
-    """One group: every retained moment is free (``eq: explicit joint moments``). Declares the factorisation; nothing verifies it."""
+    """One group: every retained moment is free (``eq: explicit joint moments``). Declares the factorisation. Nothing verifies it."""
     factorisation = Factorisation((VARS,), "no_assumption")
     return ParameterMap.build(index, factorisation, label="eq: explicit joint moments")
 
 
 def independent_screen(index, *, screen=None) -> ParameterMap:
-    """``{depth} | rest`` (``eq: independent screen moments``); ``screen`` is an
-    optional ``Closure`` on ``('depth',)``, else the screen moments are free. Declares the factorisation; nothing verifies it.
+    """``{depth} | rest`` (``eq: independent screen moments``). ``screen`` is an
+    optional ``Closure`` on ``('depth',)``, else the screen moments are free. Declares the factorisation. Nothing verifies it.
     """
     closures = ()
     if screen is not None:
@@ -314,7 +314,7 @@ def independent_screen(index, *, screen=None) -> ParameterMap:
 
 def gaussian_screen(index, mean, sigma, *, fit_hyper=False) -> ParameterMap:
     """Independent Gaussian screen on the Taylor route: depth moments from
-    ``(mean, sigma)`` in rad/m^2 (``eq: independent gaussian screen``). Declares independence and Gaussianity; nothing verifies either.
+    ``(mean, sigma)`` in rad/m^2 (``eq: independent gaussian screen``). Declares independence and Gaussianity. Nothing verifies either.
     """
     closure = Closure(
         ("depth",), "gaussian_depth", (jnp.asarray(mean), jnp.asarray(sigma))
@@ -330,7 +330,7 @@ def gaussian_screen(index, mean, sigma, *, fit_hyper=False) -> ParameterMap:
 
 
 def field_independent(index) -> ParameterMap:
-    """``{B} | rest`` ``[extension]``: ``<P_l P_k e^{ih phi} z_gamma^r z_depth^b> <z_B^s>``. Declares the factorisation; nothing verifies it."""
+    """``{B} | rest`` ``[extension]``: ``<P_l P_k e^{ih phi} z_gamma^r z_depth^b> <z_B^s>``. Declares the factorisation. Nothing verifies it."""
     factorisation = Factorisation((_REST["B"], ("B",)), "field_independent")
     return ParameterMap.build(index, factorisation)
 
@@ -338,9 +338,9 @@ def field_independent(index) -> ParameterMap:
 def azimuth_separable(index) -> ParameterMap:
     """``{phi} | rest``: ``M2 = m_phi M0_ext`` with ``m_phi = <e^{2i phi}>``
     (``[extension]`` constant conditional circular moment over all other
-    variables; the energy-moment case is the single azimuth factor of
-    ``sec: classical forward``; weaker than independence). Declares the
-    separability; nothing verifies it.
+    variables, whose energy-moment case is the single azimuth factor of
+    ``sec: classical forward``, weaker than independence). Declares the
+    separability. Nothing verifies it.
     """
     factorisation = Factorisation((_REST["phi"], ("phi",)), "azimuth_separable")
     return ParameterMap.build(
@@ -355,7 +355,7 @@ def azimuth_separable(index) -> ParameterMap:
 
 def isotropic_pitch(index) -> ParameterMap:
     """``{mu} | rest`` with ``uniform_mu``: rows with ``l >= 1`` are zero
-    (``eq: conditional legendre coefficients``). Declares isotropic pitch; nothing verifies it.
+    (``eq: conditional legendre coefficients``). Declares isotropic pitch. Nothing verifies it.
     """
     factorisation = Factorisation((_REST["mu"], ("mu",)), "isotropic_pitch")
     closure = Closure(("mu",), "uniform_mu")
@@ -367,7 +367,7 @@ def isotropic_pitch(index) -> ParameterMap:
 def fully_independent(index) -> ParameterMap:
     """Six singletons ``[extension]``: ``N_gamma + N_B + max_b + L_mu + L_eta + 2``
     free parameters with ``(N_gamma, N_B, max_b) = truncation.caps()`` (``2N +
-    max_b + ...`` uncapped). Declares the factorisation; nothing verifies it."""
+    max_b + ...`` uncapped). Declares the factorisation. Nothing verifies it."""
     factorisation = Factorisation(tuple((v,) for v in VARS), "fully_independent")
     return ParameterMap.build(index, factorisation)
 
@@ -375,7 +375,7 @@ def fully_independent(index) -> ParameterMap:
 def pitch_symmetric(index) -> ParameterMap:
     """Population invariant under ``mu -> -mu`` at fixed other variables
     ``[extension]``: every odd-``l`` row is zero and dropped (no independence
-    is assumed; one group). Declares the symmetry; nothing verifies it."""
+    is assumed, one group). Declares the symmetry. Nothing verifies it."""
     return _symmetric(index, "pitch_symmetric")
 
 
@@ -384,8 +384,8 @@ def field_reversal_symmetric(index) -> ParameterMap:
     (-mu, -eta, phi + pi)`` at fixed ``(gamma, B, depth)`` ``[extension]``:
     odd-``l + k`` rows vanish (odd ``l`` or ``k`` when the partition separates
     ``mu`` from ``eta``), so the finite ``V`` response is exactly zero.
-    A local reversal; a global one would also flip the Faraday depth, which
-    this does not model. Declares the symmetry; nothing verifies it."""
+    A local reversal. A global one would also flip the Faraday depth, which
+    this does not model. Declares the symmetry. Nothing verifies it."""
     return _symmetric(index, "field_reversal_symmetric")
 
 
@@ -395,8 +395,8 @@ def _symmetric(index, kind):
 
 def nodal(index, nodes: PopulationSamples) -> ParameterMap:
     """Nonnegative weights ``softmax(logits)`` on fixed nodes (the nonnegative
-    witness of ``sec: linear fit``, with nodes in all six variables ``[extension]``);
-    discretisation error is an input. Nothing certifies that the nodes resolve the population.
+    witness of ``sec: linear fit``, with nodes in all six variables ``[extension]``).
+    Discretisation error is an input. Nothing certifies that the nodes resolve the population.
     """
     if not isinstance(nodes, PopulationSamples):
         raise ValueError("nodes must be a PopulationSamples")
@@ -410,7 +410,7 @@ def nodal(index, nodes: PopulationSamples) -> ParameterMap:
 
 
 # The registry and the constructors of eq: uncoupled moments live in _registry.py
-# (file length); it imports the classes above, so this import comes last.
+# (file length). It imports the classes above, so this import comes last.
 from ._registry import (  # noqa: E402
     ASSUMPTIONS,
     Assume,

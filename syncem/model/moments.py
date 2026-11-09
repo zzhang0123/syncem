@@ -1,9 +1,9 @@
 """Population statistics of the finite joint response (``syncem.model.moments``).
 
 LABEL: ``eq: explicit joint moments`` (``JointMoments``), the dimensionless
-displacement coordinates (``Reference.z``; the offsets of
+displacement coordinates (``Reference.z``, the offsets of
 ``eq: channel basis expansion`` divided by fixed positive scales,
-``[extension]``), the declared population support (``Support``;
+``[extension]``), the declared population support (``Support``,
 ``sec: frequency order``, paragraph 'Energy range and distribution width') and
 the discrete electron-number measure of ``eq: joint emission depth``
 (``PopulationSamples``).
@@ -17,15 +17,15 @@ or of the same product times ``exp(2 i phi)`` (``M2``). The raw-displacement
 form of the manuscript is ``M_raw = s_gamma^r s_B^s s_depth^b M_z``
 (``to_raw_displacements``).
 
-Shapes: sample columns are ``(S,)``; ``m0`` is ``(n0,)``, ``m2`` ``(n2,)``
-complex, ``m0_ext`` ``(n0_ext,)``; ``to_vector()`` is ``(n_real,)``.
+Shapes: sample columns are ``(S,)``. ``m0`` is ``(n0,)``, ``m2`` ``(n2,)``
+complex, ``m0_ext`` ``(n0_ext,)`` and ``to_vector()`` ``(n_real,)``.
 Units: ``gamma`` dimensionless (``> 1``), ``B`` Gauss (``> 0``), ``depth``
-rad/m^2, ``mu, eta`` in ``[-1, 1]``, ``phi`` radians; scales carry the units
+rad/m^2, ``mu, eta`` in ``[-1, 1]``, ``phi`` radians. Scales carry the units
 of their variable. Weights are relative electron-number masses, normalised as
 in ``syncem.rm._screen_samples``.
 
 Exact by construction: weighted sums over the supplied discrete measure (to
-floating-point rounding); JIT and autodiff through sample values, weights and
+floating-point rounding). JIT and autodiff through sample values, weights and
 reference are validated by the package tests (finite checks, not
 certificates). Not certified:
 sampling or quadrature error of the discrete measure relative to a continuous
@@ -136,13 +136,13 @@ class JointMoments(eqx.Module):
 
     ``m0`` is real ``(n0,)`` in ``index.h0`` order, ``m2`` complex ``(n2,)``
     in ``index.h2`` order, ``m0_ext`` real ``(n0_ext,)`` over ``index.h0_ext``
-    (``b >= 1`` rows outside ``m``; ``None`` when built from a vector).
+    (``b >= 1`` rows outside ``m``, ``None`` when built from a vector).
     ``to_vector`` is ``concat(m0, Re m2, Im m2)`` (``eq: linear basis``).
-    ``assumptions`` records the parameter maps that produced the moments;
+    ``assumptions`` records the parameter maps that produced the moments, and
     ``discrepancy`` is a moment-level ``Delta_a`` (``n_real,``).
-    Shape mismatches raise ``ValueError``; nothing here checks feasibility.
+    Shape mismatches raise ``ValueError``. Nothing here checks feasibility.
     Units: dimensionless (moments of ``z`` displacements and Legendre
-    polynomials); ``to_raw_displacements`` restores ``s_gamma^r s_B^s
+    polynomials). ``to_raw_displacements`` restores ``s_gamma^r s_B^s
     s_depth^b``. Assumes nothing unless ``assumptions`` is nonempty. Not
     certified: feasibility (``fit.diagnostics.feasibility_checks`` gives
     necessary conditions only) and the accuracy of moments supplied through
@@ -186,9 +186,9 @@ class JointMoments(eqx.Module):
         Computes ``h0``, ``h0_ext`` and ``h2`` by chunked weighted sums
         (JIT and autodiff safe). With ``parameter_map`` the joint tensor is
         projected onto the map and the factorised tensor is returned (with
-        the map's record and discrepancy); ``assumptions`` (keyword addition)
-        declares the map by name instead (``assumptions.declare(index, ...)``;
-        ``ValueError`` when both are given). ``discrepancy="measured"`` stores
+        the map's record and discrepancy). ``assumptions`` (keyword addition)
+        declares the map by name instead (``assumptions.declare(index, ...)``,
+        with ``ValueError`` when both are given). ``discrepancy="measured"`` stores
         ``|m_joint - m_fac|`` on these samples as a ``measured`` term, which
         is not a bound for any other population.
         """
@@ -245,14 +245,14 @@ class JointMoments(eqx.Module):
     def from_vector(
         cls, index, m, reference, *, assumptions=(), tol=UNIT_MOMENT_TOL
     ) -> "JointMoments":
-        """Unpack a real ``(n_real,)`` vector; ``m[0]`` must equal 1 within ``tol``.
+        """Unpack a real ``(n_real,)`` vector. ``m[0]`` must equal 1 within ``tol``.
 
         ``tol`` (default ``UNIT_MOMENT_TOL = 1e-12``) is the allowed
-        ``|m[0] - 1|``; since the target is 1 it is also the relative
+        ``|m[0] - 1|``. Since the target is 1 it is also the relative
         tolerance. The default admits the roundoff of normalised weights
-        (``from_samples`` gives ``m[0] = 1 - O(1e-16)``); ``tol=0.0`` asks for
+        (``from_samples`` gives ``m[0] = 1 - O(1e-16)``), and ``tol=0.0`` asks for
         exact equality. Checked with ``eqx.error_if`` (raises at run time,
-        also under JIT); the vector is not otherwise checked for feasibility.
+        also under JIT). The vector is not otherwise checked for feasibility.
         """
         m = _as_float(m, "m")
         if m.shape != (index.n_real,):
@@ -274,7 +274,7 @@ class JointMoments(eqx.Module):
         return jnp.concatenate([self.m0, jnp.real(self.m2), jnp.imag(self.m2)])
 
     def get(self, h, l, k, r, s, b) -> jax.Array:
-        """One moment; ``h=0, b>=1`` reads ``m0_ext``; complex for ``h=2``."""
+        """One moment. ``h=0, b>=1`` reads ``m0_ext``, and ``h=2`` gives a complex value."""
         row = (int(l), int(k), int(r), int(s), int(b))
         if h == 2:
             table, values = self.index.h2, self.m2
@@ -321,7 +321,7 @@ class JointMoments(eqx.Module):
         )
 
     def to_dict(self) -> dict:
-        """Strict-JSON summary (eager use only; non-finite floats become ``None``).
+        """Strict-JSON summary (eager use only, non-finite floats become ``None``).
 
         ``index.max_orders`` is ``null`` for the uncapped cutoff or the list
         ``[N_gamma, N_B, N_depth]`` of a capped truncation, so the layout of

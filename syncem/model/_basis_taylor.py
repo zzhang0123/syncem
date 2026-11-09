@@ -7,7 +7,7 @@ need (all ``r + s <= N`` without per-variable caps):
 ``HarmonicKernel.angular_taylor`` for ``derivatives="analytic"``, nested
 forward passes of ``angular_projection`` (``point_taylor``) otherwise.
 ``columns`` scatters them into basis columns. Units and shapes follow
-``syncem.model.basis``; nothing here certifies quadrature accuracy.
+``syncem.model.basis``. Nothing here certifies quadrature accuracy.
 """
 
 from __future__ import annotations
@@ -90,7 +90,7 @@ def columns(rows, index, block_of, n_ch, dtype, weight_axis):
 def needed_orders(index) -> tuple[tuple[int, int], ...]:
     """Lower closure of the ``(r, s)`` of the retained rows (``h0`` and ``h2``).
 
-    Equal to every ``r + s <= N`` without per-variable caps; with
+    Equal to every ``r + s <= N`` without per-variable caps. With
     ``Truncation.max_orders`` it drops the multi-indices no row uses.
     """
     return lower_closure({(r, s) for (_, _, r, s, _) in index.h0 + index.h2})
@@ -102,8 +102,8 @@ def taylor_blocks(kernel, channels, reference, phase, index, quadrature):
     Only the ``(r, s)`` of :func:`needed_orders` are differentiated.
     ``HarmonicKernel(derivatives="analytic")`` uses its ``angular_taylor``
     (no tangent through the Bessel quadrature, Leibniz-assembled Legendre
-    contraction); every other kernel, and ``derivatives="autodiff"``, uses
-    nested forward passes of ``angular_projection`` (``point_taylor``;
+    contraction). Every other kernel, and ``derivatives="autodiff"``, uses
+    nested forward passes of ``angular_projection`` (``point_taylor``,
     ``jax.jacfwd`` at every level without caps, as ``taylor_tensors``), with
     the chunk budget divided by the forward tangents (``for_tangents``).
     """
@@ -134,7 +134,7 @@ class DepthPartial:
     """One phase weight ``d^b/dz^b exp(i tau (depth_ref + s_depth z))`` at ``z = 0``.
 
     ``= exp(i tau depth_ref) (i tau s_depth)^b`` (``b!`` times the Taylor
-    phase weight ``w_b``); ``tau`` in m^2, depths in rad/m^2.
+    phase weight ``w_b``), with ``tau`` in m^2 and depths in rad/m^2.
     """
 
     n_weights = 1
@@ -155,7 +155,7 @@ def partials_in_z3(basis, kernel, route, sample_depth, betas):
     at each ``b``): one ``angular_taylor`` pass per depth order ``b`` with the
     single weight :class:`DepthPartial` ``(b)`` on the per-emitter (Taylor)
     route. ``I, V`` do not depend on ``z_depth``, nor does ``P`` on a screen
-    route; those partials are zero.
+    route. Those partials are zero.
     """
     reference, channels, index = basis.reference, basis.channels, basis.index
     s_gamma, s_B, s_depth = reference.scales
@@ -198,8 +198,8 @@ def partials_in_z3(basis, kernel, route, sample_depth, betas):
 def symmetric_frobenius(values, order, dims):
     """Frobenius norm of a symmetric order-``order`` tensor over ``dims`` axes.
 
-    ``values[beta]`` is the entry ``d^beta`` (``beta`` of length ``dims``);
-    every ``beta`` with ``|beta| = order`` counts ``order!/beta!`` times.
+    ``values[beta]`` is the entry ``d^beta`` (``beta`` of length ``dims``),
+    and every ``beta`` with ``|beta| = order`` counts ``order!/beta!`` times.
     """
     total = 0.0
     for beta, value in values.items():

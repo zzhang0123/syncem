@@ -27,8 +27,8 @@ combine_basis                                                   from_basis colum
 predict, direct_channel_average -> Prediction                   forward modelling
 fit.*                                                           spectral fits
 
-No independence, isotropy or Gaussian closure is assumed unless declared;
-every approximation carries an ErrorTerm whose kind is bound, estimate,
+No independence, isotropy or Gaussian closure is assumed unless declared.
+Every approximation carries an ErrorTerm whose kind is bound, estimate,
 measured, unbounded or not_applicable. Nothing here certifies a physical
 model discrepancy or an excluded population tail.
 """

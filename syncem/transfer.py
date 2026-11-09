@@ -15,10 +15,10 @@ polarisation P = Q + i U rotates as  P -> P exp(i rV ds)  over a length ds.
 The physical Faraday position-angle rotation is  chi = RM lam^2, and the
 Stokes rotation angle is 2 chi, so  rV ds = 2 RM lam^2  (i.e. rV = 2 dchi/ds).
 
-The matrix exponential is the analytic constant-coefficient solution;
-its implementation has finite-precision error. A LOS is a chain of slabs
+The matrix exponential is the analytic constant-coefficient solution.
+Its implementation has finite-precision error. A LOS is a chain of slabs
 in traversal order. Approximating a varying medium by slabs incurs a separate
-discretisation error; refine the path and propagate that discrepancy.
+discretisation error. Refine the path and propagate that discrepancy.
 """
 
 from __future__ import annotations
@@ -49,10 +49,10 @@ def transfer_slab(S, eps, K, ds, *, max_squarings=32):
     Uses the augmented 5x5 exponential ``exp([[-K, eps], [0, 0]] ds) @ [S; 1]``
     (first four entries), well-defined for singular K (pure rotation). The
     source column is carried as ``eps ds 2^-k`` with ``[S; 2^k]``, exact since
-    the map is linear in ``eps``; ``k = floor(log2 max|eps ds|) + 1`` clipped to
-    ``[0, 1022]`` (float64), built from its bit pattern. Without the scale the
-    scaling and squaring overflows to NaN for an optically thick, bright slab;
-    no reciprocal of a data-dependent scale is formed (jax 0.10.2 CPU flushed
+    the map is linear in ``eps``. Here ``k = floor(log2 max|eps ds|) + 1``, clipped to
+    ``[0, 1022]`` (float64) and built from its bit pattern. Without the scale the
+    scaling and squaring overflows to NaN for an optically thick, bright slab.
+    No reciprocal of a data-dependent scale is formed (jax 0.10.2 CPU flushed
     the subnormal ``1/s`` to zero). Entries of ``eps ds`` below
     ``max|eps ds| 2^-1021`` become subnormal after scaling and flush to zero on
     XLA CPU, an absolute error below that bound.
@@ -65,25 +65,25 @@ def transfer_slab(S, eps, K, ds, *, max_squarings=32):
     Derivatives use ``out = Phi S + G eps``, ``Phi = e^{-K ds}``,
     ``G = int_0^ds e^{-K t} dt``: the tangent ``Phi dS + G deps + dPhi S + dG eps``
     comes from one 8x8 exponential ``[[Phi, G / ds], [0, I]]`` and its forward
-    derivative in ``K`` (``_tangent``), not through the scaled source column;
-    in ``ds`` it is ``Phi (eps - K S)``, error at most ``|Phi| (6u (|eps| +
+    derivative in ``K`` (``_tangent``), not through the scaled source column.
+    In ``ds`` it is ``Phi (eps - K S)``, with error at most ``|Phi| (6u (|eps| +
     |K| |S|) + 5u |eps - K S|)`` plus that of ``Phi`` times ``|eps - K S|``
     (``tests/test_transfer_length_derivative.py``). The rule is linear in the
     tangents and re-enters itself for the primal, so ``jvp``,
     ``vjp``, ``jacfwd``, ``jacrev``, ``hessian``, ``vmap`` (reverse mode through
     a batched ``K`` or ``ds`` included), ``jit`` and ``lax.scan`` apply. Where
     JAX differentiates the value itself (the primal of a ``vjp`` under a further
-    derivative; ``lax.scan`` under ``vjp``) it carries the same derivatives from
+    derivative, or ``lax.scan`` under ``vjp``) it carries the same derivatives from
     exposure 896 on (``_slab_value``). Tested against SciPy and autodiff of
     ``Phi S + G eps`` to 1e-13 of the largest entry up to
     ``max|eps ds| = 1.7e308``, second derivatives in every nesting. A derivative
     beyond the float64 range overflows to inf without an error.
 
     ``max_squarings`` is static. The default permits strongly absorbing slabs
-    (a regression checks tau=1e6); this does not certify arbitrary large or
+    (a regression checks tau=1e6). This does not certify arbitrary large or
     ill-conditioned K. The core is compiled once per shape (``filter_jit``).
 
-    A non-finite result is refused (``equinox.error_if``; eagerly as
+    A non-finite result is refused (``equinox.error_if``: eagerly as
     ``EquinoxRuntimeError``, under ``jit``, ``vmap``, derivatives and inside
     ``transfer_los``) naming the cause: non-finite inputs, ``eps * ds`` beyond
     float64, more than ``max_squarings`` squarings (NaN), or a value beyond
@@ -159,11 +159,11 @@ def _slab(S, eps, K, ds, max_squarings, route):
 
 
 def _slab_value(S, eps, K, ds, max_squarings, route=None):
-    """The 5x5 value; where JAX differentiates this primal (the primal of a
-    ``jvp``/``vjp`` under a further derivative; ``lax.scan`` under ``vjp``) its
+    """The 5x5 value. Where JAX differentiates this primal (the primal of a
+    ``jvp``/``vjp`` under a further derivative, or ``lax.scan`` under ``vjp``) its
     derivatives come from ``_companion`` once ``_uses_companion`` (plain autodiff
     loses the source tangent ``deps ds 2^-k`` to underflow). ``route`` (static)
-    fixes the branch; ``transfer_los`` decides once per path (1.4x per slab)."""
+    fixes the branch, and ``transfer_los`` decides once per path (1.4x per slab)."""
     value = _plain_value(S, eps, K, ds, max_squarings)
     operands = (value, *(a.astype(value.dtype) for a in (S, eps, K, ds)))
     companion = partial(_companion, max_squarings=max_squarings)
@@ -201,7 +201,7 @@ def _companion(value, S, eps, K, ds, max_squarings):
 
 @partial(jax.custom_jvp, nondiff_argnums=(4,))
 def _linear(S, eps, K, ds, max_squarings):
-    """``Phi S + G eps`` (non-finite entries 0 in the value); tangent as the slab's."""
+    """``Phi S + G eps`` (non-finite entries 0 in the value), with the slab's tangent."""
     Phi, G = _propagators(K, ds, max_squarings)
     return _finite_primal(Phi @ S + G @ eps)
 
@@ -213,7 +213,7 @@ def _linear_jvp(max_squarings, primals, tangents):
 
 
 def _companion_exponent(dtype):
-    """896 in float64 (``maxexp - 128``); 0, i.e. always, in float32."""
+    """896 in float64 (``maxexp - 128``) and 0, i.e. always, in float32."""
     return jnp.finfo(dtype).maxexp - 128
 
 
@@ -234,7 +234,7 @@ def _exposure(k, K, ds):
 
 @jax.custom_jvp
 def _finite_primal(x):
-    """``x`` with non-finite entries set to 0 in the value; tangent unchanged."""
+    """``x`` with non-finite entries set to 0 in the value and the tangent unchanged."""
     return jnp.where(jnp.isfinite(x), x, 0)
 
 
@@ -292,9 +292,10 @@ def _tangent(primals, tangents, dtype, max_squarings):
 
 
 def _length_rate(Phi, S, eps, K):
-    """``(Phi r, i)``, ``r = eps 2^-i - K (S 2^-i)``, so ``Phi (eps - K S) = Phi r 2^i``;
+    """``(Phi r, i)``, ``r = eps 2^-i - K (S 2^-i)``, so ``Phi (eps - K S) = Phi r 2^i``.
     ``i`` in ``[0, maxexp - 2]`` keeps ``|eps|``, ``4 |K| |S|`` below ``2^(maxexp // 2)``
-    (no overflow where the result is finite; entries below ``2^(i - 1022)`` flush)."""
+    (no overflow where the result is finite, and entries below ``2^(i - 1022)``
+    flush)."""
     sizes = jax.lax.stop_gradient(jnp.stack([jnp.max(jnp.abs(x)) for x in (eps, K, S)]))
     e, maxexp = jnp.frexp(sizes)[1], jnp.finfo(Phi.dtype).maxexp
     i = jnp.clip(jnp.maximum(e[0], e[1] + e[2] + 2) - maxexp // 2, 0, maxexp - 2)
@@ -316,7 +317,7 @@ def _slab_jvp(max_squarings, route, primals, tangents):
 
 def _source_exponent(magnitude):
     """``k = floor(log2 magnitude) + 1`` clipped to ``[0, 1022]`` (float64): ``2^k``,
-    ``2^-k`` normal; the scaled column is below 1 (below 4 from ``2^1022`` on)."""
+    ``2^-k`` normal. The scaled column is below 1 (below 4 from ``2^1022`` on)."""
     bias = jnp.finfo(magnitude.dtype).maxexp - 1
     return jnp.clip(jnp.frexp(magnitude)[1], 0, bias - 1)
 
@@ -324,12 +325,12 @@ def _source_exponent(magnitude):
 def transfer_los(S0, eps_s, K_s, ds, *, max_squarings=32):
     """Chain of constant-coefficient slabs along the LOS.
 
-    ``eps_s``: (N, 4) emissivity per slab; ``K_s``: (N, 4, 4) Mueller matrices;
+    ``eps_s``: (N, 4) emissivity per slab. ``K_s``: (N, 4, 4) Mueller matrices.
     ``ds``: scalar slab length (or per-slab (N,)).  Returns final Stokes (4,).
     Each slab is ``transfer_slab``: a non-finite slab is refused inside the
     scan with its cause, and derivatives use its linear tangent rule. The
     derivative route of the value (``_slab_value``) is chosen once per path.
-    Compiled once per shape (``filter_jit``); eager refusals raise
+    Compiled once per shape (``filter_jit``). Eager refusals raise
     ``EquinoxRuntimeError``.
     """
     S0, eps_s, K_s, ds = map(jnp.asarray, (S0, eps_s, K_s, ds))
@@ -366,7 +367,7 @@ def optical_depth_factor(tau):
     """(1-exp(-tau))/tau with value and derivatives continued through zero.
 
     A fourth-degree series is used for ``|tau| < 1e-4`` (next term ``<= 1.4e-23``).
-    Negative optical depths describe gain; overflow for extreme gain remains
+    Negative optical depths describe gain. Overflow for extreme gain remains
     a numerical-domain limit, not a physical saturation model.
     """
     tau = jnp.asarray(tau)

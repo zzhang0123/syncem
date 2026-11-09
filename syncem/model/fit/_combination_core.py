@@ -3,10 +3,10 @@
 With ``a = a_off + J x``, the metric ``M_x = J^T M J = R_x^T R_x`` and the
 Euclidean factorisation ``T J R_x^-1 = L Q``, the fitted model is
 ``R H T a = R H T a_off + R (H L) Q (R_x x)``. The whitened design
-``G_w = L_Sigma^-1 R H L`` on the kept rows is decomposed by SVD; clusters of
+``G_w = L_Sigma^-1 R H L`` on the kept rows is decomposed by SVD. Clusters of
 repeated singular values are kept or dropped whole and receive a canonical
 basis that depends on the observation only (pivoted Gram-Schmidt on the
-cluster projector in the metric coordinates ``x~ = R_x x``); signs make the
+cluster projector in the metric coordinates ``x~ = R_x x``), and signs make the
 largest component of each direction in ``x`` positive. Formulas: design
 Section 5.4 (``docs/DESIGN.md`` Section 10.1). Nothing here is public API.
 
@@ -97,7 +97,7 @@ def find_clusters(s, cluster_rtol):
 
 
 def classify(s, clusters, *, retain_at, null_below, notes):
-    """Class of every singular value; a cluster is decided by its minimum."""
+    """Class of every singular value, with a cluster decided by its minimum."""
     members = {i: (i,) for i in range(len(s))}
     for c in clusters:
         for i in c:
@@ -132,7 +132,7 @@ def pivoted_basis(P, k, tie_rtol=PIVOT_TIE_RTOL):
     Columns within ``tie_rtol`` (relative) of the largest norm are tied and
     the lowest index wins, so rounding below ``tie_rtol`` (for example two
     LAPACK builds on a symmetric pair) does not change the pivot. Only the
-    subspace of a (near-)degenerate set is meaningful; this fixes a basis.
+    subspace of a (near-)degenerate set is meaningful. This fixes a basis.
     """
     cols = np.array(P, dtype=float)
     out = []
@@ -167,7 +167,7 @@ def _sign_fixed(Wx):
 def pivot_tie_rtol(s, cluster):
     """``max(PIVOT_TIE_RTOL, SUBSPACE_ROUNDING u s_max / sep)``, at most 0.5.
 
-    ``sep`` is the distance of the cluster to the rest of the spectrum; by
+    ``sep`` is the distance of the cluster to the rest of the spectrum. By
     Davis-Kahan the computed cluster subspace, hence its projector's column
     norms, is determined only to about ``u s_max / sep``.
     """

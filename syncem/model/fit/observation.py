@@ -19,12 +19,12 @@ Layout and units
 * ``noise``: ``(n_data,)`` variances or ``(n_data, n_data)`` covariance of
   ``eta``, same units squared. ``n_data = 4 n_ch`` without a response.
 * ``mask``: rows that are KEPT (``True``/1). ``(4,)`` broadcasts to
-  ``(n_ch, 4)``; with a response a mask over the data rows ``(n_data,)`` is
+  ``(n_ch, 4)``. With a response a mask over the data rows ``(n_data,)`` is
   accepted, and the Stokes layout only when ``n_data == 4 n_ch``. The mask
-  must be concrete (it fixes the static row count); it is stored as a leaf
+  must be concrete (it fixes the static row count). It is stored as a leaf
   and the kept rows as a static tuple.
 * ``response``: ``(n_data, 4 n_ch)`` real matrix ``R`` mapping the flattened
-  channel Stokes to the data; ``response_uncertainty`` is ``|delta R|`` of
+  channel Stokes to the data, and ``response_uncertainty`` is ``|delta R|`` of
   the same shape (nonnegative). ``fit_linear`` adds the response-error term
   ``|delta R| (|S_hat| + E)`` (stated after ``eq: chromatic beam response``
   for a response that acts on channel-integrated Stokes, with its fitted
@@ -32,10 +32,10 @@ Layout and units
   and reports that bound ``unbounded`` when a response is set without
   ``response_uncertainty`` (zeros declare the response exact).
 * ``discrepancy``: an :class:`ErrorTerm` bounding ``|delta|`` either in
-  Stokes space (``(n_ch, 4)``, ``(4,)`` or scalar; propagated by ``|R|``)
+  Stokes space (``(n_ch, 4)``, ``(4,)`` or scalar, propagated by ``|R|``)
   or in data space (``(n_data,)``).
 
-Shape and dtype errors raise ``ValueError`` at trace time; value errors
+Shape and dtype errors raise ``ValueError`` at trace time. Value errors
 (non-finite data, nonpositive variances, an asymmetric or non-positive
 definite covariance block, negative response uncertainty) use
 ``equinox.error_if``. ``whitened``, ``whiten``, ``design``, ``covariance``
@@ -92,12 +92,12 @@ class StokesData(eqx.Module):
 
     See the module docstring for shapes and units. Masked rows are removed
     inside :meth:`whitened` (and :meth:`whiten`, :meth:`design`,
-    :meth:`covariance`, :meth:`discrepancy_vector`) and from :meth:`dof`;
-    :meth:`n_data` counts the rows before masking. The object is immutable;
-    build a new one to change any field. Units: ``stokes`` and ``noise`` in
+    :meth:`covariance`, :meth:`discrepancy_vector`) and from :meth:`dof`.
+    :meth:`n_data` counts the rows before masking. The object is immutable,
+    so build a new one to change any field. Units: ``stokes`` and ``noise`` in
     the units of the prediction they are compared with (``noise`` squared).
     Assumes Gaussian noise with the supplied variances or covariance and a
-    linear observing ``response``; ``discrepancy`` and
+    linear observing ``response``. ``discrepancy`` and
     ``response_uncertainty`` are caller declarations, not certified here.
     """
 
@@ -227,11 +227,11 @@ class StokesData(eqx.Module):
 
     # ---------------------------------------------------------- discrepancy
     def discrepancy_vector(self) -> jax.Array | None:
-        """``|delta|`` on the kept rows ``(n_kept,)``; ``None`` without a valued term.
+        """``|delta|`` on the kept rows ``(n_kept,)``, or ``None`` without a valued term.
 
         A Stokes-space term (``(n_ch, 4)``, ``(4,)`` or scalar) is
         propagated by ``|R|`` (the channel-envelope term ``|R| E``,
-        ``sec: frequency order``); a data-space term ``(n_data,)`` is used as
+        ``sec: frequency order``). A data-space term ``(n_data,)`` is used as
         is. The response-error term ``|delta R S_hat|`` (stated after
         ``eq: chromatic beam response``) needs a Stokes estimate and is added
         by ``fit_linear`` from ``response_uncertainty``, not here.
@@ -250,7 +250,7 @@ class StokesData(eqx.Module):
 
     # ------------------------------------------------------------------ dof
     def dof(self, n_params: int) -> int:
-        """``n_kept - n_params`` (signed; a rank-deficient fit should use its rank)."""
+        """``n_kept - n_params`` (signed, and a rank-deficient fit should use its rank)."""
         if isinstance(n_params, bool) or not isinstance(n_params, (int, np.integer)):
             raise ValueError("n_params must be an int")
         if n_params < 0:

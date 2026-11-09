@@ -28,9 +28,9 @@ channel derivative coefficients`` (the ``1/(r! s!)`` convention), the
     (s+1)/eps_B c[r,s+1] - (r+1)/(2 eps_g) c[r+1,s] - (1 + r/2 - s) c[r,s] = 0.   (R)
 
 One relation is generated per block and ``(r, s)`` when ``(r, s)``,
-``(r+1, s)`` and ``(r, s+1)`` are all retained; each owns its ``(r, s+1)``
+``(r+1, s)`` and ``(r, s+1)`` are all retained. Each owns its ``(r, s+1)``
 slot, so the relations are independent. For an uncapped block of degree
-``D`` there are ``D (D+1)/2`` relations and ``D + 1`` groups; the ``D``-jet of
+``D`` there are ``D (D+1)/2`` relations and ``D + 1`` groups. The ``D``-jet of
 ``B Phi(B gamma^2)`` is fixed by ``Phi^(0..D)``, so no further linear relation
 holds for a generic ``Phi`` (the set is complete). Capped blocks are checked
 on listed cases only (``tests/model/test_reduction.py``).
@@ -39,7 +39,7 @@ Other helpers: structural zero relations, residual checks, redundancy
 pruning, deterministic representative selection, ``T``/``H`` assembly,
 the Euclidean factorisation ``T = L Q`` (``lq_factor``, ``lq_qr``,
 ``lq_svd``) and numerical column-relation candidates. Nothing here is public
-API; the contracts are stated in ``syncem.model.fit.reduction``.
+API. The contracts are stated in ``syncem.model.fit.reduction``.
 """
 
 from __future__ import annotations
@@ -72,7 +72,7 @@ def structural_relations(layout):
 
 
 def fractional_scales(layout):
-    """``(eps_g, eps_B) = (s_gamma/gamma0, s_B/B0)``; ``ValueError`` unless positive finite."""
+    """``(eps_g, eps_B) = (s_gamma/gamma0, s_B/B0)``, with ``ValueError`` unless positive finite."""
     eps_g = layout.value("s_gamma") / layout.value("gamma0")
     eps_B = layout.value("s_B") / layout.value("B0")
     for name, value in (("eps_g", eps_g), ("eps_B", eps_B)):
@@ -177,7 +177,7 @@ def prune(R):
 
 
 def preference_key(layout, representatives):
-    """Sort key of a slot, most preferred first; structural zeros forced last."""
+    """Sort key of a slot, most preferred first, with structural zeros forced last."""
     listed = (
         {}
         if representatives == "gamma"
@@ -239,7 +239,7 @@ def assemble(C, R, rep, eliminated):
 
 
 def lq_qr(T):
-    """``(L, Q)`` from ``numpy.linalg.qr(T.T)``, ``diag(L) > 0``; full row rank only."""
+    """``(L, Q)`` from ``numpy.linalg.qr(T.T)``, ``diag(L) > 0``, for full row rank only."""
     T = np.asarray(T, dtype=float)
     if T.shape[0] == 0:
         return np.zeros((0, 0)), np.zeros((0, T.shape[1]))
@@ -249,7 +249,7 @@ def lq_qr(T):
 
 
 def lq_svd(T, rank=None):
-    """``(L, Q) = (U_r S_r, V_r^T)`` from the thin SVD; any row rank."""
+    """``(L, Q) = (U_r S_r, V_r^T)`` from the thin SVD, for any row rank."""
     T = np.asarray(T, dtype=float)
     if T.shape[0] == 0:
         return np.zeros((0, 0)), np.zeros((0, T.shape[1]))

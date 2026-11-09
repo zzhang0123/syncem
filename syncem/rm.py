@@ -5,11 +5,11 @@ Defines the Faraday rotation coefficient and its moment-expansion content.
 Conventions (CGS, Gaussian units)::
 
     chi  = RM * lambda^2            position-angle rotation (radians)
-    RM   = C_RM * int n_e B_par ds   [rad cm^-2 in CGS; see rm_rad_per_m2]
+    RM   = C_RM * int n_e B_par ds   [rad cm^-2 in CGS, see rm_rad_per_m2]
     C_RM = e^3 / (2 pi m_e^2 c^4)
 
 The rounded practical constant is RM[rad/m^2] = 0.812 * int n_e[cm^-3]
-B_par[uG] d(s/pc); use the CGS conversion for the unrounded coefficient.
+B_par[uG] d(s/pc). Use the CGS conversion for the unrounded coefficient.
 
 For an external Gaussian RM screen with a common incident complex polarization
 (or one independent of RM), P = Q + i U is averaged as::
@@ -18,7 +18,7 @@ For an external Gaussian RM screen with a common incident complex polarization
 
 Weighted mean and variance alone do not establish that Gaussian closure.
 Distributed emission is implemented by the joint emission-depth average in
-``syncem.faraday``; its depths are measured from each emitter to the observer.
+``syncem.faraday``. Its depths are measured from each emitter to the observer.
 """
 
 from __future__ import annotations
@@ -48,8 +48,8 @@ def rotation_measure_practical(
     """NumPy path quadrature with the rounded coefficient0.812 [rad/m^2].
 
     Supply matching finite one-dimensional samples on an increasing path, with
-    nonnegative density. This preprocessing function is not JIT/autodiff code;
-    path quadrature error and rounding of the practical coefficient remain.
+    nonnegative density. This preprocessing function is not JIT/autodiff code.
+    Path quadrature error and rounding of the practical coefficient remain.
     """
     return float(faraday_depth_practical(n_e_cm3, B_par_uG, s_pc)[0])
 
@@ -60,8 +60,8 @@ def faraday_depth_practical(
     """Depth from each path node to the observer, in rad/m^2 (NumPy).
 
     Positions increase towards the observer at the last node. Integrate
-    ``0.812 * n_e * B_parallel`` from each node to that endpoint by trapezoids;
-    positive field points towards the observer. Field reversals and nonmonotone
+    ``0.812 * n_e * B_parallel`` from each node to that endpoint by trapezoids.
+    Positive field points towards the observer. Field reversals and nonmonotone
     depth are allowed. Add a separately supplied foreground depth to every node
     if the path stops before the observer. No monotonic-depth inversion is used.
 
@@ -97,7 +97,7 @@ def faraday_depth_practical(
 
 
 def rotation_angle(lam: ArrayLike, path_cgs: ArrayLike) -> jax.Array:
-    """Position-angle Faraday rotation chi = RM * lam^2 [rad]; ``lam`` in cm,
+    """Position-angle Faraday rotation chi = RM * lam^2 [rad], ``lam`` in cm,
     ``path_cgs`` = int n_e B_par ds in [G/cm]."""
     return C_RM_CGS * jnp.asarray(lam) ** 2 * jnp.asarray(path_cgs)
 
@@ -112,7 +112,7 @@ def burn_depolarisation(
         <P(lam)> = P0 * exp(2 i mean_rm lam^2) * exp(-2 var_rm lam^4)
 
     ``P0`` may be complex (Q0 + i U0), common to the rays or independent of
-    RM; ``lam`` is in metres. Inputs must be finite and broadcast-compatible,
+    RM. ``lam`` is in metres. Inputs must be finite and broadcast-compatible,
     with var_rm>=0. A non-Gaussian screen instead requires its characteristic
     function and a discrepancy for the Gaussian closure. This expression does
     not include internally distributed emission, absorption or conversion.
@@ -141,7 +141,7 @@ def gaussian_rm_cumulants(
     Returns population (mean_rm, var_rm), without a sample-unbiased correction.
     The legacy name does not assert Gaussianity. These two statistics alone
     do not determine the external-screen characteristic function. Samples and
-    optional weights are finite matching 1D arrays; weights are nonnegative
+    optional weights are finite matching 1D arrays. Weights are nonnegative
     with positive total mass. This function supports JIT and differentiation.
     """
     rms, w = _screen_samples(rms, weights)
@@ -184,13 +184,13 @@ def _pow2(k, dtype):
 
 def _times_pow2(x, k):
     """``x * 2**k``, integer ``k`` in ``[2 (1 - bias), 2 bias]``, by two normal
-    factors: no spurious over/underflow; exact unless the result is subnormal."""
+    factors: no spurious over/underflow, and exact unless the result is subnormal."""
     half = k // 2
     return x * _pow2(half, x.dtype) * _pow2(k - half, x.dtype)
 
 
 def _weights_invalid(w):
-    """True unless ``w`` is finite, sign-bit nonnegative, with a positive entry; reads
+    """True unless ``w`` is finite, sign-bit nonnegative, with a positive entry. It reads
     the bits (on XLA CPU ``-5e-324 < 0`` is False, a mask accepted it under JIT)."""
     itype = _float_layout(w.dtype)[0]
     bits = jax.lax.bitcast_convert_type(w, itype)
@@ -200,7 +200,7 @@ def _weights_invalid(w):
 
 def _scaled_weights(w):
     """``(w / 2^top, top)``, ``top = floor(log2 max w)``, in float64 from the bits
-    ``sig 2^e`` of 16 to 64-bit ``w`` (subnormals included); peak in ``[1, 2)``."""
+    ``sig 2^e`` of 16 to 64-bit ``w`` (subnormals included), peak in ``[1, 2)``."""
     itype, nmant, bias = _float_layout(w.dtype)
     magnitude = jnp.maximum(jax.lax.bitcast_convert_type(w, itype), 0)  # -0.0 -> 0
     field = (magnitude >> nmant).astype(jnp.int32)
@@ -216,7 +216,8 @@ def _scaled_weights(w):
 
 def _headroom_shift(top, headroom):
     """``s = clip(-top - (1022 - headroom), 0, headroom)``: the tangent factor
-    ``2^-(top + s)`` stays below ``2^(1022 - headroom)``; 0 for larger ``max(w)``."""
+    ``2^-(top + s)`` stays below ``2^(1022 - headroom)``, and ``s = 0`` for
+    larger ``max(w)``."""
     return jnp.clip(-top - (_WIDE_BIAS - 1 - headroom), 0, headroom)
 
 
@@ -237,7 +238,7 @@ def _relative_weights_jvp(headroom, primals, tangents):
 
 
 def _relative_weights_wide(w, headroom=0):
-    """``w / max(w) 2^-s`` in float64 (``_headroom_shift``); refuses subnormal max."""
+    """``w / max(w) 2^-s`` in float64 (``_headroom_shift``). A subnormal max is refused."""
     w = jnp.asarray(w)
     return _relative_weights_core(
         eqx.error_if(w, _scaled_weights(w)[1] < 1 - _WIDE_BIAS, _SUBNORMAL_MAX),
@@ -249,7 +250,7 @@ def _relative_weights(w):
     """``w / max(w)`` in the dtype of 1D ``w`` (1 to one ulp at max), scaled in float64
     by the exact ``2^-floor(log2 max w)``, so no subnormal reciprocal forms (jax
     0.10.2 CPU: ``5e307 / 1e308 = 0`` via ``1e-308``). Ratios below ``2^-1022``
-    flush (at most ``n 2^-1022`` of the mass); a subnormal maximum is refused.
+    flush (at most ``n 2^-1022`` of the mass), and a subnormal maximum is refused.
     Bit-identical to v0.2.0's ``w / max(w)`` where that stayed normal. The scale
     is a constant of differentiation: the tangent is ``dw / max(w)``."""
     w = jnp.asarray(w)
@@ -259,7 +260,7 @@ def _relative_weights(w):
 @jax.custom_jvp
 def _sum_tangent(r, R, dr):
     """JVP of ``r / R``, ``R = sum(r)``, with the plain division JVP's operations
-    (bit-identical); reverse mode transposes it, forward mode uses the rule."""
+    (bit-identical). Reverse mode transposes it, and forward mode uses the rule."""
     dR = jnp.sum(dr)  # this order reproduces the division's JVP bits
     return dr / R + -dR * r * jax.lax.integer_pow(R, -2)
 
@@ -281,7 +282,7 @@ def _sum_tangent_jvp(primals, tangents):
 
 @jax.custom_jvp
 def _divide_by_sum(r):
-    """``r / sum(r)`` for float64 ``r`` with positive sum; JVP ``_sum_tangent``."""
+    """``r / sum(r)`` for float64 ``r`` with positive sum, with JVP ``_sum_tangent``."""
     return r / jnp.sum(r)
 
 
@@ -349,12 +350,12 @@ def screen_polarisation(
 
     RM samples are a nonempty 1D array in rad/m^2, wavelengths in metres.
     ``P0`` is a complex scalar shared by rays or a matching 1D array allowing
-    correlation with RM. Wavelengths can have any shape; the output has that
+    correlation with RM. Wavelengths can have any shape, and the output has that
     shape, with no implicit ray/frequency broadcasting. Weights are finite,
     nonnegative relative masses, normalized internally. All inputs must be
-    finite; RM and wavelengths must be real. JIT and differentiation are
+    finite. RM and wavelengths must be real. JIT and differentiation are
     supported. A scan uses O(number of wavelengths) working storage in forward
-    evaluation; reverse-mode AD may retain per-ray intermediates.
+    evaluation. Reverse-mode AD may retain per-ray intermediates.
 
     This is the supplied discrete-screen average, not a Gaussian closure or
     a cumulant truncation. Sampling/quadrature error and physical screen-model

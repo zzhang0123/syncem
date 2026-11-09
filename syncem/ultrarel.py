@@ -4,7 +4,7 @@ F(x)=x integral_x^infinity K_(5/3)(u) du and G(x)=x K_(2/3)(x).
 Interchanging the two positive integrals gives the single-integral form
 F=x integral_0^infinity exp(-x cosh t) cosh(5t/3)/cosh(t) dt. This avoids nested
 quadrature and the former switched small-x approximation. These are continuum
-kernels; agreement with their integral definitions does not bound the physical
+kernels. Agreement with their integral definitions does not bound the physical
 error of replacing finite-gamma, directional harmonic radiation by a continuum.
 """
 
@@ -16,7 +16,7 @@ from .bessel import _modified_integral, _modified_tail_bound, bessel_kn
 
 
 def G(x, *, n_nodes=128, tail_cutoff=50.0):
-    """G(x)=x K_(2/3)(x); G(0)=0, autodiff is intended for x > 0."""
+    """G(x)=x K_(2/3)(x) with G(0)=0. Autodiff is intended for x > 0."""
     x = jnp.asarray(x)
     safe_x = jnp.where(x > 0, x, 1.0)
     value = safe_x * bessel_kn(
@@ -26,7 +26,7 @@ def G(x, *, n_nodes=128, tail_cutoff=50.0):
 
 
 def F(x, *, n_nodes=128, tail_cutoff=50.0):
-    """F(x); node count/cutoff are static under JIT. F(0)=0.
+    """F(x). Node count/cutoff are static under JIT. F(0)=0.
 
     ``F_tail_bound`` controls the finite upper limit only. Compare node counts
     and independent references to assess quadrature and floating-point error.
@@ -42,7 +42,7 @@ def F(x, *, n_nodes=128, tail_cutoff=50.0):
 
 
 def F_tail_bound(x, *, tail_cutoff=50.0):
-    """Bound F's omitted positive-t tail; excludes quadrature/roundoff errors."""
+    """Bound F's omitted positive-t tail, excluding quadrature/roundoff errors."""
     return jnp.asarray(x) * _modified_tail_bound(
         5.0 / 3.0, x, divide_cosh=True, tail_cutoff=tail_cutoff
     )

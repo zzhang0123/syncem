@@ -1,8 +1,8 @@
 """Linear least-squares spectral fits and Fisher matrices (``syncem.model.fit.linear``).
 
 LABEL: ``eq: svd estimator`` applied to the design ``G = R C [c | P]`` of an
-affine ``ParameterMap`` (unknowns ``u = (A, A theta)``; data
-``d = A C m + delta + eta`` of ``sec: linear fit``; the observing response
+affine ``ParameterMap`` (unknowns ``u = (A, A theta)``, data
+``d = A C m + delta + eta`` of ``sec: linear fit``, the observing response
 ``R`` inside ``C`` as in ``sec: frequency order``) and ``eq: estimator bias``
 (the declared discrepancy ``delta`` that the bias bound uses).
 ``[extension]``: the column equilibration ``G D`` and the relative ``tol``,
@@ -11,16 +11,16 @@ which replace the fixed coefficient scales and the UPRE rank of
 
 :func:`fit_linear` needs an affine ``ParameterMap`` (``m = P theta + c``,
 ``ParameterMap.is_affine()``), given as ``parameter_map`` or declared by name
-with ``assumptions=`` (``assumptions.declare``; not both); any other map
+with ``assumptions=`` (``assumptions.declare``, not both). Any other map
 raises ``ValueError`` naming ``fit_bfgs`` (and ``known_angles`` for the
 bilinear uncoupled case of ``eq: uncoupled moments``). With the amplitude
-fitted the unknowns are ``u = (A, A theta)`` and the design is ``G = R C [c | P]``; with ``amplitude=<float>`` the
+fitted the unknowns are ``u = (A, A theta)`` and the design is ``G = R C [c | P]``. With ``amplitude=<float>`` the
 unknowns are ``theta`` and the design ``A R C P`` with the offset
 ``A R C c`` removed from the data. The solver minimises
 ``||L^-1 (d - G u)||`` on the kept rows by a rank-revealing SVD of the
 column-equilibrated design ``G D``, ``D = diag(1/||G_i||)`` (singular values
 below ``tol`` times the largest are dropped, so the rank does not depend on
-the ``Reference`` scales; minimum equilibrated-norm solution when
+the ``Reference`` scales, with the minimum equilibrated-norm solution when
 rank-deficient). It reports ``A = u[0]``, ``theta = u[1:] / u[0]``, the
 Fisher matrix ``G^T Sigma^-1 G``, its inverse as ``covariance`` (``None``
 when rank-deficient), ``chi2``, ``dof = n_kept - rank`` and
@@ -38,14 +38,14 @@ null-space component of ``u`` is not identified). The prediction's
 ``statistical_input`` adds the moment bias ``|dm/du| bias_bound`` to the
 one-sigma noise term (``unbounded`` when the bias is).
 ``discrepancy_policy="inflate"`` adds ``diag(delta^2)`` (declared
-discrepancy only) to the noise covariance before solving; this is a
+discrepancy only) to the noise covariance before solving. This is a
 heuristic (noted in the provenance): the Fisher matrix, covariance,
 ``chi2`` and the identifiability report then describe the inflated weights,
 not the noise (the ``chi2`` under the declared noise is noted). The bias
 bound is computed under both policies.
 
 :func:`fisher` is ``J^T Sigma^-1 J`` with ``J`` the ``jax.jacfwd`` Jacobian
-of the whitened prediction ``L^-1 R C A m(theta)``; in the ``"natural"``
+of the whitened prediction ``L^-1 R C A m(theta)``, in the ``"natural"``
 coordinates ``x = (A, flatten(theta))`` (or ``flatten(theta)`` with a fixed
 ``amplitude``), or in the ``"linear"`` coordinates ``u = (A, A theta)`` of
 ``fit_linear``. It works for any map (affine or not), is ``jax.jit`` safe
@@ -53,8 +53,8 @@ in ``theta`` and depends on ``theta`` only through the map (exact for
 affine maps in the linear coordinates).
 
 Shapes: ``G`` is ``(n_kept, 1 + n_free)`` (``(n_kept, n_free)`` with a fixed
-amplitude); ``fisher`` returns ``(n, n)`` in the chosen coordinates.
-Units: data, amplitude and ``chi2`` in the units of the basis prediction;
+amplitude), and ``fisher`` returns ``(n, n)`` in the chosen coordinates.
+Units: data, amplitude and ``chi2`` in the units of the basis prediction,
 ``theta`` and the moments in the displacement coordinates of the map.
 Shape and configuration errors raise ``ValueError`` at trace time.
 ``fit_linear`` is eager (the rank and the reports are concrete). Not
@@ -123,20 +123,20 @@ def fit_linear(
 ) -> FitResult:
     """Closed-form least-squares fit of an affine map (module docstring).
 
-    ``basis``: ``SpectralBasis``; ``data``: ``StokesData``; ``parameter_map``:
+    ``basis``: ``SpectralBasis``. ``data``: ``StokesData``. ``parameter_map``:
     an affine ``ParameterMap`` on ``basis.index``, or ``assumptions`` (keyword
-    addition): names or ``Assume`` specs for ``declare(basis.index, ...)``;
+    addition): names or ``Assume`` specs for ``declare(basis.index, ...)``,
     exactly one of the two. ``amplitude="fit"`` or a
-    positive float; ``discrepancy_policy`` in ``POLICIES``; ``tol`` the
+    positive float. ``discrepancy_policy`` in ``POLICIES``. ``tol``: the
     relative singular-value cutoff on the column-equilibrated design (passed
-    to ``identifiability``, so both report the same rank);
+    to ``identifiability``, so both report the same rank).
     ``diagnostics=False`` skips the identifiability report, the feasibility
     checks and the prediction (keyword addition, for repeated fits). Raises
     ``ValueError`` for both or neither of ``parameter_map`` and
     ``assumptions``, a non-affine map (use ``fit_bfgs``), an index or
     channel mismatch, an unknown policy, ``"inflate"`` without a valued
-    discrepancy, or a non-positive fixed amplitude. Returns a ``FitResult``;
-    shapes, units and what is not certified: module docstring.
+    discrepancy, or a non-positive fixed amplitude. Returns a ``FitResult``.
+    Shapes, units and what is not certified: module docstring.
     """
     parameter_map = resolve_map(basis.index, parameter_map, assumptions)
     if parameter_map is None:
@@ -250,12 +250,12 @@ def fisher(
 ) -> jax.Array:
     """``J^T Sigma^-1 J`` of the whitened prediction (module docstring).
 
-    ``theta`` is a ``Parameters`` of ``parameter_map``; its ``log_amplitude``
+    ``theta`` is a ``Parameters`` of ``parameter_map``. Its ``log_amplitude``
     supplies ``A`` unless ``amplitude=`` fixes it (then the amplitude is not
-    a coordinate; passing both raises ``ValueError``). ``coordinates``:
+    a coordinate, and passing both raises ``ValueError``). ``coordinates``:
     ``"natural"`` for ``x = (A, flatten(theta))`` or ``"linear"`` for
     ``u = (A, A theta)`` (``v = A theta`` with a fixed amplitude). Returns
-    ``(n, n)``; ``jax.jit`` safe in ``theta``. A local information matrix;
+    ``(n, n)``, ``jax.jit`` safe in ``theta``. A local information matrix,
     not certified as a covariance unless ``data.noise`` is the noise model.
     """
     C = _check_map(basis, parameter_map)

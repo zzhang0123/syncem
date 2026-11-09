@@ -72,9 +72,9 @@ def _harmonic(n, gamma, alpha, theta, *, n_nodes=None):
 def stokes_harmonic(n, gamma, alpha, theta, B=None, *, n_nodes=None):
     """Stokes (I, Q, V) power per unit solid angle at harmonic ``n``.
 
-    If ``B`` (Gauss) is given, returns physical ``dP_n/dOmega`` [erg/s/sr];
-    otherwise returns the value normalised by e^2 w_B^2/(2 pi c). That
-    normalisation depends on gamma; derivatives of this dimensionless output
+    If ``B`` (Gauss) is given, returns physical ``dP_n/dOmega`` [erg/s/sr].
+    Otherwise it returns the value normalised by e^2 w_B^2/(2 pi c). That
+    normalisation depends on gamma. Derivatives of this dimensionless output
     are not physical fixed-B derivatives. Harmonic n >= 1, gamma >= 1,
     alpha/theta in [0, pi]. Angular endpoints use their analytic limits.
     Numerical quadrature errors remain separate from the vacuum helical-orbit
@@ -82,7 +82,7 @@ def stokes_harmonic(n, gamma, alpha, theta, B=None, *, n_nodes=None):
 
     ``n_nodes`` (static int, keyword-only) passes through to the Bessel
     quadrature: ``None`` keeps the automatic count (identical output to the
-    historical behaviour); a static count lets ``n`` be a traced float order
+    historical behaviour), and a static count lets ``n`` be a traced float order
     under ``jax.jit``/``vmap`` (unresolved orders return NaN, see
     ``syncem.bessel``). The count is a resolution choice, not an error bound.
     """

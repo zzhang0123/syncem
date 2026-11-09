@@ -4,7 +4,7 @@
 ``sigma_P sqrt(1 - |Phi_R|^2)`` on the covariance omitted by an
 independent-screen factorisation) and ``azimuth_factorisation_bound`` (the
 ``[extension]`` bound ``sigma_F sqrt(1 - |m_phi|^2)`` on the covariance
-omitted by a constant circular moment); re-exported by
+omitted by a constant circular moment). Both are re-exported by
 ``syncem.model.bounds``, whose module docstring states the units and what is
 not certified.
 """
@@ -21,7 +21,7 @@ from .errors import ErrorTerm
 def _variance_bound(sigma, modulus, sigma_name, modulus_name, *, per_line=False):
     """``sum_m sigma_m sqrt(1 - |modulus_m|^2)`` over the last axis of ``(n_ch, n_line)``.
 
-    A 1-D ``sigma`` ``(n_ch,)`` gives ``sigma sqrt(1 - |modulus|^2)``; a 2-D
+    A 1-D ``sigma`` ``(n_ch,)`` gives ``sigma sqrt(1 - |modulus|^2)``. A 2-D
     ``sigma`` is accepted only with ``per_line``. ``modulus`` is a scalar or
     matches ``sigma``.
     """
@@ -56,20 +56,20 @@ def screen_factorisation_bound(
     * per line, ``sigma_P_in`` ``(n_ch, n_line)`` the ray standard deviation
       of the channel-weighted incident line polarisation
       ``|R_j(nu_m)| sigma_{P_m}`` and ``Phi_R_abs_min`` ``(n_ch, n_line)`` (or
-      a scalar) ``|<exp(i tau_m R)>|``; returns ``sum_m sigma_m sqrt(1 -
-      |Phi_m|^2)`` (pad absent lines with ``sigma = 0``);
+      a scalar) ``|<exp(i tau_m R)>|``, returning ``sum_m sigma_m sqrt(1 -
+      |Phi_m|^2)`` (pad absent lines with ``sigma = 0``).
     * per channel, ``sigma_P_in`` ``(n_ch,)`` the SUM over the lines of the
       per-line standard deviations, ``sum_m |R_j(nu_m)| sigma_{P_m}`` (for a
       continuum, ``int |R_j| sigma_{P(nu)} dnu``), and ``Phi_R_abs_min``
-      ``(n_ch,)`` the smallest ``|Phi_R|`` over the lines; returns
+      ``(n_ch,)`` the smallest ``|Phi_R|`` over the lines, returning
       ``sigma sqrt(1 - |Phi|^2)``.
 
     The standard deviation of the channel-summed incident polarisation is not
     a valid ``sigma_P_in``: covariances of different lines can cancel in it
     while the channel error does not. The bound applies to ``|P|`` only
-    (zeros in ``I, V``); it can be loose and is an assumption term of the
+    (zeros in ``I, V``). It can be loose and is an assumption term of the
     budget. Units: those of ``sigma_P_in`` times ``amplitude`` (channel
-    Stokes). The inputs are the caller's; nothing here certifies them.
+    Stokes). The inputs are the caller's, and nothing here certifies them.
     """
     value = _variance_bound(
         sigma_P_in, Phi_R_abs_min, "sigma_P_in", "Phi_R_abs_min", per_line=True
@@ -89,10 +89,10 @@ def azimuth_factorisation_bound(sigma_F, m_phi_abs, *, amplitude=1.0) -> ErrorTe
     """``sigma_F sqrt(1 - |m_phi|^2)`` per channel (``[extension]`` angular factorisation error).
 
     ``sigma_F`` ``(n_ch,)`` is the standard deviation of the natural-basis
-    polarised channel kernel under the population measure; ``m_phi_abs`` is
+    polarised channel kernel under the population measure, and ``m_phi_abs`` is
     ``|<exp(2 i phi)>|`` (scalar or ``(n_ch,)``). Zeros in ``I, V``.
     Units: those of ``sigma_F`` times ``amplitude``. Assumes the
-    constant-conditional-circular-moment model of that bound; the
+    constant-conditional-circular-moment model of that bound. The
     inputs are the caller's and are not certified here.
     """
     value = _variance_bound(sigma_F, m_phi_abs, "sigma_F", "m_phi_abs")

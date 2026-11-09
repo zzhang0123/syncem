@@ -3,15 +3,15 @@
 LABEL: ``eq: channel derivative coefficients`` at ``N<=1`` in the reference's
 scaled coordinates, from ``eq: legendre spectral response`` projections of
 ``eq: channel kernel``, and ``eq: angular parity`` (``I_basis`` is zero on
-``index.h0`` columns with odd ``l+k`` and ``V_basis`` on even ``l+k``;
-``index.h2`` omits odd ``l+k``, so ``P_basis`` has no such columns);
+``index.h0`` columns with odd ``l+k`` and ``V_basis`` on even ``l+k``,
+and ``index.h2`` omits odd ``l+k``, so ``P_basis`` has no such columns).
 ``[extension]`` denotes the ridge eta rule. The returned basis stores real
 ``I_basis`` and ``V_basis`` of shape ``(n_ch, n0)`` and complex ``P_basis``
 of shape ``(n_ch, n2)``, as in :class:`~syncem.model.basis.SpectralBasis`.
 
 The expensive harmonic and angular calculations run once here.  Repeated
 ``predict`` calls use the resulting :class:`~syncem.model.basis.SpectralBasis`
-matrix. ``Truncation.N`` may be zero or one; first derivatives are evaluated
+matrix. ``Truncation.N`` may be zero or one. First derivatives are evaluated
 in physical gamma/B and converted to the reference's dimensionless moment
 coordinates. This builder returns an exploratory basis
 with ``numerical`` error ``unbounded`` even if the inner quadrature stopping
@@ -73,8 +73,8 @@ def _ridge_eta_rule(mu, nodes, weights, gamma, B, frequency_floor):
     supported harmonic estimates this channel's turning-point width m**(-1/3).
     The physical beaming width gamma**(-1) is the other
     scale.  Multiplication by D=1-beta*mu**2 converts either angular width
-    into the local eta-mu width.  This choice sets a quadrature coordinate;
-    it does not truncate the support or certify a quadrature error.
+    into the local eta-mu width.  This choice sets a quadrature coordinate.
+    It does not truncate the support or certify a quadrature error.
     """
     beta = math.sqrt(1.0 - gamma**-2)
     D = 1.0 - beta * mu * mu
@@ -118,13 +118,13 @@ def build_high_order_basis(
     """Build a reusable high-order ``N<=1`` response at a fixed reference.
 
     The returned basis retains all angular Legendre pairs and depth-phase
-    weights of ``truncation``.  It can be passed to ``predict``; likelihood
+    weights of ``truncation``.  It can be passed to ``predict``, and likelihood
     evaluations then perform only matrix algebra.  The full positive harmonic
     range meeting each channel is selected at every angular node, with the
     direct/dense choice made from that channel's active mode count.
 
-    ``angular_rule="ridge"`` uses ``n_eta`` Gauss nodes *per inner panel*;
-    the number of panels is one to three for each mu node.  The coordinate
+    ``angular_rule="ridge"`` uses ``n_eta`` Gauss nodes *per inner panel*.
+    The number of panels is one to three for each mu node.  The coordinate
     covers the full eta interval and discards no angular tail.  The local
     scale is ``(1-beta*mu**2)*max(1/gamma,m_lo**(-1/3))``, where ``m_lo`` is
     the channel's lower support frequency divided by its line spacing at
@@ -137,14 +137,14 @@ def build_high_order_basis(
     corresponding ``reference.scales``. The derivative evaluator uses
     ``atol_gamma`` and ``atol_B`` as separate *physical-unit* quadrature
     stopping thresholds. They are not error bounds. The finite angular rule
-    and host harmonic values/derivatives are not certified by this builder;
-    ``kernel_terms.numerical`` is ``unbounded``. The optional separate
+    and host harmonic values/derivatives are not certified by this builder,
+    and ``kernel_terms.numerical`` is ``unbounded``. The optional separate
     postprocessor returns a new basis, with a report, whose ``numerical``
-    term is a conditional fixed-reference ``bound``; the supplied basis is
+    term is a conditional fixed-reference ``bound``. The supplied basis is
     unchanged. The N=1 derivative part of that bound is coarse. No bound for
     a nonzero gamma/B Taylor displacement is inferred from either basis.
     ``allow_unconverged=True`` permits failed inner quadrature-difference
-    checks for exploratory work; the count is recorded in provenance.
+    checks for exploratory work, and the count is recorded in provenance.
     ``E_phys`` is an optional *declared* model discrepancy, not a numerical
     certificate.  Only :class:`TaylorPhase` is accepted in this first route.
     """
@@ -195,7 +195,7 @@ def build_high_order_basis(
     parity = (-1.0) ** (pairs[:, 0] + pairs[:, 1])
     norm = (2 * pairs[:, 0] + 1) * (2 * pairs[:, 1] + 1) / 4.0
 
-    # The positive half of the full mu rule; the eta nodes may depend on mu.
+    # The positive half of the full mu rule. The eta nodes may depend on mu.
     mu_all, w_mu_all = np.polynomial.legendre.leggauss(n_mu)
     eta_rule_nodes, eta_rule_weights = np.polynomial.legendre.leggauss(n_eta)
     positive = mu_all > 0

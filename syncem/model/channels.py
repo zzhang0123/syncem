@@ -4,17 +4,17 @@ LABEL ``eq: channel kernel``: the Dirac-line harmonic spectrum is evaluated
 only after pairing with a smooth response of compact support away from zero
 frequency. The ``bump`` family ``R = exp[1 - 1/(1 - t^2)]``, ``t = (nu - c)/w``,
 ``|t| < 1``, used in the acceptance benchmark, has the shape of main.tex
-``eq: forward response families`` with ``k = 1``; the package parametrises it
+``eq: forward response families`` with ``k = 1``. The package parametrises it
 by the support half-width ``w`` and scales it to unit peak by default
 (``"unit_integral"`` gives the unit area of main.tex).
 
 Units: frequencies in Hz. ``R`` is dimensionless for ``normalisation="unit_peak"``
-(height-normalised, as in the acceptance benchmark; outputs are
+(height-normalised, as in the acceptance benchmark, and outputs are
 band-integrated powers) and has units 1/Hz for ``"unit_integral"`` (``int R dnu = 1``). No
 ``2 pi`` enters anywhere: ``from_table(..., argument="omega")`` converts by
 ``R_nu(nu) = R_omega(2 pi nu)``.
 
-Shapes: ``n_ch`` channels; ``__call__(nu)`` returns ``(n_ch, *nu.shape)``.
+Shapes: ``n_ch`` channels, and ``__call__(nu)`` returns ``(n_ch, *nu.shape)``.
 ``nodes``/``weights`` are an ``n_nu``-point Gauss-Legendre rule on each support
 (weights include the Jacobian ``(nu_hi - nu_lo)/2``) for the continuum route.
 For ``bump``, the stored support is padded outward by one floating-point step
@@ -104,25 +104,25 @@ def _static_int(value, name, minimum):
 
 
 class Channels(eqx.Module):
-    """Frequency responses of ``n_ch`` channels; see the module docstring.
+    """Frequency responses of ``n_ch`` channels (module docstring).
 
     ``widths_hz`` is the half-width of the support for ``bump``, ``planck_taper``,
     ``raised_cosine`` and ``tophat``, the standard deviation for ``gaussian`` and
     the support half-width for ``table``. ``support`` is ``(n_ch, 2)`` with
-    ``0 < nu_lo < nu_hi``. Arrays are traced leaves; ``family``, ``normalisation``,
+    ``0 < nu_lo < nu_hi``. Arrays are traced leaves. ``family``, ``normalisation``,
     ``smoothness``, ``taper``, ``n_nu``, ``table`` and ``support_sigma`` are static.
     ``from_basis`` adds the leaves ``reference_channels`` (a ``Channels``) and
     ``coefficients`` ``(n_ch, n_ref)``. ``from_callable`` adds the static
     ``response_fn`` (one callable per channel), ``derivative_bound`` and
     ``edge`` (the sampled relative edge value).
 
-    Units: all frequencies in Hz; ``__call__`` is dimensionless for
+    Units: all frequencies in Hz, and ``__call__`` is dimensionless for
     ``unit_peak`` and per Hz for ``unit_integral``. Assumes the response is
     exactly the declared function of frequency (an instrument's measured
     response enters through ``from_table`` with its declared smoothness).
     Not certified: the fidelity of that response to the instrument, and the
     Gauss-Legendre ``nodes``/``weights`` accuracy for the continuum route
-    (``n_nu`` is a declared count; ``planck_taper`` converges slowly).
+    (``n_nu`` is a declared count, and ``planck_taper`` converges slowly).
     """
 
     family: str = eqx.field(static=True)
@@ -223,7 +223,7 @@ class Channels(eqx.Module):
     def bump(
         cls, centres_hz, widths_hz, *, normalisation="unit_peak", n_nu=64
     ) -> "Channels":
-        """``R = exp(1 - 1/(1 - t^2))``, ``t = (nu - c)/w``; C-infinity.
+        """``R = exp(1 - 1/(1 - t^2))``, ``t = (nu - c)/w``, C-infinity.
 
         The stored support includes one outward ULP on each side of ``c±w``
         so exact-binary input rounding cannot clip the flat zeros.
@@ -244,9 +244,9 @@ class Channels(eqx.Module):
         cls, centres_hz, widths_hz, *, taper=0.5, normalisation="unit_peak", n_nu=64
     ) -> "Channels":
         """Planck-taper window on ``[c - w, c + w]``: ``u = (nu - c + w)/(2w)``,
-        ``v = min(u, 1 - u)``; ``R = 1`` for ``v >= taper`` and
+        ``v = min(u, 1 - u)``, ``R = 1`` for ``v >= taper`` and
         ``R = 1/(1 + exp[taper/v - taper/(taper - v)])`` for ``0 < v < taper``.
-        ``taper`` in ``(0, 0.5]``; ``0.5`` has no flat top. C-infinity."""
+        ``taper`` in ``(0, 0.5]``, where ``0.5`` has no flat top. C-infinity."""
         if not (0.0 < float(taper) <= 0.5):
             raise ValueError("taper must lie in (0, 0.5]")
         w = jnp.asarray(widths_hz)
@@ -265,7 +265,7 @@ class Channels(eqx.Module):
     def raised_cosine(
         cls, centres_hz, widths_hz, *, normalisation="unit_peak", n_nu=64
     ) -> "Channels":
-        """``R = [1 + cos(pi t)]/2`` for ``|t| < 1``; C^1 (second derivative jumps)."""
+        """``R = [1 + cos(pi t)]/2`` for ``|t| < 1``, C^1 (second derivative jumps)."""
         w = jnp.asarray(widths_hz)
         return cls._build(
             "raised_cosine",
@@ -281,7 +281,7 @@ class Channels(eqx.Module):
     def tophat(
         cls, centres_hz, widths_hz, *, normalisation="unit_peak", n_nu=64
     ) -> "Channels":
-        """``R = 1`` for ``|t| < 1``, else 0; discontinuous (smoothness 0)."""
+        """``R = 1`` for ``|t| < 1``, else 0, discontinuous (smoothness 0)."""
         w = jnp.asarray(widths_hz)
         return cls._build(
             "tophat",
@@ -304,7 +304,7 @@ class Channels(eqx.Module):
         n_nu=64,
     ) -> "Channels":
         """``R = exp(-t^2/2)``, ``t = (nu - c)/sigma``, truncated at ``|t| < support_sigma``.
-        The edge jump ``exp(-support_sigma^2/2)`` makes this smoothness 0; it is
+        The edge jump ``exp(-support_sigma^2/2)`` makes this smoothness 0. It is
         recorded in ``describe()`` as ``edge_jump``. ``widths_hz`` stores sigma."""
         if not float(support_sigma) > 0:
             raise ValueError("support_sigma must be positive")
@@ -333,12 +333,12 @@ class Channels(eqx.Module):
     ) -> "Channels":
         """Linear interpolation of a sampled response on one increasing grid.
 
-        ``nu_hz`` is ``(n_pts,)``; ``response`` is ``(n_pts,)`` for one channel or
+        ``nu_hz`` is ``(n_pts,)``, and ``response`` is ``(n_pts,)`` for one channel or
         ``(n_ch, n_pts)``. ``argument="omega"`` means the grid is angular frequency
         and the table is ``R_omega``: ``R_nu(nu) = R_omega(2 pi nu)``, no ``2 pi``
         factor on the values. Each channel's support is the grid interval that
         contains its nonzero samples extended to the adjacent zero samples (the
-        interpolant is nonzero there); tables are rescaled to unit peak. The
+        interpolant is nonzero there). Tables are rescaled to unit peak. The
         grid and rescaled table are concrete NumPy inputs stored as static
         tuples. ``smoothness`` is declared by the caller and not verified.
         """
@@ -490,7 +490,7 @@ class Channels(eqx.Module):
         """Response ``(n_ch, *nu.shape)``: exactly zero outside ``(nu_lo, nu_hi)``.
 
         Safe under ``jit``, ``jacfwd``/``grad`` and nested derivatives at and
-        beyond the support edges (no ``0 * inf``); ``nu_hz`` must be real.
+        beyond the support edges (no ``0 * inf``). ``nu_hz`` must be real.
         """
         nu = jnp.asarray(nu_hz)
         if jnp.iscomplexobj(nu):
@@ -525,9 +525,9 @@ class Channels(eqx.Module):
         """``(n_ch,)`` factor from the unit-peak shape to the declared normalisation.
 
         ``unit_integral`` uses closed-form band areas (``bump``: a cached
-        512-node constant; ``planck_taper``: ``2 w (1 - taper)``;
-        ``raised_cosine``: ``w``; ``tophat``: ``2 w``; ``gaussian``: the
-        truncated erf area; ``table``: the trapezoid rule, exact for the
+        512-node constant, ``planck_taper``: ``2 w (1 - taper)``,
+        ``raised_cosine``: ``w``, ``tophat``: ``2 w``, ``gaussian``: the
+        truncated erf area, ``table``: the trapezoid rule, exact for the
         interpolant), differentiable in ``widths_hz``. ``basis`` and
         ``callable`` responses are used as supplied (ones).
         """

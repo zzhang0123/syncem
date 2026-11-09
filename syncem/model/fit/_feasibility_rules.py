@@ -2,7 +2,7 @@
 
 Split out of :mod:`syncem.model.fit.diagnostics` to keep that file short.
 Each rule adds ``(name, passed, margin)`` triples to a ``_Collector`` or
-records why a check is not computable from the retained moment rows; the
+records why a check is not computable from the retained moment rows. The
 inequalities are the necessary conditions listed in the diagnostics module
 docstring (``sec: finite joint response``). Nothing here is public API.
 """
@@ -118,11 +118,11 @@ def _matrix_checks(col, lookup):
 
 
 def _square_checks(col, lookup):
-    """``abs_bound``: ``|<f^2 e^{2i phi}>| <= <f^2>``; ``cauchy_schwarz``:
+    """``abs_bound``: ``|<f^2 e^{2i phi}>| <= <f^2>``. ``cauchy_schwarz``:
     ``|<f e^{2i phi}>|^2 <= <f^2>`` for the monomials ``f`` of the truncation.
 
-    Monomials in ``NAMED_F`` are listed individually when not computable;
-    the others are counted in one summary entry.
+    Monomials in ``NAMED_F`` are listed individually when not computable.
+    The others are counted in one summary entry.
     """
     skipped = 0
     for row in _fz.f_rows(lookup.index):

@@ -2,12 +2,12 @@
 
 ``required_m_max`` (``kernels.py``) and hence the zero harmonic-tail bound of
 ``HarmonicKernel.truncation_error`` assume that every emitting electron has
-``gamma <= support.gamma[1]`` and ``B >= support.B[0]``;
+``gamma <= support.gamma[1]`` and ``B >= support.B[0]``.
 ``Support.truncated=False`` declares the population complete inside all three
 intervals. :func:`outside_support` compares concrete samples with those
 intervals. Samples with zero normalised weight or ``B = 0`` (no emission)
 are ignored. By default a relative slack of ``REL_TOL`` of the interval scale
-absorbs roundoff on the edges; strict harmonic-range pruning removes it.
+absorbs roundoff on the edges, and strict harmonic-range pruning removes it.
 Anything beyond the chosen edge counts as outside. Traced samples
 or a traced support cannot be checked eagerly: the result is then ``None``
 and callers must state the hypothesis as unchecked (``UNCHECKED`` for the
@@ -69,8 +69,8 @@ def outside_support(
     per violating variable, ``"<name> in [min, max] vs declared [lo, hi]"``
     over the emitting samples. ``harmonic_only=True`` checks only the two
     sides that enter ``required_m_max`` (``gamma`` above ``hi``, ``B`` below
-    ``lo``); ``harmonic_range=True`` checks both sides of ``gamma`` and ``B``;
-    otherwise ``gamma``, ``B`` and ``depth`` are checked on both sides.
+    ``lo``). ``harmonic_range=True`` checks both sides of ``gamma`` and ``B``.
+    Otherwise ``gamma``, ``B`` and ``depth`` are checked on both sides.
     ``strict=True`` removes the edge slack for exact support pruning.
     """
     if samples is None or support is None:

@@ -3,7 +3,7 @@
 Every shape function takes the frequency array already broadcast to
 ``(n_ch, *shape)`` together with the boolean mask ``inside`` of the open
 support ``(nu_lo, nu_hi)`` and returns the unit-peak response evaluated with
-safe arguments (finite value and finite nested derivatives everywhere); the
+safe arguments (finite value and finite nested derivatives everywhere). The
 caller masks the result to exactly zero outside the support.
 """
 
@@ -28,7 +28,7 @@ FAMILIES = (
 NORMALISATIONS = ("unit_peak", "unit_integral")
 SMOOTH = 99
 # Below this value of 1 - t^2 (bump) or v/taper (Planck) the response is below
-# exp(-999), which is exactly zero in float64; flooring there removes the
+# exp(-999), which is exactly zero in float64. Flooring there removes the
 # 0 * inf products in the derivatives without changing any returned value.
 FLOOR = 1e-3
 

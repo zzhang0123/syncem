@@ -11,9 +11,9 @@ rule).
 (``J = I``, the source-column weighted coefficients ``a = (N_src/N_*) (m,
 m0_ext)``, no slot fixed), ``a[1:]`` with a fixed amplitude, or the
 ``u = (A, A theta)`` / ``v = A theta`` of an affine ``ParameterMap``
-(``parameter_map``, or declared by name with ``assumptions=``; its record
+(``parameter_map``, or declared by name with ``assumptions=``, whose record
 joins the provenance). The
-coefficient metric ``||a||^2 = a^T M a`` (Euclidean by default; a positive
+coefficient metric ``||a||^2 = a^T M a`` (Euclidean by default, or a positive
 diagonal or an SPD matrix) is pulled back to ``M_x = J^T M J = R_x^T R_x``,
 and ``T J R_x^-1 = L Q`` (``Q Q^T = I``) keeps it: the whitened design
 ``G_w = L_Sigma^-1 R H L`` is decomposed by SVD. An SVD of ``H`` alone
@@ -21,22 +21,22 @@ would change the metric and the meaning of the cutoff.
 
 Three claims are kept apart: analytic redundancy (the reduction, before any
 data), the numerical rank (singular values ``> rank_tol s_max``, strict)
-and practical recoverability (``1/s <= max_sigma``, inclusive; ``max_sigma``
-is required). Repeated singular values (``cluster_rtol``) are kept or dropped
+and practical recoverability (``1/s <= max_sigma``, inclusive, with ``max_sigma``
+required). Repeated singular values (``cluster_rtol``) are kept or dropped
 as a whole. Returns a
 :class:`~syncem.model.fit.combination_result.CombinationFit`.
 
 Relation to ``fit_linear`` (whose defaults are unchanged): with a full-rank
 affine map, ``max_sigma = inf`` and the same ``rank_tol``, ``x_hat`` equals
-its ``u``; when rank-deficient the predictions agree but ``fit_linear``
+its ``u``. When rank-deficient the predictions agree but ``fit_linear``
 returns the minimum equilibrated-norm solution and this path the minimum
 metric-norm one. Unlike ``fit_linear``, a reduced rank does not make
 ``bias`` unbounded: it bounds the error of the identified projection
-``Pi x``; the unidentified part is ``unresolved``.
+``Pi x``, and the unidentified part is ``unresolved``.
 
 Shapes: ``J`` ``(n_full, n_x)``, estimator ``(n_x, n_kept)``. Units: data in
 the units of the basis response, ``x`` dimensionless. Eager NumPy on
-concrete values; not ``jax.jit`` safe. Not certified: that ``data.noise``
+concrete values, not ``jax.jit`` safe. Not certified: that ``data.noise``
 is the noise, the declared discrepancy and coefficient bound, and anything
 about the unresolved directions beyond a declared bound.
 """
@@ -220,15 +220,15 @@ def fit_combinations(
     ``max_sigma`` (required, positive, finite or ``math.inf``): keep a mode
     when ``1/s <= max_sigma``. ``reduction``: ``None`` (``reduce_response(basis)``)
     or a ``ResponseReduction`` of this basis. ``parameter_map``: ``None`` or
-    an affine ``ParameterMap``; ``assumptions`` (keyword addition): names or
+    an affine ``ParameterMap``. ``assumptions`` (keyword addition): names or
     ``Assume`` specs for ``declare(basis.index, ...)`` instead (``ValueError``
     when both are given). ``amplitude``: ``"fit"`` or a positive float.
     ``metric``: ``None`` (Euclidean in ``a``), ``(n_full,)`` positive weights
     or an ``(n_full, n_full)`` SPD matrix. ``rank_tol``: numerical-rank
-    cutoff relative to ``s_max``; ``cluster_rtol``: repeated-value gap
+    cutoff relative to ``s_max``. ``cluster_rtol``: repeated-value gap
     relative to ``s_max`` (an absolute gap, since a singular vector is
-    determined only to about ``u s_max / gap``; the ``beta`` of a cluster may
-    be correlated, see the notes); ``discrepancy_policy`` in ``POLICIES``;
+    determined only to about ``u s_max / gap``, and the ``beta`` of a cluster may
+    be correlated, see the notes). ``discrepancy_policy`` in ``POLICIES``.
     ``coefficient_bound``: an ``ErrorTerm`` ``(n_full,)`` bounding ``|a|``.
     Raises ``ValueError`` for invalid inputs, a non-affine map, a redundant
     map under the metric, more than ``MAX_FISHER_PARAMS`` unknowns or a zero

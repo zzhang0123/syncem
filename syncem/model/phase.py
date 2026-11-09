@@ -9,36 +9,36 @@ screen`` and ``eq: independent screen response`` (screen routes), and the
 
 The phase coordinate is ``tau = 2 lambda^2`` with ``lambda = C_SI_M / nu`` in
 metres, so ``tau`` has units m^2 and ``tau * varphi`` is in radians for a depth
-``varphi`` in rad/m^2. ``phase_coordinate(nu_hz)`` computes it; the harmonic
+``varphi`` in rad/m^2. ``phase_coordinate(nu_hz)`` computes it. The harmonic
 kernel evaluates it at every line ``nu_m`` and the continuum kernel at every
 frequency node, never at a nominal channel frequency (main.tex ``eq: channel
 kernel``: "Each harmonic retains its own channel weight and Faraday phase").
 
-Routes (all satisfy :class:`PhaseWeights`; ``__call__`` returns a complex
+Routes (all satisfy :class:`PhaseWeights`, and ``__call__`` returns a complex
 array ``(n_weights, *tau.shape)`` and is ``jit``/``grad`` safe):
 
 * :class:`TaylorPhase` (default): ``w_b = exp(i tau depth_ref) (i tau s_depth)^b / b!``
   for ``b = 0..degree``, the phase expanded about the reference depth in the
   dimensionless displacement ``z_depth = (varphi - depth_ref)/s_depth``. The
   Taylor remainder is bounded by ``build_basis``/``bounds.py`` through
-  ``|tau s_depth|^{N+1}/(N+1)!`` times the absolute depth moment; it is not
+  ``|tau s_depth|^{N+1}/(N+1)!`` times the absolute depth moment. It is not
   bounded here.
-* :class:`GaussianScreen`: ``w_0 = exp(i tau mean - tau^2 sigma^2 / 2)`` (Burn);
+* :class:`GaussianScreen`: ``w_0 = exp(i tau mean - tau^2 sigma^2 / 2)`` (Burn),
   exact within the independent Gaussian-screen model, which is recorded as
   two forced assumptions (``independent_screen``, ``gaussian_screen``) whose
   discrepancy is unbounded. ``depth_ref``/``s_depth`` are accepted and ignored.
 * :class:`CumulantScreen`: ``w_0 = exp(g_4)`` with
   ``g_4 = i tau k1 - tau^2 k2/2 - i tau^3 k3/6 + tau^4 k4/24``. The zero-free
   interval and the continuous logarithm of the manuscript are assumed, not
-  verifiable from ``kappa``; the exponent remainder ``|R_5| <= |tau|^5 g5/5!``
+  verifiable from ``kappa``. The exponent remainder ``|R_5| <= |tau|^5 g5/5!``
   needs the supplied ``g5_bound`` (``exponent_remainder``), else it is unbounded.
 * :class:`EmpiricalScreen`: ``w_0 = sum_i w_i exp(i tau depth_i)``, exact for
-  the supplied discrete independent screen; sampling error is external.
+  the supplied discrete independent screen. Sampling error is external.
 
 Not certified: independence of the screen from the emitting parameters (a
 physical assumption recorded by ``forced_assumptions``), the Taylor remainder,
 the cumulant zero-free condition, argument reduction of large phases
-(``tau * depth`` must be finite; accuracy degrades as it grows) and any
+(``tau * depth`` must be finite, and accuracy degrades as it grows) and any
 frequency dependence of the depth (the rotation law is ``lambda^2``).
 """
 
@@ -75,8 +75,8 @@ def _finite(value, name):
 def phase_coordinate(nu_hz) -> jax.Array:
     """``tau = 2 (C_SI_M / nu)^2`` in m^2 for positive finite ``nu_hz`` (any shape).
 
-    ``nu_hz`` in Hz; value errors use ``equinox.error_if``. No assumptions
-    beyond the pure-rotation phase ``2 lambda^2 depth``; nothing certified.
+    ``nu_hz`` in Hz. Value errors use ``equinox.error_if``. No assumptions
+    beyond the pure-rotation phase ``2 lambda^2 depth``, nothing certified.
     """
     nu = _real(nu_hz, "frequencies")
     nu = eqx.error_if(nu, jnp.any(nu <= 0), "frequencies must be positive")
@@ -97,12 +97,12 @@ def _independent_record(closure_kind, hyper, discrepancy_kind="unbounded"):
 
 @runtime_checkable
 class PhaseWeights(Protocol):
-    """Per-line phase weights (``eq: channel kernel``); contract in the module docstring.
+    """Per-line phase weights (``eq: channel kernel``), with the contract in the module docstring.
 
     ``__call__(tau, depth_ref=, s_depth=)`` returns ``(n_weights, *tau.shape)``
     complex weights for ``tau = 2 lambda^2`` in m^2 and depths in rad/m^2.
     ``forced_assumptions`` lists what the route assumes (nothing for the
-    Taylor route; an independent screen for the screen routes). Nothing in a
+    Taylor route, an independent screen for the screen routes). Nothing in a
     route certifies that the screen model holds for the population.
     """
 
@@ -122,12 +122,12 @@ class PhaseWeights(Protocol):
 class TaylorPhase(eqx.Module):
     """``w_b(tau) = exp(i tau depth_ref) (i tau s_depth)^b / b!``, ``b = 0..degree``.
 
-    ``degree`` (static, >= 0) must equal the index's maximum ``b``;
+    ``degree`` (static, >= 0) must equal the index's maximum ``b``.
     ``build_basis`` validates that. ``depth_ref`` [rad/m^2] and ``s_depth``
     (positive scale) are read from ``Reference`` by the caller. No screen
     assumption is forced. ``tau * depth_ref`` must be finite (``eqx.error_if``).
     ``tau`` is in m^2, so ``tau * depth`` is a phase in radians. Not
-    certified: the truncation of the phase series at ``degree``; its
+    certified: the truncation of the phase series at ``degree``. Its
     remainder is the depth part of the ``[extension]`` Taylor bound of
     ``eq: channel residual average``.
     """
@@ -171,14 +171,14 @@ class TaylorPhase(eqx.Module):
 
 
 class GaussianScreen(eqx.Module):
-    """``w_0 = exp(i tau mean - tau^2 sigma^2 / 2)``; ``mean`` [rad/m^2], ``sigma >= 0``.
+    """``w_0 = exp(i tau mean - tau^2 sigma^2 / 2)`` with ``mean`` [rad/m^2], ``sigma >= 0``.
 
     Equals ``syncem.rm.burn_depolarisation(1, mean, sigma**2, lam)`` at
     ``lam = C_SI_M / nu``. ``depth_ref`` and ``s_depth`` are ignored: the
     screen is not expanded about a reference. Forces ``max_b() == 0``.
     ``tau`` in m^2. Assumes a Faraday screen independent of the emitters with
     a Gaussian depth distribution (records ``independent_screen`` and
-    ``gaussian_screen``); neither is verified here, and the discrepancy of
+    ``gaussian_screen``). Neither is verified here, and the discrepancy of
     a real population from this model is an input of the budget.
     """
 
@@ -229,16 +229,16 @@ class GaussianScreen(eqx.Module):
 class CumulantScreen(eqx.Module):
     """``w_0 = exp(g_4(tau))`` from the first four depth cumulants ``kappa`` (4,).
 
-    ``kappa = (k1, k2, k3, k4)`` in rad/m^2 powers; ``k2 >= 0``. ``g5_bound``
-    is ``sup |g^(5)|`` on the zero-free interval (rad^5/m^10 units); with it,
+    ``kappa = (k1, k2, k3, k4)`` in rad/m^2 powers, ``k2 >= 0``. ``g5_bound``
+    is ``sup |g^(5)|`` on the zero-free interval (rad^5/m^10 units). With it,
     ``exponent_remainder(tau) = |tau|^5 g5_bound / 5!`` bounds ``|R_5|``,
     otherwise the exponent remainder is unbounded. The zero-free interval is
     assumed. ``depth_ref``/``s_depth`` are ignored. Forces ``max_b() == 0``.
-    A positive ``k4`` makes ``|w_0|`` grow as ``exp(tau^4 k4/24)``; overflow
+    A positive ``k4`` makes ``|w_0|`` grow as ``exp(tau^4 k4/24)``, and overflow
     raises through ``eqx.error_if``.
     ``tau`` in m^2, cumulants in powers of rad/m^2. Assumes an independent
     screen whose characteristic function has no zero on the used ``tau``
-    interval; not certified: that assumption, and the truncation of the
+    interval. Not certified: that assumption, and the truncation of the
     cumulant series beyond the supplied ``g5_bound``.
     """
 
@@ -291,7 +291,7 @@ class CumulantScreen(eqx.Module):
         )
 
     def forced_assumptions(self) -> tuple[AssumptionRecord, ...]:
-        """Independent screen and the fourth-order cumulant closure; the
+        """Independent screen and the fourth-order cumulant closure. The
         exponent remainder is ``bound`` only when ``g5_bound`` is supplied."""
         hyper = self._hyper()
         kind = "unbounded" if self.g5_bound is None else "bound"
@@ -315,13 +315,13 @@ class CumulantScreen(eqx.Module):
 class EmpiricalScreen(eqx.Module):
     """``w_0 = sum_i w_i exp(i tau depth_i)`` over a discrete independent screen.
 
-    ``depths`` (n,) in rad/m^2; ``weights`` (n,) nonnegative relative masses
-    (normalised as in ``syncem.rm.screen_polarisation``; None means uniform).
-    Exact for the supplied screen; equals ``rm.screen_polarisation(1, depths,
+    ``depths`` (n,) in rad/m^2, ``weights`` (n,) nonnegative relative masses
+    (normalised as in ``syncem.rm.screen_polarisation``, None means uniform).
+    Exact for the supplied screen, and equal to ``rm.screen_polarisation(1, depths,
     lam, weights)``. A scan keeps O(tau.size) working storage.
     ``depth_ref``/``s_depth`` are ignored. Forces ``max_b() == 0``.
     ``tau`` in m^2. Assumes a screen independent of the emitters (records
-    ``independent_screen``); exactness holds for the supplied discrete
+    ``independent_screen``). Exactness holds for the supplied discrete
     screen only, and nothing certifies that the discrete screen represents
     a continuous one (sampling error is an input).
     """

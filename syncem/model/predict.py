@@ -13,50 +13,50 @@ per-emitter, per-line Faraday phase and the sky factor ``exp(2 i phi)``).
 
 Units: ``stokes`` ``(n_ch, 4)`` in Stokes order ``I, Q, U, V`` is the
 amplitude ``N_src`` times the per-electron channel kernel (erg/s/sr per
-electron for ``unit_peak`` channels, per Hz for ``unit_integral``); every
+electron for ``unit_peak`` channels, per Hz for ``unit_integral``). Every
 budget term is in the same units, shape ``(n_ch, 4)``. ``amplitude`` is a
 nonnegative scalar. Moments are in the ``z`` coordinates of the basis
-reference; ``predict`` raises ``ValueError`` for an index mismatch and
+reference. ``predict`` raises ``ValueError`` for an index mismatch and
 ``equinox.error_if`` for a reference mismatch.
 
 Budget rules (FINAL_DESIGN Section 8). Missing inputs are ``unbounded``,
-never zero: ``basis_remainder`` needs ``errors`` (a ``RemainderInputs``) and
+never zero. ``basis_remainder`` needs ``errors`` (a ``RemainderInputs``) and
 is ``unbounded`` on a nonsmooth line-kernel basis (the ``build_basis``
-note); ``statistical_input`` is ``N_src |C| Delta`` from
+note). ``statistical_input`` is ``N_src |C| Delta`` from
 ``statistical_input`` (``Delta_a`` over ``m``) plus any moment-level
 discrepancy that is not attributed to an assumption (their sum, weaker
-kind); the kernel terms come from ``basis.kernel_terms`` scaled by the
+kind). The kernel terms come from ``basis.kernel_terms`` scaled by the
 amplitude (a ``(4 n_ch, n_real)`` per-column envelope is contracted with
-``|m|``); ``excluded_tail`` follows ``Support.truncated`` (``None``:
+``|m|``). ``excluded_tail`` follows ``Support.truncated`` (``None``:
 unbounded, ``False``: declared zero, ``True``: ``excluded_tail`` is a
-required input); ``depth_model`` needs its input; ``amplitude`` is
+required input). ``depth_model`` needs its input. ``amplitude`` is
 ``delta N_src (|C m| + e)`` with ``e`` the valued per-electron slots
-(``depth_model`` divided by ``N_src``; ``excluded_tail`` counts electrons
-outside ``N_src`` and is not rescaled; Stokes-unit assumption allowances
-are divided by ``N_src``); a concrete ``delta N_src = 0`` is a zero
+(``depth_model`` divided by ``N_src``, ``excluded_tail`` counting electrons
+outside ``N_src`` and not rescaled, and Stokes-unit assumption allowances
+divided by ``N_src``). A concrete ``delta N_src = 0`` is a zero
 ``bound`` (amplitude declared exact) and a negative one raises. The first
 ``AssumptionRecord`` of the moments gets ``N_src |C| Delta`` from ``moments.discrepancy`` or is
-``unbounded``; every further record is ``unbounded``. Assumptions forced by
+``unbounded``. Every further record is ``unbounded``. Assumptions forced by
 the basis (phase-route screens, the continuum kernel's isotropic pitch) are
 ``unbounded`` and override a moment-level term of the same name, since the
 retained moments do not resolve what they constrain. ``assumption_allowances``
 (keyword addition, ``{name: ErrorTerm}`` in Stokes units) replaces the term
 of a named assumption, forced or moment-level, by a caller-supplied
 allowance (for example ``bounds.screen_factorisation_bound`` for
-``independent_screen``); its kind is kept (``not_applicable`` raises) and the
+``independent_screen``). Its kind is kept (``not_applicable`` raises) and the
 note records the source.
 ``samples`` with ``kernel`` (keyword addition) probe the remainder inputs on
 the basis phase route, run the Support check of ``kernel.truncation_error``
 (harmonic tail) and of a declared-complete ``excluded_tail`` (samples outside
-the Support make both ``unbounded``, as in :func:`direct_channel_average`;
-traced samples keep the declared zero and its note says it was not checked),
+the Support make both ``unbounded``, as in :func:`direct_channel_average`,
+and traced samples keep the declared zero and its note says it was not checked),
 and leave ``basis_remainder`` ``unbounded`` when the order-``N+1``
 derivative probe is not in ``basis.certified_orders``.
 
 Not certified: physical adequacy of the kernel (``physical_kernel`` is
 whatever the basis declares), feasibility of the supplied moments, the truth
 of any supplied envelope, and quadrature error beyond the ``numerical`` term
-the basis reports. ``to_dict``/``summary`` need concrete values (eager);
+the basis reports. ``to_dict``/``summary`` need concrete values (eager).
 ``predict`` itself is ``equinox.filter_jit``- and ``grad``-safe in the
 amplitude and the moments (assumption names are string leaves).
 """
@@ -219,7 +219,7 @@ def predict(
 ) -> Prediction:
     """Finite joint response ``N_src C m`` with its budget (module docstring).
 
-    ``basis`` is a ``SpectralBasis``; ``moments`` a ``JointMoments`` on the
+    ``basis`` is a ``SpectralBasis`` and ``moments`` a ``JointMoments`` on the
     same index and reference. ``errors``: ``RemainderInputs`` (or probed from
     ``samples`` with ``kernel``). ``statistical_input``: ``Delta_a``
     ``(n_real,)`` or an ``ErrorTerm`` over ``m`` (added to an unattributed
@@ -233,7 +233,7 @@ def predict(
     excluded tail against them. ``assumption_allowances``: ``{name:
     ErrorTerm}`` in Stokes units for named assumptions (``ValueError`` for an
     unknown name or the kind ``not_applicable``). Units and what is not certified: module
-    docstring; the returned budget lists every missing input as
+    docstring. The returned budget lists every missing input as
     ``unbounded`` rather than assuming it zero.
     """
     index = basis.index

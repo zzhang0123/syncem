@@ -40,7 +40,7 @@ def expm_pade13(A, max_squarings):
     (Higham 2005: backward error below the unit roundoff).
 
     ``jax.scipy.linalg.expm`` takes ``floor`` and so evaluates Pade 13 up to
-    ``2 theta_13``; for a rotation-dominated ``A`` just below ``2^(m+1) theta_13``
+    ``2 theta_13``. For a rotation-dominated ``A`` just below ``2^(m+1) theta_13``
     that costs relative errors from 1e-10 (m = 0) to 1e-1 (m = 31) where
     ``ceil`` stays at the conditioning limit (``tests/test_transfer_expm_boundaries.py``).
     Where ``ceil`` exceeds ``max_squarings`` but ``floor`` does not, ``floor``
@@ -98,7 +98,7 @@ def propagators(K, ds, max_squarings):
 
 @jax.custom_batching.custom_vmap
 def any_member(flag):
-    """``flag``; under ``vmap`` its ``any`` over the batch, unbatched, so that a
+    """``flag``, or under ``vmap`` its ``any`` over the batch, unbatched, so that a
     ``lax.cond`` on it stays a branch instead of evaluating both sides. The rule
     re-enters ``any_member``, so an enclosing ``vmap`` reduces its axis too (a
     plain ``jnp.any`` stayed batched there, and reverse mode through nested
@@ -113,7 +113,7 @@ def _any_member_vmap(axis_size, in_batched, flag):
 
 @jax.custom_batching.custom_vmap
 def batched_only(flag):
-    """``True``; under ``vmap`` with a batched ``flag``, ``flag``. In a branch
+    """``True``, or ``flag`` under ``vmap`` with a batched ``flag``. In a branch
     taken on ``any_member(flag)`` it selects the members per step, and folds
     to nothing when unbatched (a ``where`` on ``flag`` cost 1.4x in reverse).
     Unbatched at one level, it re-enters itself for an enclosing ``vmap``."""

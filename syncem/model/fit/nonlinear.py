@@ -9,7 +9,7 @@ supplied channel envelope, ``sec: frequency order``).
 
 Coordinates. :class:`Transform` maps the ``Parameters`` of a map to one
 real unconstrained vector ``z`` and back (class in ``_transform.py``):
-``log_amplitude`` is carried as is (``A = exp z_0``; a prior on it is a
+``log_amplitude`` is carried as is (``A = exp z_0``, so a prior on it is a
 prior on ``log A``, no Jacobian), free tables are identity,
 hyper-parameters that must be positive (labels ``hyper:...:sigma`` and
 ``hyper:...:kappa_2``) are carried as their logarithm, nodal logits are
@@ -21,33 +21,33 @@ coordinates becomes a density in ``z``. For nodal logits it is the
 additive-log-ratio Jacobian ``sum log softmax(z)`` with the softmax gauge
 direction left flat (improper). With a flat prior the mode of the density
 in ``z`` is therefore not the maximum-likelihood point when a log or box
-slot is present; a prior of ``-log sigma`` (or ``-log_det``) restores it.
+slot is present. A prior of ``-log sigma`` (or ``-log_det``) restores it.
 
 :class:`LogDensity` evaluates ``-chi^2/2 + log prior(theta) + log_det(z)``
 for a ``ParameterMap`` (or one declared by name with ``assumptions=``)
-with the whitened residual of :class:`StokesData` on the kept rows; it is
+with the whitened residual of :class:`StokesData` on the kept rows. It is
 ``jax.jit``, ``jax.grad`` and ``jax.vmap`` ready in ``z``. The data
-``discrepancy`` and ``response_uncertainty`` are not part of the density;
-they enter the ``bias_bound`` of the ``FitResult`` (for ``fit_bfgs`` an
+``discrepancy`` and ``response_uncertainty`` are not part of the density.
+They enter the ``bias_bound`` of the ``FitResult`` (for ``fit_bfgs`` an
 estimate linearised at the optimum) and through it ``statistical_input``,
 which is ``unbounded`` without a declared discrepancy. :func:`fit_bfgs` minimises
 ``-LogDensity`` with ``jax.scipy.optimize.minimize(method="BFGS")`` and
 refuses more than ``MAX_BFGS_PARAMS`` parameters (dense inverse Hessian).
 Both fitters build the private :class:`_FitOutcome` and return it wrapped
 as a ``FitResult`` (``fit/result.py``: Gauss-Newton Fisher matrix in the fit
-coordinates, diagnostics and prediction; ``diagnostics=False`` skips the
+coordinates, diagnostics and prediction, and ``diagnostics=False`` skips the
 reports). The ``FitResult`` exposes ``z``, ``fun``, ``weights`` and
 ``discretisation`` with the meanings given for ``_FitOutcome``.
 
-Shapes: ``z`` is ``(n_params,)``; the whitened residual is ``(n_kept,)``.
-Units: amplitudes and data in the units of the basis prediction; moments in
+Shapes: ``z`` is ``(n_params,)`` and the whitened residual is ``(n_kept,)``.
+Units: amplitudes and data in the units of the basis prediction, moments in
 the displacement coordinates of the map. Shape and configuration errors
-raise ``ValueError`` at trace time; value errors (a nonpositive value for a
-log slot, a boxed value outside its interval) use ``equinox.error_if``;
-inside :func:`fit_bfgs` a line-search trial point that would trip one is
+raise ``ValueError`` at trace time. Value errors (a nonpositive value for a
+log slot, a boxed value outside its interval) use ``equinox.error_if``.
+Inside :func:`fit_bfgs` a line-search trial point that would trip one is
 given objective ``+inf`` instead (``_bfgs.total_objective``).
 Not certified: convergence to the global optimum (BFGS reports its own
-``success`` or the precision floor; the nodal fit reports the simplex
+``success`` or the precision floor, and the nodal fit reports the simplex
 stationarity residual), feasibility of the fitted moments, and the nodal
 discretisation error, which the caller supplies.
 """
@@ -80,10 +80,10 @@ MAX_BFGS_PARAMS = 2000
 class _FitOutcome(NamedTuple):
     """Private fit outcome (wrapped into ``FitResult`` by ``fit/result.py``).
 
-    ``theta``: fitted ``Parameters``; ``z``: the unconstrained vector;
-    ``converged``: optimiser flag; ``n_iter``: iterations; ``fun``: the
+    ``theta``: fitted ``Parameters``. ``z``: the unconstrained vector.
+    ``converged``: optimiser flag. ``n_iter``: iterations. ``fun``: the
     minimised objective (``-log density`` for BFGS, half chi-square for the
-    nodal fit); ``weights``: simplex weights of a nodal fit (else ``None``);
+    nodal fit). ``weights``: simplex weights of a nodal fit (else ``None``).
     ``discretisation``: the ``ErrorTerm`` passed to ``fit_nodal`` (else ``None``).
     """
 
@@ -111,9 +111,9 @@ class LogDensity(eqx.Module):
     given). ``prior(theta) -> scalar`` is a log prior on the
     constrained coordinates (``None`` for flat). The whitened design
     ``W = L^-1 R C`` and target ``L^-1 d`` are precomputed leaves.
-    Dimensionless value (log density in ``z``); data and basis in the
+    Dimensionless value (log density in ``z``), data and basis in the
     prediction's units. Assumes Gaussian noise (``StokesData``) and the
-    map's factorisation; not certified: the global optimum, feasibility of
+    map's factorisation. Not certified: the global optimum, feasibility of
     ``m(theta)``, and the data discrepancy, which is not in the density.
     """
 
@@ -220,7 +220,7 @@ def fit_bfgs(
 
     Refuses ``n_params > MAX_BFGS_PARAMS`` (``ValueError``): BFGS stores a
     dense inverse Hessian. ``tol`` is the gradient-norm tolerance (passed as
-    ``gtol``; JAX ignores its own ``tol`` argument) and ``maxiter`` the total
+    ``gtol``, because JAX ignores its own ``tol`` argument) and ``maxiter`` the total
     iteration cap. With ``precondition`` (default) the search runs in
     ``y = z / s`` with the Gauss-Newton diagonal scale ``s`` of
     :func:`_gauss_newton_scale` at ``z0`` (the whitened chi-square is badly
@@ -229,15 +229,15 @@ def fit_bfgs(
     a fresh inverse Hessian, at most ``restarts`` times. A trial point the
     density cannot evaluate (non-finite, or a log slot beyond
     ``LOG_SLOT_LIMIT`` of ``_bfgs.py``) has objective ``+inf`` and is
-    rejected by the line search; after each run the lowest finite point of
+    rejected by the line search. After each run the lowest finite point of
     ``_bfgs.accepted_point`` is kept. Returns a
-    ``FitResult`` (``fit/result.py``) with ``fun`` the minimised ``-logdensity``;
+    ``FitResult`` (``fit/result.py``) with ``fun`` the minimised ``-logdensity``.
     ``converged`` is the optimiser's ``success`` (``gtol`` met) or the
     precision floor of :func:`_at_precision_floor` (a line search that
-    stops with a predicted decrease below ``PRECISION_FLOOR`` relative);
+    stops with a predicted decrease below ``PRECISION_FLOOR`` relative).
     ``n_iter`` is the total iteration count. The optimum is not certified
     beyond that flag. Assumes the density's Gaussian noise model and the
-    map's factorisation; ``z`` is dimensionless, ``fun`` in the units of
+    map's factorisation. ``z`` is dimensionless, ``fun`` in the units of
     the log density.
     """
     if not isinstance(logdensity, LogDensity):
@@ -316,7 +316,7 @@ def fit_nodal(
 ) -> "FitResult":  # noqa: F821  (defined in fit/result.py)
     """Nonnegative normalised weights on fixed ``nodes`` (``sec: linear fit``).
 
-    The weights are the nonnegative witness of ``sec: linear fit``; nodes in
+    The weights are the nonnegative witness of ``sec: linear fit``. Nodes in
     all six variables are ``[extension]``.
 
     Solves ``min_{w >= 0, sum w = 1, A >= 0} ||L^-1 (d - R A C X^T w)||^2``
@@ -326,17 +326,17 @@ def fit_nodal(
     cap, ``tol`` the simplex stationarity tolerance
     ``max_i w_i |g_i - <g, w>| / (1 + max |g|)`` (``converged``). Nodes with
     zero weight in ``nodes`` start at zero and stay there (the updates are
-    multiplicative); uniform weights are the neutral start. ``discretisation``
-    is the caller's ``ErrorTerm`` for the node discretisation (``[extension]``;
-    it enters as a supplied channel envelope, ``sec: frequency order``;
-    ``None`` leaves it unbounded downstream); it is validated and passed
+    multiplicative), and uniform weights are the neutral start. ``discretisation``
+    is the caller's ``ErrorTerm`` for the node discretisation (``[extension]``),
+    which enters as a supplied channel envelope (``sec: frequency order``).
+    ``None`` leaves it unbounded downstream. It is validated and passed
     through. Returns a :class:`_FitOutcome` with
     ``theta = Parameters(log_amplitude, logits=log w)`` for the map
     ``nodal(basis.index, nodes)``, ``weights = w`` and ``fun`` the final half
     chi-square. The optimum is not certified beyond ``converged``. Assumes
     the population is supported on ``nodes`` (the discretisation error is
-    the caller's ``discretisation`` term) and the Gaussian noise model;
-    weights are dimensionless, ``fun`` in data units.
+    the caller's ``discretisation`` term) and the Gaussian noise model.
+    Weights are dimensionless, ``fun`` in data units.
     """
     if not isinstance(nodes, PopulationSamples):
         raise ValueError("nodes must be a PopulationSamples")

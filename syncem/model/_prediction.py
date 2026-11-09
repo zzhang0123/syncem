@@ -1,7 +1,7 @@
 """The ``Prediction`` container (private helper of ``syncem.model.predict``).
 
 Split out so that ``predict.py`` and ``_direct.py`` share it without a
-circular import; see ``syncem.model.predict`` for the contract, units and
+circular import. See ``syncem.model.predict`` for the contract, units and
 what is not certified.
 """
 
@@ -27,12 +27,12 @@ class Prediction(eqx.Module):
     response ``R`` ``(n_data, 4 n_ch)`` acting on the channel-major flattened
     ``(I, Q, U, V)`` vector: ``|R| @ envelope + |delta R| @ (|stokes| +
     envelope)``
-    (``sec: frequency order``; the response-error term follows
-    ``eq: chromatic beam response``); the second term is ``unbounded``
+    (``sec: frequency order``, and the response-error term follows
+    ``eq: chromatic beam response``). The second term is ``unbounded``
     unless ``response_uncertainty`` is supplied (``0`` declares the response
     exact). ``to_dict`` is JSON-ready (``total.value`` is ``null`` when any
-    term is unbounded); ``summary`` is a short text report. Both are eager.
-    Units: ``stokes`` and every budget term in ``provenance.units``;
+    term is unbounded), and ``summary`` is a short text report. Both are eager.
+    Units: ``stokes`` and every budget term in ``provenance.units``, and
     ``amplitude`` is the source column in the basis amplitude units.
     Assumes what ``provenance.assumptions`` lists. Not certified: any
     ``unbounded`` slot, and the truth of declared inputs (``E_phys``,

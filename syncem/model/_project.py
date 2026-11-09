@@ -3,7 +3,7 @@
 Private helper of :mod:`syncem.model.assumptions`, split out to keep that
 file under 400 lines. Functions take the map as their first argument and
 use only its public fields and methods. Nothing here certifies feasibility
-of a projected parameter set; ``project`` reads marginals off a tensor that
+of a projected parameter set. ``project`` reads marginals off a tensor that
 the caller vouches for.
 """
 
@@ -22,7 +22,7 @@ def marginal(pm, full, group, projection):
     """Group marginal ``<prod_v f_v>`` read off the full tensor.
 
     The marginal is the retained row whose exponents vanish outside
-    ``group``; rows with ``b >= 1`` and ``h = 0`` come from ``m0_ext``.
+    ``group``. Rows with ``b >= 1`` and ``h = 0`` come from ``m0_ext``.
     Raises ``ValueError`` when the row is not retained.
     """
     row = [0] * 6
@@ -50,7 +50,7 @@ def marginal(pm, full, group, projection):
 def project_hyper(pm, full, closure):
     """Fitted depth hyper-parameters (rad/m^2) from the depth marginals.
 
-    Gaussian: ``(mean, sigma)`` from ``b = 1, 2``; cumulant: ``K`` cumulants
+    Gaussian: ``(mean, sigma)`` from ``b = 1, 2``. Cumulant: ``K`` cumulants
     from the raw moments through ``b = K`` (moment-to-cumulant recursion).
     A negative roundoff variance is clamped at zero.
     """
@@ -201,7 +201,7 @@ def fitted_hyper_note(pm, theta):
 
 
 def project(pm, full, amplitude, Parameters):
-    """``Parameters`` of the group marginals of ``full``; see ``ParameterMap.project``."""
+    """``Parameters`` of the group marginals of ``full`` (``ParameterMap.project``)."""
     if pm.nodes is not None:
         raise ValueError(
             "project is not defined for a nodal map; fit its weights instead"
@@ -219,7 +219,7 @@ def project(pm, full, amplitude, Parameters):
 
 
 def labels(pm):
-    """Names of the free parameters; see ``ParameterMap.labels``."""
+    """Names of the free parameters (``ParameterMap.labels``)."""
     if pm.nodes is not None:
         return tuple(f"logit[{j}]" for j in range(pm.nodes.size))
     out = []
@@ -237,10 +237,10 @@ def labels(pm):
 def prepare(index, groups, closures, free_hyper, nodes, discrepancy, ErrorTerm):
     """Static checks of ``ParameterMap.build`` plus the table construction.
 
-    Returns ``(tables_spec, gathers, keep, ext_ok, symmetrised)``; ``ValueError``
+    Returns ``(tables_spec, gathers, keep, ext_ok, symmetrised)``, with ``ValueError``
     on any invalid closure, hyper selection, nodal configuration, discrepancy
     shape or fixed-table length (the full table under a symmetry, see
-    :func:`_factor.symmetrised_tables`; the reduced one is refused on every route).
+    :func:`_factor.symmetrised_tables`, and the reduced one is refused on every route).
     """
     for closure in closures:
         _f.validate_closure(closure, groups, index)
@@ -315,7 +315,7 @@ def check_theta(pm, theta, Parameters):
 
 
 def flatten(pm, theta):
-    """Real ``(n_free,)`` vector; see ``ParameterMap.flatten``."""
+    """Real ``(n_free,)`` vector (``ParameterMap.flatten``)."""
     if pm.nodes is not None:
         return jnp.asarray(theta.logits, dtype=float)
     parts = []
@@ -330,7 +330,7 @@ def flatten(pm, theta):
 
 
 def unflatten(pm, vector):
-    """``(tables, hyper)`` from a flat vector; see ``ParameterMap.unflatten``."""
+    """``(tables, hyper)`` from a flat vector (``ParameterMap.unflatten``)."""
     tables, start = [], 0
     for g in pm.free_groups():
         n, mask = len(pm.tables_spec[g]), pm._complex_mask(g)
@@ -351,7 +351,7 @@ def unflatten(pm, vector):
 
 def group_tables(pm, theta, reference):
     """Evaluated ``[1, *table_g]`` for every group (free from ``theta``,
-    closed from the closure; fitted hyper from ``theta.hyper``)."""
+    closed from the closure, fitted hyper from ``theta.hyper``)."""
     tables, j = [], 0
     for g, (group, spec) in enumerate(zip(pm.factorisation.groups, pm.tables_spec)):
         c = pm._closure_index(g)

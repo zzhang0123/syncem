@@ -30,13 +30,13 @@ model            : finite joint response of channel Stokes spectra and spectral
                    high_order_harmonic, screens, basis, high_order_basis,
                    predict, adapters, fit.observation, fit.linear,
                    fit.nonlinear, fit.diagnostics, fit.result, fit.layout,
-                   fit.reduction, fit.combinations, fit.combination_result);
-                   import its modules by full path
+                   fit.reduction, fit.combinations, fit.combination_result).
+                   Import its modules by full path.
 """
 
 from __future__ import annotations
 
-__version__ = "0.7.0"
+__version__ = "0.7.1.dev0"
 
 import jax
 

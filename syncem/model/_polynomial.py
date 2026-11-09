@@ -1,4 +1,4 @@
-"""Polynomial test kernel (private; re-exported by ``kernels``). ``[extension, test oracle]``."""
+"""Polynomial test kernel (private, re-exported by ``kernels``). ``[extension, test oracle]``."""
 
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ class PolynomialTestKernel(eqx.Module):
     The Legendre projection is exact (``angular_projection`` returns the
     coefficient polynomial in ``z``), so it tests index bookkeeping, factorials
     and the ``C`` layout independently of Bessel numerics. Units are whatever the
-    coefficients carry. Not a physical model and not certified as one; ``physical_error`` is a declared
+    coefficients carry. Not a physical model and not certified as one. ``physical_error`` is a declared
     zero and ``truncation_error`` is ``not_applicable``.
     """
 

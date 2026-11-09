@@ -4,7 +4,7 @@ For fixed exact-binary gamma and B, this internal helper bounds the channel
 sum at every point of one angular box. It uses DLMF 10.14.5--6 for the exact
 integer Bessel functions and the interval geometry from
 ``_interval_angular_geometry``. The result remains conditional on mpmath's
-experimental interval elementary functions; it does not certify an angular
+experimental interval elementary functions. It does not certify an angular
 integral, a population, or a physical model.
 
 The caller must supply a channel response already verified to vanish outside
@@ -12,7 +12,7 @@ its stored open support and obey ``0 <= R(nu) <= 1`` inside, such as the
 validated unit-peak bump. This helper receives only the lower support
 frequency and cannot check that response precondition. A positive bound
 smaller than the least positive
-binary64 value remains positive as an MP interval; publication as a float
+binary64 value remains positive as an MP interval. Publication as a float
 requires outward rounding (for example, toward positive infinity).
 """
 
@@ -87,7 +87,7 @@ def prepare_faint_cell(
     fixed: AngularFixedGeometry | None = None,
     mu_abs_lower=None,
 ) -> PreparedFaintCell:
-    """Precompute guarded geometry; mu_abs_lower must bound |mu| in the box."""
+    """Precompute guarded geometry, where mu_abs_lower must bound |mu| in the box."""
     if constants is None:
         constants = prepare_faint_bound_constants(ctx)
     elif not isinstance(constants, FaintBoundConstants) or constants.ctx is not ctx:
@@ -142,8 +142,8 @@ def prepare_faint_cell(
                 ).b
                 physical_upper = min(physical_upper, axis_upper)
         p_over_d3 = min(p_over_d3, physical_upper)
-    # The physical Doppler identity gives |delta|/D <= sqrt(1-z²) <= 1;
-    # keep that correlation when an interval ratio is wider near an axis.
+    # The physical Doppler identity gives |delta|/D <= sqrt(1-z²) <= 1.
+    # Keep that correlation when an interval ratio is wider near an axis.
     defect_upper = ctx.sqrt((1 - z.a) * (1 + z.a)).b
     delta_ratio_upper = min((delta_upper / D.a).b, defect_upper)
     parallel_base = (delta_ratio_upper / z_hi).b
@@ -190,7 +190,7 @@ def angular_faint_magnitude_bounds(
     Since ``xi'(z)=-sqrt(1-z²)/z``, the log derivative of
     ``exp(-m*xi(z))/z`` is ``(m*sqrt(1-z²)-1)/z``. The derivative envelope
     adds ``z/(2*(1+z²))`` to this nonnegative derivative. Thus both increase
-    on ``0<z<=z_hi`` if ``first*sqrt(1-z_hi²)>1``; both tend to zero at
+    on ``0<z<=z_hi`` if ``first*sqrt(1-z_hi²)>1``, and both tend to zero at
     ``z=0`` for ``m>=3``. Their maxima occur at ``z_hi`` and ``m=first``.
     The per-line prefactor is bounded with ``m=last`` and positive geometry
     endpoints, then multiplied by the integer count. ``|Q|,|V|<=I`` and

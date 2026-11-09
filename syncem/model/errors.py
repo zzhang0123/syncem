@@ -6,10 +6,10 @@ and its propagation by consumers of :meth:`ErrorBudget.envelope`). The nine
 slots of :class:`ErrorBudget` and the names ``E_num``, ``E_phys``, ``E_tail``
 are ``[extension]``: the package's split of that envelope into typed terms.
 ``basis_remainder`` is the ``[extension]`` truncation bound of
-``eq: channel residual average``; in the depth-degree layout on a Taylor
+``eq: channel residual average``. In the depth-degree layout on a Taylor
 phase route its ``P`` column is the ``[extension]`` depth-Taylor bound with
 inputs ``depth_tail`` and ``intrinsic_residual``. ``screen_exponent`` is the
-``R_5`` bound of ``eq: independent gaussian screen``; ``depth_model`` is the
+``R_5`` bound of ``eq: independent gaussian screen``, and ``depth_model`` is the
 ``[extension]`` depth-perturbation bound.
 
 An :class:`ErrorTerm` is a nonnegative envelope ``value`` in the units of the
@@ -17,8 +17,8 @@ quantity it bounds (channel Stokes, ``(n_ch, 4)`` or broadcastable) with a
 static ``kind``: ``"bound"`` (a proven envelope under stated hypotheses),
 ``"measured"`` (an actual difference on a finite population),
 ``"estimate"`` (a heuristic such as a two-quadrature difference),
-``"unbounded"`` (no information; ``value=None``) or ``"not_applicable"``
-(the term does not arise; ``value=None``). A missing input is ``unbounded``,
+``"unbounded"`` (no information, ``value=None``) or ``"not_applicable"``
+(the term does not arise, ``value=None``). A missing input is ``unbounded``,
 never zero. ``ErrorBudget.total()`` is ``unbounded`` when any term is,
 otherwise the sum of the valued terms with the weakest kind present
 (``bound < measured < estimate``). ``not_applicable`` terms are skipped.
@@ -66,16 +66,16 @@ def _static_str(value, name):
 class ErrorTerm(eqx.Module):
     """One error envelope: ``value`` (nonnegative, real, finite) and a static kind.
 
-    ``value`` is ``None`` iff ``kind in {"unbounded", "not_applicable"}``;
-    otherwise it is a float array, usually ``(n_ch, 4)`` in channel Stokes
+    ``value`` is ``None`` iff ``kind in {"unbounded", "not_applicable"}``.
+    Otherwise it is a float array, usually ``(n_ch, 4)`` in channel Stokes
     units, or any shape that broadcasts to it. ``note`` says where the number
-    came from and under which hypotheses; ``manuscript_term`` names the term
+    came from and under which hypotheses, and ``manuscript_term`` names the term
     it belongs to (an ``[extension]`` budget symbol such as ``"E_num"``, or a
     manuscript label).
     Value checks use ``equinox.error_if`` (JIT and AD safe).
 
-    Assumes the caller's envelope holds under the hypotheses of its note;
-    the term records that claim and its kind, it does not verify it. Not
+    Assumes the caller's envelope holds under the hypotheses of its note.
+    The term records that claim and its kind, it does not verify it. Not
     certified: any ``bound`` whose inputs (``E_phys``, ``E_tail``, supplied
     envelopes) are external declarations.
     """
@@ -126,7 +126,7 @@ class ErrorTerm(eqx.Module):
         return cls(jnp.zeros(shape), "bound", f"declared zero: {reason}")
 
     def scaled(self, factor):
-        """Multiply ``value`` by a nonnegative ``factor`` (broadcast); keep kind and note."""
+        """Multiply ``value`` by a nonnegative ``factor`` (broadcast), keeping kind and note."""
         if self.value is None:
             return self
         factor = jnp.asarray(factor)
@@ -165,12 +165,12 @@ class ErrorBudget(eqx.Module):
     term ``E_num``), ``excluded_tail`` (``E_tail``),
     ``screen_exponent``, ``depth_model``, ``amplitude``. ``assumption`` is a
     tuple of ``(name, ErrorTerm)`` pairs, one per declared factorisation or
-    closure; the names are plain strings inside a pytree, so a budget with
+    closure. The names are plain strings inside a pytree, so a budget with
     assumptions crosses a JIT boundary through ``equinox.filter_jit`` (plain
     ``jax.jit`` rejects string leaves). Values are in channel Stokes units,
-    ``(n_ch, 4)`` or broadcastable. The budget assumes nothing itself; it
+    ``(n_ch, 4)`` or broadcastable. The budget assumes nothing itself. It
     aggregates declared terms, and it does not certify any of them (``E_phys``
-    and ``E_tail`` are inputs; ``estimate`` terms are not bounds).
+    and ``E_tail`` are inputs, and ``estimate`` terms are not bounds).
     """
 
     basis_remainder: ErrorTerm
@@ -219,7 +219,7 @@ class ErrorBudget(eqx.Module):
 
     @classmethod
     def all_unbounded(cls, note=""):
-        """Every slot ``unbounded`` with ``note``; no assumptions."""
+        """Every slot ``unbounded`` with ``note``, and no assumptions."""
         return cls(**{slot: ErrorTerm.unbounded(note) for slot in cls.SLOTS})
 
     def terms(self) -> tuple[tuple[str, ErrorTerm], ...]:
@@ -234,10 +234,10 @@ class ErrorBudget(eqx.Module):
         return tuple(name for name, term in self.terms() if term.kind == "unbounded")
 
     def total(self) -> ErrorTerm:
-        """Sum of the valued terms with the weakest kind; ``unbounded`` if any term is.
+        """Sum of the valued terms with the weakest kind, ``unbounded`` if any term is.
 
         Values broadcast to a common shape (``ValueError`` when they cannot).
-        ``not_applicable`` terms are skipped; with no valued term the total is
+        ``not_applicable`` terms are skipped. With no valued term the total is
         a zero ``bound`` of shape ``(1, 4)``.
         """
         missing = self.unbounded()

@@ -8,7 +8,7 @@ tolerance is met or a resource cap is reached. All supported lines are
 included. The finite-gamma helical-orbit model remains the reference.
 
 The calculation is conditional on mpmath's experimental interval arithmetic
-and exact binary-float inputs. It is fixed-point only and internal; angular
+and exact binary-float inputs. It is fixed-point only and internal. Angular
 integration, gamma/B derivatives, population tails and physical-model error
 are not certified here.
 """
@@ -171,7 +171,7 @@ def certified_dense_channel_modes(
     includes *all* integer lines whose exact-binary-input frequencies could
     meet the open support, plus outward endpoint padding. The result is
     returned only when its whole-channel componentwise absolute error meets
-    ``atol``; otherwise the function raises, including at ``max_blocks``.
+    ``atol``. Otherwise the function raises, including at ``max_blocks``.
     """
     gamma, B, mu, eta = _point(gamma, B, mu, eta)
     if not isinstance(channels, Channels) or channels.family != "bump":

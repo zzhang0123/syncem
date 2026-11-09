@@ -1,31 +1,31 @@
 """Harmonic (Dirac-line) channel kernel (``syncem.model.harmonic``).
 
 LABEL: ``eq: channel kernel`` (``H_{P,j} = sum_m Q_m R_j(nu_m)
-exp(2 i (c/nu_m)^2 varphi)``, ``nu_m = m nu_B / D``; ``I, V`` without phase),
+exp(2 i (c/nu_m)^2 varphi)``, ``nu_m = m nu_B / D``, ``I, V`` without phase),
 ``eq: channel derivative coefficients`` (``build_basis`` uses the Taylor
 tensors of :meth:`HarmonicKernel.angular_taylor`). The natural-basis line powers
 ``(I_m, Q_m, V_m)`` are the recurrence used by ``syncem.stokes``
 (``J_m/sin theta = b_perp (J_{m-1} + J_{m+1})/(2D)``), in erg/s/sr per
 electron, at a traced float harmonic index with a static Bessel resolution
 ``n_nodes`` (default ``2^ceil(log2(max(128, 4 m_max + 64)))``, the automatic
-count of ``syncem.bessel``); ``J_{m-1}``, ``J_{m+1}`` and ``J_m'`` share
+count of ``syncem.bessel``). ``J_{m-1}``, ``J_{m+1}`` and ``J_m'`` share
 one contour quadrature per point (``bessel_jn_neighbours``).
 
 Memory: one ``lax.map`` step of ``angular_projection``, ``angular_taylor``
 and the tail probe holds at most ``chunk_budget`` Bessel integrand values
 (``chunk_plan``: up to ``m_chunk`` harmonics by ``vmap``, angular points in
-blocks). ``channel_modes`` plans for one point; vmapped over ``S`` samples
+blocks). ``channel_modes`` plans for one point, and vmapped over ``S`` samples
 it holds ``S`` times that, so ``direct_channel_average`` caps ``S`` per step
 by ``samples_per_step``. Blocking changes only the summation order.
 
 Derivatives (``derivatives="analytic"``, default): ``angular_taylor`` gives
 the ``(z_gamma, z_B)`` Taylor tensors for ``build_basis`` with no tangent
-through the Bessel quadrature (order recurrence on the same contour;
-Leibniz-assembled Legendre contraction, ``_harmonic_taylor``);
+through the Bessel quadrature (order recurrence on the same contour,
+Leibniz-assembled Legendre contraction, ``_harmonic_taylor``).
 ``angular_projection`` differentiates the Bessel triple by the recurrence.
 ``"autodiff"`` nests ``jacfwd`` through the quadrature and the contraction
 (the v0.2.0 structure on the shared-contour rule ``bessel_jn_neighbours``,
-not bit-identical to v0.2.0; its Bessel derivatives lose accuracy at
+not bit-identical to v0.2.0, and its Bessel derivatives lose accuracy at
 ``|x| << m``). Both are the same AD of the same program and agree to
 roundoff (tests: ``1e-12`` per Stokes block).
 
@@ -40,7 +40,7 @@ edges, so the moving cell boundaries contribute no boundary terms. AD
 differentiates the rule itself except in cells with ``0 < lo < 0.1 hi``,
 whose nodes follow the bounds affinely in ``t``, and at an exact
 channel-edge/line coincidence at ``t = 0``, where the rule is not
-differentiable (``product_cells``); there AD is not the derivative of the
+differentiable (``product_cells``). There AD is not the derivative of the
 computed values, and either way a derivative carries a quadrature error of
 its own (estimated by ``numerical``, not bounded).
 Secondary route ``quadrature="tensor"``: ``n_mu x n_eta``
@@ -59,11 +59,11 @@ sweep of ``docs/DESIGN.md`` every mass-column error above 10% lay below
 ``w/c = 2/min(n_mu, n_eta)``, and ``build_basis`` notes channels with
 ``(nu_hi - nu_lo)/centre < 4/min(n_mu, n_eta)`` (sampled, not a bound).
 
-Shapes: scalar ``(gamma, B, mu, eta)``; ``Modes`` ``(n_ch,)``/``(n_weights, n_ch)``;
+Shapes: scalar ``(gamma, B, mu, eta)``, ``Modes`` ``(n_ch,)``/``(n_weights, n_ch)``,
 ``ProjectedModes`` over ``MomentIndex.pairs``. Units: Gauss, Hz, m^2 for ``tau``.
-Regime: ``gamma <~ 50``, ``m_max <~ 1e3``; Galactic harmonic numbers
+Regime: ``gamma <~ 50``, ``m_max <~ 1e3``. Galactic harmonic numbers
 (``m ~ 1e11``) are outside the design and refused by ``build_basis``.
-``mode_intervals`` selects inclusive ranges before the Bessel evaluation;
+``mode_intervals`` selects inclusive ranges before the Bessel evaluation, and
 ``build_basis`` also prunes orders excluded by the declared gamma/B and channel
 supports. This does not relax the contour resolution or high-order guard.
 
@@ -122,22 +122,22 @@ DERIVATIVES = ("analytic", "autodiff")
 
 
 class HarmonicKernel(eqx.Module):
-    """Dirac-line harmonic channel kernel; see the module docstring for the contract.
+    """Dirac-line harmonic channel kernel (contract in the module docstring).
 
     Static fields: ``m_max`` (largest harmonic considered), ``mode_intervals``
-    (inclusive selected ranges; ``None`` means ``1..m_max``), ``n_nodes`` (Bessel
-    resolution, ``None`` for the automatic count; an explicit count must be
+    (inclusive selected ranges, ``None`` means ``1..m_max``), ``n_nodes`` (Bessel
+    resolution, ``None`` for the automatic count, and an explicit count must be
     ``>= 4 m_max + 2``), ``n_outer``/``n_inner`` (product-cell Gauss-Legendre
     counts), ``n_mu``/``n_eta`` (tensor route), ``m_chunk`` (harmonics
     batched by ``vmap`` inside one ``lax.map`` step, an upper cap),
     ``chunk_budget`` (Bessel integrand values per ``lax.map`` step, default
-    ``CHUNK_BUDGET = 2^20``; module docstring, :meth:`samples_per_step`),
+    ``CHUNK_BUDGET = 2^20``, see the module docstring and :meth:`samples_per_step`),
     ``tail_probe`` (harmonics beyond ``m_max`` summed for the truncation
     estimate, or ``None``), ``quadrature`` (default route), ``derivatives``
-    (``"analytic"`` or ``"autodiff"``; module docstring). ``E_phys`` is an
+    (``"analytic"`` or ``"autodiff"``, module docstring). ``E_phys`` is an
     optional declared physical-error term (leaf). Units: per-electron channel
-    Stokes; ``B`` in Gauss, Hz. Assumes vacuum helical-orbit radiation with a
-    pure-rotation phase; not certified: that model (``physical_error``
+    Stokes, ``B`` in Gauss, Hz. Assumes vacuum helical-orbit radiation with a
+    pure-rotation phase. Not certified: that model (``physical_error``
     unbounded unless ``E_phys`` is declared) and the quadrature beyond the
     ``numerical`` estimate.
     """
@@ -228,7 +228,7 @@ class HarmonicKernel(eqx.Module):
         return auto_nodes(self.m_max) if self.n_nodes is None else self.n_nodes
 
     def harmonics(self) -> jax.Array:
-        """Selected harmonic orders as floats; may be empty or disjoint."""
+        """Selected harmonic orders as floats, possibly empty or disjoint."""
         intervals = self.selected_intervals()
         if not intervals:
             return jnp.empty((0,), dtype=float)
@@ -408,7 +408,7 @@ class HarmonicKernel(eqx.Module):
         return "recurrence" if self.derivatives == "analytic" else "autodiff"
 
     def _plan(self, points: int, tangents: int = 1) -> tuple[int, int]:
-        """``(harmonics, block)`` per ``lax.map`` step for ``points`` angular points;
+        """``(harmonics, block)`` per ``lax.map`` step for ``points`` angular points.
         ``tangents`` forward tangents through the Bessel contour count
         ``n_nodes`` values each per point."""
         per_point = self.resolution() * max(1, int(tangents))
@@ -424,7 +424,7 @@ class HarmonicKernel(eqx.Module):
     def samples_per_step(self, channels, requested: int) -> int:
         """``max(1, min(requested, chunk_budget // (h n_nodes)))``: samples per step
         of a ``vmap`` of ``channel_modes`` (``h`` harmonics per step, one point)
-        within ``chunk_budget``; tangents of an outer ``jacfwd`` are not counted."""
+        within ``chunk_budget``. Tangents of an outer ``jacfwd`` are not counted."""
         harmonics = min(self._plan(1)[0], max(1, self.selected_mode_count()))
         per_sample = harmonics * self.resolution()
         return max(1, min(int(requested), self.chunk_budget // per_sample))
@@ -524,13 +524,13 @@ class HarmonicKernel(eqx.Module):
 
         The projection is taken at ``(gamma0 + s_gamma z_gamma, B0 + s_B
         z_B)`` with ``scales = (s_gamma, s_B)``, for ``r + s <= order``
-        (static), without ``1/(r! s!)``; ``order = 0`` is
+        (static), without ``1/(r! s!)``. ``order = 0`` is
         :meth:`angular_projection`. ``orders`` (static set of ``(r, s)``,
         ``r + s <= order``) restricts the output to its lower closure and
         the nested passes to the directions it needs (per-variable caps).
         Differentiable in every traced leaf (outer ``jacfwd``/``grad``).
-        Same units and caveats as the projection; see the module docstring
-        for the derivative paths.
+        Same units and caveats as the projection. The module docstring
+        describes the derivative paths.
         """
         quadrature = self.quadrature if quadrature is None else quadrature
         if quadrature not in QUADRATURES:
@@ -595,7 +595,7 @@ class HarmonicKernel(eqx.Module):
         the relevant support (``_support_check``). Manual low/gap omissions
         are ``unbounded``. An upper-tail ``estimate`` comes from probe harmonics
         (``_harmonic_tail``) over ``samples`` or the angular grid at
-        ``reference``; other unresolved cases are ``unbounded``. Columns are
+        ``reference``. Other unresolved cases are ``unbounded``. Columns are
         ``I, Q, U, V`` with the natural ``|Q_m|`` sum in both ``Q`` and ``U``.
         """
         n_ch = channels.n_ch

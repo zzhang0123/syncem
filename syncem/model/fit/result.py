@@ -12,9 +12,9 @@ A :class:`FitResult` holds the fitted parameters, the moments they imply,
 the amplitude, the Fisher matrix and its covariance in the fit's own
 coordinates (named by ``labels`` and described by ``coordinates``): for
 ``fit_linear`` the unknowns ``u = (A, A theta)`` (or ``theta`` with a fixed
-amplitude); for ``fit_bfgs`` the unconstrained ``z`` of its ``Transform``;
-for ``fit_nodal`` ``(log A, logits)``. ``covariance`` is ``None`` whenever
-the Fisher matrix is rank-deficient at the relative cutoff ``tol``; ``rank``
+amplitude), for ``fit_bfgs`` the unconstrained ``z`` of its ``Transform``,
+and for ``fit_nodal`` ``(log A, logits)``. ``covariance`` is ``None`` whenever
+the Fisher matrix is rank-deficient at the relative cutoff ``tol``. ``rank``
 is the numerical rank, ``dof = n_kept - rank`` (``n_kept - n_params`` when
 no Fisher matrix was formed). ``chi2`` is the whitened residual norm
 squared at the fitted point, in the data units.
@@ -31,23 +31,23 @@ an ``estimate`` linearised at the optimum (prior and log-Jacobian curvature
 excluded). It is ``unbounded`` when no valued discrepancy is declared, when
 a response is set without ``response_uncertainty`` (zeros declare ``R``
 exact) and when the Fisher or design rank is below the number of unknowns
-(only the identified projection is bounded; its max is quoted in the note);
-``None`` for ``fit_nodal``. ``identifiability``, ``feasibility`` and
+(only the identified projection is bounded, and its max is quoted in the
+note). It is ``None`` for ``fit_nodal``. ``identifiability``, ``feasibility`` and
 ``prediction`` are ``None`` when not computed (``diagnostics=False``, nodal
-maps for the identifiability report, non-finite fits); the ``provenance``
+maps for the identifiability report, non-finite fits), and the ``provenance``
 notes say why. The prediction's ``statistical_input`` is
 ``Delta = sigma + |dm/dx| bias_bound`` over ``m``: the one-sigma noise
 propagated from the Fisher covariance plus the propagated bias (an
 ``estimate``, not an envelope). It is ``unbounded`` whenever ``bias_bound``
-is (including the default fit with no declared discrepancy; the noise part
+is (including the default fit with no declared discrepancy, where the noise part
 is quoted in the note) and whenever no covariance exists (every nodal fit:
 the softmax gauge makes its Fisher matrix singular). A map with fitted
-hyper-parameters records NaN placeholders in its ``AssumptionRecord``; the
+hyper-parameters records NaN placeholders in its ``AssumptionRecord``. The
 fitted values are in ``theta`` and in a ``provenance`` note.
 
 Shapes: ``fisher`` and ``covariance`` are ``(n, n)`` with ``n = len(labels)``.
-Units: data and amplitude in the units of the basis prediction; moments in
-the displacement coordinates of the map. Every field is immutable; the
+Units: data and amplitude in the units of the basis prediction, moments in
+the displacement coordinates of the map. Every field is immutable, and the
 builders are eager (ranks and reports are concrete). Not certified: that
 the optimum is global (``converged`` is the optimiser's own flag),
 feasibility of the fitted moments (the report lists necessary conditions
@@ -91,7 +91,7 @@ class FitResult(eqx.Module):
     nodal fit), ``identifiability``,
     ``feasibility``, ``prediction`` (each or ``None``), static
     ``provenance``. Trailing additions: ``method``, ``labels`` and
-    ``coordinates`` (static; the meaning of the Fisher axes),
+    ``coordinates`` (static, the meaning of the Fisher axes),
     ``parameter_map`` (the map that produced ``moments``), ``z`` (the
     optimiser's coordinates), ``fun`` (the minimised objective), ``weights``
     (nodal simplex weights) and ``discretisation`` (nodal ``ErrorTerm``).
@@ -163,7 +163,7 @@ class FitResult(eqx.Module):
         return jnp.sqrt(jnp.maximum(jnp.diag(self.covariance), 0.0))
 
     def to_dict(self) -> dict:
-        """Strict-JSON summary (eager; tuples become lists, non-finite floats
+        """Strict-JSON summary (eager, tuples become lists, non-finite floats
         such as fitted-hyper placeholders become ``None``)."""
         pm = self.parameter_map
         parameters = None

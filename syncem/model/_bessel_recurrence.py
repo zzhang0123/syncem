@@ -9,17 +9,17 @@ quadrature is evaluated at the primal ``x`` only:
 * ``bessel_band(m, x, width, n_nodes)`` returns ``J_{m+k}(x)``, ``|k| <=
   width``, from one set of ``cos(phi)``, ``sin(phi)``, ``E`` on the contour
   ``t + i a`` of ``bessel_jn_neighbours`` (``phi = m t - |x| cosh(a) sin t``,
-  ``E = exp(|x| sinh(a) cos t)``; order ``m + k`` uses ``exp(-(m + k) a) E
+  ``E = exp(|x| sinh(a) cos t)``, and order ``m + k`` uses ``exp(-(m + k) a) E
   e^{i (phi + k t)}``). Negative orders use ``J_{-p} = (-1)^p J_p`` (on the
   order-``m`` contour they lose ``(2m/|x|)^p`` in roundoff), ``x < 0`` the
   parity ``(-1)^n``, and ``x = 0`` the exact ``J_n(0) = delta_{n0}``.
   Its ``custom_jvp`` is ``J_n' = (J_{n-1} - J_{n+1})/2`` from the band of
-  width ``width + 1``; nested derivatives recurse.
+  width ``width + 1``. Nested derivatives recurse.
 * ``neighbours_recurrence(m, x, n_nodes)`` has the values of
   ``bessel_jn_neighbours`` and the recurrence derivatives.
 * ``derivative_coefficients(m, x0, order, n_nodes)`` gives ``d^k/dx^k`` of the
   triple at ``x0`` for ``k <= order`` from one band of width ``order + 1``
-  (``J_n^{(k)} = 2^{-k} sum_j (-1)^j C(k, j) J_{n-k+2j}``);
+  (``J_n^{(k)} = 2^{-k} sum_j (-1)^j C(k, j) J_{n-k+2j}``).
   ``taylor_neighbours(coeffs, h)`` is the degree-``order`` polynomial in
   ``h = x - x0``: its derivatives through ``order`` at ``h = 0`` equal those
   of the triple, and outer derivatives in ``x0`` stay exact through the band's
@@ -30,11 +30,11 @@ integrand is ``-i sin(tau)`` times it, which is half the difference of the
 order ``n - 1`` and ``n + 1`` integrands node by node, so the recurrence is
 the derivative of the same trapezoid sums up to roundoff (and the reflection
 of negative orders). Autodiff of the shifted contour amplifies roundoff by
-about ``(2m/|x|)^k`` at order ``k`` for ``|x| << m``; the recurrence does not
+about ``(2m/|x|)^k`` at order ``k`` for ``|x| << m``. The recurrence does not
 for non-negative orders. Precision is checked against SciPy over the harmonic
 resolution classes (``tests/model/test_bessel_recurrence.py``), not bounded.
-Dimensionless; ``m`` is an integral order (traced float allowed, not
-differentiated); ``n_nodes`` is static. Resolution guard as
+Dimensionless. ``m`` is an integral order (traced float allowed, not
+differentiated), and ``n_nodes`` is static. Resolution guard as
 ``bessel_jn_neighbours``: ``m + 1 + |x| <= n_nodes/2`` or NaN (a resolution
 statement, not an accuracy certificate).
 """
@@ -135,7 +135,7 @@ def _valid(m, x, n_nodes):
 def derivative_coefficients(m, x0, order, n_nodes):
     """``d^k/dx^k (J_{m-1}, J_{m+1}, J_m')`` at ``x0``, shape ``(order+1, 3, *shape)``.
 
-    One band of width ``order + 1``; NaN outside the resolution guard.
+    One band of width ``order + 1``, NaN outside the resolution guard.
     """
     order = int(order)
     band = bessel_band(m, x0, order + 1, int(n_nodes))

@@ -5,7 +5,7 @@ LABEL: ``eq: channel kernel``, ``eq: full channel average``,
 channel modes over a ``PopulationSamples`` measure with the sky factor
 ``exp(2 i phi_n)`` on ``P`` and the exact per-emitter, per-line phase
 ``exp(i tau_m depth_n)`` (a ``TaylorPhase`` of degree 0 evaluated at each
-sample's own depth); a screen route replaces that phase by the screen's
+sample's own depth). A screen route replaces that phase by the screen's
 characteristic function (the sample depths are then ignored, and the screen
 assumptions are recorded). A kernel requiring ``uniform_mu``
 (``ContinuumKernel``, which ignores ``mu``) records ``isotropic_pitch`` as
@@ -88,7 +88,7 @@ def _per_sample(samples, kernel, channels, route, use_sample_depth, depth_ref, b
 
 
 def _default_reference(samples):
-    """Weighted means (eager); the ``(0, 0, 0)`` moments do not depend on it."""
+    """Weighted means (eager). The ``(0, 0, 0)`` moments do not depend on it."""
     w = np.asarray(samples.normalised_weights())
     gamma0 = max(float(w @ np.asarray(samples.gamma)), 1.0 + 1e-9)
     B0 = max(float(w @ np.asarray(samples.B)), 1e-300)
@@ -110,7 +110,7 @@ def truncation_term(kernel, support, channels, samples, route, reference=None):
 
 
 def excluded_tail_term(support, excluded_tail, n_ch, samples):
-    """``E_tail``; a ``Support.truncated=False`` declaration contradicted by the
+    """``E_tail``. A ``Support.truncated=False`` declaration contradicted by the
     concrete samples (``_support_check.outside_support``) becomes ``unbounded``.
     Supplied samples that cannot be checked (traced) keep the declared zero,
     and its note states the unchecked hypothesis."""
@@ -216,25 +216,25 @@ def direct_channel_average(
 ) -> Prediction:
     """Exact channel average of ``samples`` under ``kernel`` (module docstring).
 
-    ``phase=None`` or any ``TaylorPhase`` gives the exact per-emitter phase;
-    a screen (``GaussianScreen``, ``CumulantScreen``, ``EmpiricalScreen``)
+    ``phase=None`` or any ``TaylorPhase`` gives the exact per-emitter phase,
+    and a screen (``GaussianScreen``, ``CumulantScreen``, ``EmpiricalScreen``)
     is applied as the screen's characteristic function at ``reference.depth_ref``
     (sample depths ignored). ``support`` enables the harmonic-tail term
     (``bound`` zero when ``m_max >= required_m_max`` and no emitting sample
     leaves the support) and the excluded-tail tri-state (a declared-complete
-    support contradicted by the samples gives ``unbounded``); ``reference`` (default: sample-weighted means, eager only)
+    support contradicted by the samples gives ``unbounded``). ``reference`` (default: sample-weighted means, eager only)
     labels the returned ``(0, 0, 0)`` moments. Keyword additions:
     ``excluded_tail``, ``amplitude_uncertainty``, ``depth_model`` as in
     ``predict``, ``assumption_allowances`` (``{name: ErrorTerm}`` in Stokes
     units, replacing the unbounded term of a forced assumption, a screen
     route's or the ``isotropic_pitch`` of a ``uniform_mu`` kernel, as in
-    ``predict``); ``batch_size >= 1`` samples per ``lax.map`` step, an upper
+    ``predict``). ``batch_size >= 1``: samples per ``lax.map`` step, an upper
     cap: the kernel's ``samples_per_step`` lowers it so that one vmapped
     step stays within the kernel's ``chunk_budget`` (summation order only).
     The ``numerical`` term is unbounded (no two-quadrature estimate here).
     Provenance is built eagerly (``describe`` calls need concrete values).
     Units: ``amplitude`` times the per-electron channel Stokes of the
-    kernel. Assumes the discrete measure is the population; not certified:
+    kernel. Assumes the discrete measure is the population. Not certified:
     sampling error against a continuous population and ``physical_kernel``.
     """
     if int(batch_size) < 1:

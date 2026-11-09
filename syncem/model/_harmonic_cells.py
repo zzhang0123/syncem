@@ -1,8 +1,8 @@
 """Line powers and product-coordinate cells of the harmonic kernel (private).
 
 ``harmonic_lines`` is the recurrence of ``syncem.stokes`` at a traced float
-harmonic index; ``product_cells`` is the JAX port of the cell geometry in the
-manuscript's ``validation/full_response_product.py``; ``chunk_plan``,
+harmonic index. ``product_cells`` is the JAX port of the cell geometry in the
+manuscript's ``validation/full_response_product.py``. ``chunk_plan``,
 ``sum_harmonics`` and ``sum_point_blocks`` bound the vmapped working set of
 one ``lax.map`` step. See ``syncem.model.harmonic`` for the contract and
 what is not certified.
@@ -25,7 +25,7 @@ from ._kernel_helpers import gyrofrequency_hz, sine_from_cosine
 # for n_outer <= 128, so the floor never moves a node that carries weight.
 _T_FLOOR = 1e-100
 # Cells with 0 < lo < RHO_SWITCH * hi move their nodes affinely in t under AD
-# (product_cells); the v-map would amplify the edge velocity by up to
+# (product_cells). The v-map would amplify the edge velocity by up to
 # RHO_SWITCH^(-3/4) = 5.6 at the switch.
 RHO_SWITCH = 0.1
 # Default static working-set budget: integrand values (Bessel contour nodes of
@@ -38,7 +38,7 @@ MAX_NODES = 65536  # largest automatic Bessel node count (validated regime)
 def auto_nodes(m_max: int) -> int:
     """``2^ceil(log2(max(128, 4 m_max + 64)))``: resolves ``m + |x| <= 2 m_max + 1``.
 
-    Dimensionless node count for ``syncem.bessel``; the guard is a
+    Dimensionless node count for ``syncem.bessel``. The guard is a
     resolution statement, not an accuracy certificate.
     """
     return 2 ** math.ceil(math.log2(max(128, 4 * int(m_max) + 64)))
@@ -47,7 +47,7 @@ def auto_nodes(m_max: int) -> int:
 def checked_nodes(m_max: int, n_nodes):
     """``n_nodes`` validated for ``m_max`` (``None`` keeps the automatic count).
 
-    An explicit count must be a static integer ``>= 4 m_max + 2``; the
+    An explicit count must be a static integer ``>= 4 m_max + 2``, and the
     automatic count must not exceed ``MAX_NODES`` (the validated regime).
     """
     if n_nodes is not None:
@@ -85,26 +85,26 @@ def harmonic_lines(m, gamma, B, mu, eta, *, n_nodes, bessel=None):
     """Natural-basis line powers and frequency at harmonic ``m`` (all broadcast).
 
     Returns ``(I_m, Q_m, V_m, nu_m)``: erg/s/sr per electron and Hz. ``m`` may
-    be a traced float (integral values); ``n_nodes`` is the static Bessel
+    be a traced float (integral values), and ``n_nodes`` is the static Bessel
     resolution (``m + 1 + |x| <= n_nodes/2`` or NaN). ``J_{m-1}``, ``J_{m+1}``
     and ``J_m'`` share one quadrature on the order-``m`` contour
-    (``syncem.bessel.bessel_jn_neighbours``; v0.2.0 used three separate
+    (``syncem.bessel.bessel_jn_neighbours``, where v0.2.0 used three separate
     contours, equal to ``1e-12`` relative in the tests). ``bessel`` selects
     the derivative rule of that triple (``_bessel_recurrence.bessel_rule``):
     ``None``/``"recurrence"`` (default) differentiates by the order
     recurrence on the same contour, so no tangent passes through the
-    ``n_nodes`` integrand values; ``"autodiff"`` differentiates that
+    ``n_nodes`` integrand values. ``"autodiff"`` differentiates that
     shared-contour quadrature (the v0.2.0 structure, not bit-identical to
-    v0.2.0, which used one contour per order; its derivatives lose accuracy
+    v0.2.0, which used one contour per order, and its derivatives lose accuracy
     at ``|x| << m``, e.g. the third ``x``-derivative at ``m = 1``,
     ``x = 1e-6`` is off by more than its own size, where the recurrence is
-    accurate to ``1e-15``); a callable ``(m, x) -> triple`` is used as given
+    accurate to ``1e-15``). A callable ``(m, x) -> triple`` is used as given
     (``_harmonic_taylor`` passes a Taylor polynomial). Values are the same
     for both named rules. ``sqrt(1 - c^2)`` is evaluated as
     ``sqrt((1-c)(1+c))`` and the viewing axis ``|eta| = 1`` and the field
     direction ``|mu| = 1`` use the exact recurrence limits with a zero
     tangent of the vanishing sine. ``B`` in Gauss. Assumes the vacuum
-    helical-orbit reference of ``syncem.stokes``; not certified beyond it,
+    helical-orbit reference of ``syncem.stokes``. Not certified beyond it,
     and the Bessel resolution guard is not an accuracy certificate.
     """
     m, gamma, B, mu, eta = jnp.broadcast_arrays(
@@ -137,7 +137,7 @@ def product_cells(
     """Nodes and weights of the two sign cells of harmonic ``m`` in ``[nu_lo, nu_hi]``.
 
     Returns ``(mu, eta, measure)`` of shape ``(2, n_outer, n_inner)`` covering
-    ``mu > 0`` only; ``measure`` is the ``dmu deta`` weight (zero for empty
+    ``mu > 0`` only. ``measure`` is the ``dmu deta`` weight (zero for empty
     cells). Row 0 is ``t > 0``, row 1 is ``t < 0``. Cell bounds in
     ``t = mu eta`` follow the manuscript (``lower = max(-1, (1 - m nu_B/nu_lo)
     /beta)``, ``upper = min(1, (1 - m nu_B/nu_hi)/beta)``), ``t = sign v^4``
@@ -155,13 +155,13 @@ def product_cells(
     computed values grow like ``h^(-3/4)`` from ``lo^(1/4)``). For ``0 < lo <
     rho_switch * hi`` the ``v``-map moves interior nodes by up to
     ``(hi/lo)^(3/4)`` times the edge velocity (``d lo^(1/4)/d lo =
-    lo^(-3/4)/4``, unbounded as a channel edge meets a line at ``t = 0``);
-    there the nodes instead follow the bounds affinely in ``t``
+    lo^(-3/4)/4``, unbounded as a channel edge meets a line at ``t = 0``).
+    There the nodes instead follow the bounds affinely in ``t``
     (``_affine_follow``), an exact change of variables, so AD gives the rule
     applied to the derivative of the pulled-back integrand. The two differ
     by the rule's quadrature error, not by a bound. Frequencies in Hz, ``B``
     in Gauss. Assumes ``nu_m = m nu_B / (1 - beta mu eta)`` (the vacuum line
-    positions); the Gauss-Legendre counts are declared, and their
+    positions). The Gauss-Legendre counts are declared, and their
     convergence is estimated, not bounded.
     """
     gx_o, gw_o = leggauss(n_outer)
@@ -193,7 +193,7 @@ def product_cells(
 def _affine_follow(t_frozen, w_frozen, lo, hi, filled):
     """``(t, w)`` equal to the frozen values, moving as ``lo + (hi - lo) s``.
 
-    ``s = (t - lo)/(hi - lo)`` and ``w/(hi - lo)`` are frozen; ``lo``, ``hi``
+    ``s = (t - lo)/(hi - lo)`` and ``w/(hi - lo)`` are frozen, and ``lo``, ``hi``
     carry the derivatives. Empty cells keep zero weight.
     """
     lo_f, hi_f = jax.lax.stop_gradient(lo), jax.lax.stop_gradient(hi)
@@ -220,7 +220,7 @@ def chunk_plan(points: int, n_nodes: int, m_chunk: int, budget: int):
     plan keeps ``harmonics * block * n_nodes <= max(budget, n_nodes)``: all
     ``points`` in one block with up to ``m_chunk`` harmonics when they fit,
     otherwise one harmonic and blocks of ``budget // n_nodes`` points (at
-    least one). Integers only; memory per step also scales with the number
+    least one). Integers only. Memory per step also scales with the number
     of forward-mode tangents (``3^N`` for nested ``jacfwd`` of order ``N`` in
     two variables), which the budget does not see.
     """
@@ -235,11 +235,11 @@ def sum_point_blocks(fn, arrays, block):
     """``sum_blocks fn(block_arrays, mask)`` over blocks of the leading point axis.
 
     ``arrays`` is a tuple of arrays with a common leading axis of length
-    ``P``; it is padded to a multiple of ``block`` by repeating the last
+    ``P``. It is padded to a multiple of ``block`` by repeating the last
     point, and ``mask`` (shape ``(block,)``) is zero on the padding, which
     ``fn`` must use to weight its per-point contributions. ``fn`` returns a
     pytree already reduced over the block. A single block calls ``fn``
-    directly; otherwise the blocks run inside ``lax.map`` with each block
+    directly. Otherwise the blocks run inside ``lax.map`` with each block
     ``jax.checkpoint``-ed. Only the summation order depends on ``block``.
     """
     size = arrays[0].shape[0]
@@ -261,11 +261,11 @@ def sum_point_blocks(fn, arrays, block):
 def sum_harmonics(fn, ms, chunk):
     """``sum_m fn(m)`` with ``fn`` vmapped over chunks inside ``lax.map``.
 
-    ``fn`` maps a scalar harmonic to a pytree of arrays; padded entries
+    ``fn`` maps a scalar harmonic to a pytree of arrays. Padded entries
     (the first selected harmonic with zero weight) do not contribute. Each chunk is
     ``jax.checkpoint``-ed: reverse mode recomputes a chunk instead of storing
     its residuals (357.6 GB -> 5.8 GB of XLA temporaries for ``jax.grad`` at
-    the benchmark size); values and forward mode are unchanged.
+    the benchmark size). Values and forward mode are unchanged.
     """
     ms = jnp.asarray(ms, dtype=float)
     if ms.size == 0:

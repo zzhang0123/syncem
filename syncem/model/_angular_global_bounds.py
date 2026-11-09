@@ -9,7 +9,7 @@ conditional numerical assumption. The output does not certify an angular
 integral, a population, or a physical model.
 
 Positive MP bounds below binary64's smallest positive number must be rounded
-outward if published as floats; an ordinary ``float(bound.b)`` can become
+outward if published as floats. An ordinary ``float(bound.b)`` can become
 zero and is not a valid upper bound in that case.
 """
 
@@ -209,7 +209,7 @@ def angular_global_magnitude_bounds(
     integer-Bessel integral, hence ``|J_n(x)|<=1``. Differentiating under
     that finite integral gives ``|J'_m(x)|<=1``. DLMF
     `10.6.1 <https://dlmf.nist.gov/10.6.E1>`_ gives
-    ``J_m(mz)/z=(J_(m-1)(mz)+J_(m+1)(mz))/2`` for ``z>0``; its continuous
+    ``J_m(mz)/z=(J_(m-1)(mz)+J_(m+1)(mz))/2`` for ``z>0``, and its continuous
     value at ``z=0`` also has magnitude at most one. Therefore
     ``|A_parallel|<=|delta|*perpendicular/D`` and
     ``|A_perpendicular|<=perpendicular``. DLMF 10.14.2, 10.14.6 and
@@ -218,8 +218,8 @@ def angular_global_magnitude_bounds(
     Splitting the DLMF 10.9.2 derivative integral at
     ``delta=(4/m)**(1/3)`` and integrating the outer part by parts gives
     the stronger uniform ``C*m**(-2/3)`` derivative bound, where
-    ``C=3*4**(2/3)/(2*pi)``; the direct integral handles ``m=1``.
-    For each term use the smallest available bound; after
+    ``C=3*4**(2/3)/(2*pi)``. The direct integral handles ``m=1``.
+    For each term use the smallest available bound. After
     multiplication by ``m**2`` both alternatives increase with order,
     so their maximum is at ``last``. Multiplying by the inclusive integer
     count, using
@@ -334,7 +334,7 @@ def angular_global_first_derivative_bounds(
 
     `DLMF 10.9.2 <https://dlmf.nist.gov/10.9.E2>`_ gives
     |J_n(x)|, |J'_n(x)| <= 1 for every nonnegative integer
-    n and real x; the second follows by differentiating the finite cosine
+    n and real x. The second follows by differentiating the finite cosine
     integral. Hence the neighbouring-order amplitudes and their gamma
     derivatives are bounded without evaluating a Bessel function. For V,
     Cauchy--Schwarz bounds the cross term by the product of the amplitude

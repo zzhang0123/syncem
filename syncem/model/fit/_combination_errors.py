@@ -31,7 +31,7 @@ def discrepancy_term(data, stokes_hat):
 
 
 def propagated(gain, term, target, what):
-    """``|gain| value`` with the term's kind; ``unbounded``/``not_applicable`` pass through."""
+    """``|gain| value`` with the term's kind. ``unbounded``/``not_applicable`` pass through."""
     if term.kind == "not_applicable":
         return ErrorTerm.not_applicable(term.note)
     if term.value is None:
@@ -53,7 +53,7 @@ def column_selection(J):
 
 
 def unresolved_term(Jx, Pi_complement, J, bound, target, *, check_scale=None):
-    """``|Jx (I - Pi)| x_bound``; ``not_applicable`` when ``Jx (I - Pi)`` vanishes (numerical check)."""
+    """``|Jx (I - Pi)| x_bound``, ``not_applicable`` when ``Jx (I - Pi)`` vanishes (numerical check)."""
     D = np.asarray(Jx) @ Pi_complement
     scale = (
         float(np.max(np.abs(Jx), initial=0.0)) if check_scale is None else check_scale
@@ -119,7 +119,7 @@ def reduction_envelope(reduction, data, bound):
 
 
 def combine(terms, target):
-    """Sum of the valued terms with the weakest kind; ``unbounded`` if any term is."""
+    """Sum of the valued terms with the weakest kind, ``unbounded`` if any term is."""
     live = [t for t in terms if t.kind != "not_applicable"]
     if not live:
         return ErrorTerm.not_applicable("every term is not_applicable")

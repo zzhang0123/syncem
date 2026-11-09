@@ -51,8 +51,8 @@ def _flatten(parameter_map, theta):
     """``ParameterMap.flatten`` with static (NumPy) masks, safe under ``jit``.
 
     Same layout as :meth:`ParameterMap.flatten`: per free group the real
-    parts, then the imaginary parts of the ``e^{2i phi}`` entries; then the
-    fitted hyper arrays; nodal maps give the logits. The public method
+    parts, then the imaginary parts of the ``e^{2i phi}`` entries, then the
+    fitted hyper arrays. Nodal maps give the logits. The public method
     indexes with a traced boolean mask, which ``jax.jit`` rejects.
     """
     parameter_map.flatten  # noqa: B018  (raises ValueError on a bad theta)
@@ -74,12 +74,12 @@ class Transform(eqx.Module):
 
     ``z`` is ``(n_params,)`` with ``n_params = n_free + 1`` when ``amplitude``
     (slot 0 is ``log A``), followed by the map's :meth:`ParameterMap.flatten`
-    order. ``kinds`` and ``bounds`` are static per-slot tuples; ``labels``
+    order. ``kinds`` and ``bounds`` are static per-slot tuples, and ``labels``
     names every slot. ``forward`` needs ``theta.log_amplitude`` when the
     transform carries an amplitude (``ValueError`` otherwise). ``z`` is
     dimensionless (logs of positive quantities, tanh boxes, identity
     elsewhere). Assumes only the positivity/box declarations it was built
-    with; nothing certified about the fit that uses it.
+    with. Nothing is certified about the fit that uses it.
     """
 
     LABEL: ClassVar[str] = "[extension] unconstrained fit coordinates"
@@ -142,7 +142,7 @@ class Transform(eqx.Module):
         return z.astype(jnp.result_type(z, 1.0))
 
     def forward(self, theta: Parameters) -> jax.Array:
-        """``theta -> z`` (``(n_params,)``); ``error_if`` on infeasible values."""
+        """``theta -> z`` (``(n_params,)``), with ``error_if`` on infeasible values."""
         v = _flatten(self.parameter_map, theta)
         if self.amplitude:
             if theta.log_amplitude is None:
@@ -166,7 +166,7 @@ class Transform(eqx.Module):
         """The constrained coordinates ``(A, tables, positive hyper, ...)`` of ``z``.
 
         Identity and logit slots are returned as is (the simplex weights are
-        not materialised; their Jacobian enters :meth:`log_det` only).
+        not materialised. Their Jacobian enters :meth:`log_det` only).
         """
         z = self._check_z(z)
         is_log, is_box, _, lo, hi = self._masks()
@@ -189,7 +189,7 @@ class Transform(eqx.Module):
         )
 
     def log_det(self, z) -> jax.Array:
-        """``log |d(constrained)/dz|`` (scalar); see the module docstring."""
+        """``log |d(constrained)/dz|`` (scalar), as in the module docstring."""
         z = self._check_z(z)
         is_log, is_box, is_logit, lo, hi = self._masks()
         box = jnp.log(0.5 * (hi - lo)) + 2.0 * jnp.log(2.0) - 2.0 * jnp.logaddexp(z, -z)

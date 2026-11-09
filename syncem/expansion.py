@@ -2,13 +2,13 @@
 
 The first two cumulants are equivalent coordinates for the same raw moments:
 <S> = S0 + dS kappa1 + ddS:(kappa2+kappa1*kappa1)/2. The omitted kernel
-Taylor remainder is separate from any PDF closure; even Gaussian statistics
+Taylor remainder is separate from any PDF closure. Even Gaussian statistics
 do not make this finite-degree kernel approximation exact. General Bell
-algebra is in ``cumulants``; neither module reconstructs a positive PDF.
+algebra is in ``cumulants``. Neither module reconstructs a positive PDF.
 
 Derivative arrays are precomputed and stored as ordinary Equinox array leaves.
 They are traced under filter_jit. They are frozen only when the caller's
-partition/gradient arguments exclude them; the module does not enforce that.
+partition/gradient arguments exclude them. The module does not enforce that.
 """
 
 from __future__ import annotations
@@ -25,9 +25,9 @@ def mixed_moments(offsets, factor, weights=None):
     """Return E[W], E[W*dq], E[W*dq*dq] for a supplied joint population.
 
     ``offsets`` is a nonempty real (samples, P) array of deviations from the
-    kernel reference; ``factor`` is a matching real or complex (samples,)
+    kernel reference, and ``factor`` is a matching real or complex (samples,)
     array W. Optional nonnegative relative electron-number weights are
-    normalized as in ``syncem.rm`` (in float64 by exact powers of two; a
+    normalized as in ``syncem.rm`` (in float64 by exact powers of two, and a
     largest weight below 2^-1022 is refused), but W is NOT normalized. For fixed-harmonic field averaging,
     use W=(B/B0)^2 and W=(B/B0)^2*exp(2j*phi), with B0>0 and phi in radians.
     Keep every sample's q, B and phi paired to preserve their correlations.
@@ -89,13 +89,13 @@ class CumulantExpansion(eqx.Module):
         Harmonic numbers (static field).
     S0 : jax.Array
         Zeroth-order Stokes at the reference point, shape ``(N, 3)``
-        (ordinary array leaf; exclude from the differentiation arguments).
+        (ordinary array leaf, to exclude from the differentiation arguments).
     dS : jax.Array
         First derivative spectra, shape ``(N, 3, P)``.
     ddS : jax.Array
         Second derivative spectra, shape ``(N, 3, P, P)``.
 
-    The reference point (gamma0, alpha0, theta0) is implicit in S0/dS/ddS; it is
+    The reference point (gamma0, alpha0, theta0) is implicit in S0/dS/ddS. It is
     not stored as a field (so it never enters the jit cache or the gradient).
     """
 
@@ -113,7 +113,7 @@ class CumulantExpansion(eqx.Module):
         Parameters
         ----------
         kappa1 : (P,) array
-            First cumulants <dp_i> (the deviation means; zero if the reference
+            First cumulants <dp_i> (the deviation means, zero if the reference
             point is the mean).
         kappa2 : (P, P) array
             Second cumulants <dp_i dp_j> - <dp_i><dp_j> (the covariance).
@@ -137,7 +137,7 @@ class CumulantExpansion(eqx.Module):
             <S> = S(B0) * [1 + 2 mu_B/B0 + (var_B + mu_B^2)/B0^2].
 
         ``S`` is physical Stokes evaluated at B0. A dimensionless S remains a
-        dimensionless rescaled quantity; this operation does not add physical
+        dimensionless rescaled quantity. This operation does not add physical
         units. ``mu_B``/``var_B`` are statistics of B-B0. For correlated B and
         other parameters, use ``mixed_average`` with joint mixed moments, or
         explicitly integrate conditional moments before the remaining average.
@@ -156,7 +156,7 @@ class CumulantExpansion(eqx.Module):
         moments with shapes (), (P,), (P,P): E[W], E[W*dq], E[W*dq*dq].
         Use real W=(B/B0)^2 for field_moments, and complex
         W=(B/B0)^2*exp(2j*phi) for phase_moments. Both use the same normalized
-        electron-number distribution; ``mixed_moments`` can compute them from
+        electron-number distribution. ``mixed_moments`` can compute them from
         paired samples. Zero field is allowed. Do not divide by E[W], which
         would discard amplitude and can be zero for the complex factor.
 
@@ -168,7 +168,7 @@ class CumulantExpansion(eqx.Module):
 
         The caller must supply a componentwise nonnegative error envelope.
         For a pointwise natural-kernel remainder ``|R_s(q)| <= rho_s(q)``, the I,V
-        errors are bounded by E[(B/B0)^2*rho_s]; the same Q-kernel bound applies
+        errors are bounded by E[(B/B0)^2*rho_s]. The same Q-kernel bound applies
         separately to sky Q and U. Uncertain mixed moments add the absolute
         coefficient contraction with their error envelopes. This API checks
         shapes/finiteness, NOT joint-moment realizability, physical support,
@@ -224,7 +224,7 @@ class CumulantExpansion(eqx.Module):
 
         This opt-in fitting boundary accepts real finite (P,) means and (P,P)
         covariances. Symmetry and PSD checks use a relative floating-point
-        tolerance of 32*P*eps in correlation coordinates; negative variances
+        tolerance of 32*P*eps in correlation coordinates. Negative variances
         and nonzero covariance with a zero-variance coordinate are rejected
         outright. No eigenvalues are clipped. Zero covariance is valid. The low-level
         ``__call__`` remains available without this eigensolver overhead.
@@ -234,7 +234,7 @@ class CumulantExpansion(eqx.Module):
         NOT inferred from covariance validity. It must cover the omitted
         kernel terms and any other model errors the caller claims to control.
         Physical support and the validity of this envelope are not certified
-        here; zero is justified only for an exact quadratic response or other
+        here. Zero is justified only for an exact quadratic response or other
         independently established zero remainder. Numerical roundoff is not
         bounded by this routine. For a later linear map A, propagate this
         componentwise envelope as abs(A) @ envelope.
@@ -297,11 +297,11 @@ QuadraticTaylorExpansion = CumulantExpansion
 
 
 def build_expansion(harmonics, gamma0, alpha0, theta0, *, B=None):
-    """Build a quadratic response; B [G] selects physical fixed-B derivatives.
+    """Build a quadratic response. B [G] selects physical fixed-B derivatives.
 
     B=None preserves the legacy dimensionless output. The reference point and
-    physical units are construction-time choices; changing either requires a
-    new expansion. The public inputs are (gamma, alpha, theta); the two angles are in radians.
+    physical units are construction-time choices. Changing either requires a
+    new expansion. The public inputs are (gamma, alpha, theta), with the two angles in radians.
     """
     harmonics = tuple(harmonics)
     if not harmonics or any(int(n) != n or n < 1 for n in harmonics):

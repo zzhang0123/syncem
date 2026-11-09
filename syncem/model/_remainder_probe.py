@@ -13,20 +13,20 @@ the per-multi-index inputs of the lower-set margin form
 ``derivatives="analytic"``) takes the ``(z_gamma, z_B)`` partials from
 ``angular_taylor`` at each probe point, one pass per depth order ``b`` with
 the single weight ``d^b_{z_depth} exp(i tau (depth + s_depth z_depth)) =
-exp(i tau depth) (i tau s_depth)^b`` (``_basis_taylor.partials_in_z3``);
+exp(i tau depth) (i tau s_depth)^b`` (``_basis_taylor.partials_in_z3``).
 ``"jacfwd"`` nests ``jax.jacfwd`` of ``angular_projection`` in ``z_3``. Both
 differentiate the same computed projection (tests: ``1e-12`` relative).
 Units follow ``syncem.model.bounds``.
 
 Memory: an order-``q`` nested ``jacfwd`` in ``z_3`` carries the primal and
-three tangents per level, ``4^q`` copies of the projection's working set;
-the projection runs with ``kernel.for_tangents(tangent_divisor(kernel, q))``.
+three tangents per level, ``4^q`` copies of the projection's working set.
+The projection runs with ``kernel.for_tangents(tangent_divisor(kernel, q))``.
 The divisor is ``4^q`` (one ``eta`` node or angular point at the floor)
 except for the harmonic kernel with ``derivatives="analytic"`` (recurrence
 rule for the Bessel triple), which keeps its budget. Measured peaks, JAX
 0.10.0 / 0.10.2, benchmark ``L = 8``, ``N = 2``, ``q = 3``: ``4^q`` lowers
 that harmonic probe only from 2.2 / 2.0 to 1.7 / 1.8 GB and makes it 1.8 to
-2.5 times slower per point; it lowers the ``"autodiff"`` harmonic probe from
+2.5 times slower per point. It lowers the ``"autodiff"`` harmonic probe from
 4.0 / 10.1 to 2.0 / 2.9 GB (1.7 times slower) and the continuum probe of
 README example (b) from 1.85 / 5.0 to 1.16 / 1.85 GB.
 ``angular_residual`` vmaps ``channel_modes`` and ``angular_projection`` over
@@ -159,8 +159,8 @@ def derivative_envelope(
     """``(H (n_ch, 3, n_lk), H_2d (n_ch, n_lk))`` of the order-``N+1`` derivatives.
 
     Probe points: ``z = 0`` and ``t z_n`` for every sample ``n`` and every
-    ``t`` in ``segment_points``; ``H`` is the maximum Frobenius norm of the
-    order-``N+1`` tensor in ``z_3`` (``I, V`` do not depend on ``z_depth``);
+    ``t`` in ``segment_points``. ``H`` is the maximum Frobenius norm of the
+    order-``N+1`` tensor in ``z_3`` (``I, V`` do not depend on ``z_depth``), and
     ``H_2d`` restricts the ``P`` tensor to ``(z_gamma, z_B)`` (``[extension]``
     depth-degree layout ``r+s <= N, b <= L``). ``method``: see
     :func:`probe_method`.
@@ -212,7 +212,7 @@ def margin_envelope(samples, basis, kernel, *, phase, segment_points, method="au
     For each ``beta`` of ``truncation.margin_rows()`` (order ``n_m``) the
     maximum modulus over the path points ``p_k(t)``, ``k`` the first nonzero
     coordinate of ``beta``, ``t`` in ``{0} union segment_points``, every
-    sample; ``X`` in the order ``I, P, V``. ``method``: see
+    sample, with ``X`` in the order ``I, P, V``. ``method``: see
     :func:`probe_method` (``"jacfwd"``: nested ``jacfwd`` per order).
     """
     rows = basis.index.truncation.margin_rows()
@@ -319,9 +319,9 @@ def angular_residual(samples, basis, kernel, *, phase, batch_size):
     """``<|K_X(p) - sum_lk K_{X;lk}(gamma, B) P_l(mu) P_k(eta)|>``, ``(n_ch, 3)``.
 
     Exact residual of the Legendre truncation for the discrete population
-    (the natural ``Q`` residual for ``P``, phase of unit modulus); the
+    (the natural ``Q`` residual for ``P``, phase of unit modulus). The
     ``(gamma, B)`` dependence is kept exact. Samples per ``lax.map`` step:
-    ``batch_size`` capped by ``_direct.sample_batch``; the projection runs at
+    ``batch_size`` capped by ``_direct.sample_batch``. The projection runs at
     ``chunk_budget // batch`` (module docstring).
     """
     index, channels = basis.index, basis.channels

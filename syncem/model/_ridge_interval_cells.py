@@ -54,10 +54,10 @@ def _cosh_nonnegative(ctx, x):
 
 
 def prepare_ridge_slab(ctx, fixed, mu_box, *, h=None) -> RidgeSlab:
-    """Prepare a positive-mu slab; default ``h`` is rounded ``1/gamma``.
+    """Prepare a positive-mu slab. The default ``h`` is rounded ``1/gamma``.
 
-    Any positive exact binary ``h`` gives the same complete angle coverage;
-    it only changes how the ``u`` coordinate concentrates near ``eta=mu``.
+    Any positive exact binary ``h`` gives the same complete angle coverage.
+    It only changes how the ``u`` coordinate concentrates near ``eta=mu``.
     Endpoint values of ``L_s(mu)=asinh((1-s*mu)/h)`` are reused by cells.
     """
     if not isinstance(fixed, AngularFixedGeometry) or fixed.ctx is not ctx:
@@ -112,7 +112,7 @@ def _endpoint_jacobian(ctx, u, L, h):
 def ridge_interval_cell(ctx, slab: RidgeSlab, side: int, u_box) -> RidgeIntervalCell:
     """Enclose a correlated ``(mu,u)`` cell for one side of the eta domain.
 
-    ``side=+1`` maps to ``[mu,1]`` and ``side=-1`` to ``[-1,mu]``; the latter
+    ``side=+1`` maps to ``[mu,1]`` and ``side=-1`` to ``[-1,mu]``. The latter
     reverses orientation, so ``jacobian`` is the positive absolute Jacobian.
     ``eta(mu,u)=mu+side*h*sinh(u*L_side(mu))`` and
     ``J=h*L_side(mu)*cosh(u*L_side(mu))``.

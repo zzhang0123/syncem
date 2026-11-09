@@ -16,7 +16,7 @@ kept apart in :class:`LinearRelation`:
 * ``"analytic"``: the continuum scaling identity (``_relations`` docstring),
   generated only when ``basis.provenance.kernel`` names ``continuum``, for any
   ``Truncation`` accepted by ``build_basis``, any channels, any
-  ``PhaseWeights`` and any positive reference scales; checked on the grid to
+  ``PhaseWeights`` and any positive reference scales, checked on the grid to
   ``check_rtol``. ``HarmonicKernel`` (the Doppler factor and harmonic lines
   depend on ``gamma`` separately from ``B gamma^2``), ``PolynomialTestKernel``
   and unnamed kernels are outside this scope: ``relations="auto"`` falls back
@@ -24,13 +24,13 @@ kept apart in :class:`LinearRelation`:
 * ``"declared"``: a caller statement with a non-empty scope, checked to
   ``check_rtol`` and then treated as exact ("declared by caller", not derived).
 * ``"approximate"``: kept with ``delta_C = C - H T`` and propagated by the
-  fit; :func:`find_column_relations` proposes such candidates from a sampled
+  fit. :func:`find_column_relations` proposes such candidates from a sampled
   grid and never promotes them to analytic or declared.
 
 The Euclidean factorisation ``T = L Q`` (``Q Q^T = I``, ``L L^T = T T^T``)
 keeps the coefficient metric: ``C = (H L) Q``. Units: ``C`` and ``H`` in the
 units of the basis response (per unit ``z``-moment), ``T``, ``L``, ``Q``
-dimensionless. Eager NumPy on concrete values (not ``jax.jit`` safe); array
+dimensionless. Eager NumPy on concrete values (not ``jax.jit`` safe), and array
 fields are ``jnp`` float64 leaves. Not certified: the relation residual
 checks are finite float64 checks on the supplied grid (``check_rtol``), a
 declared relation is the caller's claim, and a numerical near-dependence is
@@ -61,10 +61,10 @@ CHECK_RTOL = 1e-10
 class LinearRelation(NamedTuple):
     """A claim ``sum_j w_j C[:, j] = 0`` on full slots (``[extension]``).
 
-    ``weights``: ``((slot, w), ...)``; ``source``: ``"structural"``,
-    ``"analytic"``, ``"declared"`` or ``"approximate"``; ``scope``: the
+    ``weights``: ``((slot, w), ...)``. ``source``: ``"structural"``,
+    ``"analytic"``, ``"declared"`` or ``"approximate"``. ``scope``: the
     derivation scope (generated) or the caller statement. Dimensionless.
-    Validated by :func:`reduce_response`; a declared relation is not
+    Validated by :func:`reduce_response`. A declared relation is not
     certified by the package beyond its residual check (module docstring).
     """
 
@@ -154,7 +154,7 @@ class ResponseReduction(eqx.Module):
         return stokes.reshape(-1, 4)
 
     def to_dict(self, arrays=False) -> dict:
-        """Strict JSON; the arrays ``C``, ``T``, ``H``, ``L``, ``Q``, ``delta_C`` only with ``arrays=True``."""
+        """Strict JSON, with the arrays ``C``, ``T``, ``H``, ``L``, ``Q``, ``delta_C`` only with ``arrays=True``."""
         out = {
             "layout": self.layout.to_dict(),
             "n_full": self.n_full,
@@ -199,11 +199,11 @@ def reduce_response(
 
     ``basis``: a ``SpectralBasis`` or a duck type with ``response_matrix()``,
     ``index``, ``reference`` and ``provenance``. ``relations`` in
-    ``RELATIONS``; ``declared``: ``LinearRelation`` s with source
-    ``"declared"`` or ``"approximate"``; ``representatives``: ``"gamma"``
+    ``RELATIONS``. ``declared``: ``LinearRelation`` s with source
+    ``"declared"`` or ``"approximate"``. ``representatives``: ``"gamma"``
     (keep the ``s = 0`` columns) or a tuple of distinct ``(r, s, b)`` most
-    preferred first (changes only ``H``, ``T`` and labels);
-    ``include_ext`` adds the ``h0_ext`` slots; ``check_rtol`` the relative
+    preferred first (changes only ``H``, ``T`` and labels).
+    ``include_ext`` adds the ``h0_ext`` slots. ``check_rtol``: the relative
     residual accepted for analytic and declared relations. Raises
     ``ValueError`` for invalid options or relations, a non-finite ``C``, a
     failed residual check or an inconsistent exact reduction. Not certified:
@@ -284,7 +284,7 @@ def find_column_relations(
 
     ``||C_i - ratio C_j||_inf <= rtol ||C_i||_inf`` with the least-squares
     ratio (a zero column: ``||C_i||_inf <= rtol max|C|``). Every candidate
-    has source ``"approximate"`` and a scope naming the grid; it enters a
+    has source ``"approximate"`` and a scope naming the grid. It enters a
     reduction only when passed in ``declared``. Not certified: a sampled
     near-dependence is not a physical identity.
     """

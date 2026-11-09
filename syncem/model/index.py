@@ -5,18 +5,18 @@ tensors ``M^{(0)}``, ``M^{(2)}``), ``eq: finite joint response`` (cutoffs
 ``r+s <= N`` for ``I, V`` and ``r+s+b <= N`` for ``P``), ``eq: angular
 parity`` (``P`` rows with ``l+k`` odd dropped), the ``[extension]``
 depth-degree layout ``r+s <= N, b <= L`` (``depth_degree=L``),
-``eq: linear basis`` (real flattening ``m = concat(M0[h0], Re M2[h2], Im M2[h2])``);
+``eq: linear basis`` (real flattening ``m = concat(M0[h0], Re M2[h2], Im M2[h2])``).
 ``[extension]`` per-variable caps ``max_orders=(N_gamma, N_B, N_depth)``
 intersect the cutoffs with ``r <= N_gamma, s <= N_B, b <= N_depth`` (a
-lower set; its remainder margin is ``lower_set_margin``).
+lower set, whose remainder margin is ``lower_set_margin``).
 
 Everything here is static bookkeeping: tuples of integers, hashable, with no
 array leaves, so a ``MomentIndex`` can be a static field of an
 ``equinox.Module`` or a static argument of ``jax.jit``. Moments themselves
-live in ``syncem.model.moments``; nothing in this module is a physical
+live in ``syncem.model.moments``. Nothing in this module is a physical
 quantity, and no units enter. This module provides only the enumeration and
 slot arithmetic of the retained rows (exact integer bookkeeping, validated by
-the package tests); it does not certify that a moment vector
+the package tests). It does not certify that a moment vector
 laid out this way is feasible for any population.
 """
 
@@ -47,25 +47,25 @@ class Truncation(eqx.Module):
     """Static truncation orders ``(L_mu, L_eta, N, depth_degree, max_orders)``.
 
     ``L_mu``, ``L_eta``: Legendre degrees in ``mu = cos(alpha)`` and
-    ``eta = cos(theta)``; ``N``: total Taylor degree in the displacements
+    ``eta = cos(theta)``. ``N``: total Taylor degree in the displacements
     ``z = (z_gamma, z_B, z_depth)``. ``depth_degree=None`` uses the main-text
-    cutoff ``r+s+b <= N`` for the ``P`` block (``eq: finite joint response``);
+    cutoff ``r+s+b <= N`` for the ``P`` block (``eq: finite joint response``).
     ``depth_degree=L`` uses the ``[extension]`` depth-degree layout
     ``r+s <= N, b <= L``. ``I, V`` rows always use ``r+s <= N, b = 0``.
-    ``max_orders=(N_gamma, N_B, N_depth)`` (keyword addition ``[extension]``;
+    ``max_orders=(N_gamma, N_B, N_depth)`` (keyword addition ``[extension]``,
     each a static int or ``None``) also requires ``r <= N_gamma``,
     ``s <= N_B``, ``b <= N_depth``. The retained ``(r, s, b)`` set is then a
     lower set whose Taylor remainder is the margin sum of
     :func:`lower_set_margin` (``bounds.RemainderInputs`` uses it when
     :meth:`is_capped`). Caps that remove no row are dropped, so a
-    non-binding ``max_orders`` equals the default; in the depth-degree
+    non-binding ``max_orders`` equals the default. In the depth-degree
     layout ``N_depth < depth_degree`` raises ``ValueError`` (set
-    ``depth_degree`` instead). All fields are static and hashable; the
+    ``depth_degree`` instead). All fields are static and hashable, and the
     module has no array leaves. Dimensionless. Assumes nothing about the
-    population; the orders are declared cutoffs, and nothing here certifies
+    population. The orders are declared cutoffs, and nothing here certifies
     that they are sufficient (``basis_remainder`` evaluates the
     ``[extension]`` truncation bound of ``eq: channel residual average`` from
-    supplied ``RemainderInputs``; its kind is bound, estimate or unbounded
+    supplied ``RemainderInputs``. Its kind is bound, estimate or unbounded
     according to those inputs and the basis, and the manuscript gives no
     general bound).
     """
@@ -140,7 +140,7 @@ class Entry(NamedTuple):
     ``h in {0, 2}`` is the azimuthal Fourier weight, ``part`` is ``"real"``
     for ``M0`` rows and ``"re"``/``"im"`` for the two real slots of an ``M2``
     row, ``slot`` is the position in ``m`` and ``label`` the printed name.
-    Dimensionless bookkeeping (``eq: linear basis``); no physical
+    Dimensionless bookkeeping (``eq: linear basis``), with no physical
     content and nothing certified.
     """
 
@@ -187,29 +187,29 @@ class MomentIndex(eqx.Module):
     Rows are 5-tuples ``(l, k, r, s, b)`` in lexicographic order:
 
     * ``h0``: ``M0`` rows, all ``(l, k)`` with ``l <= L_mu, k <= L_eta``,
-      ``r+s <= N``, ``b = 0``; slot 0 is ``M0[l=0,k=0;r=0,s=0] = 1``.
+      ``r+s <= N``, ``b = 0``. Slot 0 is ``M0[l=0,k=0;r=0,s=0] = 1``.
       Without ``"V"`` in ``components`` the ``l+k`` odd rows are dropped
       (they weight only the ``V`` basis, ``eq: angular parity``).
     * ``h2``: ``M2`` rows (complex), ``l+k`` even when ``parity=True``
-      (default; the odd bases vanish identically), all pairs when
-      ``parity=False`` ``[extension]``; ``r+s+b <= N`` or the ``[extension]``
+      (the default: the odd bases vanish identically), all pairs when
+      ``parity=False`` ``[extension]``, with ``r+s+b <= N`` or the ``[extension]``
       depth-degree cutoff ``r+s <= N, b <= L``.
     * ``h0_ext``: real ``M0`` rows with ``b >= 1`` over the ``h2`` pair set
-      and cutoff. Not part of ``m``; used by parameter maps (azimuth
+      and cutoff. Not part of ``m``, and used by parameter maps (azimuth
       separability needs ``M0`` with ``b > 0``) and by sample moments.
 
     ``m = concat(M0[h0], Re M2[h2], Im M2[h2])`` has length
     ``n_real = n0 + 2 n2``. ``pairs`` lists the ``(l, k)`` pairs that appear
-    in ``h0`` or ``h2``; ``n_lk = len(pairs)``. Sizes (``d = 1`` iff both
+    in ``h0`` or ``h2``, and ``n_lk = len(pairs)``. Sizes (``d = 1`` iff both
     Legendre limits are even): ``n0 = (L_mu+1)(L_eta+1) C(N+2,2)`` when
     ``V`` is retained, ``n2 = n_+ C(N+3,3)`` with
     ``n_+ = [(L_mu+1)(L_eta+1) + d]/2`` in the main-text layout. With
     ``max_orders`` every ``(r, s, b)`` cutoff above also obeys the caps.
 
-    All fields are static and hashable; there are no array leaves. Build with
+    All fields are static and hashable, with no array leaves. Build with
     :meth:`build` (or the constructor, which takes the same keywords).
     Dimensionless bookkeeping. Assumes the parity rule ``eq: angular parity``
-    when ``parity=True``; nothing here certifies that the retained rows
+    when ``parity=True``. Nothing here certifies that the retained rows
     suffice for a given population (see ``bounds.RemainderInputs``).
     """
 
@@ -258,14 +258,14 @@ class MomentIndex(eqx.Module):
 
     @classmethod
     def build(cls, truncation, *, parity=True, components=("I", "Q", "V")):
-        """Enumerate the index for ``truncation``; see the class docstring."""
+        """Enumerate the index for ``truncation`` (class docstring)."""
         return cls(truncation, parity=parity, components=components)
 
     # -- lookups ---------------------------------------------------------
 
     def position(self, h, l, k, r, s, b) -> int:
         """Slot of a row in ``m``: ``M0`` rows directly, ``M2`` rows give the
-        ``Re`` slot ``n0 + i``; the ``Im`` slot is ``position + n2``.
+        ``Re`` slot ``n0 + i``, and the ``Im`` slot is ``position + n2``.
         Raises ``ValueError`` for rows outside ``m`` (including ``h0_ext``)."""
         row = (int(l), int(k), int(r), int(s), int(b))
         if h == 0:
@@ -357,7 +357,7 @@ def _check_components(components):
 def n_plus(L_mu: int, L_eta: int) -> int:
     """``[(L_mu+1)(L_eta+1) + d]/2`` retained even-parity pairs, ``d = 1`` iff both even.
 
-    Dimensionless count; ``eq: angular parity``. No assumptions, nothing certified.
+    Dimensionless count (``eq: angular parity``). No assumptions, nothing certified.
     """
     d = 1 if (L_mu % 2 == 0 and L_eta % 2 == 0) else 0
     return ((L_mu + 1) * (L_eta + 1) + d) // 2
@@ -366,7 +366,7 @@ def n_plus(L_mu: int, L_eta: int) -> int:
 def main_text_sizes(truncation: Truncation) -> tuple[int, int, int]:
     """Closed-form ``(n0, n2, n_real)`` for the default index (all components).
 
-    Dimensionless counts for ``parity=True`` and the main-text cutoff; a
+    Dimensionless counts for ``parity=True`` and the main-text cutoff, and a
     cross-check of the :class:`MomentIndex` sizes (a finite check, not a
     certificate). ``ValueError`` for a capped truncation (no closed form).
     """

@@ -1,10 +1,10 @@
 """Provenance records for ``syncem.model`` (private helper of ``errors.py``).
 
-Split out of ``syncem/model/errors.py`` to keep that file under 400 lines;
-import these names from ``syncem.model.errors``. Both classes are frozen
+Split out of ``syncem/model/errors.py`` to keep that file under 400 lines.
+Import these names from ``syncem.model.errors``. Both classes are frozen
 dataclasses of hashables so that a record can be a static field of an
-``equinox.Module``. They document configuration and declared assumptions;
-they certify nothing about accuracy.
+``equinox.Module``. They document configuration and declared assumptions.
+They certify nothing about accuracy.
 """
 
 from __future__ import annotations
@@ -57,16 +57,16 @@ def _tuple_of(values, check, name):
 class AssumptionRecord:
     """A declared factorisation or closure, as recorded in provenance.
 
-    ``groups`` is the partition of ``(gamma, B, mu, eta, phi, depth)``;
+    ``groups`` is the partition of ``(gamma, B, mu, eta, phi, depth)``.
     ``closure_kind`` names the closure (``"none"``, ``"uniform_mu"``,
-    ``"gaussian_depth"``, ...; a fitted closure is ``"<kind> (fitted)"``);
-    ``hyper`` its fixed hyper-parameters, or NaN placeholders for fitted
+    ``"gaussian_depth"``, ..., and ``"<kind> (fitted)"`` for a fitted closure).
+    ``hyper`` holds its fixed hyper-parameters, or NaN placeholders for fitted
     ones (the fitted values are in the ``FitResult`` provenance notes and
-    in the provenance of its prediction; :meth:`to_dict` renders the
-    placeholders as ``null``); ``n_free`` the free-parameter count of the
-    map; ``discrepancy_kind`` the kind of the discrepancy allowance that
+    in the provenance of its prediction, and :meth:`to_dict` renders the
+    placeholders as ``null``). ``n_free`` is the free-parameter count of the
+    map and ``discrepancy_kind`` the kind of the discrepancy allowance that
     was supplied. Hashable. ``hyper`` values are in the closure's units
-    (rad/m^2 for depth closures). The record documents a declared assumption; it does not
+    (rad/m^2 for depth closures). The record documents a declared assumption. It does not
     certify that the population satisfies it (the discrepancy allowance in the
     channel envelope of ``sec: frequency order`` is a separate input).
     ``[extension]``.
@@ -103,7 +103,7 @@ class AssumptionRecord:
         object.__setattr__(self, "hyper", tuple(float(h) for h in hyper))
 
     def to_dict(self) -> dict:
-        """Strict-JSON dict; NaN placeholders in ``hyper`` become ``None``."""
+        """Strict-JSON dict, with NaN placeholders in ``hyper`` as ``None``."""
         return strict_json(
             {
                 "name": self.name,
@@ -148,14 +148,14 @@ class Provenance:
     """Hashable record of what produced a basis or prediction.
 
     Every field is a str, an int, a tuple of ``(key, value)`` pairs (rendered
-    as a dict by :meth:`to_dict`) or a tuple of hashables; arrays are not
+    as a dict by :meth:`to_dict`) or a tuple of hashables. Arrays are not
     allowed (record concrete floats). ``assumptions`` holds
     :class:`AssumptionRecord` entries. ``notes`` carries statements such as
     ``"incident polarisation not modelled"``. Usable as a static field of an
-    ``equinox.Module``. The record documents configuration; it is not a
+    ``equinox.Module``. The record documents configuration. It is not a
     certificate of accuracy. ``certified_orders`` (name kept for
     compatibility) lists the derivative orders validated by finite-difference
-    tests (finite checks, not certificates). Units are stated in the ``units`` field;
+    tests (finite checks, not certificates). Units are stated in the ``units`` field, and
     ``reference`` and ``support`` carry Gauss, Hz and rad/m^2 as concrete
     floats. ``[extension]``.
     """
@@ -199,7 +199,7 @@ class Provenance:
         _tuple_of(self.notes, lambda v: isinstance(v, str), "notes")
 
     def to_dict(self) -> dict:
-        """Strict-JSON dict; ``(key, value)`` pair tuples become dicts, NaN ``None``."""
+        """Strict-JSON dict. ``(key, value)`` pair tuples become dicts and NaN becomes ``None``."""
         return {f.name: _plain(getattr(self, f.name)) for f in dataclasses.fields(self)}
 
     def with_notes(self, *notes) -> "Provenance":

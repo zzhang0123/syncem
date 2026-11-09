@@ -17,7 +17,7 @@ leaves applies to :func:`_build_core`, not to :func:`build_basis`.
 
 Units: the bases are per-electron channel Stokes responses per unit
 ``z``-moment, erg/s/sr for ``unit_peak`` channels (band-integrated) and
-erg/s/sr/Hz for ``unit_integral``; the polynomial test kernel carries the
+erg/s/sr/Hz for ``unit_integral``. The polynomial test kernel carries the
 units of its coefficients. ``C`` has shape ``(4 n_ch, n_real)``, channel-major
 with Stokes order ``I, Q, U, V``: ``C[I_j, h0] = I~``, ``C[V_j, h0] = V~``,
 and with ``P~ = a + i b``: ``C[Q_j, Re] = a``, ``C[Q_j, Im] = -b``,
@@ -85,13 +85,13 @@ class KernelTerms(eqx.Module):
 
     ``physical_kernel`` (``E_phys``), ``harmonic_truncation`` (omitted lines,
     ``E_num``), ``numerical`` (refined-rule estimate plus, for the continuum
-    kernel, the ``F``/``G`` tail bound; ``E_num``) and ``screen_exponent``
+    kernel, the ``F``/``G`` tail bound, ``E_num``) and ``screen_exponent``
     (``R_5`` bound of ``eq: independent gaussian screen``). Values are
     ``(n_ch, 4)`` per electron, except ``numerical``: a per-column envelope
-    ``(4 n_ch, n_real)`` that ``predict`` contracts with ``|m|``; ``predict``
+    ``(4 n_ch, n_real)`` that ``predict`` contracts with ``|m|``. ``predict``
     scales all by the amplitude.
     Units: the per-electron channel Stokes units of the basis. Each term
-    carries its own kind; ``physical_kernel`` is a declaration, never a
+    carries its own kind, and ``physical_kernel`` is a declaration, never a
     package certificate.
     """
 
@@ -111,12 +111,12 @@ class SpectralBasis(eqx.Module):
     """The response of every retained moment row in every channel.
 
     ``I_basis``, ``V_basis`` are real ``(n_ch, n0)`` over ``index.h0`` (zero
-    on the parity-forbidden rows); ``P_basis`` is complex ``(n_ch, n2)`` over
+    on the parity-forbidden rows). ``P_basis`` is complex ``(n_ch, n2)`` over
     ``index.h2`` and includes the phase weight ``w_b``. ``kernel_terms`` holds
-    the per-electron kernel-side error slots; ``provenance`` is the static
-    hashable record; ``certified_orders`` (name kept for compatibility) lists
+    the per-electron kernel-side error slots, ``provenance`` is the static
+    hashable record, and ``certified_orders`` (name kept for compatibility) lists
     the orders validated by finite-difference tests (finite checks, not
-    certificates); ``phase`` (keyword
+    certificates). ``phase`` (keyword
     addition) is the phase route used, kept so that :func:`basis_convergence`
     can rebuild the basis. Shape errors raise ``ValueError``. Units: per-
     electron channel Stokes per unit ``z``-moment (module docstring).
@@ -164,7 +164,7 @@ class SpectralBasis(eqx.Module):
         return self.channels.n_ch
 
     def response_matrix(self) -> jax.Array:
-        """``C`` of shape ``(4 n_ch, n_real)``; see the module docstring for the layout."""
+        """``C`` of shape ``(4 n_ch, n_real)``, laid out as in the module docstring."""
         return _core.response_matrix(
             self.index, self.n_ch, self.I_basis, self.V_basis, self.P_basis
         )
@@ -176,8 +176,8 @@ class SpectralBasis(eqx.Module):
         (``eq: linear basis``): shapes ``(4 n_ch, n_free)``,
         ``(4 n_ch,)`` and ``n_free`` labels. Give a ``ParameterMap`` on this
         index or ``assumptions`` (names for ``assumptions.declare``), not
-        both. ``ValueError`` for a non-affine map (``fit_bfgs``;
-        ``known_angles`` for the bilinear uncoupled case). The assumptions
+        both. ``ValueError`` for a non-affine map (``fit_bfgs``,
+        or ``known_angles`` for the bilinear uncoupled case). The assumptions
         are declared, not verified.
         """
         parameter_map = resolve_map(self.index, parameter_map, assumptions)
@@ -211,12 +211,12 @@ def build_basis(
 ) -> SpectralBasis:
     """Build the :class:`SpectralBasis` of ``kernel`` on ``channels`` at ``reference``.
 
-    Eager: every input must be concrete. Validation (``ValueError``): types;
-    ``gamma0 > 1``, ``B0 > 0``; support ordering; ``phase.max_b()`` equal to
-    ``truncation.max_b()`` (``phase=None`` selects ``TaylorPhase(max_b)``);
-    ``ContinuumKernel`` with ``L_mu > 0``; for Dirac-line kernels a channel
-    ``smoothness < N + 1`` unless ``allow_nonsmooth=True`` (keyword addition;
-    the remainder is then unbounded and noted); ``m_max < required_m_max``
+    Eager: every input must be concrete. Validation (``ValueError``): types,
+    ``gamma0 > 1``, ``B0 > 0``, support ordering, ``phase.max_b()`` equal to
+    ``truncation.max_b()`` (``phase=None`` selects ``TaylorPhase(max_b)``),
+    ``ContinuumKernel`` with ``L_mu > 0``, for Dirac-line kernels a channel
+    ``smoothness < N + 1`` unless ``allow_nonsmooth=True`` (keyword addition,
+    the remainder is then unbounded and noted), ``m_max < required_m_max``
     unless ``allow_truncated=True``, and any ``required_m_max`` beyond the
     harmonic design regime. Kernels without ``V`` drop the odd-parity rows
     (``MomentIndex.build(components=kernel.components)``) and record
@@ -225,13 +225,13 @@ def build_basis(
     ``quadrature`` (``None`` = the kernel default) selects the angular route.
     ``convergence="angular"`` (default) fills ``kernel_terms.numerical`` with
     the per-column envelope of :func:`basis_convergence` (same route at 2x
-    nodes for the harmonic kernel, 2x ``n_nu``/``n_eta`` for the continuum);
+    nodes for the harmonic kernel, 2x ``n_nu``/``n_eta`` for the continuum).
     ``"full"`` also doubles the Bessel or ``F``/``G`` resolution, ``False``
-    leaves it ``unbounded``. ``cross_route`` (keyword addition; ``None`` =
+    leaves it ``unbounded``. ``cross_route`` (keyword addition, ``None`` =
     ``convergence == "full"``) also rebuilds the harmonic basis on the other
     angular route at 2x nodes and records the product-vs-tensor comparison
     as the named finite check ``"route check ..."`` (``check_route`` in
-    ``provenance.quadrature``); it is not part of the budget. ``E_phys`` (an
+    ``provenance.quadrature``). It is not part of the budget. ``E_phys`` (an
     ``ErrorTerm``) replaces ``kernel.physical_error``. Cost: one Taylor
     evaluation of the projection through order ``N``, one
     convergence rebuild, and one more with the route check. Channels from
@@ -239,7 +239,7 @@ def build_basis(
     of the above applies to them) and combined by :func:`combine_basis`.
     ``E_phys`` then refers to the instrument channels. Units and
     what is not certified: see :class:`SpectralBasis` and the module
-    docstring; ``E_phys`` and ``allow_truncated`` are caller declarations.
+    docstring. ``E_phys`` and ``allow_truncated`` are caller declarations.
     """
     check_types(kernel, channels, truncation, reference, support)
     if convergence not in CONVERGENCE:
@@ -415,7 +415,7 @@ def basis_convergence(
     angular route at ``factor`` times the node counts for the harmonic
     kernel (``cross_route=True``, keyword addition: the other route, the
     finite route check), ``factor`` times ``n_nu`` and ``n_eta`` for the
-    continuum kernel; ``full`` also multiplies the Bessel or ``F``/``G``
+    continuum kernel, and ``full`` also multiplies the Bessel or ``F``/``G``
     resolution. ``predict`` contracts the envelope with ``|m|``, which is
     invariant under ``Reference.scales`` and bounds ``|(C' - C) m|``. The
     continuum kernel adds its ``F``/``G`` tail bound at ``(gamma0, B0,

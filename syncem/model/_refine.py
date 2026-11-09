@@ -2,7 +2,7 @@
 
 Private helper of :mod:`syncem.model.assumptions`, split out of
 ``_project.py`` to keep both files under 400 lines. ``refine`` merges the
-partitions and closures of several maps; a map's moment-level discrepancy
+partitions and closures of several maps. A map's moment-level discrepancy
 is carried over only when the other maps add no constraint, otherwise the
 combined assumption has no allowance (``unbounded``). Nothing here
 certifies that a population satisfies the combined assumption. ``record``
@@ -19,7 +19,7 @@ def _adds_no_constraint(pm, groups, closures):
     """True when the refined ``(groups, closures)`` are the map's own.
 
     Only then does the map's moment-level discrepancy describe the combined
-    assumption; a finer partition or an extra closure is a further
+    assumption. A finer partition or an extra closure is a further
     constraint that the allowance was not measured or bounded for.
     """
     if tuple(pm.factorisation.groups) != tuple(groups):
@@ -34,12 +34,12 @@ def _adds_no_constraint(pm, groups, closures):
 def refine(maps):
     """Common refinement of the maps' partitions and merged closures.
 
-    Returns ``(groups, closures, free_hyper, discrepancy)``; raises
+    Returns ``(groups, closures, free_hyper, discrepancy)``, and raises
     ``ValueError`` for a nodal map, mismatched indices, a closed group split
     by the refinement, conflicting closures or two discrepancies. The
     discrepancy of an input map is kept only when the other maps add no
-    constraint (the refinement equals that map's own groups and closures);
-    otherwise it is ``None``, so the combined assumption is ``unbounded``
+    constraint (the refinement equals that map's own groups and closures).
+    Otherwise it is ``None``, so the combined assumption is ``unbounded``
     until the caller supplies an allowance for it. Symmetry closures (empty
     group) are never split and merge by kind.
     """

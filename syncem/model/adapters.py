@@ -8,20 +8,20 @@ layout ``r+s <= N, b <= L`` (moments ``M[a, b]`` of
 of its residual (:func:`to_joint_faraday`: the frequency-resolved
 contraction of ``syncem.faraday.joint_faraday_average``),
 ``eq: channel kernel`` against the fixed-harmonic quadratic average of
-``syncem.expansion`` (:func:`fixed_harmonic_comparison`; two different
+``syncem.expansion`` (:func:`fixed_harmonic_comparison`, two different
 observables, not an equality), ``eq: independent gaussian screen`` against
 ``syncem.rm.burn_depolarisation`` (:func:`burn_screen_check`).
 
-Shapes: channel quantities are ``(n_ch, 4)`` or ``(n_ch,)``; the depth-degree
+Shapes: channel quantities are ``(n_ch, 4)`` or ``(n_ch,)``. The depth-degree
 contraction uses ``(n_ch, n_a)`` coefficients and an ``(n_a, L+1)`` matrix.
 Units follow ``syncem.model.predict``: channel Stokes are the amplitude
-times the per-electron channel kernel; wavelengths are in metres; depths in
+times the per-electron channel kernel, wavelengths are in metres and depths in
 rad/m^2. ``to_joint_faraday`` evaluates the nominal phase coordinate at each
 channel centre, so the equality with ``predict`` holds up to the variation
 of ``tau = 2 (c/nu)^2`` across the channel support (exact for a delta-like
-channel; the relative residual grows like the depth degree times the
+channel, and the relative residual grows like the depth degree times the
 fractional channel width). Nothing here certifies the physics of either side
-of a comparison; the returned differences are measured on the supplied
+of a comparison. The returned differences are measured on the supplied
 population only.
 """
 
@@ -49,8 +49,8 @@ from .predict import predict
 def joint_faraday_rows(index) -> tuple:
     """``[extension]`` depth-degree row order ``a = (l, k, r, s)``: the ``h2`` rows with ``b = 0``.
 
-    Dimensionless bookkeeping; assumes the ``[extension]`` depth-degree layout
-    ``r+s <= N, b <= L`` of the index; nothing certified.
+    Dimensionless bookkeeping. Assumes the ``[extension]`` depth-degree layout
+    ``r+s <= N, b <= L`` of the index. Nothing certified.
     """
     return tuple(row[:4] for row in depth_rows(index))
 
@@ -58,10 +58,10 @@ def joint_faraday_rows(index) -> tuple:
 def to_joint_faraday(basis, moments, *, samples=None, absolute_next=None):
     """``(coefficients (n_ch, n_a), M (n_a, L+1), absolute_next (n_a,) | None)``.
 
-    ``basis`` must use the ``[extension]`` depth-degree layout (``depth_degree = L``);
+    ``basis`` must use the ``[extension]`` depth-degree layout (``depth_degree = L``).
     ``coefficients[j, a]`` is the ``b = 0`` column of ``P_basis`` divided by
     ``exp(i tau_j depth_ref)`` with ``tau_j = 2 (c / centre_j)^2`` (the
-    nominal wavelength ``lam_j = C_SI_M / centre_j``); ``M[a, b]`` is
+    nominal wavelength ``lam_j = C_SI_M / centre_j``). ``M[a, b]`` is
     ``M2[l k; r s b] s_depth^b`` (raw depth displacements, ``z`` for
     ``r, s``). ``absolute_next`` is the supplied envelope, or
     ``<|chi_a| |depth - depth_ref|^{L+1}>`` computed on ``samples``, else
@@ -71,8 +71,8 @@ def to_joint_faraday(basis, moments, *, samples=None, absolute_next=None):
     polarised channel prediction equals ``predict`` up to the channel-width
     residual named in the module docstring. Units: coefficients in the basis
     units, ``M`` dimensionless in ``z`` for ``r, s`` and rad/m^2 powers for
-    ``b``. Assumes the channel is narrow enough for one nominal ``tau_j``;
-    not certified: that width residual (measured in the tests, not bounded).
+    ``b``. Assumes the channel is narrow enough for one nominal ``tau_j``.
+    Not certified: that width residual (measured in the tests, not bounded).
     """
     index = basis.index
     L = index.truncation.depth_degree
@@ -107,15 +107,15 @@ class HarmonicComparison(eqx.Module):
     """Channel prediction versus the fixed-harmonic quadratic average.
 
     ``channel_finite``/``channel_direct`` ``(n_ch, 4)`` (``channel_direct``
-    is ``None`` without a kernel); ``fixed_finite``/``fixed_direct``
+    is ``None`` without a kernel). ``fixed_finite``/``fixed_direct``
     ``(n_harmonics, 4)`` in sky Stokes order at fixed harmonic number and
-    physical ``B``; the two ``remainder`` terms are measured differences on
+    physical ``B``. The two ``remainder`` terms are measured differences on
     the supplied population (``channel_remainder`` is the basis-remainder
     term of the budget when no kernel is given). The observables differ
     (fixed channel versus fixed harmonic index), so no equality is asserted.
     Units: channel entries in the basis units, fixed-harmonic entries in
     erg/s/sr per electron. Assumes the vacuum helical-orbit model on both
-    sides; both remainders are measured on the supplied population and
+    sides. Both remainders are measured on the supplied population and
     certify nothing for other populations. ``[extension]``.
     """
 
@@ -150,14 +150,14 @@ def fixed_harmonic_comparison(
     """Compare ``predict`` on ``basis`` with ``expansion.mixed_average`` on ``samples``.
 
     ``expansion`` is a ``syncem.expansion.CumulantExpansion`` built at
-    ``(basis.reference.gamma0, alpha0, theta0, B=basis.reference.B0)``;
-    its offsets are ``(gamma - gamma0, alpha - alpha0, theta - theta0)`` with
+    ``(basis.reference.gamma0, alpha0, theta0, B=basis.reference.B0)``.
+    Its offsets are ``(gamma - gamma0, alpha - alpha0, theta - theta0)`` with
     ``alpha = arccos(mu)``, ``theta = arccos(eta)`` and the exact field
     factors ``(B/B0)^2`` and ``(B/B0)^2 exp(2 i phi)``. The fixed-harmonic
     direct reference is ``syncem.stokes.stokes_harmonic`` at every sample.
     ``kernel`` (the basis kernel) enables the channel direct average.
     Units: see :class:`HarmonicComparison`. Assumes the same vacuum
-    helical-orbit model on both sides; nothing certified beyond the
+    helical-orbit model on both sides. Nothing is certified beyond the
     measured differences on ``samples``.
     """
     reference = basis.reference
@@ -223,7 +223,7 @@ class BurnCheck(NamedTuple):
     their ``difference`` (``ErrorTerm`` ``(n_ch, 4)``, measured) and the nominal
     wavelengths ``(n_ch,)`` in metres. Kernels in ``amplitude`` times
     erg/s/sr per electron. Assumes the Gaussian screen of
-    ``eq: independent gaussian screen``; the difference is a measurement
+    ``eq: independent gaussian screen``. The difference is a measurement
     for the supplied channel and viewing point, not a bound."""
 
     LABEL = "eq: independent gaussian screen"
@@ -240,13 +240,13 @@ def burn_screen_check(
 
     ``screened = A sum_m Q_m R_j(nu_m) w_0(tau_m)`` with
     ``w_0 = exp(i tau mean - tau^2 sigma^2 / 2)`` (``eq: independent gaussian
-    screen``); ``nominal = burn_depolarisation(P0_j, mean, sigma^2, lam_j)``
+    screen``), and ``nominal = burn_depolarisation(P0_j, mean, sigma^2, lam_j)``
     with ``P0_j = A sum_m Q_m R_j(nu_m)`` and ``lam_j = C_SI_M / centre_j``.
-    The two agree for a delta-like channel; their difference is the error of
+    The two agree for a delta-like channel. Their difference is the error of
     rotating an already integrated channel at one nominal wavelength.
-    Units: ``amplitude`` times erg/s/sr per electron; ``mean`` in rad/m^2,
+    Units: ``amplitude`` times erg/s/sr per electron, ``mean`` in rad/m^2,
     ``sigma`` in rad/m^2, ``B`` in Gauss. Assumes an independent Gaussian
-    screen; the difference is measured at one viewing point and is not a
+    screen. The difference is measured at one viewing point and is not a
     bound over a population.
     """
     screen = GaussianScreen(

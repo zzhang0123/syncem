@@ -1,12 +1,12 @@
 """Host-only, fixed-point evaluation of densely spaced harmonic channel modes.
 
-LABEL: ``eq: channel kernel``; ``[extension]`` denotes the numerical range
+LABEL: ``eq: channel kernel``. ``[extension]`` denotes the numerical range
 evaluator. Frequencies have units Hz, ``B`` Gauss, and powers erg/s/sr per
 electron. Output shapes are ``I,V: (n_ch,)`` and ``P: (n_weights,n_ch)``.
 
 This is a provisional value and first-derivative backend for the vacuum
 helical-orbit reference. ``build_high_order_basis`` uses it in an eager
-preparation step; the resulting matrix can then be reused by JIT prediction.
+preparation step. The resulting matrix can then be reused by JIT prediction.
 It keeps the finite-gamma line powers and evaluates each line's response and
 Faraday weight. It does not certify the accelerated result: the special-
 function, Euler--Maclaurin remainder, and floating-point errors have no
@@ -16,12 +16,12 @@ values while marking uncaught numerical errors ``unbounded``.
 
 The accelerated branch uses the integral and half-endpoint terms of the
 Euler--Maclaurin identity, `DLMF 2.10.1 <https://dlmf.nist.gov/2.10.E1>`_.
-The identity's remainder contains a weighted integral of ``f''``; a
+The identity's remainder contains a weighted integral of ``f''``, and a
 fine-minus-coarse quadrature difference is *not* a bound on that remainder.
 SciPy's ``jv`` evaluates Bessel functions at real continuous order
 for the integral. No truncated DLMF Airy expansion is used by this module.
 
-SciPy is optional; install ``syncem[high_harmonic]`` to use this module.
+SciPy is optional. Install ``syncem[high_harmonic]`` to use this module.
 The host evaluator itself has no JAX JIT or automatic differentiation. Outputs
 are NumPy arrays in the :class:`HostModes` natural-basis layout.
 Not certified: the absolute numerical error of the accelerated or direct
@@ -54,8 +54,8 @@ class HostModes(NamedTuple):
 
     LABEL: ``eq: channel kernel`` [extension]. Shapes are ``(n_ch,)``
     for real ``I,V`` and ``(n_weights,n_ch)`` for complex ``P``. Units follow
-    the supplied channel normalisation. Not certified: the numerical error;
-    see :class:`HighOrderChannelResult`.
+    the supplied channel normalisation. Not certified: the numerical error
+    (see :class:`HighOrderChannelResult`).
     """
 
     I: np.ndarray
@@ -71,15 +71,15 @@ class HighOrderChannelResult:
 
     ``modes`` has ``I,V`` shape ``(n_ch,)`` and complex ``P`` shape
     ``(n_weights,n_ch)``. ``quadrature`` is a fine-minus-coarse *estimate*
-    with value shape ``(2+n_weights,n_ch)`` in row order ``I,V,P[:]``; it is
+    with value shape ``(2+n_weights,n_ch)`` in row order ``I,V,P[:]``. It is
     ``not_applicable`` if all channels use direct summation. ``harmonic_sum``
-    is ``unbounded`` whenever an accelerated interval is used; ``bessel`` and
+    is ``unbounded`` whenever an accelerated interval is used, and ``bessel`` and
     ``floating_point`` are likewise ``unbounded`` for nonzero emission.
     ``quadrature_converged`` says only whether the displayed difference met
     the requested stopping tolerance, not whether the result is accurate.
     The excluded population tail and physical model discrepancy are outside
     this fixed-point numerical result. The overall numerical result is not
-    certified; see the module docstring.
+    certified (module docstring).
     """
 
     modes: HostModes
@@ -102,12 +102,12 @@ class HighOrderDerivativeResult:
     ``reference.scales[0]`` and ``reference.scales[1]``, respectively, to form
     the ``r=1`` and ``s=1`` columns of ``eq: channel derivative coefficients``.
 
-    ``d_gamma`` has units of mode power per unit gamma; ``d_B`` has units of
+    ``d_gamma`` has units of mode power per unit gamma, and ``d_B`` has units of
     mode power per Gauss. ``quadrature.value`` (when present) has shape
     ``(3, 2+n_weights, n_ch)`` for value, gamma and B differences. Every
     dense-route difference is a stopping estimate, not an error bound.
     The Bessel and floating-point errors remain unbounded on nonzero lines.
-    The overall numerical result is not certified; see the module docstring.
+    The overall numerical result is not certified (module docstring).
     """
 
     modes: HostModes
@@ -187,7 +187,7 @@ def _geometry(gamma, mu, eta):
     defect = (eta_minus_bpar / D) ** 2 + (inv_gamma * sin_theta / D) ** 2
     direct_z = b_perp * sin_theta / D
     # sqrt(1-defect) preserves 1-z near the turning region but loses z when
-    # defect is nearly one; the direct expression is accurate for small z.
+    # defect is nearly one. The direct expression is accurate for small z.
     z = direct_z if direct_z < 0.5 else math.sqrt(max(0.0, 1.0 - min(1.0, defect)))
     return beta, b_perp, D, z, eta_minus_bpar
 
@@ -251,7 +251,7 @@ def _line_powers_with_derivatives(m, gamma, B, mu, eta):
     The usual branch calls ``jv`` only for orders ``m-1`` and ``m+1``.
     Differentiating their sum/difference by the Bessel equation avoids new
     special-function calls. Very small positive ``z`` uses ``jvp`` because
-    those quotient recurrences lose significant digits there; at ``z=0``
+    those quotient recurrences lose significant digits there. At ``z=0``
     their product with ``z_gamma`` vanishes and is set directly to zero.
     """
     gamma, B, mu, eta = _point(gamma, B, mu, eta)
@@ -373,7 +373,7 @@ def _single_channel(channels, j):
 
 
 def _host_response(channels, j):
-    """One host response; use NumPy for the common analytic bump family."""
+    """One host response, with NumPy for the common analytic bump family."""
     if channels.family != "bump":
         return _single_channel(channels, j)
     centre = float(channels.centres_hz[j])
@@ -509,7 +509,7 @@ def _active_range(support, spacing):
         raise ValueError("channel support order is not representable")
     # The response is zero outside its open support. Pad both endpoints by
     # two orders because floating division can round an exact edge across an
-    # integer; the extra terms are evaluated with the actual response.
+    # integer. The extra terms are evaluated with the actual response.
     a = max(1, math.floor(lo / spacing) - 2)
     b = math.ceil(hi / spacing) + 2
     if b > _MAX_EXACT_FLOAT_INT:
@@ -555,16 +555,16 @@ def high_order_channel_modes(
 ) -> HighOrderChannelResult:
     """Evaluate compact-channel ``I,V,P`` at one ``(gamma,B,mu,eta)`` point.
 
-    The whole positive-order support is included; no ``m_max`` tail is cut.
+    The whole positive-order support is included, and no ``m_max`` tail is cut.
     The direct/integral choice uses the number of candidate integers strictly
     inside each channel's support. Direct evaluation also computes up to six
     endpoint-padding orders whose response should vanish. Above
     ``direct_limit`` candidate integers, only ``bump`` responses use the corrected
     integral. The method uses DLMF 2.10.1 (link in module docstring), with
     its remainder left ``unbounded``. ``rtol``/``atol`` stop refinement of a
-    quadrature *estimate* only; they do not certify the harmonic sum. Direct
+    quadrature *estimate* only. They do not certify the harmonic sum. Direct
     sums retain unbounded special-function and floating-point error.
-    Failure to meet that estimate raises ``ArithmeticError`` by default;
+    Failure to meet that estimate raises ``ArithmeticError`` by default.
     ``allow_unconverged=True`` returns the value with a false convergence flag
     solely for exploratory diagnostics. Broad order ranges with ``b/a > 16``
     are refused because a whole-interval rule can miss localised emission.
@@ -742,10 +742,10 @@ def high_order_channel_derivatives(
     channel's active integer count. The dense stopping check covers *all*
     value and derivative rows. ``atol``, ``atol_gamma`` and ``atol_B`` are
     separate absolute stopping thresholds in value, per-gamma and per-Gauss
-    units respectively; all default to zero. No threshold is an error bound.
+    units respectively, and all default to zero. No threshold is an error bound.
     The Euler--Maclaurin, SciPy and floating-point errors remain unbounded.
-    The returned values and derivatives are not certified; see the module
-    docstring.
+    The returned values and derivatives are not certified (module
+    docstring).
     """
     if not isinstance(channels, Channels):
         raise TypeError("channels must be a Channels instance")

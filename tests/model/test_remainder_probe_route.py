@@ -179,13 +179,10 @@ _R30_INTERVAL_ENVELOPE_SENTENCES = {
             "inputs.",
             "A routine ``eqx.tree_at`` edit changes the live field, while its "
             "certified snapshot remains the one validated at attachment.",
-            "This guard detects accidental stale-certificate reuse; it is not a "
-            "tamper-resistant seal against deliberate replacement of both live "
-            "fields and snapshots.",
+            "This guard detects accidental stale-certificate reuse.",
             "The exact cached C, after a JAX-compatible certificate identity check.",
             "Any unsupported input, missing I00 certificate, resource cap or "
-            "unrepresentable outward rounded value raises; the supplied immutable "
-            "basis is untouched.",
+            "unrepresentable outward rounded value raises.",
             "No gamma/B displacement remainder is inferred from this certificate.",
         }
     ),

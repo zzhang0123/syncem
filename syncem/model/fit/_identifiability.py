@@ -35,7 +35,7 @@ def whitened_design(data, C, columns):
     """``L^-1 R C columns`` over the kept data rows, ``(n_kept, n_u)``.
 
     Uses ``data.design`` (``StokesData``: response applied, kept rows
-    selected) when present; otherwise applies ``data.response`` and
+    selected) when present. Otherwise it applies ``data.response`` and
     ``data.mask`` (``True`` = kept) directly.
     """
     n_rows = int(C.shape[0])
@@ -74,7 +74,7 @@ def equilibrate(G):
     Column equilibration: every nonzero column of ``G D`` has unit norm, so
     its singular values and right singular vectors are invariant under a
     positive rescaling of the unknowns. Only exactly zero (or non-finite)
-    column norms keep the weight 1; a column that is small only because of
+    column norms keep the weight 1. A column that is small only because of
     the coordinate units is restored to unit norm. Eager (``d`` is concrete).
     """
     G = jnp.asarray(G)

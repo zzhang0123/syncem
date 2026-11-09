@@ -1,6 +1,6 @@
 """Builders of :class:`~syncem.model.fit.result.FitResult` (private helper).
 
-``from_linear`` wraps the closed-form solution of ``fit_linear``;
+``from_linear`` wraps the closed-form solution of ``fit_linear``.
 ``from_bfgs`` and ``from_nodal`` wrap the private outcomes of ``fit_bfgs``
 and ``fit_nodal`` with a Gauss-Newton Fisher matrix in the fit coordinates
 (``J^T J`` of the whitened residual: ``jax.jacfwd`` in ``z`` for BFGS, the
@@ -150,7 +150,7 @@ def from_linear(
 
     ``data`` is the data the fit was weighted with (the inflated noise under
     ``discrepancy_policy="inflate"``), so the identifiability report and the
-    Fisher summary share weights; ``tol`` is the fit's singular-value cutoff.
+    Fisher summary share weights. ``tol`` is the fit's singular-value cutoff.
     """
     moments = parameter_map(theta, basis.reference)
     reference = basis.reference

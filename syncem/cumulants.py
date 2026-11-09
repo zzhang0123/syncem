@@ -2,8 +2,8 @@
 
 First K moments and cumulants are invertible coordinate descriptions of the
 same statistics, assuming the moments exist. The scalar helper can optionally
-set unprovided higher cumulants to zero while constructing moments through N;
-this is an additional closure, not a general positive-PDF reconstruction.
+set unprovided higher cumulants to zero while constructing moments through N.
+This is an additional closure, not a general positive-PDF reconstruction.
 It must not be identified with a legal polynomial log-characteristic function:
 Marcinkiewicz excludes non-Gaussian exact finite polynomial log CFs of degree>2.
 
@@ -97,7 +97,7 @@ def vector_cumulant_expansion(S_derivs, kappas):
              + (1/24) kappa_i kappa_j kappa_k kappa_l S^(ijkl)
 
     (indices summed implicitly).  For K=2 this coincides with the second-order
-    moment expansion; the coefficients are the multivariate Faà di Bruno
+    moment expansion. The coefficients are the multivariate Faà di Bruno
     (complete Bell) weights.  JAX-native, so it is jittable/differentiable.
     """
     K = len(kappas)

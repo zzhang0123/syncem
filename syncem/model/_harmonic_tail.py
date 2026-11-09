@@ -8,9 +8,9 @@ over the kernel's ``n_mu x n_eta`` Gauss-Legendre angular grid at the
 reference ``(gamma0, B0)``. Harmonics beyond the probe are not included, so
 the result is an ``estimate``, never a bound. Memory: the samples (or grid
 points) run in blocks inside ``lax.map`` so that one step holds at most
-``kernel.chunk_budget`` Bessel integrand values (``sample_plan``); blocking
+``kernel.chunk_budget`` Bessel integrand values (``sample_plan``), and blocking
 changes the summation order only. Units: per-electron channel Stokes,
-``(n_ch, 4)``; ``B`` in Gauss, Hz.
+``(n_ch, 4)``, ``B`` in Gauss, Hz.
 """
 
 from __future__ import annotations

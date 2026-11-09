@@ -15,8 +15,8 @@ discrepancy envelope.
 * ``FitResult``: the self-describing result.
 * ``reduce_response``, ``fit_combinations`` ``[extension]``: exact pre-fit
   grouping ``C = H T`` and the identifiable combinations of a linear fit in a
-  declared coefficient metric (``CombinationFit``; analytic redundancy,
-  numerical rank and practical recoverability reported separately).
+  declared coefficient metric (``CombinationFit``, which reports analytic redundancy,
+  numerical rank and practical recoverability separately).
 
 A small residual is not a remainder certificate, feasibility checks are
 necessary conditions only, and an error envelope is not a noise distribution.

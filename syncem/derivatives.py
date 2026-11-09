@@ -4,7 +4,7 @@ The building blocks of the moment expansion are the derivatives of the
 single-particle Stokes parameters w.r.t. the physical parameters, evaluated at
 a reference point.  Because the exact Schott expressions are implemented with
 pure JAX primitives, autodiff differentiates their numerical quadrature. Function and derivative
-errors must be validated separately; it does not remove kernel quadrature error.
+errors must be validated separately. Autodiff does not remove kernel quadrature error.
 
 Parameter vector (natural polarisation basis, U = 0)::
 
@@ -40,7 +40,7 @@ def derivative_spectra(n: int, gamma0: float, alpha0: float, theta0: float, *, B
 
     ``B=None`` preserves the dimensionless harmonic response. Pass B [G] to
     differentiate physical power at fixed B, including omega_B(gamma)^2.
-    This is a fixed harmonic-number derivative; a fixed-frequency response
+    This is a fixed harmonic-number derivative. A fixed-frequency response
     additionally depends on moving line positions and the observing kernel.
 
     Returns

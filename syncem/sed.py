@@ -4,16 +4,16 @@ The analytic power-law formula extends the energy integral to (0,infinity),
 requires p>1/3, uses the ultra-relativistic vacuum continuum kernel, and assumes
 conditional pitch isotropy. Energy support/tails and finite-gamma corrections
 are separate discrepancies. The absolute API declares whether a directional
-ordered field or an average over viewing directions is wanted; these differ
+ordered field or an average over viewing directions is wanted. These differ
 from an unnormalised angular integral.
 
 The slope a_s=(p-1)/2 holds within that reference model. For spatial mixtures,
 cumulants are emissivity-amplitude weighted at a declared frequency pivot,
 not electron-number weighted. Curvature Var(p)/4 refers to those weights at
-that pivot; mapping unweighted population statistics into it is another step.
+that pivot. Mapping unweighted population statistics into it is another step.
 
 Analytic formulas use JAX. Finite energy quadrature remains NumPy precompute,
-with caller-controlled bounds/resolution; numerical convergence does not bound
+with caller-controlled bounds/resolution. Numerical convergence does not bound
 excluded physical tails or certify a PDF closure.
 """
 
@@ -33,20 +33,20 @@ def spectral_index(p):
 
 
 def spectral_curvature(var_p):
-    """Delta_alpha_s = Var(p)/4 (leading order; the Chluba+2017 curvature)."""
+    """Delta_alpha_s = Var(p)/4 (leading order, the Chluba+2017 curvature)."""
     return var_p / 4.0
 
 
 def power_law_emissivity_abs(nu, p, C, B, *, theta=None):
     """Physical emissivity [erg/s/cm^3/Hz/sr] for N(gamma)=C gamma^-p.
 
-    B [G], nu [Hz], p>1/3. ``theta`` selects an ordered-field viewing angle;
-    the directional continuum approximation assumes isotropic electron pitch
+    B [G], nu [Hz], p>1/3. ``theta`` selects an ordered-field viewing angle.
+    The directional continuum approximation assumes isotropic electron pitch
     angles. ``theta=None`` averages that directional emissivity with the
     normalised measure sin(theta)dtheta/2 (equivalently, random field axes).
     This default corrects the legacy omitted factor1/2. A physical ordered
     field generally emits anisotropically even for isotropic electron pitch.
-    The analytic integral extends gamma to (0,infinity); its physical energy
+    The analytic integral extends gamma to (0,infinity). Its physical energy
     cutoffs, continuum error and pitch anisotropy remain explicit limitations.
     """
     p = jnp.asarray(p)
@@ -77,7 +77,7 @@ def power_law_emissivity_rel(nu, p):
 
     Its angular integral is twice the probability average. For the absolute
     orientation-averaged result multiply by sqrt(3)e^3 C B/(8pi m_e c^2)
-    and evaluate at nu/nu_B. p>1/3 and nu>0; the energy integral is extended.
+    and evaluate at nu/nu_B. It requires p>1/3 and nu>0. The energy integral is extended.
     """
     p = jnp.asarray(p)
     nu = jnp.asarray(nu)
@@ -110,7 +110,7 @@ def power_law_emissivity_rel(nu, p):
 
 
 def los_intensity(nu, s_grid, j0, p, *, nu0=1.0):
-    """I(nu)=int j0(s) (nu/nu0)^-((p(s)-1)/2) ds; j0 is at pivot nu0."""
+    """I(nu)=int j0(s) (nu/nu0)^-((p(s)-1)/2) ds, with j0 at pivot nu0."""
     return np.trapezoid(j0 * (nu / nu0) ** (-(p - 1.0) / 2.0), s_grid)
 
 
@@ -140,7 +140,7 @@ def log_parabola_running_index(nu, p0, a, nu_ref=1.0):
     alpha=(p0-1)/2 + a/2 [ln(nu/nu_ref)-d ln M(q)/dq] + O(a^2),
     q=(p0-1)/2 > -1/3. nu_ref=a_B*gamma_ref^2. For local electron slope
     p0+b*y use a=b/2. The omitted index term is
-    -a/2*(<ln x>_a-<ln x>_0); the running correction is
+    -a/2*(<ln x>_a-<ln x>_0), and the running correction is
     -a^2 Var_a(ln x)/4 under the tilted continuum kernel. These remainders
     exclude finite-energy-tail and physical-kernel discrepancies.
     """
@@ -164,7 +164,7 @@ def emissivity_curved(nu, p_func, nu_c_ref=1.0, gmin=0.05, gmax=5000.0, ng=400):
 
     p_func is the exponent, not the local logarithmic electron slope. Bounds
     below gamma=1 are a formal mathematical continuation, not physical Lorentz
-    factors. The default retains the historical integration interval; callers
+    factors. The default retains the historical integration interval. Callers
     must declare physical support and propagate excluded tails separately.
     """
     from .ultrarel import F

@@ -8,7 +8,7 @@ expanded back onto the retained rows with the Legendre linearisation
 ``P_a P_b = sum_c g_abc P_c`` (``numpy.polynomial.legendre.legmul``), and the
 moment matrices ``<conj(f_i) f_j>`` of a candidate list of functions are
 assembled over the largest prefix-greedy subset whose products are all
-retained. Nothing here certifies feasibility; the inequalities it evaluates
+retained. Nothing here certifies feasibility. The inequalities it evaluates
 are necessary conditions for membership of the feasible set of
 ``sec: finite joint response``.
 """
@@ -87,7 +87,7 @@ class MomentLookup:
         return None if i is None else complex(self.m2[i])
 
     def evaluate(self, expansion: Expansion, h: int):
-        """``sum coeff * M^(h)[row]``; ``None`` when any needed row is missing."""
+        """``sum coeff * M^(h)[row]``, or ``None`` when any needed row is missing."""
         total = 0.0
         for row, coeff in expansion.items():
             if coeff == 0.0:
@@ -164,7 +164,7 @@ def moment_matrix(lookup: MomentLookup, candidates):
     """Greedy maximal moment matrix ``H_ij = <conj(f_i) f_j>``.
 
     ``candidates`` is a sequence of ``(label, expansion, h)`` with ``h`` in
-    ``{0, 2}``; a candidate is kept when its products with itself and every
+    ``{0, 2}``. A candidate is kept when its products with itself and every
     kept candidate are retained moments. Returns ``(labels, H)`` with ``H``
     Hermitian (real symmetric when all ``h = 0``), or ``(labels, None)`` when
     fewer than two candidates survive.
@@ -212,11 +212,11 @@ def min_eigenvalue(H) -> float:
 
 def legendre_range(l: int) -> tuple[float, float]:
     """``(min, max)`` of ``P_l`` on ``[-1, 1]``: interior critical points
-    from the roots of ``P_l'`` plus the endpoints; the maximum is ``1``.
+    from the roots of ``P_l'`` plus the endpoints. The maximum is ``1``.
 
-    Dimensionless; a floating-point NumPy root computation, compared with a
+    Dimensionless. A floating-point NumPy root computation, compared with a
     dense grid in the tests for ``l <= 8`` (a finite check, not a
-    certificate); no physical assumption. It states the range of ``P_l``
+    certificate), with no physical assumption. It states the range of ``P_l``
     only, nothing about a population.
     """
     l = int(l)

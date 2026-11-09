@@ -21,7 +21,7 @@ PRECISION_FLOOR = 1e-12
 # entry: caps the scale ratio at 1e3, so zero-curvature slots at a degenerate
 # start (all tables zero, say) do not get steps 1e6 times the smallest.
 SCALE_FLOOR = 1e-6
-# ``exp(700) ~ 1e304`` is below the float64 maximum; a log slot beyond it
+# ``exp(700) ~ 1e304`` is below the float64 maximum. A log slot beyond it
 # would give an infinite constrained value (an infinite sigma, say).
 LOG_SLOT_LIMIT = 700.0
 
@@ -29,7 +29,7 @@ LOG_SLOT_LIMIT = 700.0
 def gauss_newton_scale(logdensity, z0):
     """Diagonal preconditioner ``s`` with ``diag(J^T J) s^2 ~ 1`` at ``z0``.
 
-    ``J`` is the Jacobian of the whitened residual (``jax.jacfwd``); columns
+    ``J`` is the Jacobian of the whitened residual (``jax.jacfwd``). Columns
     with curvature below ``SCALE_FLOOR`` of the largest are clamped there, so
     unidentified parameters keep a finite scale at most ``1e3`` times the
     smallest.
@@ -60,7 +60,7 @@ def total_objective(logdensity, scale):
 
     The density is evaluated at a finite, clipped copy of ``z = scale * y``
     (non-finite entries set to zero, log slots clipped to
-    ``|z| <= LOG_SLOT_LIMIT``), so no value check fires; the result is
+    ``|z| <= LOG_SLOT_LIMIT``), so no value check fires. The result is
     ``+inf`` unless ``z`` needed no change and the density is finite. Inside
     the evaluable region it equals ``-logdensity(z)`` exactly.
     """
@@ -86,7 +86,7 @@ def accepted_point(objective, y_start, result):
 
     ``result.x`` when the run reports success. Otherwise the lowest finite
     objective among ``result.x``, the pre-step point ``result.x + H g`` and
-    the run's start ``y_start`` (ties go to that order; ``y_start`` when
+    the run's start ``y_start`` (ties go to that order, and ``y_start`` is kept when
     none is finite): when its zoom line search fails, JAX's BFGS still
     applies the unit step ``-H g`` and reports the objective of the
     pre-step point, so ``result.x`` can be a rejected (``+inf``) trial point.

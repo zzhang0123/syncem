@@ -2,20 +2,20 @@
 
 ``nonsmooth_reason`` returns why the Taylor remainder of a basis is
 unconstrained (a line kernel whose channels have smoothness below
-``N + 1``; ``_basis_checks.check_kernel`` records the same condition as a
+``N + 1``, and ``_basis_checks.check_kernel`` records the same condition as a
 provenance note). ``derivative_gate`` returns why a line-kernel remainder on
 a ``Channels.from_callable`` response cannot be a ``bound`` (no declared
 ``sup|R^(N+1)|``), or the note of a declared one. ``is_screen_route`` tells
 whether the basis phase route is a screen, whose finite response does not
 Taylor-expand the depth.
 ``lower_set_margin`` is the margin ``S(Lambda)`` of the lower-set Taylor
-remainder used for capped truncations (re-exported by ``syncem.model.index``);
+remainder used for capped truncations (re-exported by ``syncem.model.index``).
 ``margin_columns`` evaluates that form from the probed or supplied inputs
 and ``appendix_c`` the ``P`` column of the ``[extension]`` depth-Taylor bound
 ``<|r_in|> + sum_a |c_a| tau_max^{L+1}/(L+1)! <|chi_a| |depth - depth_ref|^{L+1}>``
 of the residual (of the form of ``eq: channel residual average``, for the
 depth-degree set).
-Units follow ``syncem.model.bounds``; nothing here verifies the supplied
+Units follow ``syncem.model.bounds``. Nothing here verifies the supplied
 envelopes.
 """
 
@@ -97,7 +97,7 @@ def is_screen_route(basis) -> bool:
     """``True`` when the basis phase route is a screen (not ``TaylorPhase``).
 
     Reads ``basis.phase`` when set, else the ``route`` entry of
-    ``provenance.phase_route``; an unrecorded route counts as Taylor, which
+    ``provenance.phase_route``. An unrecorded route counts as Taylor, which
     keeps the depth-Taylor term.
     """
     phase = getattr(basis, "phase", None)
@@ -126,7 +126,7 @@ def lower_set_margin(lower_set) -> tuple[tuple[int, ...], ...]:
     sets). The one-dimensional Taylor step in ``z_d`` at fixed ``z'`` gives
     ``f = sum_{j<=J} z_d^j/j! h_j(z') + R_d`` with ``h_j = d_d^j f(., 0)``
     and ``|R_d| <= |z_d|^{J+1}/(J+1)! sup_t |d_d^{J+1} f(z', t z_d)|``
-    (integral form, complex ``f``); since ``T_Lambda f = sum_j z_d^j/j!
+    (integral form, complex ``f``). Since ``T_Lambda f = sum_j z_d^j/j!
     T_{Lambda_j} h_j``, ``f - T_Lambda f = R_d + sum_j z_d^j/j! (h_j -
     T_{Lambda_j} h_j)`` and the induction hypothesis on each ``h_j``
     telescopes the rest. Hence ``S = {(0,..,0,J+1)} union_j S(Lambda_j) x {j}``
@@ -134,13 +134,13 @@ def lower_set_margin(lower_set) -> tuple[tuple[int, ...], ...]:
     this is the shell ``|beta| = N + 1``, the multi-index form of the
     order-``N+1`` Taylor remainder of ``eq: channel basis expansion``.
     ``S`` contains every minimal element of the complement and can contain
-    more (for ``{0,1}^2``: ``(2,1)``); the minimal elements alone do not bound
+    more (for ``{0,1}^2``: ``(2,1)``), and the minimal elements alone do not bound
     (``tests/model/test_lower_set_truncation.py`` shows a counterexample).
     Every ``beta`` in ``S`` has a predecessor ``beta - e_i`` in ``Lambda``.
 
     ``lower_set``: nonempty iterable of equal-length int tuples, closed
     under ``beta -> beta - e_i`` (``ValueError`` otherwise). Returns the
-    sorted tuple ``S``. Dimensionless combinatorics; exact integer
+    sorted tuple ``S``. Dimensionless combinatorics, with exact integer
     bookkeeping validated by tests. The derivative sup is an input: nothing
     here verifies it, and a probed sup is an estimate.
     """
@@ -171,8 +171,8 @@ def margin_columns(rho, margin_H, margin_moments, basis):
     """``(n_ch, 3)`` in ``I, P, V`` order: ``rho + sum_lk sum_beta H A / beta!``.
 
     ``rho`` ``(n_ch, 3)``, ``margin_H`` ``(n_ch, 3, n_lk, n_m)``,
-    ``margin_moments`` ``(n_lk, n_m)`` over ``truncation.margin_rows()``;
-    ``ValueError`` on a shape mismatch.
+    ``margin_moments`` ``(n_lk, n_m)`` over ``truncation.margin_rows()``,
+    with ``ValueError`` on a shape mismatch.
     """
     rows = basis.index.truncation.margin_rows()
     n_ch, n_lk, n_m = basis.channels.n_ch, basis.index.n_lk, len(rows)

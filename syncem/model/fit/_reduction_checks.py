@@ -1,7 +1,7 @@
 """Option checks, relation validation and text of ``reduce_response`` (private).
 
 Split out of :mod:`syncem.model.fit.reduction` to keep that file under
-400 lines. Nothing here is public API; the contracts are stated in the
+400 lines. Nothing here is public API. The contracts are stated in the
 ``reduction`` module docstring.
 """
 

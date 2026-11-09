@@ -170,7 +170,7 @@ def _faint_channel_bounds(ctx, geometry, first, last, frequency_lo, n_weights, s
     a maximum over the range times its integer count bounds every Stokes
     sum. The unit-peak bump response is between zero and one. This coarse
     envelope is intended only for channels already faint at the requested
-    *absolute* scale; it makes no relative-accuracy claim.
+    *absolute* scale. It makes no relative-accuracy claim.
     """
     if last < first:
         return [ctx.mpf(0) for _ in range(2 + n_weights)]
@@ -227,7 +227,7 @@ def certified_sparse_channel_modes(
     of all supplied floats and stored channel parameters. They exclude
     physical-model error and uncertainty in those inputs. Only a TaylorPhase
     or no phase is supported. The selected integer interval is obtained from
-    outward-rounded interval line spacing; all possibly active lines are
+    outward-rounded interval line spacing. All possibly active lines are
     considered, and proven zero-response lines skip Bessel evaluation. When
     ``atol`` is supplied, a channel exceeding ``max_modes`` can instead use
     a whole-range DLMF magnitude bound if every output component meets it.

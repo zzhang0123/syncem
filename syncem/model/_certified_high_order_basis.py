@@ -114,7 +114,7 @@ class CertifiedHighOrderBasis(SpectralBasis):
     The snapshots are JAX leaves so the exact equality check works under JIT.
     A routine ``eqx.tree_at`` edit changes the live field, while its certified
     snapshot remains the one validated at attachment.  This guard detects
-    accidental stale-certificate reuse; it is not a tamper-resistant seal
+    accidental stale-certificate reuse. It is not a tamper-resistant seal
     against deliberate replacement of both live fields and snapshots.
     """
 
@@ -321,7 +321,7 @@ def certify_high_order_basis_coarse(
     ``column_atol`` is optional and may be one nonnegative number or one per
     stored column. Every row of each column must meet it. Any unsupported
     input, missing I00 certificate, resource cap or unrepresentable outward
-    rounded value raises; the supplied immutable basis is untouched. At N=1,
+    rounded value raises. The supplied immutable basis is untouched. At N=1,
     whole-angle derivative magnitude bounds enclose the extra columns. No
     gamma/B displacement remainder is inferred from this certificate.
     """
@@ -432,7 +432,7 @@ def certify_high_order_basis_coarse(
                 stored = matrix[row + stokes, entry.slot]
                 if stokes not in allowed:
                     # These are exact model zeros and must remain exact zeros
-                    # in the fast matrix; a stale or altered basis fails closed.
+                    # in the fast matrix. A stale or altered basis fails closed.
                     if stored != 0:
                         raise ValueError("stored response violates a structural zero")
                     continue

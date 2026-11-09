@@ -3,7 +3,7 @@
 Split out of ``basis.py`` to keep that file under 400 lines. ``build_core``
 evaluates ``kernel.angular_projection`` at the reference and its derivatives
 in ``(z_gamma, z_B)`` through the total Taylor degree ``N`` (``eq: channel
-derivative coefficients``; nested ``jax.jacfwd``, or ``angular_taylor`` of
+derivative coefficients``, by nested ``jax.jacfwd`` or ``angular_taylor`` of
 ``HarmonicKernel(derivatives="analytic")``), divides by ``r! s!``
 and scatters the results into the ``I``, ``V`` and ``P`` basis columns of
 the ``MomentIndex`` rows. The depth index ``b`` selects the phase weight
@@ -11,8 +11,8 @@ the ``MomentIndex`` rows. The depth index ``b`` selects the phase weight
 bookkeeping: the refined kernels of the ``numerical`` estimate and the
 route check, the per-column envelope helpers, the active-harmonic record at
 the reference and the
-``screen_exponent`` term. Units and shapes follow ``syncem.model.basis``;
-nothing here certifies quadrature accuracy.
+``screen_exponent`` term. Units and shapes follow ``syncem.model.basis``.
+Nothing here certifies quadrature accuracy.
 """
 
 from __future__ import annotations
@@ -54,7 +54,7 @@ def package_version() -> str:
 
 
 def concrete(value, name) -> float:
-    """Eager float of a scalar; ``ValueError`` for traced or non-numeric input."""
+    """Eager float of a scalar, with ``ValueError`` for traced or non-numeric input."""
     try:
         out = np.asarray(value, dtype=float)
     except Exception as exc:
@@ -67,7 +67,7 @@ def concrete(value, name) -> float:
 def build_core(kernel, channels, reference, phase, *, index, quadrature):
     """``(I_basis, V_basis, P_basis)`` of shapes ``(n_ch, n0)``, ``(n_ch, n0)``, ``(n_ch, n2)``.
 
-    Traced in the kernel, channel and reference leaves; ``index`` and
+    Traced in the kernel, channel and reference leaves, and ``index`` and
     ``quadrature`` are static. ``jax.jacfwd`` with respect to the reference
     leaves differentiates the whole construction. Parity masks are applied to
     the ``I`` and ``V`` columns (``eq: angular parity``). The derivative
@@ -173,7 +173,7 @@ def continuum_tail(kernel, channels, reference) -> ErrorTerm | None:
 
 
 def response_matrix(index, n_ch, I_basis, V_basis, P_basis):
-    """``C`` of shape ``(4 n_ch, n_real)``; layout in ``syncem.model.basis``."""
+    """``C`` of shape ``(4 n_ch, n_real)``, laid out as in ``syncem.model.basis``."""
     n0, n2 = index.n0, index.n2
     real = jnp.result_type(I_basis, 1.0)
     C = jnp.zeros((n_ch, 4, index.n_real), dtype=real)
@@ -189,7 +189,7 @@ def response_matrix(index, n_ch, I_basis, V_basis, P_basis):
 
 def on_mass_column(envelope, index, value):
     """Add a per-electron ``(n_ch, 4)`` term to the ``(0,0,0,0,0)`` column of an
-    ``(4 n_ch, n_real)`` envelope; the contraction multiplies it by ``|m_0|``."""
+    ``(4 n_ch, n_real)`` envelope. The contraction multiplies it by ``|m_0|``."""
     n_ch = value.shape[0]
     mass = index.position(0, 0, 0, 0, 0, 0)
     out = envelope.reshape(n_ch, 4, index.n_real)
@@ -220,7 +220,7 @@ def harmonic_activity(kernel, channels, reference):
 
     ``m_range`` is ``(m_min, m_max_active)`` over the harmonics whose line can
     meet a channel support at ``(gamma0, B0)`` for some ``(mu, eta)``, or
-    ``None`` when no line does (or the kernel has no harmonics); ``cells``
+    ``None`` when no line does (or the kernel has no harmonics). ``cells``
     counts the non-empty ``(m, channel, sign)`` cells.
     """
     if not isinstance(kernel, HarmonicKernel):
@@ -367,7 +367,7 @@ def screen_exponent_term(kernel, channels, reference, phase, quadrature) -> Erro
 
     Taylor route: ``not_applicable``. Gaussian and empirical screens: a zero
     ``bound`` (their characteristic functions are exact within the declared
-    screen). Cumulant screen: ``unbounded`` without ``g5_bound``; otherwise the
+    screen). Cumulant screen: ``unbounded`` without ``g5_bound``, and otherwise the
     ``estimate`` ``<H_I>_{angles} max|w_0| (e^{eps5,j} - 1)`` in the ``Q, U``
     columns, with ``eps5,j = tau_max^5 g5/5!`` at the channel's lower support
     edge, ``<H_I>`` the angular average of the ``I`` channel kernel at the

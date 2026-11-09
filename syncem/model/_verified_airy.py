@@ -10,7 +10,7 @@ enclosed by a power series with a geometric majorant for the omitted terms.
 
 The enclosure uses mpmath's experimental interval elementary functions and
 exact binary-float inputs. It is internal until that arithmetic is vetted.
-This is an integer-line result; it does not bound continuous-order SciPy
+This is an integer-line result. It does not bound continuous-order SciPy
 Bessel values or a dense weighted harmonic sum.
 """
 
@@ -141,7 +141,7 @@ def _airy_on_interval(ctx, x, *, coefficients=None, endpoint_cache=None):
         return evaluate(x.a)
     low_ai, low_prime = evaluate(x.a)
     high_ai, high_prime = evaluate(x.b)
-    # DLMF 9.9: Ai and Ai' have no nonnegative zeros; DLMF 9.2 gives
+    # DLMF 9.9: Ai and Ai' have no nonnegative zeros. DLMF 9.2 gives
     # Ai(0)>0, Ai'(0)<0 and Ai''=x*Ai. Thus Ai decreases and Ai' increases.
     # https://dlmf.nist.gov/9.9 and https://dlmf.nist.gov/9.2.E1
     return (

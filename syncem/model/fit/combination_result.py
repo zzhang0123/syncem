@@ -6,12 +6,12 @@ discrepancy) and ``[extension]`` (combination fits).
 
 A :class:`CombinationFit` reports, in the fit coordinates ``x`` (``a = a_off
 + J x``, ``n_x`` unknowns named by ``labels``): the ``n_R`` retained
-combinations ``beta = B x`` with ``beta_hat`` and ``beta_sigma`` (``1/s``;
-inside a cluster the square root of the covariance diagonal, and the ``beta``
+combinations ``beta = B x`` with ``beta_hat`` and ``beta_sigma`` (``1/s``,
+or inside a cluster the square root of the covariance diagonal, and the ``beta``
 of a cluster may be correlated, see the notes), the estimator ``K``
 ``(n_x, n_kept)`` with ``x_hat = K (d - offset)``, the resolution operator
-``Pi = W B`` ``(n_x, n_x)``, the noise covariance (retained subspace only;
-``K``, ``Pi`` and it do not depend on a cluster's basis), the retained,
+``Pi = W B`` ``(n_x, n_x)``, the noise covariance (retained subspace only,
+and ``K``, ``Pi`` and it do not depend on a cluster's basis), the retained,
 weak, numerical-null and analytic-null directions (``Subspaces``, each
 ``(n_x, k)`` and ``M_x``-orthonormal) and four separate error terms: ``bias`` (declared
 discrepancy, ``|K| delta``, the bias of ``x_hat`` relative to ``Pi x``),
@@ -22,13 +22,13 @@ declared), ``reduction_bias`` (approximate relations only) and, through
 ``representative`` ``(n_full,)`` is ``a_off + J x_hat``: a representative of
 ``Pi a`` plus noise and bias with only ``n_retained`` independent fitted
 numbers. It is not a moment vector, it is not checked for feasibility and a
-positive population need not realise it; a zero projection or a zero
+positive population need not realise it. A zero projection or a zero
 projected covariance in a null slot is neither a physical zero nor a bound.
 Units: ``x``, ``a`` and ``beta`` dimensionless (source-column weighted
 ``z``-moments), Stokes arrays in the units of the basis response, ``chi2``
 dimensionless. Not certified: the noise model, the declared discrepancy and
 coefficient bound, the physical adequacy of the model, unique moment recovery
-and any global rank statement; the numerical rank and the retained set hold
+and any global rank statement. The numerical rank and the retained set hold
 for the stated channels, mask, response, noise, metric, scales and thresholds.
 """
 
@@ -56,9 +56,9 @@ LABEL = (
 class Subspaces(eqx.Module):
     """Directions in ``x``: ``retained``, ``weak``, ``numerical_null``, ``analytic_null``.
 
-    Each ``(n_x, k)``, ``M_x``-orthonormal; together they span ``R^{n_x}``.
+    Each ``(n_x, k)``, ``M_x``-orthonormal, and together they span ``R^{n_x}``.
     Dimensionless. The split depends on declared thresholds and the noise
-    model (module docstring); it does not certify a physical null space.
+    model (module docstring). It does not certify a physical null space.
     """
 
     LABEL: ClassVar[str] = "[extension] combination subspaces"
@@ -76,7 +76,7 @@ class ObservableSummary(eqx.Module):
     can form ``J K delta``), the error terms ``bias``, ``reduction_bias`` and
     ``unresolved`` (``(n_obs,)`` each) and ``null_sensitivity`` (``J W`` for
     the weak, numerical-null and analytic-null directions). :meth:`total`
-    adds the three error envelopes; noise stays separate. Units: those of
+    adds the three error envelopes. Noise stays separate. Units: those of
     ``J_obs`` times ``x``. Not certified: see the module docstring.
     """
 
@@ -92,7 +92,7 @@ class ObservableSummary(eqx.Module):
     note: str = eqx.field(static=True, default="")
 
     def total(self) -> ErrorTerm:
-        """``bias + reduction_bias + unresolved`` (weakest kind; ``unbounded`` if any is)."""
+        """``bias + reduction_bias + unresolved`` (weakest kind, ``unbounded`` if any is)."""
         return err.combine(
             (self.bias, self.reduction_bias, self.unresolved), "observable error total"
         )
@@ -108,10 +108,10 @@ class TruthComparison(eqx.Module):
     ``truth`` ``(n_full,)``, ``x_true`` ``(n_x,)``, ``beta_true = B x_true``,
     ``beta_hat``, ``projected_truth = Pi x_true`` (and
     ``projected_truth_full = a_off + J Pi x_true``), ``representative``,
-    ``unresolved_truth = x_true - Pi x_true``; with a discrepancy
+    ``unresolved_truth = x_true - Pi x_true``. With a discrepancy:
     ``bias_measured = K (delta + R delta_C a)_kept`` and ``beta_bias_measured``
-    ("measured, synthetic example only"); with a noise realisation
-    ``noise_part = K n`` and ``beta_noise_part``; with both,
+    ("measured, synthetic example only"). With a noise realisation:
+    ``noise_part = K n`` and ``beta_noise_part``. With both:
     ``decomposition_residual = x_hat - Pi x - bias_measured - noise_part``.
     Real data cannot supply these fields. Units: those of ``x``. Not
     certified: see the module docstring.
@@ -222,7 +222,7 @@ class CombinationFit(eqx.Module):
         """Per ``x`` slot: ``"resolved"`` (``Pi`` row ``e_i``), ``"unconstrained"`` (zero row) or ``"mixed"``.
 
         ``rtol`` defaults to the threshold of the ``unresolved`` check
-        (``PI_RTOL``). "resolved" is a numerical statement about ``Pi``; it
+        (``PI_RTOL``). "resolved" is a numerical statement about ``Pi``. It
         does not remove the slot's ``unresolved`` entry unless the whole
         ``unresolved`` term is ``not_applicable``.
         """
@@ -290,7 +290,7 @@ class CombinationFit(eqx.Module):
         )
 
     def against_truth(self, a_true, *, discrepancy=None, noise=None) -> TruthComparison:
-        """Compare with a known full vector (synthetic studies only; :class:`TruthComparison`)."""
+        """Compare with a known full vector (synthetic studies only), as a :class:`TruthComparison`."""
         J, a_off = np.asarray(self.jacobian), np.asarray(self.offset)
         a_true = np.asarray(a_true, dtype=float)
         if a_true.shape != (J.shape[0],):

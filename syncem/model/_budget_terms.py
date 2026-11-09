@@ -3,7 +3,7 @@
 
 Every function returns an ``ErrorTerm`` of value shape ``(n_ch, 4)`` in the
 units of the prediction (amplitude times the per-electron kernel). A missing
-input gives ``unbounded`` with the reason in the note, never a zero; a
+input gives ``unbounded`` with the reason in the note, never a zero. A
 declared value keeps its declared kind. Nothing here certifies the truth of
 a supplied envelope.
 """
@@ -54,7 +54,7 @@ def contract_moment_error(absC, delta, amplitude, n_ch):
     """``amplitude (|C| @ Delta)`` reshaped to ``(n_ch, 4)``.
 
     ``Delta`` is ``(n_real,)`` or a scalar, which is broadcast to every moment
-    (``statistical_input=0`` declares exact moments); other shapes raise.
+    (``statistical_input=0`` declares exact moments). Other shapes raise.
     """
     delta = jnp.asarray(delta)
     if jnp.iscomplexobj(delta):
@@ -109,7 +109,7 @@ def statistical_term(statistical_input, moments, absC, amplitude, n_ch):
 
 def assumption_terms(records, discrepancy, absC, amplitude, n_ch):
     """``(name, term)`` pairs, one term per record. The moment-level
-    discrepancy is the allowance of the first record only; every further
+    discrepancy is the allowance of the first record only. Every further
     record is ``unbounded`` (no allowance of its own is established)."""
     out = []
     for i, record in enumerate(records):
@@ -206,7 +206,7 @@ def excluded_tail_term(support, excluded_tail, n_ch):
 
 
 def _stokes_per_electron(terms, amplitude, delta):
-    """``value / amplitude`` of Stokes-unit ``(name, term)`` pairs; raises for
+    """``value / amplitude`` of Stokes-unit ``(name, term)`` pairs. Raises for
     ``amplitude = 0 < delta``."""
     amplitude = jnp.asarray(amplitude)
     safe = jnp.where(amplitude > 0, amplitude, 1.0)
@@ -259,7 +259,7 @@ def amplitude_term(
 
     ``(A + dA) s_true - A C m = A (s_true - C m) + dA s_true``, so the
     amplitude slot needs ``dA |s_true| <= dA (|C m| + e)``.
-    ``per_electron_errors`` are ``(name, term)`` pairs at unit amplitude;
+    ``per_electron_errors`` are ``(name, term)`` pairs at unit amplitude, and
     ``stokes_errors`` are ``(name, term)`` pairs in Stokes units proportional
     to ``amplitude`` (divided by it).
     Unbounded contributions are named in the note: their cross term is
@@ -322,7 +322,7 @@ def depth_model_term(depth_model, n_ch):
 
 
 def scaled_kernel_term(term, amplitude, m, n_ch):
-    """Per-electron basis term times ``amplitude``; a ``(4 n_ch, n_real)``
+    """Per-electron basis term times ``amplitude``. A ``(4 n_ch, n_real)``
     per-column envelope is contracted with ``|m|`` first."""
     if term.value is None:
         return term
@@ -340,7 +340,7 @@ def propagate_envelope(total, stokes, R, response_uncertainty):
     ``(R + dR) s_true - R s = R (s_true - s) + dR s_true`` and
     ``|s_true| <= |s| + envelope``, so the response term multiplies the
     predicted magnitude plus the budget envelope.
-    Labels: ``sec: frequency order``; the response-error term follows
+    Labels: ``sec: frequency order``, and the response-error term follows
     ``eq: chromatic beam response``. ``response_uncertainty`` is ``None``
     (unbounded), a scalar or an array of ``R``'s shape, or an ``ErrorTerm``
     with such a value (for example ``BandpassFit.response_uncertainty()``).

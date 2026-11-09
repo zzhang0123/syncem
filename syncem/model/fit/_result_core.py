@@ -45,8 +45,8 @@ def fisher_from_jacobian(J, *, tol=TOL) -> FisherSummary:
 
     The rank counts singular values of the column-equilibrated ``J D``
     (``D = diag(1/||J_i||)``, the rule of ``fit_linear`` and
-    ``identifiability``) above ``tol`` times the largest (concrete, eager);
-    the covariance is ``D (D J^T J D)^-1 D = (J^T J)^-1`` through that SVD
+    ``identifiability``) above ``tol`` times the largest (concrete, eager).
+    The covariance is ``D (D J^T J D)^-1 D = (J^T J)^-1`` through that SVD
     when the rank is full and ``None`` otherwise. ``singular_values`` are
     those of ``J D``. A non-finite Jacobian gives rank 0 and no covariance.
     """
@@ -87,8 +87,8 @@ def moment_uncertainty(m_of, x, covariance, *, bias_bound, bias_note=None) -> Er
     (linearised). ``bias_bound`` (a term over ``x``: ``u`` for ``fit_linear``,
     ``z`` for ``fit_bfgs``) adds ``|J| bias_bound`` (``eq: estimator bias``:
     a componentwise discrepancy envelope ``|epsilon| <= E`` biases the
-    estimate by at most ``|K| E``, propagated as in ``sec: frequency order``;
-    the moment bias from the declared discrepancy therefore belongs here).
+    estimate by at most ``|K| E``, propagated as in ``sec: frequency order``,
+    so the moment bias from the declared discrepancy therefore belongs here).
     ``bias_note`` says how exact that propagation is (default: the
     ``fit_linear`` text, exact with a fixed amplitude, linearised through
     ``theta = u[1:]/u[0]`` otherwise). An ``unbounded`` or missing (``None``)
@@ -129,9 +129,9 @@ def moment_uncertainty(m_of, x, covariance, *, bias_bound, bias_note=None) -> Er
 def nodal_jacobian(basis, data, nodes, w, amplitude, design) -> jax.Array:
     """Whitened Jacobian of ``A L^-1 R C X^T softmax(logits)`` in ``(log A, logits)``.
 
-    ``design`` is ``L^-1 R C`` ``(n_kept, n_real)``; ``B = design X^T`` is
+    ``design`` is ``L^-1 R C`` ``(n_kept, n_real)``. ``B = design X^T`` is
     formed row by row with the chunked node operator (never ``X`` for large
-    ``S``); ``d softmax / d logits = diag(w) - w w^T``. Shape ``(n_kept, S + 1)``.
+    ``S``). ``d softmax / d logits = diag(w) - w w^T``. Shape ``(n_kept, S + 1)``.
     """
     operator = _nodal.NodeOperator(nodes, basis.index, basis.reference)
     w = jnp.asarray(w, dtype=float)

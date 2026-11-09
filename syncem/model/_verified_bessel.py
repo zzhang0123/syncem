@@ -17,7 +17,7 @@ Every sampled integrand and the bound are evaluated with mpmath's interval
 elementary functions. The enclosure is for the exact binary float or input
 interval z supplied to this function, not for a separately rounded physical
 geometry. mpmath's
-interval support is marked experimental by its maintainers; this route is
+interval support is marked experimental by its maintainers, and this route is
 kept internal until its elementary operations and performance have been
 validated for the target environment. It does not address real noninteger
 orders, harmonic summation, channel weights or the physical-model error.
@@ -56,8 +56,8 @@ def integer_bessel_enclosure(
     abs_tolerance controls the analytic quadrature remainder for both
     values. Interval rounding width is reported in the returned intervals
     and is not assumed to meet that tolerance. z may be a binary float or
-    an mpmath interval. Only 0<=z<=1 is supported;
-    the current shifted-contour branch accepts z>=0.5. Raises when the
+    an mpmath interval. Only 0<=z<=1 is supported,
+    and the current shifted-contour branch accepts z>=0.5. Raises when the
     requested quadrature remainder exceeds the resource cap.
     """
     if isinstance(m, bool) or not isinstance(m, int) or m < 1:
