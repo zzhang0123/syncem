@@ -63,7 +63,8 @@ Importing `syncem` enables float64.
 syncem/model/
   index.py         Truncation, MomentIndex, Entry, lower_set_margin
   errors.py        ErrorTerm, ErrorBudget, AssumptionRecord, Provenance
-  channels.py      Channels
+  channels.py      Channels (from_basis, from_callable)
+  bandpass.py      fit_bandpass, BandpassFit
   phase.py         TaylorPhase, GaussianScreen, CumulantScreen, EmpiricalScreen
   screens.py       LaplaceScreen, GammaScreen (fig: screen shapes)
   moments.py       Reference, Support, PopulationSamples, JointMoments
@@ -71,7 +72,7 @@ syncem/model/
   assumptions.py   Factorisation, Closure, ParameterMap, named constructors
   kernels.py       KernelModel protocol, Modes, ContinuumKernel, PolynomialTestKernel, required_m_max
   harmonic.py      HarmonicKernel
-  basis.py         build_basis, SpectralBasis, basis_convergence
+  basis.py         build_basis, SpectralBasis, basis_convergence, combine_basis
   predict.py       predict, direct_channel_average, Prediction
   adapters.py      to_joint_faraday, fixed_harmonic_comparison, burn_screen_check
   fit/observation.py  StokesData
@@ -208,6 +209,8 @@ outside the support edges.
 | `tophat` | | 0 |
 | `gaussian(support_sigma=6)` | truncated at `support_sigma` sigma; edge jump recorded | 0 |
 | `from_table(..., smoothness=, argument="nu"\|"omega")` | interpolated table | declared |
+| `from_basis(reference, coefficients)` | `sum_k c_jk phi_k` in another `Channels` | the reference's |
+| `from_callable(fn, support, smoothness, derivative_bound=None)` | a JAX-differentiable `fn(nu)` | declared |
 
 `normalisation="unit_peak"` (default) gives band-integrated powers (the
 acceptance benchmark's normalisation; main.tex uses unit area);
@@ -218,6 +221,93 @@ factor enters anywhere; `from_table(..., argument="omega")` converts
 `R_nu(nu) = R_omega(2 pi nu)`. `width_ratio()` is recorded in
 `provenance.numerics`; `edge_jump()` returns the largest unit-peak response
 at a support edge (0 for continuous families).
+
+Composed responses. `from_basis(reference, coefficients)` takes
+`coefficients (n_ch, n_ref)`, real, finite and concrete, each row with a
+nonzero entry. A reference that is itself a basis is flattened. Row `j` is
+exactly zero outside the hull of the supports of the references with
+`c_jk != 0`. The support, `nodes` and `weights` follow that nonzero pattern
+at construction, so a coefficient array replaced later must keep it. The
+channel kernel and its Taylor coefficients are linear in `R_j`, so
+`build_basis` builds the reference basis (with its convergence
+estimate and route check) and `combine_basis(reference_basis, channels,
+*, E_phys=None)` returns `C_j = sum_k c_jk C_k`. Each kernel term becomes
+`|c| @` the reference term and keeps its kind. `E_phys` then refers to the
+instrument channels. No radiation integral of the combined responses is
+evaluated. `combine_basis` requires `channels.reference_channels` to equal
+`reference_basis.channels` under `equinox.tree_equal` (callables compared
+by identity, tables by value), because `describe()` names a callable only
+by `__qualname__` and a table only by its length. Integrating one combined
+response directly over its hull is less accurate at the same node counts:
+the product route places one cell across the flat zeros of the inner
+references. Both product-route methods converge to the same columns
+(`test_channel_compose_extremes.py`, `slow`). Against `combine_basis` at
+128 outer/inner nodes, the largest Stokes-block discrepancy is:
+
+| case | method | 16 | 32 | 64 | 128 |
+|---|---|---|---|---|---|
+| `w/c = 0.3`, `N = 2` | direct hull cell | 0.36 | 2.3e-2 | 4.6e-3 | 9.3e-5 |
+| `w/c = 0.3`, `N = 2` | `combine_basis` | 1.4e-2 | 2.8e-4 | 4.6e-7 | 0 |
+| `w/c = 1e-3`, `N = 1` | direct hull cell | 0.13 | 5.9e-3 | 4.7e-5 | 3.5e-6 |
+| `w/c = 1e-3`, `N = 1` | `combine_basis` | 4.9e-3 | 3.0e-4 | 2.0e-7 | 0 |
+
+On the tensor route the angular nodes do not depend on the channel support,
+and the two methods agree to rounding (`1e-12`) for any combination.
+`basis_convergence` of a combined basis rebuilds it on the hull rule, so on
+the product route it describes that rule rather than the combined columns.
+The `numerical` term that `build_basis` returns is `|c| @` the reference
+estimate.
+
+`from_callable(fn, support, smoothness, derivative_bound=None, *,
+normalisation="unit_peak", n_nu=64)` takes one callable or one per channel,
+elementwise from Hz to the response, and a support `(2,)` or `(n_ch, 2)`
+with `0 < nu_lo < nu_hi` finite, stored exactly. `__call__` evaluates `fn`
+inside the open support and returns exactly zero outside it. Derivatives
+`R^(r)` come from JAX autodiff of `fn`. The eager checks can refute the
+declarations, and passing them does not verify them. They require finite real
+values of the input's shape on the nodes and 2048 interior points, a JAX
+trace of `fn'`, and, when `smoothness >= 1`, vanishing `R^(k)` one
+floating-point step inside each edge for `k = 0 .. min(smoothness, 4)`
+(`|R^(k)| w^k` at most `1e-6` of the sampled peak, `w` the half-width). The
+extension by zero of a `C^k` response has these derivatives zero. Every declared bound
+must be at least the sampled `|R^(r)|`. `derivative_bound` is
+`{order: sup|R^(order)|}` (scalar or `(n_ch,)`, Hz^-order times the
+response units). Its value decides the kind only and enters no computed
+envelope, so supplied `RemainderInputs` must be derived from it. On a line
+kernel, `basis_remainder` is a `bound` only when the order `N + 1` is
+declared (`derivative_bound_reason(N + 1) is None`). Otherwise it is an
+`estimate`, also from supplied `RemainderInputs`, and its note says why.
+Both composed families use the response as supplied: `normalisation` names
+its units and `peak_scale()` is one. Known limitation: `response_fn` is a
+static field. Parameters closed over by `fn` are constants, so a basis
+cannot be differentiated in them, and each new closure is a new static
+value that `jax.jit` retraces and recompiles.
+
+`bandpass.fit_bandpass(reference, nu_hz, response, *, argument="nu",
+oversample=8)` fits a measured table by least squares on its samples. The
+measured response is the linear interpolant of the table, zero outside its
+grid. The residual `Delta R_j` is evaluated on a check grid: the table grid
+with `oversample` points per interval, plus `4 n_nu` Gauss-Legendre nodes
+on every reference support. With nonnegative references and
+`Phi = sum_k phi_k`, `d_jk = max |Delta R_j| / Phi` over the check points
+where `phi_k > 0` covers `|Delta R_j| <= sum_k d_jk phi_k` there. Since
+`|Q_m|, |U_m|, |V_m| <= I_m` line by line, the response error of every
+Stokes datum of channel `j` is at most `sum_k d_jk I_k`
+(`eq: chromatic beam response`). `BandpassFit.response_uncertainty()` puts
+`d_jk` on the `I` column of reference `k`, `(4 n_ch, 4 n_ref)`, kind
+`estimate`. It is `unbounded` when a residual lies where no reference
+reaches (`uncovered > 0`): the reference set must cover the measured
+support, including the last interpolation interval. It is also `unbounded`
+when a table row does not start and end at zero (`open_edges`), since the
+response beyond the grid is then not given. Least-squares coefficients
+below `1e-13` of the row's largest are set to zero before the support is
+fixed, and the residual is computed afterwards. A large `d_jk` on an outer
+reference means that only its tail covers the residual near the edge of the
+reference set: the covering is valid but loose. `operator()` is
+`c (x) 1_4`, so `predict(reference_basis, ...).propagate(fit.operator(),
+response_uncertainty=fit.response_uncertainty())` bounds the instrument
+data with the response error included. `propagate` multiplies `delta R`
+by `|stokes| + envelope`, which covers the error of the predicted `I_k`.
 
 ## 5. Phase routes (`phase.py`)
 
@@ -869,7 +959,10 @@ channels)` offers `to_dict()`, `summary()` and
 returns `|R| @ envelope + |delta R| @ (|stokes| + envelope)`
 (`sec: frequency order`; the response-error term is stated after
 `eq: chromatic beam response`); the second term is `unbounded` when
-`delta R` is not supplied.
+`delta R` is not supplied. `response_uncertainty` may be an `ErrorTerm`
+(for example `BandpassFit.response_uncertainty()`): the result has the
+weaker of the two kinds, and a term without a value (`unbounded` or
+`not_applicable`) makes it unbounded.
 
 `RemainderInputs(rho_ang, H, absolute_moments, depth_tail,
 intrinsic_residual, kind, *, absolute_depth_coefficients=None,
@@ -1442,6 +1535,9 @@ the full-resolution population (1,048,576 samples) at `N = 2, L = 8`:
 | `test_index.py` | 116 | row enumeration and slots against an `itertools`/`math.comb` oracle over 13 truncations; the worked numbers of Section 3; parity and component masks; hashability and one compile per index |
 | `test_errors.py` | 45 | kind arithmetic (`bound < measured < estimate`, `unbounded` propagation), broadcasting, `to_dict` JSON round trips, `Provenance` immutability |
 | `test_channels.py` | 41 | every family against closed forms; exact zero at and beyond the support; `jacfwd` finite everywhere; unit-peak and unit-integral areas to 1e-12 |
+| `test_channel_compose.py` | 24 | `from_basis` equals `c @` the reference response; `from_basis` columns equal the columns of the same combination integrated directly on the tensor route to 1e-12 (and on the product route for single-reference rows); kernel terms are `\|c\| @` the reference terms; `from_callable` reproduces the `bump` values, derivatives to third order and basis (1e-13); refusal of supports outside `(0, inf)` and of a declared smoothness whose edge derivatives do not vanish; a callable remainder is a `bound` only with a declared `sup\|R^(N+1)\|`; `combine_basis` refuses a reference basis on other callables or tables with the same `describe()`; `fit_bandpass` recovers an exact combination and its covering dominates the residual; `propagate` takes an `ErrorTerm` and reads a valueless one as unbounded |
+| `test_channel_compose_boundaries.py` | 10 | boundary of `from_basis` at reference width `w = W (1 + delta)`, `delta` from 0.3 to 0, for `W/c = 0.05` and 0.4: agreement with the direct channel to 1e-12 at `delta = 0`, monotone in `delta`, below 20 times the representation residual; the covering bounds `\|S(R_table) - S(sum c phi)\|` of `direct_channel_average` on a 12-atom population in every Stokes component |
+| `test_channel_compose_extremes.py` | 50 (10 `slow`) | the two methods of each composed route compared directly, bypassing the `build_basis` dispatch, at `w/c = 1e-3, 0.3, 0.9` and a support edge at `1e-6 c`, `N = 0, 3` (tensor) and `N = 0, 1` (product; `N = 3` `slow`): `combine_basis` equals a direct `from_callable` build of the same combination to `1e-12` on the tensor route, and for single-reference rows on the product route; a callable bump equals `Channels.bump` (columns to `1e-12`, values bit for bit); `fit_bandpass` on a table in the span of tent references returns the table values (`1e-14` of the peak) and a residual below `1e-13`; `slow`: both product-route methods converge to the same columns (`1e-3` at 128 nodes) |
 | `test_phase.py` | 20 | Taylor weights, `GaussianScreen` against `rm.burn_depolarisation`, `EmpiricalScreen` against `rm.screen_polarisation`, `CumulantScreen` remainder |
 | `test_stokes_nodes.py` | 6 | `stokes_harmonic(n_nodes=)` reproduces the historical output bit for bit at `n_nodes=None` |
 | `test_kernels.py`, `test_continuum.py` | 11 + 9 | `PolynomialTestKernel` exactness; `ContinuumKernel` against `ultrarel.F/G` quadrature, mu-independence, `x_min` guard |

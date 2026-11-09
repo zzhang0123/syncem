@@ -35,6 +35,12 @@ route refined against itself, is an estimate, not a bound), derivative orders ab
 adequacy of the kernel (``physical_kernel``), the Taylor remainder of the
 basis (``bounds.RemainderInputs``, which needs ``smoothness >= N+1``), and
 harmonic tails when ``allow_truncated=True``.
+
+Channels from ``Channels.from_basis`` (``R_j = sum_k c_jk phi_k``) are built
+through the reference responses: ``build_basis`` builds the reference basis
+and :func:`combine_basis` returns ``C_j = sum_k c_jk C_k`` with the kernel
+terms ``|c| @`` the reference terms (``_basis_combine``); no radiation
+integral of the combined responses is evaluated.
 """
 
 from __future__ import annotations
@@ -46,6 +52,7 @@ import jax
 import jax.numpy as jnp
 
 from . import _basis_core as _core
+from ._basis_combine import combine_basis
 from ._registry import require_affine, resolve_map
 from .assumptions import ParameterMap
 from .channels import Channels
@@ -225,7 +232,10 @@ def build_basis(
     ``provenance.quadrature``); it is not part of the budget. ``E_phys`` (an
     ``ErrorTerm``) replaces ``kernel.physical_error``. Cost: one Taylor
     evaluation of the projection through order ``N``, one
-    convergence rebuild, and one more with the route check. Units and
+    convergence rebuild, and one more with the route check. Channels from
+    ``Channels.from_basis`` are built through their reference channels (all
+    of the above applies to them) and combined by :func:`combine_basis`;
+    ``E_phys`` then refers to the instrument channels. Units and
     what is not certified: see :class:`SpectralBasis` and the module
     docstring; ``E_phys`` and ``allow_truncated`` are caller declarations.
     """
@@ -235,6 +245,21 @@ def build_basis(
     cross_route = resolve_cross_route(cross_route, convergence)
     if E_phys is not None and not isinstance(E_phys, ErrorTerm):
         raise ValueError("E_phys must be an ErrorTerm or None")
+    if channels.family == "basis":
+        reference_basis = build_basis(
+            kernel,
+            channels.reference_channels,
+            truncation,
+            reference,
+            support=support,
+            phase=phase,
+            quadrature=quadrature,
+            allow_truncated=allow_truncated,
+            convergence=convergence,
+            allow_nonsmooth=allow_nonsmooth,
+            cross_route=cross_route,
+        )
+        return combine_basis(reference_basis, channels, E_phys=E_phys)
     phase = TaylorPhase(truncation.max_b()) if phase is None else phase
     check_phase(phase, truncation)
     notes: list[str] = []
@@ -436,5 +461,6 @@ __all__ = [
     "SpectralBasis",
     "build_basis",
     "basis_convergence",
+    "combine_basis",
     "CERTIFIED_ORDERS",
 ]

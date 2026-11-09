@@ -24,7 +24,8 @@ magnus           : Magnus expansion (Omega1, Omega2) of the LOS transfer
 los_moments      : explicit reduced-units and physical-CGS moment-driven slabs
 sed              : frequency-domain SED (spectral index, curvature, abs. emissivity)
 model            : finite joint response of channel Stokes spectra and spectral
-                   fits (subpackage: index, errors, channels, phase, moments,
+                   fits (subpackage: index, errors, channels, bandpass,
+                   phase, moments,
                    bounds, assumptions, kernels, harmonic,
                    high_order_harmonic, screens, basis, high_order_basis,
                    predict, adapters, fit.observation, fit.linear,

@@ -28,15 +28,35 @@ in the second), 0 for ``tophat`` and the truncated ``gaussian`` (edge jump
 for ``from_table`` (linear interpolation is at most C^0). ``build_basis``
 needs ``smoothness >= N + 1`` for a ``basis_remainder`` of kind ``bound``.
 
+Composed responses (``_channel_compose``). ``from_basis(reference,
+coefficients)`` is ``R_j = sum_k c_jk phi_k`` in the responses ``phi_k`` of
+another ``Channels`` (``coefficients`` ``(n_ch, n_ref)``): its smoothness is
+the reference's, its support per row the hull of the references with
+``c_jk != 0``, and ``build_basis`` computes the reference columns once and
+returns ``C_j = sum_k c_jk C_k`` (the kernel columns are linear in ``R_j``).
+``from_callable(fn, support, smoothness, derivative_bound=None)`` takes a
+JAX-differentiable ``fn(nu)`` on a declared support in ``(0, inf)``; the
+derivatives ``R^(r)`` the kernels need come from JAX autodiff. A line-kernel
+``basis_remainder`` on a callable response is a ``bound`` only when
+``derivative_bound`` declares ``sup|R^(N+1)|`` (``derivative_bound_reason``);
+otherwise it is reported as an ``estimate``. Both families use the response
+as supplied: ``normalisation`` names its units (dimensionless for
+``"unit_peak"``, 1/Hz for ``"unit_integral"``) and no rescaling is applied.
+``bandpass.fit_bandpass`` writes a measured bandpass table in a reference
+set and reports the representation residual as a response error.
+
 Not certified: the physical adequacy of any response as a model of a real
 bandpass; the quadrature accuracy of ``nodes``/``weights`` for ``planck_taper``
 with a small ``taper`` (the rule converges slowly across the taper, increase
-``n_nu``); interpolation error of ``from_table`` between its samples. The
-shape functions live in ``syncem.model._channel_shapes``.
+``n_nu``); interpolation error of ``from_table`` between its samples; the declared
+smoothness and ``derivative_bound`` of ``from_callable`` (the eager checks on
+sampled points can refute them, not verify them). The shape functions live in
+``syncem.model._channel_shapes``.
 """
 
 from __future__ import annotations
 
+import dataclasses
 import math
 from typing import ClassVar
 
@@ -45,7 +65,16 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 
+from ._channel_compose import (
+    basis_parts,
+    callable_parts,
+    callable_response,
+    check_callable,
+    derivative_bounds,
+    describe_fn,
+)
 from ._channel_shapes import (
+    COMPOSED,
     FAMILIES,
     NORMALISATIONS,
     SMOOTH,
@@ -82,6 +111,10 @@ class Channels(eqx.Module):
     the support half-width for ``table``. ``support`` is ``(n_ch, 2)`` with
     ``0 < nu_lo < nu_hi``. Arrays are traced leaves; ``family``, ``normalisation``,
     ``smoothness``, ``taper``, ``n_nu``, ``table`` and ``support_sigma`` are static.
+    ``from_basis`` adds the leaves ``reference_channels`` (a ``Channels``) and
+    ``coefficients`` ``(n_ch, n_ref)``; ``from_callable`` adds the static
+    ``response_fn`` (one callable per channel), ``derivative_bound`` and
+    ``edge`` (the sampled relative edge value).
 
     Units: all frequencies in Hz; ``__call__`` is dimensionless for
     ``unit_peak`` and per Hz for ``unit_integral``. Assumes the response is
@@ -104,11 +137,16 @@ class Channels(eqx.Module):
     n_nu: int = eqx.field(static=True, default=64)
     table: tuple | None = eqx.field(static=True, default=None)
     support_sigma: float = eqx.field(static=True, default=6.0)
+    reference_channels: "Channels | None" = None
+    coefficients: jax.Array | None = None
+    response_fn: tuple | None = eqx.field(static=True, default=None)
+    derivative_bound: tuple | None = eqx.field(static=True, default=None)
+    edge: float = eqx.field(static=True, default=0.0)
     LABEL: ClassVar[str] = "eq: channel kernel"
 
     # ------------------------------------------------------------ constructors
     @classmethod
-    def _build(cls, family, centres, widths, half_widths, **static):
+    def _build(cls, family, centres, widths, half_widths, *, bounds=None, **static):
         normalisation, n_nu = static["normalisation"], static["n_nu"]
         if family not in FAMILIES:
             raise ValueError(f"unknown channel family {family!r}")
@@ -120,7 +158,10 @@ class Channels(eqx.Module):
         widths = _as_positive_1d(widths, "widths_hz")
         if widths.shape != centres.shape:
             raise ValueError("centres_hz and widths_hz must have the same shape")
-        lo, hi = centres - half_widths, centres + half_widths
+        if bounds is None:
+            lo, hi = centres - half_widths, centres + half_widths
+        else:  # composed families store their support exactly as computed
+            lo, hi = (jnp.asarray(edge, dtype=centres.dtype) for edge in bounds)
         raw_invalid = (
             jnp.any(~jnp.isfinite(lo))
             | jnp.any(~jnp.isfinite(hi))
@@ -171,6 +212,11 @@ class Channels(eqx.Module):
             n_nu=n_nu,
             table=static.get("table"),
             support_sigma=float(static.get("support_sigma", 6.0)),
+            reference_channels=static.get("reference_channels"),
+            coefficients=static.get("coefficients"),
+            response_fn=static.get("response_fn"),
+            derivative_bound=static.get("derivative_bound"),
+            edge=float(static.get("edge", 0.0)),
         )
 
     @classmethod
@@ -336,6 +382,105 @@ class Channels(eqx.Module):
             table=static,
         )
 
+    @classmethod
+    def from_basis(cls, reference, coefficients, *, n_nu=None) -> "Channels":
+        """``R_j = sum_k c_jk phi_k`` in the reference responses ``phi_k``.
+
+        ``reference`` is a ``Channels`` (a reference that is itself a basis
+        is flattened); ``coefficients`` is ``(n_ch, n_ref)`` or ``(n_ref,)``,
+        real, finite and concrete, each row with a nonzero entry. The support
+        of row ``j`` is the hull of the supports of the references with
+        ``c_jk != 0``, fixed at construction; smoothness and normalisation
+        (the units) are the reference's, and the response is not rescaled.
+        ``n_nu`` (default: the reference's) sets the nodes on that support,
+        used by direct routes. ``build_basis`` builds the reference columns
+        once and returns their combination (``basis.combine_basis``). The
+        coefficients are array leaves, but the support, ``nodes`` and
+        ``weights`` follow their nonzero pattern at construction: a
+        replaced coefficient array (for example through ``eqx.tree_at``)
+        must keep that pattern, or the direct routes integrate the wrong
+        interval; build a new ``from_basis`` instead. ``describe()`` and
+        ``edge_jump()`` need concrete coefficients. Not certified:
+        how well the combination represents an instrument
+        (``bandpass.fit_bandpass`` reports that residual).
+        """
+        if not isinstance(reference, Channels):
+            raise ValueError("reference must be a Channels")
+        reference, c, lo, hi = basis_parts(reference, coefficients)
+        return cls._build(
+            "basis",
+            (lo + hi) / 2,
+            (hi - lo) / 2,
+            (hi - lo) / 2,
+            bounds=(lo, hi),
+            normalisation=reference.normalisation,
+            n_nu=reference.n_nu if n_nu is None else n_nu,
+            smoothness=reference.smoothness,
+            reference_channels=reference,
+            coefficients=jnp.asarray(c),
+        )
+
+    @classmethod
+    def from_callable(
+        cls,
+        fn,
+        support,
+        smoothness: int,
+        derivative_bound=None,
+        *,
+        normalisation="unit_peak",
+        n_nu=64,
+    ) -> "Channels":
+        """A user response ``fn(nu)`` on a declared support (module docstring).
+
+        ``fn`` maps an array of frequencies [Hz] to the response of the same
+        shape, elementwise, and must be JAX-traceable and differentiable to
+        the orders the kernel uses; a sequence gives one callable per
+        channel. ``support`` is ``(2,)`` or ``(n_ch, 2)`` with
+        ``0 < nu_lo < nu_hi`` finite (``ValueError`` otherwise), stored
+        exactly; ``__call__`` is ``fn`` inside the open support and exactly
+        zero outside it. ``smoothness`` is the declared class.
+        ``derivative_bound`` is ``None`` or ``{order: sup|R^(order)|}`` with
+        scalar or ``(n_ch,)`` values (Hz^-order times the response units); a
+        ``basis_remainder`` of kind ``bound`` on a line kernel needs the
+        order ``N + 1`` (``derivative_bound_reason``). The response is used
+        as supplied; ``normalisation`` names its units. Eager checks that
+        can refute the declarations (``_channel_compose``): finite real
+        values of the input's shape, a JAX trace of ``fn'``, vanishing
+        ``R^(k)`` one floating-point step inside each edge for
+        ``k = 0 .. min(smoothness, 4)`` when ``smoothness >= 1``, and every
+        declared bound at least the sampled ``|R^(order)|``. Passing them
+        does not verify the smoothness or the bounds. ``derivative_bound``
+        decides the kind only; its value enters no computed envelope, so
+        supplied ``RemainderInputs`` must be derived from it. ``response_fn``
+        is a static field: parameters closed over by ``fn`` are constants,
+        so a basis cannot be differentiated in them, and every new closure is
+        a new static value that ``jax.jit`` retraces and recompiles. The
+        constructor is eager: ``fn`` must not close over traced values.
+        ``describe()`` names each callable by its ``__qualname__``, which
+        does not identify the function.
+        """
+        if normalisation not in NORMALISATIONS:
+            raise ValueError(f"normalisation must be one of {NORMALISATIONS}")
+        _static_int(smoothness, "smoothness", 0)
+        _static_int(n_nu, "n_nu", 1)
+        fns, lo, hi = callable_parts(fn, support)
+        bounds = derivative_bounds(derivative_bound, lo.size)
+        edge = check_callable(fns, lo, hi, smoothness, bounds, n_nu)
+        return cls._build(
+            "callable",
+            (lo + hi) / 2,
+            (hi - lo) / 2,
+            (hi - lo) / 2,
+            bounds=(lo, hi),
+            normalisation=normalisation,
+            n_nu=n_nu,
+            smoothness=smoothness,
+            response_fn=fns,
+            derivative_bound=bounds,
+            edge=edge,
+        )
+
     # --------------------------------------------------------------- queries
     @property
     def n_ch(self) -> int:
@@ -350,12 +495,16 @@ class Channels(eqx.Module):
         nu = jnp.asarray(nu_hz)
         if jnp.iscomplexobj(nu):
             raise ValueError("frequencies must be real")
-        nu = jnp.broadcast_to(
-            nu.astype(jnp.result_type(nu, 1.0)), (self.n_ch, *nu.shape)
-        )
+        nu = nu.astype(jnp.result_type(nu, 1.0))
+        if self.family == "basis":  # zero outside the hull by construction
+            values = self.reference_channels(nu)  # (n_ref, *nu.shape)
+            return jnp.tensordot(self.coefficients, values, axes=1)
+        nu = jnp.broadcast_to(nu, (self.n_ch, *nu.shape))
         expand = (self.n_ch,) + (1,) * (nu.ndim - 1)
         lo, hi = self.support[:, 0].reshape(expand), self.support[:, 1].reshape(expand)
         inside = (nu > lo) & (nu < hi)
+        if self.family == "callable":
+            return callable_response(self.response_fn, nu, inside, self.centres_hz)
         shape = unit_peak_shape(
             self.family,
             nu,
@@ -379,9 +528,10 @@ class Channels(eqx.Module):
         512-node constant; ``planck_taper``: ``2 w (1 - taper)``;
         ``raised_cosine``: ``w``; ``tophat``: ``2 w``; ``gaussian``: the
         truncated erf area; ``table``: the trapezoid rule, exact for the
-        interpolant), differentiable in ``widths_hz``.
+        interpolant), differentiable in ``widths_hz``. ``basis`` and
+        ``callable`` responses are used as supplied (ones).
         """
-        if self.normalisation == "unit_peak":
+        if self.normalisation == "unit_peak" or self.family in COMPOSED:
             return jnp.ones_like(self.centres_hz)
         if self.family == "table":
             assert self.table is not None
@@ -397,7 +547,17 @@ class Channels(eqx.Module):
         return (support[:, 1] - support[:, 0]) / centres
 
     def edge_jump(self) -> float:
-        """Largest unit-peak response value at a support edge (0 when continuous)."""
+        """Largest unit-peak response value at a support edge (0 when continuous).
+
+        ``basis``: the reference's value times the largest row sum of
+        ``|c_jk|`` (a bound on any jump inside the hull); ``callable``: the
+        sampled edge value relative to the sampled peak.
+        """
+        if self.family == "basis":
+            rows = np.sum(np.abs(np.asarray(self.coefficients)), axis=1)
+            return self.reference_channels.edge_jump() * float(np.max(rows))
+        if self.family == "callable":
+            return self.edge
         if self.family == "tophat":
             return 1.0
         if self.family == "gaussian":
@@ -430,7 +590,67 @@ class Channels(eqx.Module):
         if self.family == "table":
             assert self.table is not None
             items.append(("n_table", len(self.table[0])))
+        if self.family == "basis":
+            coefficients = np.asarray(self.coefficients)
+            items += [
+                ("n_reference", self.reference_channels.n_ch),
+                ("reference", self.reference_channels.describe()),
+                (
+                    "coefficients",
+                    tuple(tuple(float(v) for v in row) for row in coefficients),
+                ),
+            ]
+        if self.family == "callable":
+            items += [
+                ("response_fn", tuple(describe_fn(f) for f in self.response_fn)),
+                ("derivative_bound", self.derivative_bound),
+            ]
         return tuple(items)
+
+    def derivative_bound_reason(self, order: int) -> str | None:
+        """Why ``sup|R^(order)|`` is not declared, or ``None`` (eager, static).
+
+        ``None`` for the built-in families, whose formulas fix the
+        derivatives, and for a ``callable`` whose ``derivative_bound`` has
+        ``order``; a ``basis`` response asks its reference. A line-kernel
+        ``basis_remainder`` with a reason is an ``estimate``, never a
+        ``bound``. A declared value is a caller statement, not verified here.
+        """
+        if self.family == "basis":
+            return self.reference_channels.derivative_bound_reason(order)
+        if self.family != "callable":
+            return None
+        if order in dict(self.derivative_bound or ()):
+            return None
+        return (
+            f"callable channel response: sup|R^({order})| not declared "
+            f"(derivative_bound={{{order}: ...}}), so the remainder is an "
+            "estimate, not a bound"
+        )
+
+    def select(self, j: int) -> "Channels":
+        """Channel ``j`` alone (a static int), same family and settings."""
+        if not isinstance(j, int) or isinstance(j, bool) or not 0 <= j < self.n_ch:
+            raise ValueError(f"channel index must be an int in [0, {self.n_ch})")
+        rows = slice(j, j + 1)
+        table = None if self.table is None else (self.table[0], (self.table[1][j],))
+        bounds = self.derivative_bound
+        return dataclasses.replace(
+            self,
+            centres_hz=self.centres_hz[rows],
+            widths_hz=self.widths_hz[rows],
+            support=self.support[rows],
+            nodes=self.nodes[rows],
+            weights=self.weights[rows],
+            table=table,
+            coefficients=None if self.coefficients is None else self.coefficients[rows],
+            response_fn=None if self.response_fn is None else (self.response_fn[j],),
+            derivative_bound=(
+                None
+                if bounds is None
+                else tuple((order, (values[j],)) for order, values in bounds)
+            ),
+        )
 
 
 __all__ = ["Channels", "FAMILIES", "NORMALISATIONS"]

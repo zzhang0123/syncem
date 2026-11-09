@@ -18,6 +18,11 @@ syncem.model.channels
 
 .. automodule:: syncem.model.channels
 
+syncem.model.bandpass
+---------------------
+
+.. automodule:: syncem.model.bandpass
+
 syncem.model.phase
 ------------------
 

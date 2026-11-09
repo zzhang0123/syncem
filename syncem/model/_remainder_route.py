@@ -3,7 +3,9 @@
 ``nonsmooth_reason`` returns why the Taylor remainder of a basis is
 unconstrained (a line kernel whose channels have smoothness below
 ``N + 1``; ``_basis_checks.check_kernel`` records the same condition as a
-provenance note). ``is_screen_route`` tells whether the basis phase route is
+provenance note). ``derivative_gate`` returns why a line-kernel remainder on
+a ``Channels.from_callable`` response cannot be a ``bound`` (no declared
+``sup|R^(N+1)|``), or the note of a declared one. ``is_screen_route`` tells whether the basis phase route is
 a screen, whose finite response does not Taylor-expand the depth.
 ``lower_set_margin`` is the margin ``S(Lambda)`` of the lower-set Taylor
 remainder used for capped truncations (re-exported by ``syncem.model.index``);
@@ -55,6 +57,39 @@ def nonsmooth_reason(basis) -> str | None:
             "defined and the basis remainder is unbounded"
         )
     return None
+
+
+def _uses_callable(channels) -> bool:
+    if channels.family == "basis":
+        return _uses_callable(channels.reference_channels)
+    return channels.family == "callable"
+
+
+def derivative_gate(basis) -> tuple[str | None, str | None]:
+    """``(reason, note)`` for the order-``N+1`` channel derivative of a line kernel.
+
+    ``reason`` is set when the channel response is a callable without a
+    declared ``sup|R^(N+1)|`` (the remainder is then an ``estimate``);
+    ``note`` records a declared bound, on which a ``bound`` is conditional.
+    Both are ``None`` for other kernels and for the built-in families.
+    """
+    provenance = getattr(basis, "provenance", None)
+    kernel = _record(getattr(provenance, "kernel", ()) or ())
+    channels = getattr(basis, "channels", None)
+    if kernel.get("name") not in LINE_KERNELS or channels is None:
+        return None, None
+    if not _uses_callable(channels):
+        return None, None
+    order = basis.index.truncation.N + 1
+    reason = channels.derivative_bound_reason(order)
+    if reason is not None:
+        return reason, None
+    return None, (
+        f"conditional on the declared smoothness {channels.smoothness} and "
+        f"derivative_bound sup|R^({order})| of the callable channel response "
+        "(checked on sampled points, not verified; the supplied H must be "
+        "derived from them)"
+    )
 
 
 def is_screen_route(basis) -> bool:
@@ -208,6 +243,7 @@ __all__ = [
     "MARGIN_NOTE",
     "appendix_c",
     "nonsmooth_reason",
+    "derivative_gate",
     "is_screen_route",
     "lower_set_margin",
     "NONSMOOTH_PREFIX",

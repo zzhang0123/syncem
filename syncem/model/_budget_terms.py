@@ -341,7 +341,13 @@ def propagate_envelope(total, stokes, R, response_uncertainty):
     ``|s_true| <= |s| + envelope``, so the response term multiplies the
     predicted magnitude plus the budget envelope.
     Labels: ``sec: frequency order``; the response-error term follows
-    ``eq: chromatic beam response``.
+    ``eq: chromatic beam response``. ``response_uncertainty`` is ``None``
+    (unbounded), a scalar or an array of ``R``'s shape (caller
+    declarations; the result keeps the budget's kind), or an ``ErrorTerm``
+    with such a value (for example ``BandpassFit.response_uncertainty()``):
+    the result then has the weaker of the two kinds. A valueless term
+    (``unbounded`` or ``not_applicable``) makes the result unbounded; it is
+    never read as an exact response.
     """
     n_ch = stokes.shape[0]
     R = jnp.asarray(R)
@@ -359,6 +365,15 @@ def propagate_envelope(total, stokes, R, response_uncertainty):
             "observing response exact",
             _PROPAGATION,
         )
+    supplied = None
+    if isinstance(response_uncertainty, ErrorTerm):
+        supplied = response_uncertainty
+        if supplied.value is None:  # unbounded or not_applicable: no envelope
+            return ErrorTerm.unbounded(
+                f"response_uncertainty is {supplied.kind}: {supplied.note}",
+                _PROPAGATION,
+            )
+        response_uncertainty = supplied.value
     flat = jnp.abs(stokes).ravel() + envelope
     dR = jnp.asarray(response_uncertainty)
     if dR.ndim == 0:
@@ -369,9 +384,13 @@ def propagate_envelope(total, stokes, R, response_uncertainty):
         note = "supplied |delta R|"
     else:
         raise ValueError("response_uncertainty must be a scalar or have R's shape")
+    kind = total.kind
+    if supplied is not None:
+        note = f"{supplied.kind}: {supplied.note}"
+        kind = _weaker(total.kind, supplied.kind)
     return ErrorTerm(
         first + second,
-        total.kind,
+        kind,
         f"|R| @ envelope ({total.kind}: {total.note}) + |delta R| @ (|stokes| + "
         f"envelope) ({note})",
         _PROPAGATION,

@@ -2,6 +2,57 @@
 
 ## Unreleased (0.7.0)
 
+### Added
+
+- `Channels.from_basis(reference, coefficients)` writes instrument channels
+  as `R_j = sum_k c_jk phi_k` in the responses of another `Channels` (for
+  example overlapping `bump` channels on a finer grid). The smoothness is
+  the reference's, and each row's support is the hull of the references
+  with `c_jk != 0`, fixed at construction (a coefficient array replaced
+  later must keep the nonzero pattern). `build_basis` builds the reference
+  columns once and returns `C_j = sum_k c_jk C_k`, with each kernel term
+  `|c| @` the reference term (a `bound` stays a `bound`).
+  `combine_basis(reference_basis, channels)` does the same from a reference
+  basis that is already built. It requires the reference channels to equal
+  those of the basis under `equinox.tree_equal`, which compares callables
+  by identity and tables by value.
+- `Channels.from_callable(fn, support, smoothness, derivative_bound=None)`
+  takes a JAX-differentiable response on a declared support in `(0, inf)`.
+  A nonpositive, infinite or empty support raises `ValueError`. The
+  derivatives the kernels need come from JAX autodiff. Eager checks can
+  refute the declarations: finite real values of the input's shape, a JAX
+  trace of `fn'`, vanishing `R^(k)` one step inside each edge for
+  `k = 0 .. min(smoothness, 4)` when `smoothness >= 1`, and every declared
+  `derivative_bound` at least the sampled `|R^(r)|`. Passing them does not
+  verify the declarations, and the value of `derivative_bound` enters no
+  computed envelope. On a line kernel, `RemainderInputs.basis_remainder`
+  for such a response is a `bound` only when `derivative_bound` declares
+  `sup|R^(N+1)|`. Otherwise it is an `estimate`, also from supplied
+  envelopes. The new `Channels.derivative_bound_reason(order)` reports
+  which case applies. Known limitation: `fn` is stored as a static field,
+  so a response with free parameters closed over by `fn` cannot be
+  differentiated in them, and each new closure retraces and recompiles
+  under `jax.jit`.
+- `syncem.model.bandpass.fit_bandpass(reference, nu_hz, response)` fits the
+  coefficients of a measured bandpass table by least squares and returns a
+  `BandpassFit`. Its `response_uncertainty()` is the representation
+  residual as a response error (`Delta W_aj` of
+  `eq: chromatic beam response`). With nonnegative references,
+  `|Delta R_j| <= sum_k d_jk phi_k` on a check grid, and `|Q_m|, |U_m|,
+  |V_m| <= I_m` for every line then bound every Stokes datum of channel `j`
+  by `sum_k d_jk I_k`. The term has shape `(4 n_ch, 4 n_ref)` and kind
+  `estimate`. It is `unbounded` where no reference reaches and when a table
+  row does not start and end at zero. It enters
+  `Prediction.propagate(fit.operator(), response_uncertainty=...)` on a
+  prediction in the reference channels.
+- `Prediction.propagate` and `_budget_terms.propagate_envelope` accept an
+  `ErrorTerm` as `response_uncertainty`. The result has the weaker of the
+  two kinds, and a term without a value (`unbounded` or `not_applicable`)
+  makes it unbounded. Scalars and arrays are still accepted (see Fixed for
+  the formula).
+- `Channels.select(j)` returns one channel. The high-order routes use it,
+  so composed families slice their coefficients or callables correctly.
+
 ### Fixed
 
 - `Prediction.propagate` now returns
@@ -64,8 +115,29 @@
     `ValueError` messages say "depth-degree layout" instead of
     `app: depth moments`.
 
+### Tests
+
+- `tests/model/test_channel_compose.py` (24 tests) checks the composed
+  responses, `combine_basis`, `fit_bandpass` and the propagation of its
+  response-error term.
+- `tests/model/test_channel_compose_boundaries.py` (10 tests) fits a bump
+  channel with references of width `W (1 + delta)` and checks agreement
+  with the direct channel as `delta -> 0`, and that the covering bounds the
+  response error of a sampled population.
+- `tests/model/test_channel_compose_extremes.py` (50 tests, 10 `slow`)
+  compares the two methods of each composed route directly, bypassing the
+  `build_basis` dispatch, for narrow (`w/c = 1e-3`), moderate, wide
+  (`w/c = 0.9`) channels and a support edge at `1e-6 c`, at `N` from 0 to
+  3. `combine_basis` equals a direct build of the same combination through
+  `from_callable` to `1e-12` on the tensor route and, for rows with one
+  reference, on the product route. A callable bump equals `Channels.bump`
+  to `1e-12` on both routes. `fit_bandpass` on a table in the span of tent
+  references returns the table values and a zero residual.
+
 ### Documentation
 
+- `docs/guide/model.md` has a section on instrument bandpasses and user
+  responses.
 - Docstrings, `README.md`, `docs/DESIGN.md`, the guide, the scripts and
   test comments cite labels of the current `main.tex`. Section and figure
   numbers follow the current paper (the smooth-channel example is

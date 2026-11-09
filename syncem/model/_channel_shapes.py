@@ -16,7 +16,15 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 
-FAMILIES = ("bump", "planck_taper", "raised_cosine", "tophat", "gaussian", "table")
+COMPOSED = ("basis", "callable")
+FAMILIES = (
+    "bump",
+    "planck_taper",
+    "raised_cosine",
+    "tophat",
+    "gaussian",
+    "table",
+) + COMPOSED
 NORMALISATIONS = ("unit_peak", "unit_integral")
 SMOOTH = 99
 # Below this value of 1 - t^2 (bump) or v/taper (Planck) the response is below

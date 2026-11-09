@@ -30,7 +30,6 @@ result and the physical adequacy of the helical-orbit reference model.
 
 from __future__ import annotations
 
-import dataclasses
 from dataclasses import dataclass
 from fractions import Fraction
 from functools import lru_cache
@@ -370,19 +369,7 @@ def _leggauss(order):
 
 def _single_channel(channels, j):
     """One response without evaluating all other channels at every order."""
-    table = None
-    if channels.table is not None:
-        grid, rows = channels.table
-        table = (grid, (rows[j],))
-    return dataclasses.replace(
-        channels,
-        centres_hz=channels.centres_hz[j : j + 1],
-        widths_hz=channels.widths_hz[j : j + 1],
-        support=channels.support[j : j + 1],
-        nodes=channels.nodes[j : j + 1],
-        weights=channels.weights[j : j + 1],
-        table=table,
-    )
+    return channels.select(int(j))
 
 
 def _host_response(channels, j):

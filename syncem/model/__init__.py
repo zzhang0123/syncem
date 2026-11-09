@@ -13,6 +13,9 @@ Objects
 Truncation, MomentIndex      index layout (h; l,k; r,s,b), flattening to m
 lower_set_margin             remainder margin of a capped (lower-set) truncation
 Channels                     smooth compact channel responses R_j(nu)
+                             (also from_basis, from_callable)
+fit_bandpass -> BandpassFit  measured bandpass in reference responses,
+                             with its response-error term
 TaylorPhase, GaussianScreen, CumulantScreen, EmpiricalScreen,
 LaplaceScreen, GammaScreen                                      depth phase routes
 HarmonicKernel, ContinuumKernel, PolynomialTestKernel           kernel models
@@ -20,6 +23,7 @@ Reference, Support, PopulationSamples, JointMoments             statistics
 ParameterMap and named constructors                             declared assumptions
 declare, Assume, ASSUMPTIONS                                    assumptions by name
 build_basis -> SpectralBasis                                    the cacheable response
+combine_basis                                                   from_basis columns from a reference basis
 predict, direct_channel_average -> Prediction                   forward modelling
 fit.*                                                           spectral fits
 
@@ -90,7 +94,14 @@ from .high_order_harmonic import (
     high_order_channel_modes,
     high_order_line_powers,
 )
-from .basis import KernelTerms, SpectralBasis, basis_convergence, build_basis
+from .basis import (
+    KernelTerms,
+    SpectralBasis,
+    basis_convergence,
+    build_basis,
+    combine_basis,
+)
+from .bandpass import BandpassFit, fit_bandpass
 from .high_order_basis import build_high_order_basis
 from ._certified_high_order_basis import (
     CoarseHighOrderBasisReport,
@@ -109,6 +120,8 @@ __all__ = [
     "ErrorTerm",
     "Provenance",
     "Channels",
+    "BandpassFit",
+    "fit_bandpass",
     "CumulantScreen",
     "EmpiricalScreen",
     "GaussianScreen",
@@ -163,6 +176,7 @@ __all__ = [
     "SpectralBasis",
     "basis_convergence",
     "build_basis",
+    "combine_basis",
     "build_high_order_basis",
     "CoarseHighOrderBasisReport",
     "certify_high_order_basis_coarse",
