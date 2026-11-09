@@ -25,7 +25,8 @@ class Prediction(eqx.Module):
 
     ``propagate(R, response_uncertainty=)`` applies a linear observing
     response ``R`` ``(n_data, 4 n_ch)`` acting on the channel-major flattened
-    ``(I, Q, U, V)`` vector: ``|R| @ envelope + |delta R| @ |stokes|``
+    ``(I, Q, U, V)`` vector: ``|R| @ envelope + |delta R| @ (|stokes| +
+    envelope)``
     (``sec: frequency order``; the response-error term follows
     ``eq: chromatic beam response``); the second term is ``unbounded``
     unless ``response_uncertainty`` is supplied (``0`` declares the response

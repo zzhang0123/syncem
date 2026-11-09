@@ -335,8 +335,11 @@ def scaled_kernel_term(term, amplitude, m, n_ch):
 
 
 def propagate_envelope(total, stokes, R, response_uncertainty):
-    """``|R| @ envelope + |delta R| @ |stokes|`` per data element.
+    """``|R| @ envelope + |delta R| @ (|stokes| + envelope)`` per data element.
 
+    ``(R + dR) s_true - R s = R (s_true - s) + dR s_true`` and
+    ``|s_true| <= |s| + envelope``, so the response term multiplies the
+    predicted magnitude plus the budget envelope.
     Labels: ``sec: frequency order``; the response-error term follows
     ``eq: chromatic beam response``.
     """
@@ -356,7 +359,7 @@ def propagate_envelope(total, stokes, R, response_uncertainty):
             "observing response exact",
             _PROPAGATION,
         )
-    flat = jnp.abs(stokes).ravel()
+    flat = jnp.abs(stokes).ravel() + envelope
     dR = jnp.asarray(response_uncertainty)
     if dR.ndim == 0:
         second = jnp.abs(dR) * jnp.sum(flat) * jnp.ones(R.shape[0])
@@ -369,7 +372,8 @@ def propagate_envelope(total, stokes, R, response_uncertainty):
     return ErrorTerm(
         first + second,
         total.kind,
-        f"|R| @ envelope ({total.kind}: {total.note}) + |delta R| @ |stokes| ({note})",
+        f"|R| @ envelope ({total.kind}: {total.note}) + |delta R| @ (|stokes| + "
+        f"envelope) ({note})",
         _PROPAGATION,
     )
 

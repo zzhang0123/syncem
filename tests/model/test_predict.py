@@ -305,7 +305,7 @@ def test_propagate_with_and_without_response_uncertainty(poly_basis):
     with_dr = pred.propagate(R, response_uncertainty=dR)
     assert_allclose(
         np.asarray(with_dr.value),
-        np.abs(R) @ envelope + dR @ np.abs(stokes),
+        np.abs(R) @ envelope + dR @ (np.abs(stokes) + envelope),
         rtol=1e-13,
     )
     with pytest.raises(ValueError):

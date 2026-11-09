@@ -2,6 +2,15 @@
 
 ## Unreleased (0.7.0)
 
+### Fixed
+
+- `Prediction.propagate` now returns
+  `|R| @ envelope + |delta R| @ (|stokes| + envelope)`. The response term
+  multiplied only the predicted `|stokes|`, but `(R + dR) s_true - R s`
+  needs `|s_true| <= |s| + envelope`. The missing `|delta R| @ envelope`
+  made a `bound` too small. Values change only when both `delta R` and
+  the budget envelope are nonzero.
+
 ### Changed
 
 - The manuscript labels that SyncEM reports at run time now name labels of

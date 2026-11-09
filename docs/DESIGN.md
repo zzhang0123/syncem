@@ -866,7 +866,7 @@ tests (finite checks, not certificates). Notes such as "incident polarisation no
 `Prediction(stokes (n_ch, 4), amplitude, moments, budget, provenance,
 channels)` offers `to_dict()`, `summary()` and
 `propagate(R, response_uncertainty=None) -> ErrorTerm (n_data,)`, which
-returns `|R| @ envelope + |delta R| @ |stokes|`
+returns `|R| @ envelope + |delta R| @ (|stokes| + envelope)`
 (`sec: frequency order`; the response-error term is stated after
 `eq: chromatic beam response`); the second term is `unbounded` when
 `delta R` is not supplied.
