@@ -39,9 +39,18 @@ Output of the validation script `harmonic_continuum_check.py` (harmonic against 
 
 | File | SHA-256 | Read by |
 |---|---|---|
-| `harmonic_continuum_results.json` | `aad5d7140bfa7e66818a0659c3982b6496fb18e87e439e7375e2feceba55cd12` | `harmonic_correction.py` (harmonic-versus-continuum kernels at θ = π/3) |
+| `harmonic_continuum_results.json` | `aad5d7140bfa7e66818a0659c3982b6496fb18e87e439e7375e2feceba55cd12` | `harmonic_correction.py` (harmonic-versus-continuum kernels at θ = π/3), `render_classical_limit.py` (Fig. 3(b, c)) |
 
-`lib/figure_style.py` is a byte copy of the style module used for the paper's figures (SHA-256 `e2f37e065b7e0b4f927a16819faba9f406e2733eb61977af70529e22d20cd003`), used by `bridge.py` and `make_figures.py`.
+`lib/figure_style.py` is a byte copy of the style module used for the paper's figures (SHA-256 `e2f37e065b7e0b4f927a16819faba9f406e2733eb61977af70529e22d20cd003`), used by `bridge.py` and `make_figures.py`. `lib/figure_style_paper.py` is a byte copy of the later version of that module (SHA-256 `9bf0aa49a7b84b4c382588b915c6db6b49b6cd6d411dd8266987270c0f9262e3`), with the palette and the row packing, used by `render_classical_limit.py`.
+
+## `manuscript-fig3/`
+
+Files of the manuscript repository from which `recover_classical_limit_a.py` recovers the curves of Fig. 3(a). The harmonic pipeline output behind that panel (`smooth-forward/results_fine.json`) and its renderer are no longer available. Matplotlib wrote each 105-point curve of the earlier figure as one unsimplified PDF path, so the curves follow from the axis transform. The recovery checks every visible vertex against the channel grid `geomspace(3, 1000, 105)` Hz and the three peaks against the manifest.
+
+| File | SHA-256 | Read by |
+|---|---|---|
+| `classical_limit_11b2f95.pdf` | `4cde88a2540f6d8ac8d356ec4e9679acac886f1bf56d15eaa57505b0fa7f3845` | `recover_classical_limit_a.py` (byte copy of `figures/classical_limit.pdf` at manuscript commit 11b2f95) |
+| `render_old_panels_manifest.json` | `f7175c4d2e69cdb87fe3a8d9360995e3c250a1cab7aa17b60e4596b1cdeae12e` | `recover_classical_limit_a.py` (peak values and positions of panel (a)) |
 
 ## `galprop-benchmark/`
 

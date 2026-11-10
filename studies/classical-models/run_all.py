@@ -4,7 +4,7 @@ Run: python run_all.py
      python run_all.py --checksums-only   (only rewrite SHA256SUMS from the files on disk)
 
 The producing scripts run first, then the verify scripts, then make_figures.py, which comes
-last because it reads verify_fits_results.json. Each script runs in its own process with this
+last because it reads verify_fits_results.json, and render_classical_limit.py (Fig. 3). Each script runs in its own process with this
 interpreter, from this directory, with its default arguments. The run stops at the first script
 that exits with a non-zero status. The wall time of each script is printed. kp_bridge_tables.py
 only prints the tables of kp_bridge_results.json and is not run.
@@ -50,6 +50,7 @@ PRODUCERS = (
     ("bridge_harmonic_probe.py", ()),
     ("bridge.py", ("bridge_harmonic_probe.npz", "bridge_harmonic_probe.json",
                    "bridge_mpmath_check.json")),
+    ("recover_classical_limit_a.py", ()),
 )
 VERIFIERS = (
     ("verify_core.py", ("forward_results.json", "regression_results.json")),
@@ -63,7 +64,8 @@ FIGURE_INPUTS = ("fits_results.json", "fits_products.npz", "forward_results.json
                  "forward_spectra.npz", "params_results.json", "baselines_results.json",
                  "baselines_plotdata.npz", "cost_results.json", "kp_pseudotruth_results.json",
                  "kp_pseudotruth.npz", "verify_fits_results.json", "ridge_sed_results.json")
-FIGURES = (("make_figures.py", FIGURE_INPUTS),)
+FIGURES = (("make_figures.py", FIGURE_INPUTS),
+           ("render_classical_limit.py", ("recover_classical_limit_a_results.json",)))
 STAGES = (("producing scripts", PRODUCERS), ("verify scripts", VERIFIERS), ("figures", FIGURES))
 
 CHECKSUM_FILE = HERE / "SHA256SUMS"

@@ -26,7 +26,7 @@ Notation: I_j is the channel intensity, ν_j the channel centre, η the cosine o
 
 ### 1. Harmonic forward spectra
 
-**Produced by.** The spectra and checks of this group come from the harmonic pipeline, which is not in this directory. No script in this directory produces these numbers.
+**Produced by.** The spectra and checks of this group come from the harmonic pipeline, which is not in this directory. No script in this directory produces these numbers. Fig. 3 is drawn by `render_classical_limit.py` (→ `figures/classical_limit.{pdf,png}`, `render_classical_limit_results.json`) from `inputs/validation/harmonic_continuum_results.json` and from `recover_classical_limit_a_results.json`, which `recover_classical_limit_a.py` recovers from the vector paths of the earlier figure (`inputs/manuscript-fig3/`). No physics is recomputed for Fig. 3.
 
 **Ensembles.**
 - Low-energy spectra of Fig. 3(a): uniform energy densities on γ ∈ [1.1, 1.2] and [2, 4]. Fields are uniform on [2, 8] µG (broad) or [4.5, 5.5] µG (narrow, this panel only). The rounded response (k = 1) has f = 0.08.

@@ -1,0 +1,266 @@
+{
+ "created_utc": "2026-11-08T20:46:33+00:00",
+ "script": {
+  "path": "/Users/zzhang/Documents/MyDrafts/Overleaf_Synchrotron_Emission_Modelling/studies/classical-models/render_old_panels.py",
+  "sha256": "2fa57dd8f69a7ef89d0fb5a10858d64ca88348638c2b75251b0201d554438309"
+ },
+ "environment": {
+  "python": "3.12.9",
+  "executable": "/opt/homebrew/Caskroom/miniconda/base/bin/python",
+  "numpy": "2.3.5",
+  "matplotlib": "3.10.8",
+  "latex": "pdfTeX 3.141592653-2.6-1.40.28 (TeX Live 2025)",
+  "dvipng": "This is dvipng 1.18 Copyright 2002-2015, 2019 Jan-Ake Larsson"
+ },
+ "physics_recomputed": false,
+ "inputs": {
+  "forward_results_fine": {
+   "path": "/Users/zzhang/.codex/worktrees/section5-harmonic-design/Overleaf_Synchrotron_Emission_Modelling/implementation-review/section5-harmonic-revision/data/smooth-forward/results_fine.json",
+   "sha256": "c6cc4802da12adb05c7c623f9703634dbfb9000d796ff1e46da253c550588956"
+  },
+  "harmonic_continuum_results": {
+   "path": "/Users/zzhang/Documents/MyDrafts/Overleaf_Synchrotron_Emission_Modelling/validation/harmonic_continuum_results.json",
+   "sha256": "aad5d7140bfa7e66818a0659c3982b6496fb18e87e439e7375e2feceba55cd12"
+  }
+ },
+ "input_provenance": {
+  "forward_results_fine": {
+   "generator_source_sha256": "cf36b445e7ef549356d587ff33eb0bae3b121f122d1ebc5097b33f2dd7dfdaff",
+   "package_commit": "d51f9bef4fa744a536a60c3da821b1033818a232",
+   "package_source_sha256": "a5ed224ceaff820992b042ca28b37cbd7be0732ff97d855c980e5de8ac138b52",
+   "stable_line_source_sha256": "c661ba3235bae5c5343651b2fdc995d9fb7228dfc329619255456adc51cc6768",
+   "smooth_channel_source_sha256": "3c27fa6b73f9003171fcd35aa8331922f409f708ac5ea3389df6f98003ef0c05",
+   "level": "fine",
+   "orders": [
+    24,
+    8,
+    5,
+    14,
+    40,
+    12,
+    12,
+    12
+   ]
+  },
+  "harmonic_continuum_results": "written by validation/harmonic_continuum_check.py (theta=pi/3); pinned in reproducibility/synchrotron-reproducibility/MANIFEST.json"
+ },
+ "reference_code": {
+  "old_fig6_renderer": {
+   "path": "/Users/zzhang/.codex/worktrees/section5-harmonic-design/Overleaf_Synchrotron_Emission_Modelling/implementation-review/section5-harmonic-revision/data/plain-prose-review/render_figures.py",
+   "sha256": "091884a84ac41f477f4e1d23ccf8955ec46f4ecfb043f607688be1203b82576d"
+  },
+  "continuum_renderer": {
+   "path": "/Users/zzhang/Documents/MyDrafts/Overleaf_Synchrotron_Emission_Modelling/validation/spectral_figures.py",
+   "sha256": "6a67403941c8d6e5c8f103133143ecb681f57fbad9d0ea89c29f7a9e817b5af5"
+  },
+  "continuum_producer": {
+   "path": "/Users/zzhang/Documents/MyDrafts/Overleaf_Synchrotron_Emission_Modelling/validation/harmonic_continuum_check.py",
+   "sha256": "3476b711a65d7ef12ee79414742032751d2aaa828ce1cdaf3bca1910feb3d1de"
+  },
+  "house_style": {
+   "path": "/Users/zzhang/Documents/MyDrafts/Overleaf_Synchrotron_Emission_Modelling/validation/figure_style.py",
+   "sha256": "9bf0aa49a7b84b4c382588b915c6db6b49b6cd6d411dd8266987270c0f9262e3"
+  }
+ },
+ "reference_figures": {
+  "forward_population_spectra.png": {
+   "path": "/Users/zzhang/Documents/MyDrafts/Overleaf_Synchrotron_Emission_Modelling/figures/forward_population_spectra.png",
+   "sha256": "8ac56f7f33e0dfda4670df03ac0f40102f4c315d3bad4f5383a82ba0dac51e7d"
+  },
+  "forward_population_spectra.pdf": {
+   "path": "/Users/zzhang/Documents/MyDrafts/Overleaf_Synchrotron_Emission_Modelling/figures/forward_population_spectra.pdf",
+   "sha256": "84d59b04c0389b9259f137672bebb22c89985cdbc7a321149585741c11f026e3"
+  },
+  "harmonic_continuum_check.png": {
+   "path": "/Users/zzhang/Documents/MyDrafts/Overleaf_Synchrotron_Emission_Modelling/figures/harmonic_continuum_check.png",
+   "sha256": "a917ba6eddbb3db106d970bcda62beba997ca0cefa0a69468c7ae787863d4f83"
+  },
+  "harmonic_continuum_check.pdf": {
+   "path": "/Users/zzhang/Documents/MyDrafts/Overleaf_Synchrotron_Emission_Modelling/figures/harmonic_continuum_check.pdf",
+   "sha256": "8c529b94b016977d7d8fd50bd4db6d783ec20e51f37be092e58b4b4dd950fc16"
+  }
+ },
+ "outputs": {
+  "classical_limit": {
+   "files": {
+    "/Users/zzhang/Documents/MyDrafts/Overleaf_Synchrotron_Emission_Modelling/studies/classical-models/figures/classical_limit.pdf": "4cde88a2540f6d8ac8d356ec4e9679acac886f1bf56d15eaa57505b0fa7f3845",
+    "/Users/zzhang/Documents/MyDrafts/Overleaf_Synchrotron_Emission_Modelling/studies/classical-models/figures/classical_limit.png": "9eeb98c82346e35e7ac3fe52192a289947de861868606d67e99ee36869f0a87b"
+   },
+   "size_inches": [
+    6.1,
+    2.4
+   ],
+   "png_dpi": 200,
+   "layout": {
+    "panel_width_pt": 112.97,
+    "spacing_pt": [
+     37.2,
+     24.73
+    ],
+    "min_clear_gap_pt": [
+     6.0,
+     6.0
+    ]
+   }
+  },
+  "channel_depolarisation": {
+   "files": {
+    "/Users/zzhang/Documents/MyDrafts/Overleaf_Synchrotron_Emission_Modelling/studies/classical-models/figures/channel_depolarisation.pdf": "1b0694d38a6f6f7f12292e6e3adb3c5c06edd2c8f4ec47f2ff2d75324a73e1f8",
+    "/Users/zzhang/Documents/MyDrafts/Overleaf_Synchrotron_Emission_Modelling/studies/classical-models/figures/channel_depolarisation.png": "3533bed5a21f1631ce8c4965eb457a9297d8f43c11fd00e136ba70a700201afe"
+   },
+   "size_inches": [
+    6.1,
+    2.45
+   ],
+   "png_dpi": 200
+  }
+ },
+ "panel_map": {
+  "classical_limit (a)": "old forward_population_spectra (a); low_I / low_I[1].max(), x = low_centres_hz",
+  "classical_limit (b)": "harmonic_continuum_check (a); |harmonic/continuum - 1|, I solid, Q dashed",
+  "classical_limit (c)": "harmonic_continuum_check (b); gamma * harmonic_V / harmonic_I",
+  "channel_depolarisation": "old forward_population_spectra (d); 100|P[c,1,0]|/I[c,1,0], c=0,2,1"
+ },
+ "presentation_changes": [
+  "TeX newtx fonts and 8-9 pt text via validation/figure_style.configure (old Fig. 6 used DejaVu Sans at 8.4 in width)",
+  "panels (b,c) relabelled from (a,b); '$I$ solid, $Q$ dashed' moved from the title into a style legend",
+  "panel (c) title shortened from 'Harmonic circular polarisation' to 'Circular polarisation' (fits the 1x3 row)",
+  "colours from validation/figure_style: gamma = 10, 30, 100 and the three curves of (a) and of channel_depolarisation take SERIES[0..2] (Okabe-Ito blue, vermilion, green); old Fig. 6 used #263b4d/#c46b30/#298c84 and the continuum figure #236B8E/#CA6928/#38866B; I/Q style key in INK",
+  "line widths LW = 1.1 (Q dashed 0.8); zero line in (c) GREY at LW_REF; no grids; left and bottom spines only; frameless legends",
+  "channel_depolarisation: full-width total-spectrum and signed channel-shape difference panels",
+  "classical_limit (b) y label uses calligraphic K for kernels, as in the text (italic K is the Bessel function there)",
+  "classical_limit row packed by pack_row: each inter-panel spacing is the smallest that keeps every item of one panel 6.0 pt clear of every item of the next at the same height (edge 1.5 pt), with y label/tick pads of 2.0/2.0 pt; replaces the common wspace=0.43, left=0.085, right=0.99"
+ ],
+ "plotted_data_checks": {
+  "a": {
+   "n_lines": 3,
+   "n_points": [
+    105,
+    105,
+    105
+   ],
+   "exactly_equal_to_original_renderer": true
+  },
+  "b": {
+   "n_lines": 6,
+   "n_points": [
+    1037,
+    1037,
+    49,
+    49,
+    49,
+    49
+   ],
+   "exactly_equal_to_original_renderer": true
+  },
+  "c": {
+   "n_lines": 3,
+   "n_points": [
+    1037,
+    49,
+    49
+   ],
+   "exactly_equal_to_original_renderer": true
+  },
+  "d": {
+   "n_lines": 3,
+   "n_points": [
+    82,
+    82,
+    82
+   ],
+   "exactly_equal_to_original_renderer": true
+  }
+ },
+ "summary_numbers_from_plotted_arrays": {
+  "a": {
+   "narrowB_1.1-1.2": {
+    "peak_relative": 2.007636560292044,
+    "peak_hz": 12.122229211972435
+   },
+   "broadB_1.1-1.2": {
+    "peak_relative": 1.0,
+    "peak_hz": 16.948574956593667
+   },
+   "broadB_2-4": {
+    "peak_relative": 1.7869705920219443,
+    "peak_hz": 61.24597127137877
+   }
+  },
+  "b": {
+   "gamma=10": {
+    "gamma2_errI_range_x0.1to10": [
+     0.7666802318335719,
+     5.474769375805799
+    ],
+    "gamma2_errQ_range_x0.1to10": [
+     0.9608831283314134,
+     5.71281761612592
+    ],
+    "gamma2_errI_at_x=1e-3": 56.935255359802504,
+    "gamma2_errQ_at_x=1e-3": 15.402122287880493
+   },
+   "gamma=30": {
+    "gamma2_errI_range_x0.1to10": [
+     0.7664448281428426,
+     5.577395540836849
+    ],
+    "gamma2_errQ_range_x0.1to10": [
+     0.9618266152169763,
+     5.827309174481121
+    ],
+    "gamma2_errI_at_x=1e-3": 44.09638773518847,
+    "gamma2_errQ_at_x=1e-3": 61.83984293435086
+   },
+   "gamma=100": {
+    "gamma2_errI_range_x0.1to10": [
+     0.7664185046352134,
+     5.589169003135108
+    ],
+    "gamma2_errQ_range_x0.1to10": [
+     0.9619343281952464,
+     5.840459306007961
+    ],
+    "gamma2_errI_at_x=1e-3": 44.71778468625565,
+    "gamma2_errQ_at_x=1e-3": 63.683375889823644
+   }
+  },
+  "c": {
+   "gamma=10": {
+    "gammaV/I_at_x=1": 0.915484257522551,
+    "gammaV/I_at_x=1e-3": 1.3780166773418068
+   },
+   "gamma=30": {
+    "gammaV/I_at_x=1": 0.9168015849998614,
+    "gammaV/I_at_x=1e-3": 6.38383468227122
+   },
+   "gamma=100": {
+    "gammaV/I_at_x=1": 0.9169513835924905,
+    "gammaV/I_at_x=1e-3": 6.507973489876806
+   }
+  },
+  "d": {
+   "1% rounded": {
+    "percent_at_highest_shown_GHz": [
+     2.6101572156825332,
+     29.24806341171324
+    ],
+    "GHz_at_half_of_that_value": 0.28361411889542504
+   },
+   "10% rounded": {
+    "percent_at_highest_shown_GHz": [
+     2.6101572156825332,
+     29.21742555666468
+    ],
+    "GHz_at_half_of_that_value": 0.5293258163679105
+   },
+   "10% flat-centred": {
+    "percent_at_highest_shown_GHz": [
+     2.6101572156825332,
+     29.217919947292852
+    ],
+    "GHz_at_half_of_that_value": 0.5320105560425986
+   }
+  }
+ }
+}

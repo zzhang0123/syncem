@@ -1,0 +1,57 @@
+{
+ "nu0_hz": 13.99624492867693,
+ "layout": {
+  "panel_width_pt": 108.43,
+  "spacing_pt": [
+   35.89,
+   35.89
+  ],
+  "min_clear_gap_pt": [
+   6.0,
+   6.0
+  ]
+ },
+ "summary": {
+  "gamma=10": {
+   "gamma2_err_I_range_x0.1-10": [
+    0.7666802318335719,
+    5.474769375805799
+   ],
+   "gamma2_err_Q_range_x0.1-10": [
+    0.9608831283314134,
+    5.71281761612592
+   ],
+   "gamma2_err_IQ_max_at_x1e-3": 56.935255359802504
+  },
+  "gamma=30": {
+   "gamma2_err_I_range_x0.1-10": [
+    0.7664448281428426,
+    5.577395540836849
+   ],
+   "gamma2_err_Q_range_x0.1-10": [
+    0.9618266152169763,
+    5.827309174481121
+   ],
+   "gamma2_err_IQ_max_at_x1e-3": 61.83984293435086
+  },
+  "gamma=100": {
+   "gamma2_err_I_range_x0.1-10": [
+    0.7664185046352134,
+    5.589169003135108
+   ],
+   "gamma2_err_Q_range_x0.1-10": [
+    0.9619343281952464,
+    5.840459306007961
+   ],
+   "gamma2_err_IQ_max_at_x1e-3": 63.683375889823644
+  }
+ },
+ "inputs": {
+  "panel_a": "1db7ddbf64fc5dc72f362bdb49f4e67a7a11d5300f65d9c63089c5e153a39e15",
+  "continuum": "aad5d7140bfa7e66818a0659c3982b6496fb18e87e439e7375e2feceba55cd12"
+ },
+ "outputs": {
+  "classical_limit.pdf": "b334386ee7af06a36ca6770d837e021da53ff9d467ee636074194271e1c0255a",
+  "classical_limit.png": "fcc684e2e54110d70dc0cf17274871226117942912dcd099e81f5d6ced21777d"
+ }
+}
