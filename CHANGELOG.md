@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Classical-model study
+
+- Fig. 6(c) shows the data and the free-moment fit at 0.01% noise, and its
+  error panel shows that noise level only. The fit-range labels give the
+  noise level of each panel.
+
 ## 0.7.5 (2026-11-13)
 
 ### Classical-model study

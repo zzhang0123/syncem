@@ -1,6 +1,6 @@
 """CMB-window figure: electron families fitted over 1-40 GHz and free moments fitted over 10-300 GHz.
 
-Three columns, 1% noise.
+Three columns, 1% noise in (a, b) and 0.01% noise in (c).
 (a) E2, smoothly broken power law, and (b) E3, index mixture, from extrap_curves.npz
 (extrap_curves.py, first noise realisation): intensity divided by a power law fitted to the truth
 over 1-40 GHz, with the fitted data, the truth, the correct electron family and one incorrect
@@ -13,10 +13,9 @@ the prediction-channel errors reproduce the saved |dI|/I arrays of fits_extrap_p
 first realisation reproduces the dense curves of extrap_curves.npz, and the two grids agree at
 300 GHz.
 (c) E2 fitted with free moments over 10-300 GHz, from fits_cmb_products.npz (fits_cmb.py): the same
-ratio with a power law fitted to the truth over 10-300 GHz, the fitted data and the fit at 1%
+ratio with a power law fitted to the truth over 10-300 GHz, the fitted data and the fit at 0.01%
 noise. Below it, at half its height, the intensity error |fit - true|/I_j in per cent in each of
-the 41 channels (21 fitted, 20 withheld) at 1% and 0.01% noise (one realisation, scaled), with the
-two noise levels as reference. Panel (c) has no shading, since the whole window is fitted.
+the 41 channels (21 fitted, 20 withheld) at 0.01% noise, with that noise level as reference. Panel (c) has no shading, since the whole window is fitted.
 
 The 500-realisation statistics of the drawn families (in-band chi2/dof, rejection rate, median
 and 16-84% error at 40 and 300 GHz, signed 16-84% range of I_pred/I - 1 at 300 GHz) are recorded
@@ -69,13 +68,14 @@ OUT_JSON = HERE / "fig_cmb_extrapolation_results.json"
 
 TAG = "0.01"
 CMB_TAGS = ("0.01", "0.0001")
+TAG_C = "0.0001"  # noise level drawn in (c)
 NAME = "cmb_extrapolation"
 NU_LO, NU_FIT_HI, NU_HI = 0.9, 40.0, 330.0  # GHz: x range of (a, b) and fit-band edge
 NU_LO_C = 9.0  # GHz: lower x limit of (c)
-ERR_LIM_C = (1e-5, 40.0)  # intensity error in (c), per cent of I_j; the lowest 0.01%-noise channel is 1.3e-5 %
-ERR_TICKS_C = {1e-4: r"$10^{-4}$", 1e-2: "0.01", 1.0: "1"}  # the Fig. 5 error axis
+ERR_LIM_C = (5e-6, 0.3)  # intensity error in (c), per cent of I_j; the lowest 0.01%-noise channel is 1.3e-5 %
+ERR_TICKS_C = {1e-4: r"$10^{-4}$", 1e-2: "0.01"}  # the Fig. 5 error axis
 ALPHA_WRONG, ALPHA_RIGHT = 0.25, 0.33  # 16-84% bands of the drawn families
-SED_LIM = {"E2": (0.56, 1.1), "E3": (0.97, 1.11), "c": (0.955, 1.04)}  # no error bar or band clipped
+SED_LIM = {"E2": (0.56, 1.1), "E3": (0.97, 1.11), "c": (0.965, 1.02)}  # no error bar or band clipped
 FS = 8
 TEXT_GREY = "#555555"
 WRONG_TEXT = "#A84200"  # darkened vermilion for text: darker than the grey labels in greyscale
@@ -241,29 +241,27 @@ def sed_panel(ax, cv, ens, right, wrong, title, bands):
 
 
 def sed_panel_c(ax, zc) -> dict:
-    """(c): truth, 1% data on the 21 fitted channels and the free-moment fit at 1% noise."""
+    """(c): truth, 0.01% data on the 21 fitted channels and the free-moment fit at 0.01% noise."""
     nu, S, fi = zc["centres"] / 1e9, zc["S_direct"][:, 0], zc["fit_idx"]
     ref = reference_law(nu, S, hi=NU_HI)
     ax.plot(nu, S / ref(nu), **TRUTH_KW)
-    ax.plot(nu, zc["pred_0.01"][:, 0] / ref(nu), color=FREE, lw=1.2, ls=LS_FREE, zorder=4,
+    ax.plot(nu, zc[f"pred_{TAG_C}"][:, 0] / ref(nu), color=FREE, lw=1.2, ls=LS_FREE, zorder=4,
             path_effects=FREE_HALO)
-    ax.errorbar(nu[fi], zc["data_fit_0.01"][:, 0] / ref(nu[fi]), yerr=zc["sigma_0.01"][fi, 0] / ref(nu[fi]),
+    ax.errorbar(nu[fi], zc[f"data_fit_{TAG_C}"][:, 0] / ref(nu[fi]), yerr=zc[f"sigma_{TAG_C}"][fi, 0] / ref(nu[fi]),
                 **DATA_KW)
     freq_axis(ax, labels=False, lo=NU_LO_C, ticks=(10, 30, 100, 300), shade=False)
     fs.panel_title(ax, TITLE_C)
     ax.set_ylim(*SED_LIM["c"])
-    ax.text(0.5, 0.04, "fit: 10--300 GHz", transform=ax.transAxes, color=TEXT_GREY, ha="center", va="bottom",
+    ax.text(0.5, 0.04, r"fit: 10--300 GHz, $0.01\%$ noise", transform=ax.transAxes, color=TEXT_GREY, ha="center", va="bottom",
             fontsize=FS)
     return {"truth_over_law_min_max": [float(np.min(S / ref(nu))), float(np.max(S / ref(nu)))]}
 
 
 def error_panel_c(ax, zc, err) -> None:
-    """(c) lower panel: per-channel intensity error in per cent at 1% (heavy) and 0.01% (thin) noise."""
+    """(c) lower panel: per-channel intensity error in per cent at the 0.01% noise of the upper panel."""
     nu = zc["centres"] / 1e9
-    for pct in (1.0, 1e-2):
-        ax.axhline(pct, color=NOISE_GREY, lw=fs.LW_REF, ls=NOISE_LS, zorder=1)
-    ax.plot(nu, 100 * err["0.01"], color=FREE, lw=1.3, zorder=3)
-    ax.plot(nu, 100 * err["0.0001"], color=FREE_LOW, lw=0.75, zorder=3)
+    ax.axhline(100 * float(TAG_C), color=NOISE_GREY, lw=fs.LW_REF, ls=NOISE_LS, zorder=1)
+    ax.plot(nu, 100 * err[TAG_C], color=FREE, lw=1.3, zorder=3)
     freq_axis(ax, labels=True, lo=NU_LO_C, ticks=(10, 30, 100, 300), shade=False)
     ax.set_yscale("log")
     ax.set_ylim(*ERR_LIM_C)
@@ -282,11 +280,10 @@ def label_panels(a, b, c, ce):
     b.text(300, 0.980, "ePL", color=WRONG_TEXT, ha="right", **kw)
     b.set_yticks([0.98, 1.0, 1.02, 1.04, 1.06, 1.08, 1.1])
     for ax, y, va in ((a, 0.04, "bottom"), (b, 0.96, "top")):  # clear of the data in each panel
-        ax.text(np.sqrt(NU_LO * NU_FIT_HI), y, "fit: 1--40 GHz", transform=ax.get_xaxis_transform(),
+        ax.text(np.sqrt(NU_LO * NU_FIT_HI), y, "fit: 1--40 GHz\n" r"$1\%$ noise", linespacing=1.1, transform=ax.get_xaxis_transform(),
                 color=TEXT_GREY, ha="center", va=va, **kw)
-    c.text(290, 1.026, "free moments", color=FREE_TEXT, ha="right", va="bottom", **kw)
-    ce.text(12, 2.6, r"$1\%$ noise", color=FREE_TEXT, ha="left", va="bottom", **kw)
-    ce.text(12, 2.0e-5, r"$0.01\%$ noise", color=FREE_TEXT, ha="left", va="bottom", **kw)
+    c.text(11, 1.012, "free moments", color=FREE_TEXT, ha="left", va="bottom", **kw)
+    ce.text(12, 1.3e-2, r"$0.01\%$ noise", color=TEXT_GREY, ha="left", va="bottom", **kw)
 
 
 def legend(fig):
@@ -298,7 +295,7 @@ def legend(fig):
                (Patch(color=fs.BLUE, alpha=ALPHA_RIGHT, lw=0), Patch(color=fs.VERMILION, alpha=ALPHA_WRONG, lw=0)),
                Line2D([], [], color=FREE, lw=1.2, ls=LS_FREE, path_effects=FREE_HALO),
                Line2D([], [], color=NOISE_GREY, lw=1.0, ls=NOISE_LS)]
-    labels = ["true spectrum", r"data, $1\%$ noise", "fit, correct electron family",
+    labels = ["true spectrum", "data", "fit, correct electron family",
               "fit, incorrect electron family", r"$16$--$84\%$ of 500 realisations", "fit, free moments",
               "noise level"]
     fig.legend(handles=handles, labels=labels, loc="upper center", ncol=4, bbox_to_anchor=(0.54, 1.0),
