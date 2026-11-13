@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.7.4 (2026-11-13)
+
+### Classical-model study
+
+- Fig. 6 (`fig_cmb_extrapolation.py`) has a figure legend in the style of
+  Fig. 5, with the family names kept on the curves.
+- Fig. 7 (`emission_windows.py`) names the curves of panel (a) in a legend
+  inside that panel, names the objects of (b) and (c) in their titles and
+  has shorter notes. The plotted values are unchanged.
+
 ## 0.7.3 (2026-11-13)
 
 ### Classical-model study
