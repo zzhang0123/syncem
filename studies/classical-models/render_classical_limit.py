@@ -1,10 +1,12 @@
 """Draw Fig. 3 (figures/classical_limit.{pdf,png}) in the notation of Sec. 3.4.
 
-No physics is recomputed. Inputs (SHA-256 pinned):
-  * recover_classical_limit_a_results.json   panel (a), from recover_classical_limit_a.py
-  * inputs/validation/harmonic_continuum_results.json   panels (b, c), theta = pi/3
+No physics is recomputed. Inputs:
+  * recover_classical_limit_a_results.json   panel (a), from recover_classical_limit_a.py. The
+    script SHA-256 recorded in its provenance block must match recover_classical_limit_a.py.
+  * inputs/validation/harmonic_continuum_results.json   panels (b, c), theta = pi/3, SHA-256 pinned.
 Style: lib/figure_style_paper.py, a byte copy of the manuscript's validation/figure_style.py.
-Writes figures/classical_limit.{pdf,png} and render_classical_limit_results.json.
+Writes figures/classical_limit.{pdf,png} and render_classical_limit_results.json, with the
+SHA-256 of both inputs, of the style module and of the figures and a provenance block.
 
 Panel (b) shows |lhs/rhs - 1| for the two sides of main.tex Eq. (3.10), the
 isotropic pitch average of the harmonic kernel against the continuum kernel K^iso_X,
@@ -20,6 +22,7 @@ from __future__ import annotations
 import hashlib
 import json
 import sys
+import time
 from pathlib import Path
 
 sys.dont_write_bytecode = True
@@ -37,13 +40,20 @@ sys.path.insert(0, str(HERE / "lib"))
 from figure_style_paper import (  # noqa: E402
     GREY, INK, LW, SERIES, WIDTH, configure, pack_row, panel_title, save,
     tighten_y_labels)
+from provenance import provenance, write_json  # noqa: E402
 
+T0 = time.time()
+PANEL_A = HERE / "recover_classical_limit_a_results.json"
+PANEL_A_PRODUCER = HERE / "recover_classical_limit_a.py"
 INPUTS = {
-    "panel_a": (HERE / "recover_classical_limit_a_results.json",
-                "1db7ddbf64fc5dc72f362bdb49f4e67a7a11d5300f65d9c63089c5e153a39e15"),
     "continuum": (HERE / "inputs/validation/harmonic_continuum_results.json",
                   "aad5d7140bfa7e66818a0659c3982b6496fb18e87e439e7375e2feceba55cd12"),
 }
+STYLE = HERE / "lib" / "figure_style_paper.py"
+
+
+def sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 E_ESU, M_E_G, C_CM_S = 4.80320471e-10, 9.1093837015e-28, 2.99792458e10
 B0_GAUSS = 5e-6
 NU0_HZ = E_ESU * B0_GAUSS / (2 * np.pi * M_E_G * C_CM_S)  # 13.996 Hz
@@ -59,10 +69,16 @@ LOW = (("narrowB_1.1-1.2", r"$1.1$--$1.2$, \ $4.5$--$5.5$", INK, "--"),
 def load() -> dict:
     data = {}
     for key, (path, digest) in INPUTS.items():
-        found = hashlib.sha256(path.read_bytes()).hexdigest()
+        found = sha256(path)
         if found != digest:
             raise ValueError(f"{key}: SHA-256 {found} != pinned {digest} ({path})")
         data[key] = json.loads(path.read_text())
+    panel_a = json.loads(PANEL_A.read_text())
+    recorded, found = panel_a["provenance"]["script_sha256"], sha256(PANEL_A_PRODUCER)
+    if recorded != found:
+        raise ValueError(f"{PANEL_A.name} was written by a different {PANEL_A_PRODUCER.name} "
+                         f"(recorded SHA-256 {recorded}, file {found}); rerun it")
+    data["panel_a"] = panel_a
     return data
 
 
@@ -167,11 +183,11 @@ def main() -> None:
     label_gammas(ax_c, curves, "v_over_i", 0.3, 1.55)
     save(fig, "classical_limit", WIDTH)
     record = dict(nu0_hz=NU0_HZ, layout=layout, summary=summary(curves),
-                  inputs={k: v[1] for k, v in INPUTS.items()},
-                  outputs={n: hashlib.sha256((HERE / "figures" / n).read_bytes()).hexdigest()
+                  outputs={n: sha256(HERE / "figures" / n)
                            for n in ("classical_limit.pdf", "classical_limit.png")})
-    (HERE / "render_classical_limit_results.json").write_text(json.dumps(record, indent=1))
-    print(json.dumps(record, indent=1))
+    record["provenance"] = provenance(__file__, T0, inputs=[PANEL_A, *(p for p, _ in INPUTS.values()), STYLE])
+    write_json(HERE / "render_classical_limit_results.json", record)
+    print(json.dumps({k: v for k, v in record.items() if k != "provenance"}, indent=1))
 
 
 if __name__ == "__main__":

@@ -853,5 +853,28 @@
    "peak_hz": 61.24597127137877,
    "manifest_peak_hz": 61.24597127137877
   }
+ },
+ "provenance": {
+  "script": "recover_classical_limit_a.py",
+  "script_sha256": "7175ac3bba37512de53a942b7f8f0009cbf232c34e2e1463677f5e3360916906",
+  "lib_sha256": {
+   "kernels.py": "b0983233f8fee93b12b10c299c0ea0d0011d72a106884029ec46107ba4121570",
+   "config.py": "78aaca6292cd15db1d820d25651c288ed47d14213b8da3d55440b7d4546e887c",
+   "basis.py": "438afd89638545dbddfd9acf51cbef67d67d8484a24dcd28d2a1755b6697eace",
+   "ensembles.py": "608dc23a9f795bd7cf4af10b84bfb618c41d3d0d5d858e878aacb410fcbc7c60",
+   "provenance.py": "32dc912a4bc75a4460d6264b1ffcf8e278e7da1c6db8e0a43e810fa31f737590"
+  },
+  "inputs_sha256": {
+   "inputs/manuscript-fig3/classical_limit_11b2f95.pdf": "4cde88a2540f6d8ac8d356ec4e9679acac886f1bf56d15eaa57505b0fa7f3845",
+   "inputs/manuscript-fig3/render_old_panels_manifest.json": "f7175c4d2e69cdb87fe3a8d9360995e3c250a1cab7aa17b60e4596b1cdeae12e"
+  },
+  "versions": {
+   "python": "3.12.9",
+   "numpy": "2.3.5",
+   "scipy": "1.16.3",
+   "pdfminer.six": "20260107"
+  },
+  "wall_clock_s": 0.0331881046295166,
+  "finished": "2026-11-13T04:17:53+0000"
  }
 }

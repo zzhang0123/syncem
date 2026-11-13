@@ -1,7 +1,7 @@
 """Recover the Fig. 3(a) curves from the vector PDF drawn by the manuscript's render_old_panels.py.
 
-The generator input of that panel (smooth-forward/results_fine.json in a removed Codex
-worktree) no longer exists. Matplotlib wrote each 105-point curve as one unsimplified
+The harmonic pipeline output behind that panel (smooth-forward/results_fine.json) is no
+longer available. Matplotlib wrote each 105-point curve as one unsimplified
 PDF path (fewer than 128 vertices), so the data coordinates follow exactly from the
 axis transform. The panel had log axes with xlim = (3, 1000) Hz and ylim = (1e-4, 100).
 
@@ -12,6 +12,9 @@ The PDF is a byte copy of figures/classical_limit.pdf at manuscript commit 11b2f
 Vertices that matplotlib clipped at the canvas edge lie below the axes and are kept as
 recovered so that a redraw with ymin >= 1e-4 reproduces the visible curves.
 
+Writes recover_classical_limit_a_results.json with a provenance block that also records the
+pdfminer.six version.
+
 Run from this directory:  python recover_classical_limit_a.py
 """
 
@@ -19,13 +22,20 @@ from __future__ import annotations
 
 import hashlib
 import json
+import sys
+import time
 from pathlib import Path
 
 import numpy as np
+import pdfminer
 from pdfminer.high_level import extract_pages
 from pdfminer.layout import LTCurve
 
 HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE / "lib"))
+from provenance import provenance, write_json  # noqa: E402
+
+T0 = time.time()
 SOURCE = HERE / "inputs/manuscript-fig3/classical_limit_11b2f95.pdf"
 MANIFEST = HERE / "inputs/manuscript-fig3/render_old_panels_manifest.json"
 OUT = HERE / "recover_classical_limit_a_results.json"
@@ -105,5 +115,7 @@ def recover() -> dict:
 
 if __name__ == "__main__":
     result = recover()
-    OUT.write_text(json.dumps(result, indent=1))
+    result["provenance"] = provenance(__file__, T0, inputs=(SOURCE, MANIFEST))
+    result["provenance"]["versions"]["pdfminer.six"] = pdfminer.__version__
+    write_json(OUT, result)
     print(json.dumps(result["checks"], indent=1))

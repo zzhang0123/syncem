@@ -46,12 +46,32 @@
    "gamma2_err_IQ_max_at_x1e-3": 63.683375889823644
   }
  },
- "inputs": {
-  "panel_a": "1db7ddbf64fc5dc72f362bdb49f4e67a7a11d5300f65d9c63089c5e153a39e15",
-  "continuum": "aad5d7140bfa7e66818a0659c3982b6496fb18e87e439e7375e2feceba55cd12"
- },
  "outputs": {
   "classical_limit.pdf": "b334386ee7af06a36ca6770d837e021da53ff9d467ee636074194271e1c0255a",
   "classical_limit.png": "fcc684e2e54110d70dc0cf17274871226117942912dcd099e81f5d6ced21777d"
+ },
+ "provenance": {
+  "script": "render_classical_limit.py",
+  "script_sha256": "7564199481fc1d873fb9d4ee04eb0a77c290a94346169b6d4f88367ea52cb987",
+  "lib_sha256": {
+   "kernels.py": "b0983233f8fee93b12b10c299c0ea0d0011d72a106884029ec46107ba4121570",
+   "config.py": "78aaca6292cd15db1d820d25651c288ed47d14213b8da3d55440b7d4546e887c",
+   "basis.py": "438afd89638545dbddfd9acf51cbef67d67d8484a24dcd28d2a1755b6697eace",
+   "ensembles.py": "608dc23a9f795bd7cf4af10b84bfb618c41d3d0d5d858e878aacb410fcbc7c60",
+   "provenance.py": "32dc912a4bc75a4460d6264b1ffcf8e278e7da1c6db8e0a43e810fa31f737590"
+  },
+  "inputs_sha256": {
+   "recover_classical_limit_a_results.json": "1d44c06c0c8af3ec22bb9e4e7f8f964d190498baab8bcde056bfa3aa826e69d6",
+   "inputs/validation/harmonic_continuum_results.json": "aad5d7140bfa7e66818a0659c3982b6496fb18e87e439e7375e2feceba55cd12",
+   "lib/figure_style_paper.py": "9bf0aa49a7b84b4c382588b915c6db6b49b6cd6d411dd8266987270c0f9262e3"
+  },
+  "versions": {
+   "python": "3.12.9",
+   "numpy": "2.3.5",
+   "scipy": "1.16.3",
+   "matplotlib": "3.10.8"
+  },
+  "wall_clock_s": 0.6264650821685791,
+  "finished": "2026-11-13T04:20:00+0000"
  }
 }
