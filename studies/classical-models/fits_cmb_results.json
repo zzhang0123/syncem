@@ -1,0 +1,87 @@
+{
+ "description": "Free-moment fit of E2 over the 10-300 GHz window, for Fig. 6(c).\n\nThe fit uses the fits.py machinery (UPRE rank, whitened TSVD, N = 2 separable basis) with the\nchannels of config.CMB: 41 logarithmically spaced centres over 10-300 GHz, of which the 21 even\nchannels are fitted and the 20 odd channels are withheld. No electron family is assumed.\nThe basis keeps the energy cells this window is sensitive to, cells 6-19 of the 19-cell grid\n(gamma >= edges[5]), 42 energy columns. Truth, moments and columns are computed on the full\ngrid and the retained cells are selected, so no electron is reassigned between cells. The script\nrecords the largest contribution of the omitted cells to I_j (omitted_cells_max_over_I).\n\nNoise: one seeded realisation (paper seed, the standard normals of fits.seeded_noise) scaled\nto a standard deviation of 1% and 0.01% of I_j, so both noise levels share one realisation.\nFor each level the JSON gives the rank R*, chi2_fit and its degrees of freedom, and the\nlargest |fit - true| over the 41 channels relative to I_j (Stokes I alone and I, Q, U).\n\nReads nothing. Writes fits_cmb_results.json and fits_cmb_products.npz (channel centres, fitted\nchannel indices, true I/Q/U, fitted data and noise sd at 1%, predictions at both levels).\nRun: python fits_cmb.py\n",
+ "ensemble": "E2",
+ "noise_fracs": [
+  0.01,
+  0.0001
+ ],
+ "config": {
+  "nu_lo": 10000000000.0,
+  "nu_hi": 300000000000.0,
+  "n_channels": 41,
+  "chan_half": 0.2,
+  "n_chan_nodes": 400,
+  "b_kind": "uniform",
+  "b_lo": 4.0,
+  "b_hi": 6.0,
+  "b_rms": 5.0,
+  "n_b": 16,
+  "maxwell_cut": 8.0,
+  "eta_max": 0.5,
+  "n_eta": 12,
+  "azimuth_amp": 0.8,
+  "azimuth_phase": 0.25,
+  "screen_mean": 8.0,
+  "screen_sd": 0.5,
+  "noise_frac": 0.01,
+  "seed": 20260928,
+  "gamma_lo": 300.0,
+  "gamma_hi": 2962642.632683605,
+  "n_bins": 19,
+  "ref_slope": 2.6,
+  "azimuth_factor": [
+   0.3510330247561491,
+   0.1917702154416812
+  ],
+  "Z1": 1.2069003224378763,
+  "h_b": 0.2420476245964176,
+  "mean_b2_muG2": 25.333333333333336,
+  "mean_bperp_muG": 4.783057387452592
+ },
+ "retained_cells": {
+  "first_zero_based": 5,
+  "gamma_lo": 3375.364915660396,
+  "n_cells": 14,
+  "n_energy_columns": 42
+ },
+ "omitted_cells_max_over_I": 3.300467252078702e-20,
+ "summary": {
+  "0.01": {
+   "R_star": 7,
+   "chi2_fit": 51.335782164678676,
+   "dof_fit": 56,
+   "max_dI_over_I": 0.012811788862944509,
+   "max_IQU_err_over_I": 0.012811788862944509,
+   "rms_held_dI_over_I": 0.0035383570554322606
+  },
+  "0.0001": {
+   "R_star": 14,
+   "chi2_fit": 42.626566886901855,
+   "dof_fit": 49,
+   "max_dI_over_I": 0.0002520516671643666,
+   "max_IQU_err_over_I": 0.0002520516671643666,
+   "rms_held_dI_over_I": 8.158299629654676e-05
+  }
+ },
+ "provenance": {
+  "script": "fits_cmb.py",
+  "script_sha256": "003ab6a835e73b3adc1369bc02ed72191f1020ab42b7d7e898af7b3b31b0c2e3",
+  "lib_sha256": {
+   "kernels.py": "b0983233f8fee93b12b10c299c0ea0d0011d72a106884029ec46107ba4121570",
+   "config.py": "78aaca6292cd15db1d820d25651c288ed47d14213b8da3d55440b7d4546e887c",
+   "basis.py": "438afd89638545dbddfd9acf51cbef67d67d8484a24dcd28d2a1755b6697eace",
+   "ensembles.py": "608dc23a9f795bd7cf4af10b84bfb618c41d3d0d5d858e878aacb410fcbc7c60",
+   "provenance.py": "32dc912a4bc75a4460d6264b1ffcf8e278e7da1c6db8e0a43e810fa31f737590"
+  },
+  "inputs_sha256": {
+   "fits.py": "58df6f2a0060fc26f9c54c7384102fb4c9a3aa6526f45bcce9d8bfbf546e2d7e"
+  },
+  "versions": {
+   "python": "3.12.9",
+   "numpy": "2.3.5",
+   "scipy": "1.16.3"
+  },
+  "wall_clock_s": 2.039681911468506,
+  "finished": "2026-11-13T16:43:58+0000"
+ }
+}

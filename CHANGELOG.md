@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Classical-model study
+
+- Fig. 6 has a panel (c), the free-moment fit of E2 over 10-300 GHz from the
+  new `fits_cmb.py`, with its error panel. The error panels under (a) and (b)
+  are removed. The numbers of (a) and (b) are unchanged.
+
 ## 0.7.4 (2026-11-13)
 
 ### Classical-model study
