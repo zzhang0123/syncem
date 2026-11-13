@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.7.1 (unreleased)
+## 0.7.1 (2026-11-13)
 
 ### Fixed
 
@@ -65,7 +65,7 @@
   in place of the bytes of the two files. The earlier check failed on a
   docstring edit already present at 0.6.0.
 - The README maps each figure and table of the paper to its scripts and
-  outputs. The npz products and figures are to be attached to the v0.7.1
+  outputs. The npz products and figures are attached to the v0.7.1
   release as `classical-models-outputs-v0.7.1.tar.gz`.
 
 ## 0.7.0 (2026-11-09)
