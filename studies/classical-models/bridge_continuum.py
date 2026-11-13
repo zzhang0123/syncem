@@ -1,4 +1,4 @@
-"""Rybicki-Lightman continuum channel kernel for the Sec. 4.3 radio-fit configuration.
+"""Rybicki-Lightman continuum channel kernel for the configuration of the frozen harmonic radio fit.
 
 Every ensemble, channel, screen and basis setting copies radio_numerics.py of the
 harmonic pipeline (inputs/harmonic-radio-fit/radio_numerics.py; the pipeline's file has sha

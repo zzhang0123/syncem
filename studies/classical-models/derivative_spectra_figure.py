@@ -178,8 +178,8 @@ def _place_labels(ax, lines, texts, near=None, fixed=None) -> None:
     Candidate label boxes lie on a grid over the panel (1 pt across, 0.25 pt up), outside the shaded band. A box is accepted when its own curve is within
     `reach` and every other curve is at least `extra` farther away, so the nearest curve identifies the cell
     without relying on colour. The best box maximises the clearance from the other curves beyond its distance to its own (capped at 20 pt).
-    Labels with the fewest acceptable boxes are placed first; the tries relax reach and clearance in turn.
-    near maps a cell to a preferred frequency [GHz]; boxes centred farther than LABEL_NEAR_DEX from it are used
+    Labels with the fewest acceptable boxes are placed first. The tries relax reach and clearance in turn.
+    near maps a cell to a preferred frequency [GHz]. Boxes centred farther than LABEL_NEAR_DEX from it are used
     only if none near it is acceptable. fixed maps a cell to a hand-placed label centre (GHz, value).
     """
     near, fixed = near or {}, fixed or {}

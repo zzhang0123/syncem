@@ -1,4 +1,4 @@
-"""Harmonic-versus-continuum bridge for the paper's linear radio basis (Sec. 4.3 fit).
+"""Harmonic-versus-continuum bridge for the paper's linear radio basis (frozen harmonic fit).
 
 Loads the frozen harmonic response matrix and truth of the manuscript fit
 (inputs/harmonic-radio-fit, read only), rebuilds the same matrix with the
@@ -596,7 +596,7 @@ def main() -> None:
              "representation": np.max(np.abs(h["S"] - np.einsum("jsk,k->js", h["C"], h["a"])), axis=1) / h["S"][:, 0]}
     paths = figure(pc, coef_fit["alpha_beta_delta"], env_i, env_p, diffs, E_i, E_p, h["S"], fits_fd["_fits"])
     results = {
-        "description": "Harmonic (paper, adopted quadrature) vs Rybicki-Lightman continuum response for the Sec. 4.3 radio fit",
+        "description": "Harmonic (paper, adopted quadrature) vs Rybicki-Lightman continuum response for the frozen harmonic radio fit",
         "load_checks": load_checks,
         "continuum_quadrature": ctruth["quadrature"],
         "column_differences_over_column_max_I": columns,

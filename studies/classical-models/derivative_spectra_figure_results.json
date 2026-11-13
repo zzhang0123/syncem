@@ -42,7 +42,7 @@
  },
  "provenance": {
   "script": "derivative_spectra_figure.py",
-  "script_sha256": "6e6e34c9a8878d4cd636d8593fcf0bd616dd9e7b233f997c0c445adbd20817da",
+  "script_sha256": "36f268b127464817567c8ef974b40aaa9cf974eb77aa2f63fefbf036efd4e55d",
   "lib_sha256": {
    "kernels.py": "b0983233f8fee93b12b10c299c0ea0d0011d72a106884029ec46107ba4121570",
    "config.py": "78aaca6292cd15db1d820d25651c288ed47d14213b8da3d55440b7d4546e887c",
@@ -59,7 +59,7 @@
    "scipy": "1.16.3",
    "matplotlib": "3.10.8"
   },
-  "wall_clock_s": 5.927639007568359,
-  "finished": "2026-11-13T02:53:19+0000"
+  "wall_clock_s": 5.991879940032959,
+  "finished": "2026-11-13T04:20:07+0000"
  }
 }
