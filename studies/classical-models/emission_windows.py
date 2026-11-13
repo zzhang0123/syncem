@@ -15,8 +15,8 @@ on which the fit was tested, 10 < nu/nu_c < 3e10 with nu_c = e B/(2 pi m c) (up 
 The results JSON records the intensity relative to the power law at fixed frequencies (read
 from the saved curves), |V|/I, the screen rotation of the polarisation angle at 1 GHz
 (lambda^2 times the mean rotation measure) and the screen depolarisation factor at 0.2 GHz.
-The 0.2 GHz of the panel (b) annotation is placed by hand and is recorded as such. Text positions
-of all labels are placed by hand. Style: lib/figure_style_paper.py.
+The 0.2 GHz quoted for the depolarisation is read by eye and is recorded as such. A legend inside (a)
+names its curves, and the titles of (b) and (c) name what they show. Text positions of all labels are placed by hand. Style: lib/figure_style_paper.py.
 
 Writes emission_windows_results.json, emission_windows_curves.npz and
 figures/emission_windows.{pdf,png}.
@@ -32,8 +32,8 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.patheffects as pe  # noqa: E402
 import matplotlib.pyplot as plt  # noqa: E402
+from matplotlib.lines import Line2D  # noqa: E402
 import numpy as np  # noqa: E402
 from scipy.integrate import quad  # noqa: E402
 from scipy.special import kv  # noqa: E402
@@ -184,9 +184,26 @@ def screen_values(ghz, c) -> dict:
             "depolarisation_annotation_note": "frequency placed by hand in the panel (b) text, not computed"}
 
 
-WINDOW_STYLE = [(RADIO, "radio band\n0.1–10 GHz", "#EFEFEF"),
-                (CMB_BAND, "CMB band\n10–300 GHz", "#DCDCDC")]
+WINDOW_STYLE = [(RADIO, "radio", "#EFEFEF"),
+                (CMB_BAND, "CMB", "#DCDCDC")]
 NOTE = "#6E6E6E"  # commentary text and leaders: darker than fs.GREY so it survives projection
+
+
+AGED = "#A34D84"  # E4-JP hue darkened so the line stays a data curve on the CMB band and in greyscale
+CURVE_STYLE = {"new_range": dict(color=fs.INK, lw=1.6),
+               "old_range": dict(color=fs.INK, lw=fs.LW, ls="--"),
+               "aged_E4JP": dict(color=AGED, lw=1.6, ls=(0, (6, 1.5, 1.2, 1.5)))}
+CURVE_LABEL = {"new_range": r"power law (E1), $300\le\gamma\le2.96\times10^6$",
+               "old_range": r"same power law, $300\le\gamma\le10^5$",
+               "aged_E4JP": r"aged spectrum (E4-JP), $\gamma_{\rm c}\approx2\times10^4$"}
+
+
+def _legend(ax) -> None:
+    """Legend of the intensity curves, inside panel (a) so that it belongs to that panel only."""
+    keys = ("new_range", "old_range", "aged_E4JP")
+    handles = [Line2D([], [], **CURVE_STYLE[k]) for k in keys]
+    ax.legend(handles=handles, labels=[CURVE_LABEL[k] for k in keys], loc="lower left", handlelength=2.6,
+              handletextpad=0.5, labelspacing=0.3, borderaxespad=0.2)
 
 
 def _windows(ax, label: bool) -> None:
@@ -220,32 +237,20 @@ def _leader_from_line(ax, text, i, xy, side="right") -> None:
 
 
 def _panel_intensity(ax, ghz, c) -> None:
-    aged = "#A34D84"  # E4-JP hue darkened so the line stays a data curve on the CMB band and in greyscale
-    aged_text = "#6E2F57"  # same hue, dark like the other curve labels (commentary stays mid-grey)
-    halo = [pe.withStroke(linewidth=1.5, foreground=WINDOW_STYLE[0][2])]
     ax.axhline(1.0, color=fs.GREY, lw=fs.LW_REF, ls=":")
-    ax.plot(ghz, c["old_range"]["I_over_PL"], color=fs.INK, lw=fs.LW, ls="--", zorder=2)
-    ax.plot(ghz, c["aged_E4JP"]["I_over_PL"], color=aged, lw=1.6, ls=(0, (6, 1.5, 1.2, 1.5)), zorder=2)
-    ax.plot(ghz, c["new_range"]["I_over_PL"], color=fs.INK, lw=1.6, zorder=3)
+    ax.plot(ghz, c["old_range"]["I_over_PL"], **CURVE_STYLE["old_range"], zorder=2)
+    ax.plot(ghz, c["aged_E4JP"]["I_over_PL"], **CURVE_STYLE["aged_E4JP"], zorder=2)
+    ax.plot(ghz, c["new_range"]["I_over_PL"], **CURVE_STYLE["new_range"], zorder=3)
     ax.set_yscale("log")
     ax.set_ylim(1e-3, 6)
     ax.set_yticks([1e-3, 1e-2, 1e-1, 1.0])
     ax.set_ylabel(r"Intensity / power law")
-    ax.text(8e5, 1.35, r"$300\le\gamma\le2.96\times10^6$ (wide energy range)", fontsize=8,
-            ha="right", va="bottom")
-    ax.text(8e2, 0.2, r"$300\le\gamma\le10^5$" + "\n(narrow energy range)", fontsize=8,
-            ha="left", va="center", linespacing=1.1)
-    ax.text(0.12, 0.012, "aged electrons (E4-JP)\n" + r"only up to $\gamma_{\rm c}\approx2\times10^4$",
-            fontsize=8, color=aged_text, ha="left", va="center", linespacing=1.1, path_effects=halo)
-    _leader(ax, "turnover at the critical\nfrequency of the least\nenergetic electrons\n"
-            r"($\gamma=300$, $\approx2$ MHz)",
-            xy=(2.6e-3, 0.6), xytext=(1.3e-3, 0.0065), va="center")
-    cut = ("cut-off near the critical\nfrequency of the most\nenergetic electrons\n"
-           r"($\gamma=10^5$ dashed, $2.96\times10^6$ solid)")
-    note = ax.text(2.0e3, 0.0045, cut, fontsize=8, color=NOTE, va="center", ha="left", linespacing=1.1)
+    _leader(ax, "low-energy turnover", xy=(2.6e-3, 0.6), xytext=(1.3e-3, 0.12), va="center")
+    note = ax.text(4.0e3, 0.012, "high-energy cut-off", fontsize=8, color=NOTE, va="center", ha="left")
     _leader_from_line(ax, note, 0, (7e2, 0.045), side="left")
     _leader_from_line(ax, note, 0, (6.0e5, 0.045))
     fs.panel_title(ax, r"(a) Intensity relative to a $\gamma^{-2.6}$ power law")
+    _legend(ax)
 
 
 def _panel_linear(axp, ghz, c) -> None:
@@ -260,12 +265,10 @@ def _panel_linear(axp, ghz, c) -> None:
     i3 = int(np.argmin(np.abs(ghz - 3e3)))
     axp.text(3e3, q[i3] + 0.02, r"$Q/I$", fontsize=8, ha="center", va="bottom")
     axp.text(3e3, u[i3] + 0.02, r"$U/I$", fontsize=8, ha="center", va="bottom", color=u_ink)
-    far = axp.text(1.5e-3, 0.315, "Faraday rotation\n(oscillations) and\ndepolarisation\n"
-                   "(below about 0.2 GHz)", fontsize=8, color=NOTE, ha="left", va="top", linespacing=1.1)
-    _leader_from_line(axp, far, 1, (0.33, 0.2))
-    axp.text(1.5e-3, -0.33, "same electrons as the\nsolid curve in (a)", fontsize=8,
-             color=NOTE, ha="left", va="bottom", linespacing=1.1)
-    fs.panel_title(axp, r"(b) Linear polarisation, single frequencies")
+    far = axp.text(1.5e-3, 0.3, "Faraday rotation\nand depolarisation", fontsize=8, color=NOTE,
+                   ha="left", va="top", linespacing=1.1)
+    _leader_from_line(axp, far, 0, (0.33, 0.2))
+    fs.panel_title(axp, r"(b) Linear polarisation of the power law (E1), single frequencies")
 
 
 def _panel_circular(axv, ghz, vI, valid) -> None:
@@ -275,7 +278,7 @@ def _panel_circular(axv, ghz, vI, valid) -> None:
     axv.set_yticks([1e-6, 1e-5, 1e-4, 1e-3])
     axv.set_ylabel("Circular\nfraction ($|V|/I$)")
     axv.text(4e-2, 5.5e-4, r"$\propto\nu^{-1/2}$", fontsize=8, ha="left", va="bottom")
-    fs.panel_title(axv, r"(c) Circular polarisation, one field direction ($\theta=75^\circ$, $B=5\,\mu$G)")
+    fs.panel_title(axv, r"(c) Circular polarisation of a $\gamma^{-2.6}$ power law, one field direction ($\theta=75^\circ$, $B=5\,\mu$G)")
 
 
 def plot(ghz, c, vI, valid, gc) -> None:

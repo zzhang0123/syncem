@@ -1,5 +1,5 @@
 {
- "description": "Where the reference ensembles emit, and where their spectra are cut off (schematic figure).\n\nMonochromatic continuum emission with the paper's default geometry (B ~ U[4, 6] muG,\neta ~ U[-1/2, 1/2], isotropic pitch angles, <e^{2 i phi}> = 0.4 e^{0.5 i}, Gaussian screen with\nmean 8 and sd 0.5 rad m^-2).  The directional continuum kernels are A_theta F(x) for I and\n-A_theta G(x) for Q in the field frame, x = nu / (nu_0 gamma^2 sin theta), nu_0 = 3 e B/(4 pi m c).\nThe script checks this monochromatic implementation against the study kernels (lib/basis.py)\non narrow channels.\n\nStokes V vanishes for the symmetric eta distribution.  Panel (c) shows |V|/I for one field\ninclination, theta = 75 deg, from the power-law fit of Pandya et al. (2016, Eq. 33), which is\nvalid where the spectrum follows the power law (fit error up to 25%) and is drawn over the range\non which the fit was tested, 10 < nu/nu_c < 3e10 with nu_c = e B/(2 pi m c) (up to about 420 GHz).\n\nThe results JSON records the intensity relative to the power law at fixed frequencies (read\nfrom the saved curves), |V|/I, the screen rotation of the polarisation angle at 1 GHz\n(lambda^2 times the mean rotation measure) and the screen depolarisation factor at 0.2 GHz.\nThe 0.2 GHz of the panel (b) annotation is placed by hand and is recorded as such. Text positions\nof all labels are placed by hand. Style: lib/figure_style_paper.py.\n\nWrites emission_windows_results.json, emission_windows_curves.npz and\nfigures/emission_windows.{pdf,png}.\nRun: python emission_windows.py   (python emission_windows.py --replot redraws from the npz only)\n",
+ "description": "Where the reference ensembles emit, and where their spectra are cut off (schematic figure).\n\nMonochromatic continuum emission with the paper's default geometry (B ~ U[4, 6] muG,\neta ~ U[-1/2, 1/2], isotropic pitch angles, <e^{2 i phi}> = 0.4 e^{0.5 i}, Gaussian screen with\nmean 8 and sd 0.5 rad m^-2).  The directional continuum kernels are A_theta F(x) for I and\n-A_theta G(x) for Q in the field frame, x = nu / (nu_0 gamma^2 sin theta), nu_0 = 3 e B/(4 pi m c).\nThe script checks this monochromatic implementation against the study kernels (lib/basis.py)\non narrow channels.\n\nStokes V vanishes for the symmetric eta distribution.  Panel (c) shows |V|/I for one field\ninclination, theta = 75 deg, from the power-law fit of Pandya et al. (2016, Eq. 33), which is\nvalid where the spectrum follows the power law (fit error up to 25%) and is drawn over the range\non which the fit was tested, 10 < nu/nu_c < 3e10 with nu_c = e B/(2 pi m c) (up to about 420 GHz).\n\nThe results JSON records the intensity relative to the power law at fixed frequencies (read\nfrom the saved curves), |V|/I, the screen rotation of the polarisation angle at 1 GHz\n(lambda^2 times the mean rotation measure) and the screen depolarisation factor at 0.2 GHz.\nThe 0.2 GHz quoted for the depolarisation is read by eye and is recorded as such. A legend inside (a)\nnames its curves, and the titles of (b) and (c) name what they show. Text positions of all labels are placed by hand. Style: lib/figure_style_paper.py.\n\nWrites emission_windows_results.json, emission_windows_curves.npz and\nfigures/emission_windows.{pdf,png}.\nRun: python emission_windows.py   (python emission_windows.py --replot redraws from the npz only)\n",
  "I_over_PL_at_GHz": {
   "0.1": {
    "old_range": 0.9998027583886229,
@@ -73,12 +73,12 @@
  "curves_npz": "emission_windows_curves.npz",
  "curves_npz_sha256": "be9a727a54c091bf2897fc8244a1b38b2757e6d6dcff631cd37ae632c516c557",
  "figures": {
-  "figures/emission_windows.pdf": "a3ed63ef0d4b9bf8d9cc58f81cd07e5ad9a6c6bcffd289e44f10e81b47ad645f",
-  "figures/emission_windows.png": "74b6a773d3b02ef95f99d1ad39d053c27321315eb1e1b974b48ba4c0ec7a10b2"
+  "figures/emission_windows.pdf": "f46f7b1e045a8528b8b82f1a5296d8669fa4837a1d235c2ea00dec05dbdc3435",
+  "figures/emission_windows.png": "d25a8a09e2bcdff7273732de479288c78ed0f1cbc49345c484339220277c202e"
  },
  "provenance": {
   "script": "emission_windows.py",
-  "script_sha256": "780fb56afc91a9a853f32e782d487deb400ad1d122624745d415864997c8d7c1",
+  "script_sha256": "ab997fb7b0fd24df78fcacec1d0627017a8f897bfafc8e169213ac4f58082952",
   "lib_sha256": {
    "kernels.py": "b0983233f8fee93b12b10c299c0ea0d0011d72a106884029ec46107ba4121570",
    "config.py": "78aaca6292cd15db1d820d25651c288ed47d14213b8da3d55440b7d4546e887c",
@@ -95,7 +95,7 @@
    "scipy": "1.16.3",
    "matplotlib": "3.10.8"
   },
-  "wall_clock_s": 453.1613199710846,
-  "finished": "2026-11-13T14:28:46+0000"
+  "wall_clock_s": 453.6952519416809,
+  "finished": "2026-11-13T15:56:52+0000"
  }
 }
