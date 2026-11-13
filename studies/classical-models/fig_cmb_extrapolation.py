@@ -4,11 +4,11 @@ Two columns, (E2) smoothly broken power law and (E3) index mixture, 1% noise.
 Top row, from extrap_curves.npz (extrap_curves.py, first noise realisation): intensity divided by a
 power law fitted to the truth over 1-40 GHz, with the fitted data, the truth, the right electron
 model and one wrong electron model that the in-band chi2 accepts, over 1-300 GHz.
-Bottom row, from fits_extrap_products.npz and fits_extrap_results.json (fits_extrap.py): intensity
-error |dI|/I of the same two models (median and 16-84% band over realisations) with the 1% noise
-level as reference.
-Both rows share a 1-300 GHz logarithmic frequency axis whose fitted part (below 40 GHz, shaded) is
-drawn at one third of the logarithmic scale of the predicted part.
+Below each panel, at half its height, from fits_extrap_products.npz and fits_extrap_results.json
+(fits_extrap.py): intensity error |dI|/I of the same two models (median and 16-84% band over
+realisations) with the 1% noise level as reference.
+All panels share a uniform 1-300 GHz logarithmic frequency axis with the fitted part (below 40 GHz)
+shaded.
 The plotted medians and 84th percentiles are checked against the JSON summary, and the in-band
 chi2/dof, rejection rates and 300 GHz errors of the drawn families are recorded with the check.
 Text positions of the labels are placed by hand. Style: lib/figure_style_paper.py.
@@ -46,8 +46,8 @@ OUT_JSON = HERE / "fig_cmb_extrapolation_results.json"
 TAG = "0.01"
 NAME = "cmb_extrapolation"
 NU_LO, NU_FIT_HI, NU_HI = 0.9, 40.0, 330.0  # GHz: x range and fit-band edge
-K_FIT = 1.0 / 3.0  # logarithmic scale of the fitted part relative to the predicted part
-ERR_LIM = (6e-4, 0.6)  # intensity error, fraction of I
+ERR_LIM = (6e-4, 0.35)  # intensity error, fraction of I
+SED_LIM = {"E2": (0.56, 1.1), "E3": (0.97, 1.095)}  # intensity / power law, no in-band error bar clipped
 FS = 8
 TEXT_GREY = "#555555"
 WRONG_TEXT = "#A84200"  # darkened vermilion for text: darker than the grey labels in greyscale
@@ -55,7 +55,6 @@ LS_WRONG = (0, (4, 1.6))
 FIT_FILL = "#F2F2F2"
 NOISE_GREY = "#999999"
 ALPHA_WRONG, ALPHA_RIGHT = 0.25, 0.33
-RIGHT_LABEL_Y = {"E2": 3.6e-3, "E3": 2.4e-3}  # top of the right-model label, under its band
 TRUTH_KW = dict(color="#ADADAD", lw=3.2, solid_capstyle="butt", zorder=1)
 DATA_KW = dict(fmt="o", ms=2.0, color=fs.INK, ecolor=fs.INK, elinewidth=0.5, capsize=0, zorder=5)
 # (ensemble, right family, wrong family accepted by the in-band chi2, title)
@@ -86,24 +85,10 @@ def check_against_json(z, summ) -> dict:
     return out
 
 
-def _fwd(nu):
-    x = np.log(np.clip(nu, 1e-3, None))
-    return np.where(x < np.log(NU_FIT_HI), np.log(NU_FIT_HI) + K_FIT * (x - np.log(NU_FIT_HI)), x)
-
-
-def _inv(x):
-    x = np.asarray(x, dtype=float)
-    return np.exp(np.where(x < np.log(NU_FIT_HI), np.log(NU_FIT_HI) + (x - np.log(NU_FIT_HI)) / K_FIT, x))
-
-
-NU_FIT_MID = float(_inv(0.5 * (_fwd(NU_LO) + _fwd(NU_FIT_HI))))
-
-
 def freq_axis(ax, labels):
-    ax.set_xscale("function", functions=(_fwd, _inv))
+    ax.set_xscale("log")
     ax.set_xlim(NU_LO, NU_HI)
     ax.xaxis.set_major_locator(FixedLocator([1, 10, 40, 100, 300]))
-    ax.xaxis.set_minor_locator(FixedLocator([2, 3, 4, 5, 6, 7, 8, 9, 20, 30, 50, 60, 70, 80, 90, 200]))
     ax.xaxis.set_minor_formatter(NullFormatter())
     ax.axvspan(NU_LO, NU_FIT_HI, color=FIT_FILL, lw=0, zorder=0)
     ax.axvline(NU_FIT_HI, color=fs.GREY, lw=fs.LW_REF, zorder=0.5)
@@ -153,40 +138,39 @@ def error_panel(ax, z, ens, right, wrong):
     ax.yaxis.set_minor_formatter(NullFormatter())
 
 
-def label_sed(a, b):
-    kw = dict(fontsize=FS, linespacing=1.0)
-    a.text(1.1, 0.585, "data\n(1\\% noise)", color=fs.INK, ha="left", va="bottom", **kw)
-    a.text(300, 0.92, "truth", color=TEXT_GREY, ha="right", va="bottom", **kw)
-    a.text(300, 0.875, "right family (eSBPL)", color=fs.BLUE, ha="right", va="bottom", **kw)
-    a.text(48, 0.66, "wrong family (eLP),\naccepted in band", color=WRONG_TEXT, ha="left", va="center", **kw)
-    a.set_ylim(0.56, 1.1)
-    b.text(160, 1.059, "right family (eLP)", color=fs.BLUE, ha="right", va="bottom", **kw)
-    b.text(300, 1.050, "truth", color=TEXT_GREY, ha="right", va="top", **kw)
-    b.text(300, 1.0, "wrong family (ePL),\naccepted in band", color=WRONG_TEXT, ha="right", va="top", **kw)
+def label_sed(a, b, cv):
+    """Family names on the curves (their roles are in the caption) and the truth label."""
+    kw = dict(fontsize=FS)
+    a.text(1.1, 0.59, r"data (1\% noise)", color=fs.INK, **kw)
+    a.text(100, 0.94, "eSBPL", color=fs.BLUE, ha="right", **kw)
+    a.text(200, 0.59, "eLP", color=WRONG_TEXT, ha="right", **kw)
+    b.text(160, 1.077, "eLP", color=fs.BLUE, ha="right", **kw)
+    b.text(300, 0.991, "ePL", color=WRONG_TEXT, ha="right", **kw)
+    # E2: leader from below the curves to the truth at 300 GHz. E3: text under the truth curve,
+    # on the side away from the right-family curve, without a leader.
+    nu = cv["nu_dense"] / 1e9
+    truth = cv["truth_E2"][:, 0]
+    a.annotate("truth", xy=(300, float(truth[-1] / reference_law(nu, truth)(300))), xytext=(300, 0.815),
+               color=TEXT_GREY, ha="right", va="center", arrowprops=dict(arrowstyle="-", color=TEXT_GREY, lw=0.5),
+               **kw)
+    b.text(300, 1.046, "truth", color=TEXT_GREY, ha="right", va="top", **kw)
+    for ax, (ens, *_) in zip((a, b), PANELS):
+        ax.set_ylim(*SED_LIM[ens])
+    b.set_yticks([0.98, 1.0, 1.02, 1.04, 1.06, 1.08])
 
 
-def label_err(axes, z):
-    kw = dict(fontsize=FS, linespacing=1.0)
-    for ax, (ens, right, wrong, _) in zip(axes, PANELS):
-        ax.text(NU_FIT_MID, ERR_LIM[1] / 1.15, "fitted\n1--40 GHz", color=TEXT_GREY,
-                ha="center", va="top", **kw)
-        ax.text(NU_FIT_MID, 0.0108, "1\\% noise", color=TEXT_GREY, ha="center", va="bottom", **kw)
-        wmed = stats(z, ens, wrong)[2]
-        ax.text(300, wmed[-1] * 1.12, f"wrong ({wrong})", color=WRONG_TEXT, ha="right", va="bottom", **kw)
-        ax.text(300, RIGHT_LABEL_Y[ens], f"right ({right})", color=fs.BLUE, ha="right", va="top", **kw)
+def label_err(axes):
+    for ax in axes:
+        ax.text(np.sqrt(NU_FIT_HI), 0.06, "fit: 1--40 GHz", color=TEXT_GREY, ha="center", va="bottom", fontsize=FS)
+        ax.text(np.sqrt(NU_FIT_HI), 0.011, r"1\% noise", color=TEXT_GREY, ha="center", va="bottom", fontsize=FS)
 
 
 def layout(fig):
-    tot_w, tot_h = fig.get_figwidth() * 72, fig.get_figheight() * 72
-    left, gap, right_pad = 40.0, 30.0, 4.0
-    w = (tot_w - left - gap - right_pad) / 2
-    bottom, gap_rows, top = 27.0, 16.0, 14.0
-    h = (tot_h - bottom - gap_rows - top) / 2
-    rows = []
-    for y in (bottom + h + gap_rows, bottom):
-        rows.append([fig.add_axes([x / tot_w, y / tot_h, w / tot_w, h / tot_h])
-                     for x in (left, left + w + gap)])
-    return rows
+    """Two columns, each an intensity panel over an error panel of half its height."""
+    grid = fig.add_gridspec(2, 2, height_ratios=(2, 1), hspace=0.055, wspace=0.19, left=0.11, right=0.985,
+                            bottom=0.15, top=0.91)
+    top = [fig.add_subplot(grid[0, k]) for k in range(2)]
+    return top, [fig.add_subplot(grid[1, k], sharex=top[k]) for k in range(2)]
 
 
 def report(z, summ, sed) -> dict:
@@ -214,18 +198,17 @@ def main():
     summ = json.loads(RESULTS.read_text())["summary"]
     cv = np.load(CURVES)
     checks = check_against_json(z, summ)
-    fig = plt.figure(figsize=(fs.WIDTH, 3.9))
+    fig = plt.figure(figsize=(fs.WIDTH, 3.05))
     top, low = layout(fig)
     sed = {}
     for ax, (ens, right, wrong, title) in zip(top, PANELS):
         sed[ens] = sed_panel(ax, cv, ens, right, wrong, title)
-    for ax, (ens, right, wrong, _), letter in zip(low, PANELS, ("(c)", "(d)")):
+    for ax, (ens, right, wrong, _) in zip(low, PANELS):
         error_panel(ax, z, ens, right, wrong)
-        fs.panel_title(ax, letter)
-    label_sed(*top)
-    label_err(low, z)
+    label_sed(*top, cv)
+    label_err(low)
     top[0].set_ylabel(r"Intensity / power law")
-    low[0].set_ylabel(r"Intensity error $|\Delta I|/I$")
+    low[0].set_ylabel(r"Error $|\Delta I|/I$")
     fs.tighten_y_labels(top + low)
     values = report(z, summ, sed)
     (HERE / "figures").mkdir(exist_ok=True)

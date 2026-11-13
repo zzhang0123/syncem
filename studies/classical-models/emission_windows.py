@@ -9,7 +9,8 @@ on narrow channels.
 
 Stokes V vanishes for the symmetric eta distribution.  Panel (c) shows |V|/I for one field
 inclination, theta = 75 deg, from the power-law fit of Pandya et al. (2016, Eq. 33), which is
-valid where the spectrum follows the power law (fit error up to 25%).
+valid where the spectrum follows the power law (fit error up to 25%) and is drawn over the range
+on which the fit was tested, 10 < nu/nu_c < 3e10 with nu_c = e B/(2 pi m c) (up to about 420 GHz).
 
 The results JSON records the intensity relative to the power law at fixed frequencies (read
 from the saved curves), |V|/I, the screen rotation of the polarisation angle at 1 GHz
@@ -49,6 +50,9 @@ E_ESU, M_E, C_CGS, C_SI = 4.80320471257e-10, 9.1093837015e-28, 2.99792458e10, 2.
 NU0_PER_MUG = 3 * E_ESU * 1e-6 / (4 * np.pi * M_E * C_CGS)  # Hz per muG
 P_INDEX = 2.6
 THETA_V = np.radians(75.0)
+B_V_MUG = 5.0  # field strength of the |V|/I panel, muG
+NU_C_PER_MUG = 2.799e6 * 1e-6  # cyclotron frequency e B/(2 pi m c), Hz per muG
+V_TESTED = (10.0, 3e10)  # nu/nu_c range on which the Pandya et al. (2016) fit was tested
 NU = np.geomspace(1e6, 1e15, 700)  # Hz
 LNG = np.linspace(np.log(1.0), np.log(1e9), 5000)
 RADIO, CMB_BAND = (0.1, 10.0), (10.0, 300.0)  # GHz
@@ -109,9 +113,9 @@ def check_against_study_kernels() -> float:
     return float(np.max(np.abs(k / k.mean() - 1))), float(np.max(np.abs(p_ratio - 1)))
 
 
-def v_over_i(nu, b_mug=5.0, theta=THETA_V, p=P_INDEX):
+def v_over_i(nu, b_mug=B_V_MUG, theta=THETA_V, p=P_INDEX):
     """|j_V/j_I| of an isotropic power law (Pandya et al. 2016, Eq. 33 fit)."""
-    nu_c = 2.799e6 * b_mug * 1e-6
+    nu_c = NU_C_PER_MUG * b_mug
     return 171 / 250 * np.sqrt(p) / np.tan(theta) * (nu / (3 * nu_c * np.sin(theta))) ** -0.5
 
 
@@ -136,7 +140,8 @@ def main() -> None:
         I, P = stokes(dens)
         curves[key] = {"I_over_PL": I / I_ref, "Q_over_I": P.real / I, "U_over_I": P.imag / I}
     vI = v_over_i(NU)
-    valid = np.abs(curves["new_range"]["I_over_PL"] - 1) < 0.05
+    ratio = NU / (NU_C_PER_MUG * B_V_MUG)
+    valid = (np.abs(curves["new_range"]["I_over_PL"] - 1) < 0.05) & (ratio > V_TESTED[0]) & (ratio < V_TESTED[1])
     chk_I, chk_P = check_against_study_kernels()
     ghz = NU / 1e9
     np.savez(CURVES, ghz=ghz, vI=vI, valid=valid, gc=gc,
@@ -151,6 +156,9 @@ def main() -> None:
     write_json(HERE / "emission_windows_results.json", {
         "description": __doc__, "I_over_PL_at_GHz": probe,
         "V_over_I_theta75_at_GHz": {f"{f:g}": float(v_over_i(f * 1e9)) for f in (0.1, 1, 10, 100, 300)},
+        "V_over_I_tested_nu_over_nu_c": list(V_TESTED),
+        "V_over_I_tested_upper_GHz": V_TESTED[1] * NU_C_PER_MUG * B_V_MUG / 1e9,
+        "V_over_I_plotted_range_GHz": [float(ghz[valid].min()), float(ghz[valid].max())],
         "screen": screen_values(ghz, curves["new_range"]),
         "checks": {"monochromatic_vs_study_kernel_E1_narrow_channels": {"I_shape_max_rel": chk_I,
                                                                          "P_over_I_max_rel": chk_P},

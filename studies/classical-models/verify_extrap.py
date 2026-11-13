@@ -17,7 +17,9 @@ singular vectors at the median R*, compared with fits_extrap_noisefree_results.j
 
 The electron families are refitted to the noise-free fit-band data, and the 300 GHz intensity error
 of each fit is recorded. For the right family this is the extrapolation error that remains without
-noise (N = 2 representation and the shape of the family), not a pass/fail check.
+noise (N = 2 representation and the shape of the family), not a pass/fail check. The raw
+representation error at the generating moments (the moments of E2 and E3 at N = 2 and N = 4 put
+into the full separable columns, no fit) is recorded over 40-300 GHz for comparison.
 
 The dense curves of extrap_curves.npz share the first channel (1 GHz) with the fit grid and the
 last channel (300 GHz) with the prediction grid. There the seed-0 data, truth and model curves
@@ -53,6 +55,7 @@ OUT = HERE / "verify_extrap_results.json"
 TAG = f"{X.NOISE[0]:g}"  # the table is at 1% noise
 # (ensemble, right family, wrong family) as drawn in fig_cmb_extrapolation.py
 PAIRS = (("E2", "eSBPL", "eLP"), ("E3", "eLP", "ePL"))
+REPRESENTATION_ORDERS = (2, 4)  # N of the raw representation error at the generating moments
 P_SELECT = 0.01  # threshold of the in-band chi2 difference (one degree of freedom)
 QUANTITIES = ("dI_over_I", "dP_over_I", "dchi_deg")
 LIMITS = {"summary_rel": 1e-9, "chi2_rel": 1e-12, "rejected_abs": 0.0, "noisefree_row_abs": 1e-8,
@@ -170,6 +173,20 @@ def noisefree_families(full_f, full_p, Sf, Sp) -> dict:
     return out
 
 
+def representation_errors(Sp) -> dict:
+    """Largest |dI|/I over 40-300 GHz of the full separable columns at the generating moments, N = 2 and 4."""
+    ens = F.E.reference_ensembles(X.PAPER)
+    out = {}
+    for order in REPRESENTATION_ORDERS:
+        di, dq = F.B.derivative_spectra(X.PRED_CFG, order)
+        cols = F.B.separable_columns(X.PRED_CFG, di, dq)
+        for name in ("E2", "E3"):
+            pred = F.B.predict(cols, ens[name].moments(X.PRED_CFG, order, n=24).ravel())
+            out[f"{name}_N{order}"] = {
+                "max_dI_over_I_40_300GHz": float(np.max(np.abs(pred[:, 0] - Sp[name][:, 0]) / Sp[name][:, 0]))}
+    return out
+
+
 def curve_checks(z, cv) -> dict:
     """extrap_curves.npz at its shared end channels against fits_extrap_products.npz (seed 0, 1%)."""
     nd = cv["nu_dense"]
@@ -201,6 +218,7 @@ def main() -> None:
         "table_rows": rows, "selection": selection_fractions(z, summ),
         "row300_outside_VR": row300_outside(summ, noisefree, cf, cp, Sf),
         "noisefree_family_fits": noisefree_families(full_f, full_p, Sf, Sp),
+        "representation_at_generating_moments": representation_errors(Sp),
         "curves": curve_checks(z, cv)}
     failed = [k for k, v, lim in (
         ("summary", max(res["summary_vs_arrays_max_rel"].values()), LIMITS["summary_rel"]),

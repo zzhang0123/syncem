@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.7.2 (unreleased)
+
+### Classical-model study
+
+- Fig. 6 (`fig_cmb_extrapolation.py`) uses a uniform logarithmic frequency
+  axis, with an error panel at half the height under each intensity panel.
+  In panel (b) the truth label sits under the truth curve without a leader,
+  and the lower y-limit is 0.97, so no in-band error bar is cut.
+- Fig. 7(c) (`emission_windows.py`) draws |V|/I only over 10 < ν/ν_c < 3e10,
+  the range on which the fitting formula of Pandya et al. (2016) was tested
+  (up to 420 GHz at 5 µG, `V_over_I_tested_upper_GHz`).
+- `verify_extrap.py` records the intensity error over 40–300 GHz of the
+  separable columns at the generating moments of E2 and E3 for N = 2 and 4
+  (`representation_at_generating_moments`).
+
 ## 0.7.1 (2026-11-13)
 
 ### Fixed
