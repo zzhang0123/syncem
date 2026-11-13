@@ -35,8 +35,10 @@ from config import Config
 
 HERE = Path(__file__).resolve().parent
 CACHE = HERE.parent / "cache"
-TABLE_LNY = (np.log(1e-5), np.log(1e6))
 TABLE_STEP = 0.0025
+# Lower end extended by a whole number of steps (3685, a factor of about 1e4) for gamma up to
+# 3e6 at 0.1 GHz. The knots of the [1e-5, 1e6] table are kept.
+TABLE_LNY = (np.log(1e-5) - 3685 * TABLE_STEP, np.log(1e6))
 TABLE_ORDER = 6
 
 

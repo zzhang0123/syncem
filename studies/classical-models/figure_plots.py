@@ -6,46 +6,58 @@ moments_and_parameters  E2 moments, retained combinations, parameters, B-gamma r
 galprop_fit             noise-free fits to the GALPROP |b| >= 60 deg spectrum (external test)
 
 Compact variants (same panel functions, fewer panels):
-reference_ensembles_compact     old panels (a) and (b) in one row (Fig. 5 of the paper)
-moment_fit_gallery_compact      rows GALLERY_COMPACT (E2, E4-KP, E5) (Fig. 7 of the paper)
+reference_ensembles_compact     old panels (a) and (b) in one row
+moment_fit_gallery_compact      Stokes gallery of rows GALLERY_COMPACT (E2, E4-KP, E5): I, Q, U
+                                fits with the 1% and the low-noise fits (fig_stokes_fit_gallery)
 moments_and_parameters_compact  old panels (a) and (d) in one row, relabelled (a) and (b)
 
 field_energy_ridge      contours of old panel (d) above, SED error along the ridge at N = 2 and 4 below
-                        (ridge_sed_results.json), unlettered (Fig. 8 of the paper)
+                        (ridge_sed_results.json), unlettered
 
+Colours, line styles and line widths come from lib/figure_style_paper.py.
 All arrays come from figure_data.build_all() and the loaded results; no number is typed here.
 """
 from __future__ import annotations
 
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+import matplotlib.patheffects as pe
+from matplotlib.legend_handler import HandlerTuple
 from matplotlib.lines import Line2D
+from matplotlib.offsetbox import AnnotationBbox, DrawingArea, HPacker, TextArea
 from matplotlib.patches import Patch
-from matplotlib.ticker import FixedLocator, FuncFormatter, NullFormatter
+from matplotlib.ticker import FixedLocator, Formatter, FuncFormatter, MaxNLocator, NullFormatter, NullLocator
 from scipy.interpolate import RectBivariateSpline
 
 import ensembles as E
 from config import PAPER
+import figure_style_paper as fs
 
-# Okabe-Ito colours (colour-blind safe), one per ensemble, used in every figure.
-COLOR = {"E1": "#0072B2", "E2": "#E69F00", "E3": "#009E73", "E4-JP": "#CC79A7",
-         "E4-KP": "#D55E00", "E5": "#56B4E9", "E1M": "#666666"}
-STYLE = {"E1": "-", "E2": "-", "E3": "-", "E4-JP": "-", "E4-KP": "--", "E5": "-.", "E1M": ":"}
+# One colour and line style per ensemble, shared by every paper figure (lib/figure_style_paper.py).
+COLOR = dict(fs.ENSEMBLE)
+STYLE = dict(fs.ENSEMBLE_LS)
 LABEL = {"E1": "E1 power law", "E2": "E2 broken power law", "E3": "E3 index mixture",
          "E4-JP": "E4-JP ageing", "E4-KP": "E4-KP ageing", "E5": "E5 two zones",
          "E1M": r"E1M Maxwellian $B$"}
 FACET = {"E1": "E1 power law", "E2": "E2 broken PL", "E3": "E3 mixture", "E4-JP": "E4-JP ageing",
          "E4-KP": "E4-KP ageing", "E5": "E5 two zones"}
 SHORT = {"E1": "E1", "E2": "E2", "E3": "E3", "E4-JP": "E4-JP", "E4-KP": "E4-KP", "E5": "E5", "E1M": "E1M"}
-DIRECT, GREY = "black", "0.45"
+DIRECT, GREY = fs.INK, fs.GREY
+Q_LS = (0, (1.6, 1.0))  # Q residual: short dense dashes, unlike the grey reference curves
+WITNESS = fs.VERMILION  # nonnegative-witness markers (moments_and_parameters); not an ensemble colour
 PSEUDO_LS = (0, (5.0, 1.4, 1.2, 1.4, 1.2, 1.4))  # E4-KP reference curve: moments of the JP spectrum with t_eff
 GHZ = 1e9
 
 
-def ghz_axis(ax, label=True):
+RADIO_AXIS = dict(xlim=(0.09, 11.0), ticks=(0.1, 1.0, 10.0))
+CMB_AXIS = dict(xlim=(9.0, 330.0), ticks=(10.0, 30.0, 100.0, 300.0))
+
+
+def ghz_axis(ax, label=True, xlim=RADIO_AXIS["xlim"], ticks=RADIO_AXIS["ticks"]):
     ax.set_xscale("log")
-    ax.set_xlim(0.09, 11.0)
-    ax.xaxis.set_major_locator(FixedLocator([0.1, 1.0, 10.0]))
+    ax.set_xlim(*xlim)
+    ax.xaxis.set_major_locator(FixedLocator(list(ticks)))
     ax.xaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v:g}"))
     ax.xaxis.set_minor_formatter(NullFormatter())
     if label:
@@ -58,47 +70,94 @@ def log_ticks(ax, ticks=(0.2, 0.5, 1.0, 2.0)):
     ax.yaxis.set_minor_formatter(NullFormatter())
 
 
-def panel(ax, text, x=0.0, y=1.03, ha="left"):
-    ax.text(x, y, text, transform=ax.transAxes, ha=ha, va="bottom")
+def panel(ax, text):
+    fs.panel_title(ax, text)
 
 
 # ----------------------------------------------------------------------------- reference_ensembles
 REF_ORDER = ("E1", "E2", "E3", "E4-JP", "E4-KP", "E5")  # ensembles drawn in (a), (c); (b) adds E1M
 
 
-def _panel_electron_spectra(ax_a, ax_p2, el):
+MARK_START = {"E2": 0.03, "E3": 0.10, "E4-JP": 0.40, "E4-KP": 0.46}  # stagger the sparse markers
+
+
+def _ens_line(ax, x, y, k, markers=True):
+    """Ensemble curve in its colour, line style and sparse markers (readable in greyscale)."""
+    style = dict(color=COLOR[k], ls=STYLE[k], lw=fs.LW)
+    marker = fs.ENSEMBLE_MARKER[k]
+    if markers and marker:
+        hollow = k == "E4-KP"
+        style.update(marker=marker, ms=3.4, markevery=(MARK_START[k], 0.15),
+                     mfc="white" if hollow else COLOR[k], mec=COLOR[k] if hollow else "white",
+                     mew=0.8 if hollow else 0.5)
+    ax.plot(x, y, **style)
+
+
+def _end_labels(ax, x_end, ends: dict, sep=0.1) -> None:
+    """Labels right of the axes at each curve's end value, spread to >= sep dex, with leader lines."""
+    keys = sorted(ends, key=lambda k: ends[k])
+    want = np.log10([ends[k] for k in keys])
+    pos = want.copy()
+    for _ in range(200):  # relax overlapping labels apart, keeping their mean
+        gap = np.diff(pos)
+        push = np.clip(sep - gap, 0.0, None) / 2
+        if not push.any():
+            break
+        pos[:-1] -= push
+        pos[1:] += push
+    x_text = x_end * 1.55
+    for k, y0, y1 in zip(keys, want, pos):
+        ax.annotate(k, xy=(x_end * 1.04, 10**y0), xytext=(x_text, 10**y1), ha="left", va="center",
+                    annotation_clip=False,
+                    arrowprops=None if abs(y1 - y0) < 0.02 else
+                    dict(arrowstyle="-", color=GREY, lw=0.5, shrinkA=1.5, shrinkB=0.5))
+
+
+def _panel_electron_spectra(ax_a, ax_p2, el, labels=False):
     """(a) electron spectra relative to E1, with the E4-KP pitch-anisotropy subpanel below."""
+    gc = el["gamma_c"]
+    for ax in (ax_a, ax_p2):  # E4-KP cut-offs for 0 <= |eta| <= 1/2
+        ax.axvspan(gc["KP_mu0"], gc["KP_mu_half"], color=fs.LIGHT, lw=0, zorder=0)
+    g = el["gamma"]
+    rel = {k: np.where(el["rel_density"][k] > 0, el["rel_density"][k], np.nan) for k in REF_ORDER}
     for k in REF_ORDER:
-        y = np.where(el["rel_density"][k] > 0, el["rel_density"][k], np.nan)
-        ax_a.plot(el["gamma"], y, color=COLOR[k], ls=STYLE[k], lw=1.1)
-    ax_a.set(xscale="log", yscale="log", xlim=(300, 1e5), ylim=(0.12, 4.0))
+        _ens_line(ax_a, g, rel[k], k, markers=not labels)
+    ax_a.set(xscale="log", yscale="log", xlim=(PAPER.gamma_lo, PAPER.gamma_hi), ylim=(0.12, 4.0))
     ax_a.set_ylabel(r"$\mathcal{N}(\gamma)/\mathcal{N}_{\rm E1}(\gamma)$")
     ax_a.tick_params(labelbottom=False)
     log_ticks(ax_a)
-    panel(ax_a, r"(a) Electron spectra, unit column")
-    ax_p2.plot(el["gamma_p2"], el["p2"], color=COLOR["E4-KP"], ls=STYLE["E4-KP"], lw=1.1)
-    gc = el["gamma_c"]
-    for key, ls in (("KP_mu0", ":"), ("KP_mu_half", ":")):
-        for ax in (ax_a, ax_p2):
-            ax.axvline(gc[key], color=GREY, lw=0.6, ls=ls, zorder=0)
-    ax_p2.text(gc["KP_mu0"] / 1.07, 0.7, r"$\gamma_c^{\rm KP}(0),\,\gamma_c^{\rm KP}(\frac12)$",
-               ha="right", va="center", color=GREY)
-    ax_p2.set(xscale="log", xlim=(300, 1e5), ylim=(-0.05, 1.05))
+    panel(ax_a, r"(a) Electron spectra")
+    if labels:  # where the curves separate; E1M has the E1 electron spectrum
+        i2, i5 = np.nanargmax(rel["E2"]), np.nanargmin(rel["E5"])
+        ax_a.text(g[i2], rel["E2"][i2] * 1.12, "E2", ha="center", va="bottom")
+        ax_a.text(g[i5], rel["E5"][i5] / 1.12, "E5", ha="center", va="top")
+        x13 = 4.0e4
+        j = np.argmin(np.abs(g - x13))
+        ax_a.text(x13, rel["E1"][j] * 1.07, "E1", ha="center", va="bottom")
+        ax_a.text(x13, rel["E3"][j] / 1.07, "E3", ha="center", va="top")
+        ax_a.text(gc["KP_mu0"] / 1.12, 0.16, "E4-KP", ha="right", va="center")
+        ax_a.text(gc["KP_mu_half"] * 1.25, 0.16, "E4-JP", ha="left", va="center")
+    _ens_line(ax_p2, el["gamma_p2"], el["p2"], "E4-KP", markers=not labels)
+    ax_p2.set(xscale="log", xlim=(PAPER.gamma_lo, PAPER.gamma_hi), ylim=(-0.1, 1.1))
+    ax_p2.yaxis.set_major_locator(FixedLocator([0.0, 1.0]))
     ax_p2.set_xlabel(r"Lorentz factor $\gamma$")
-    ax_p2.set_ylabel(r"$\langle P_2(\mu)\rangle_{\rm ang}$")
-    ax_p2.text(0.03, 0.62, "E4-KP pitch\nanisotropy", transform=ax_p2.transAxes, va="center")
+    ax_p2.set_ylabel(r"$\langle \mathsf{L}_2\rangle_{\rm ang}$")
+    ax_p2.text(0.03, 0.68, "E4-KP", transform=ax_p2.transAxes, va="center")
 
 
-def _panel_channel_intensity(ax_b, nu, fnpz):
+def _panel_channel_intensity(ax_b, nu, fnpz, labels=False, label_sep=0.1):
     """(b) channel intensities relative to E1."""
     I1 = fnpz["E1"][:, 0]
+    ratio = {k: fnpz[k.replace("-", "_")][:, 0] / I1 for k in REF_ORDER + ("E1M",)}
     for k in REF_ORDER + ("E1M",):
-        ax_b.plot(nu, fnpz[k.replace("-", "_")][:, 0] / I1, color=COLOR[k], ls=STYLE[k], lw=1.1)
+        _ens_line(ax_b, nu, ratio[k], k, markers=not labels)
     ghz_axis(ax_b)
-    ax_b.set(yscale="log", ylim=(0.12, 4.0))
-    log_ticks(ax_b)
+    ax_b.set(yscale="log", ylim=(0.07 if labels else 0.12, 4.0))
+    log_ticks(ax_b, (0.1, 0.2, 0.5, 1.0, 2.0) if labels else (0.2, 0.5, 1.0, 2.0))
     ax_b.set_ylabel(r"$I_j/I_j^{\rm E1}$")
-    panel(ax_b, r"(b) Channel intensity, unit column")
+    panel(ax_b, r"(b) Channel intensities")
+    if labels:
+        _end_labels(ax_b, nu[-1], {k: v[-1] for k, v in ratio.items()}, sep=label_sep)
 
 
 def _panel_polarisation_fraction(ax_c, nu, intr, fwd):
@@ -136,9 +195,10 @@ def _panel_e5_angle(ax_d, nu, fwd):
 
 def _ensemble_legend(fig):
     """Figure legend of the seven ensembles, two rows of four above the panels."""
-    handles = [Line2D([], [], color=COLOR[k], ls=STYLE[k], lw=1.1, label=LABEL[k]) for k in REF_ORDER + ("E1M",)]
-    fig.legend(handles=handles, loc="upper center", ncol=4, frameon=False, bbox_to_anchor=(0.53, 1.0),
-               columnspacing=1.2, handlelength=2.2)
+    keys = ("E1", "E1M", "E2", "E3", "E4-JP", "E4-KP", "E5")  # column-major: related ensembles share a column
+    handles = [Line2D([], [], color=COLOR[k], ls=STYLE[k], lw=fs.LW, label=LABEL[k]) for k in keys]
+    fig.legend(handles=handles, loc="upper center", ncol=4, bbox_to_anchor=(0.53, 1.0),
+               columnspacing=1.4, handlelength=2.2)
 
 
 def _electron_axes(fig, cell):
@@ -164,18 +224,21 @@ def fig_reference_ensembles(D: dict, data: dict):
 
 
 def fig_reference_ensembles_compact(D: dict, data: dict):
-    """Panels (a) and (b) of fig_reference_ensembles in one row, same margins and column widths."""
+    """Panels (a) and (b) of fig_reference_ensembles in one row, labelled directly (no legend)."""
     fnpz = data["forward_npz"]
     nu = fnpz["centres"] / GHZ
-    height = 2.75
+    height = 2.4
     fig = plt.figure(figsize=(6.1, height))
-    outer = fig.add_gridspec(1, 2, left=0.095, right=0.985, top=1 - 0.66 / height, bottom=0.42 / height,
+    outer = fig.add_gridspec(1, 2, left=0.095, right=0.905, top=1 - 0.24 / height, bottom=0.42 / height,
                              wspace=0.3)
-    ax_a, ax_p2 = _electron_axes(fig, outer[0, 0])
+    sub = outer[0, 0].subgridspec(2, 1, height_ratios=[2.5, 1], hspace=0.12)
+    ax_a, ax_p2 = fig.add_subplot(sub[0]), fig.add_subplot(sub[1])
     ax_b = fig.add_subplot(outer[0, 1])
-    _panel_electron_spectra(ax_a, ax_p2, D["electrons"])
-    _panel_channel_intensity(ax_b, nu, fnpz)
-    _ensemble_legend(fig)
+    _panel_electron_spectra(ax_a, ax_p2, D["electrons"], labels=True)
+    # Keep directly labelled, nearly coincident E1/E1M/E3 curves legible at the
+    # shorter printed height; the leader lines still end at the original data.
+    _panel_channel_intensity(ax_b, nu, fnpz, labels=True, label_sep=0.14)
+    fig.align_ylabels([ax_a, ax_p2])
     return fig
 
 
@@ -191,7 +254,6 @@ def _row_intensity(ax, nu, f, fit_i, held_i, color, ref_ls="--"):
     ax.fill_between(nu, (pred - sd) / ref, (pred + sd) / ref, color=color, alpha=0.35, lw=0)
     ax.plot(nu, f["S"][:, 0] / ref, color=DIRECT, lw=1.0)
     ax.plot(nu, f["forward_true"][:, 0] / ref, color=GREY, ls=ref_ls, lw=0.9)
-    ax.plot(nu, pred / ref, color=color, lw=0.8)
     sig = f["sigma"][:, 0] / ref
     ax.errorbar(nu[fit_i], f["data_fit"][:, 0] / ref[fit_i], sig[fit_i], fmt="o", ms=2.4,
                 color=color, mec="black", mew=0.4, elinewidth=0.6, capsize=0)
@@ -199,19 +261,29 @@ def _row_intensity(ax, nu, f, fit_i, held_i, color, ref_ls="--"):
                 mfc="white", mec=color, color=color, mew=0.7, elinewidth=0.6, capsize=0)
 
 
-def _row_residual(ax, nu, f, color, ref_ls="--"):
+P_ERR_LS = (0, (3.0, 1.4))  # |Delta P| / I in the log residual panel
+RES_YLIM = (3e-4, 6.0)  # per cent of I_j
+
+
+def _row_residual(ax, nu, f, color, ref_ls="--", label=True):
+    """|fit - direct| / I_j for I (solid) and P = Q + iU (dashed) at each noise level (dotted line).
+
+    label=False omits the noise-level labels (drawn in the top row only; the lines are the same in every row).
+    """
     I = f["S"][:, 0]
-    ax.axhspan(-1, 1, color="0.88", lw=0, zorder=0)
-    ax.axhline(0, color="0.6", lw=0.5)
-    r = 100 * (f["pred"] - f["S"]) / I[:, None]
-    band = 100 * f["sd_I"] / I
-    ax.fill_between(nu, r[:, 0] - band, r[:, 0] + band, color=color, alpha=0.35, lw=0)
-    ax.plot(nu, 100 * (f["forward_true"][:, 0] - I) / I, color=GREY, ls=ref_ls, lw=0.9)
-    ax.plot(nu, r[:, 0], color=color, lw=1.0)
-    ax.plot(nu, r[:, 1], color="black", ls=(0, (3, 1.5)), lw=0.7)
-    ax.plot(nu, r[:, 2], color="black", ls=(0, (1, 1.2)), lw=0.8)
-    lim = max(1.6, 1.15 * np.max(np.abs(np.concatenate([r.ravel(), 100 * (f["forward_true"][:, 0] - I) / I]))))
-    ax.set_ylim(-lim, lim)
+    levels = [(PAPER.noise_frac, f["pred"])]
+    if "pred_low" in f:
+        levels.append((f["noise_low"], f["pred_low"]))
+    for frac, pred in levels:
+        d = pred - f["S"]
+        ax.axhline(100 * frac, color=GREY, ls=":", lw=fs.LW_REF, zorder=1)
+        ax.plot(nu, 100 * np.abs(d[:, 0]) / I, color=color, lw=1.0, zorder=3)
+        ax.plot(nu, 100 * np.abs(d[:, 1] + 1j * d[:, 2]) / I, color=color, ls=P_ERR_LS, lw=0.8, zorder=3)
+        if label:
+            ax.text(nu[0] * 1.04, 100 * frac * 1.35, f"{100 * frac:g}\\% noise", ha="left", va="bottom",
+                    color=fs.INK, fontsize=8)
+    ax.set_yscale("log")
+    ax.set_ylim(*RES_YLIM)
 
 
 def _row_polarisation(ax, nu, f, fit_i, held_i, color, ref_ls="--"):
@@ -221,7 +293,6 @@ def _row_polarisation(ax, nu, f, fit_i, held_i, color, ref_ls="--"):
     ax.fill_between(nu, pfit - sd, pfit + sd, color=color, alpha=0.35, lw=0)
     ax.plot(nu, frac(f["S"]), color=DIRECT, lw=1.0)
     ax.plot(nu, frac(f["forward_true"]), color=GREY, ls=ref_ls, lw=0.9)
-    ax.plot(nu, pfit, color=color, lw=0.8)
     sig = f["sigma"][:, 1]
     for idx, d, kw in ((fit_i, f["data_fit"], dict(fmt="o", mec="black", mew=0.4)),
                        (held_i, f["data_held"], dict(fmt="s", mfc="white", mec=color, mew=0.7))):
@@ -236,8 +307,8 @@ def _row_angle(ax, nu, f, fit_i, held_i, chi, color):
     free = np.asarray(chi["chi_separable_free_factor_seeded_deg"])
     ax.fill_between(nu[sel], (joint - sd)[sel], (joint + sd)[sel], color=color, alpha=0.35, lw=0)
     ax.plot(nu[sel], true[sel], color=DIRECT, lw=1.0)
-    ax.plot(nu[sel], joint[sel], color=color, lw=0.8, label=r"joint $(a,M^{(2)})$")
-    ax.plot(nu[sel], free[sel], color="black", ls="-.", lw=0.9, label="one azimuth\nfactor")
+    ax.fill_between([], [], [], color=color, alpha=0.35, lw=0, label=r"joint $(a,M^{(2)})$")
+    ax.plot(nu[sel], free[sel], color=fs.VERMILION, ls="-.", lw=fs.LW, label="one azimuth\nfactor")
     d_all = np.empty_like(f["S"])
     d_all[fit_i], d_all[held_i] = f["data_fit"], f["data_held"]
     ang = np.degrees(E.derotated_angle(PAPER, d_all))  # same de-rotation as the fits run
@@ -268,17 +339,20 @@ def fig_moment_fit_gallery(D: dict, data: dict, rows: tuple[str, ...] | None = N
     if missing or not rows:
         raise KeyError(f"gallery rows {missing or rows} not in figure_data.GALLERY {tuple(bd['fits'])}")
     n = len(rows)
-    height = 1.48 * n + 0.88  # 6.8 in for four rows: fits the paper's text block with a 10-line caption
+    compact = rows == GALLERY_COMPACT
+    height = 1.24 * n + 0.94 if compact else 1.48 * n + 0.88
+    legend_height = 0.80 if compact else 0.74
     fig, axes = plt.subplots(n, 3, figsize=(6.1, height), sharex=True,
-                             gridspec_kw=dict(left=0.085, right=0.948, top=1 - 0.74 / height,
-                                              bottom=0.44 / height, hspace=0.12, wspace=0.34))
+                             gridspec_kw=dict(left=0.085, right=0.948, top=1 - legend_height / height,
+                                              bottom=0.44 / height,
+                                              hspace=0.18 if compact else 0.12, wspace=0.34))
     chi = data["fits"]["E5"]["chi_nu"]
     for row, name in enumerate(rows):
         f, c = bd["fits"][name], COLOR[name]
         ls = PSEUDO_LS if name == "E4-KP" else "--"
         ax_i, ax_r, ax_p = axes[row]
         _row_intensity(ax_i, nu, f, fit_i, held_i, c, ls)
-        _row_residual(ax_r, nu, f, c, ls)
+        _row_residual(ax_r, nu, f, c, ls, label=(row == 0))
         if name == "E5":
             _row_angle(ax_p, nu, f, fit_i, held_i, chi, c)
             ax_p.set_ylabel(r"$\chi_j$ [deg]")
@@ -286,31 +360,303 @@ def fig_moment_fit_gallery(D: dict, data: dict, rows: tuple[str, ...] | None = N
             _row_polarisation(ax_p, nu, f, fit_i, held_i, c, ls)
             ax_p.set_ylabel(r"$|P_j|/I_j$")
         ax_i.set_ylabel(r"$I_j/I_{\rm PL}$")
-        ax_r.set_ylabel(r"Residual [\%]")
+        ax_r.set_ylabel(r"Error [\%]")
         ax_p.text(1.03, 0.5, f"{FACET[name]}\n$R_\\star={f['R_star']}$", transform=ax_p.transAxes,
                   rotation=-90, ha="left", va="center", ma="center", linespacing=1.1)
         for ax in axes[row]:
             ghz_axis(ax, label=(row == n - 1))
-    for ax, t in zip(axes[0], (r"(a) Intensity", r"(b) $({\rm fit}-{\rm direct})/I_j$", r"(c) Polarisation")):
+    for ax, t in zip(axes[0], (r"(a) Intensity", r"(b) $|{\rm fit}-{\rm direct}|/I_j$", r"(c) Polarisation")):
         panel(ax, t)
-    fit_handle = (Patch(facecolor="0.55", alpha=0.5, lw=0), Line2D([], [], color="0.3", lw=0.8))
+    fit_handle = Patch(facecolor=GREY, alpha=0.45, lw=0)
     handles = [Line2D([], [], color=DIRECT, lw=1.0, label="direct"),
                Line2D([], [], color=GREY, ls="--", lw=0.9, label="true moments, $N=2$"),
                Line2D([], [], color=GREY, ls=PSEUDO_LS, lw=0.9, label=r"E4-KP: JP($t_{\rm eff}$) moments, $N=2$"),
                fit_handle,
-               Line2D([], [], marker="o", ls="", ms=3, color="0.4", mec="black", mew=0.4, label="data, fitted"),
-               Line2D([], [], marker="s", ls="", ms=3, mfc="white", mec="0.3", mew=0.7, label="data, withheld"),
-               Patch(facecolor="0.88", label=r"$\pm1\%$ noise"),
-               Line2D([], [], color="black", ls=(0, (3, 1.5)), lw=0.7, label="$Q$ residual"),
-               Line2D([], [], color="black", ls=(0, (1, 1.2)), lw=0.8, label="$U$ residual")]
-    labels = [h.get_label() if not isinstance(h, tuple) else r"UPRE fit $\pm1\sigma$" for h in handles]
+               Line2D([], [], marker="o", ls="", ms=3, color=GREY, mec="black", mew=0.4, label="data, fitted"),
+               Line2D([], [], marker="s", ls="", ms=3, mfc="white", mec=GREY, mew=0.7, label="data, withheld"),
+               Line2D([], [], color=GREY, ls=":", lw=fs.LW_REF, label="noise level"),
+               Line2D([], [], color=DIRECT, lw=1.0, label="$I$ error"),
+               Line2D([], [], color=DIRECT, ls=P_ERR_LS, lw=0.8, label="$P$ error")]
+    labels = [r"UPRE fit $\pm1\sigma$" if h is fit_handle else h.get_label() for h in handles]
     order = [0, 3, 6, 1, 4, 7, 2, 5, 8]  # column-major fill: three rows of three
     fig.legend(handles=[handles[i] for i in order], labels=[labels[i] for i in order], loc="upper center",
                ncol=3, frameon=False, bbox_to_anchor=(0.53, 1.0), columnspacing=1.6, handlelength=2.4)
     return fig
 
 
-# ----------------------------------------------------------------- moments_and_parameters, field_energy_ridge
+# ----------------------------------------------------------------------------- Stokes gallery (moment_fit_gallery_compact)
+# Column headings carry the plotted quantity, so the panels need no y labels.
+STOKES_COLUMNS = ((0, r"(a) Intensity / power law, $I_j/I_{\rm PL}$"), (1, r"(b) Stokes $Q_j/I_j$"), (2, r"(c) Stokes $U_j/I_j$"))
+# Polarisation shown as fraction and intrinsic angle (Faraday rotation of the mean depth removed):
+# the same information as Q and U, read directly as depolarisation and rotation.
+POLAR_COLUMNS = ((0, r"(a) Intensity, $I_j/I_{\rm PL}$"), (1, r"(b) Polarisation fraction, $|P_j|/I_j$"),
+                 (2, r"(c) Intrinsic angle [deg]"))  # chi_j - lambda_j^2 Psi_bar, defined in the caption
+POL_MIN = 0.03  # the angle is drawn only where |P|/I exceeds 3% (as in fits.py)
+ANGLE_ERR_LIM = (4e-4, 30.0)  # degrees
+ANGLE_TICKS = {1e-3: r"$\leq\!10^{-3}$", 0.1: "0.1", 10.0: "10"}  # degrees; the unit is in the heading
+MASK_SHADE = "#F3F3F3"  # frequencies where the angle is not drawn
+# Row titles: the model in plain words as in Sec. 5 and Table 3, its code in parentheses.
+ROW_TITLE = {"E1": "Power law (E1)", "E2": "Smoothly broken power law (E2)",
+             "E3": "Index mixture (E3)", "E4-JP": "Ageing, isotropised pitch angles (E4-JP)",
+             "E4-KP": "Ageing, fixed pitch angles (E4-KP)", "E5": "Two power-law zones (E5)",
+             "E1M": r"Power law, Maxwellian field strength (E1M)"}
+# inches; "gap" is the band above each block that holds its row title
+STOKES_HEIGHTS = dict(main=0.80, inner=0.05, sub=0.38, gap=0.24, top=0.56, bottom=0.36)
+STOKES_ERR_LIM = (4e-5, 12.0)  # per cent of I_j; the axis line sits below the floor, the top clears the E5 dash-dot error
+ERR_FLOOR = 1e-4  # per cent of I_j; smaller errors are drawn at this labelled level
+ERR_TICKS = {1e-4: r"$\leq\!10^{-4}$", 1e-2: "0.01", 1.0: "1"}
+# Q/U/I error panels are not clipped: errors below the axis leave the panel through the bottom
+STOKES_ERR_TICKS = {1e-4: r"$10^{-4}$", 1e-2: "0.01", 1.0: "1"}
+# error curves: the 1% fit heavy in the row colour, the low-noise fit thin in a darker tone of it
+# (weight and tone, not hue or markers), so the thin curve keeps its contrast in greyscale
+ERR_STYLE = {"high": dict(lw=1.3), "low": dict(lw=0.75)}
+ERR_LOW_DARKEN = 0.35  # fraction of INK mixed into the row colour for the low-noise curve
+# noise-level reference, drawn above the error curves so it shows where they sit on it
+NOISE_STYLE = dict(color="#8C8C8C", lw=0.5, dashes=(1, 2))
+NOISE_ZORDER = {"high": 3, "low": 1.5}  # above the heavy 1% curve, below the thin low-noise curve
+NOISE_LEGEND_STYLE = dict(color="#8C8C8C", lw=1.0, dashes=(1, 1.5))  # heavier so the handle shows at legend size
+FREE_FACTOR_LS = "-."
+TRUE_STYLE = dict(color="#DCDCDC", lw=2.6, solid_capstyle="round", zorder=1)  # wide light line under the fit
+FIT_LW = 1.1
+# thin dark underlay: the fit stays darker than the true-spectrum band in greyscale, whatever the row colour
+FIT_HALO = [pe.Stroke(linewidth=FIT_LW + 0.6, foreground=fs.INK, alpha=0.55), pe.Normal()]
+DATA_STYLE = dict(fmt="o", ms=2.4, color=fs.INK, mec=fs.INK, elinewidth=0.6, capsize=0, zorder=4)
+
+
+def _err_color(color, style):
+    """Row colour for the 1% error curve, a darker tone of it for the low-noise curve."""
+    if style == "high":
+        return color
+    c, ink = np.array(mcolors.to_rgb(color)), np.array(mcolors.to_rgb(fs.INK))
+    return tuple((1 - ERR_LOW_DARKEN) * c + ERR_LOW_DARKEN * ink)
+
+
+def _stokes_main(ax, nu, f, k, color, fit_i):
+    """True spectrum (wide light line), fitted data with 1-sigma noise bars, fit (thin line in the row colour).
+
+    I is shown relative to a power law fitted to the true spectrum, Q and U relative to I_j.
+    """
+    I = f["S"][:, 0]
+    norm = _power_law_reference(nu, I) if k == 0 else I
+    ax.plot(nu, f["S"][:, k] / norm, **TRUE_STYLE)
+    ax.plot(nu, f["pred"][:, k] / norm, color=color, lw=FIT_LW, zorder=3, path_effects=FIT_HALO)
+    if k > 0 and "pred_free_factor" in f:
+        ff = f["pred_free_factor"][:, k] / I
+        ax.plot(nu, ff, color=fs.VERMILION, ls=FREE_FACTOR_LS, lw=FIT_LW, zorder=3)
+        if k == 1:  # direct label inside the empty lower right, under the dash-dot tail
+            ax.text(0.99, 0.01, "energy-\nindependent\nazimuth", transform=ax.transAxes, ha="right", va="bottom",
+                    color=_err_color(fs.VERMILION, "low"), fontsize="x-small", linespacing=0.95)
+    ax.errorbar(nu[fit_i], f["data_fit"][:, k] / norm[fit_i], f["sigma"][fit_i, k] / norm[fit_i], **DATA_STYLE)
+    ax.yaxis.set_major_locator(MaxNLocator(3, steps=[1, 2, 2.5, 5], min_n_ticks=3))
+    ax.yaxis.set_major_formatter(CommonDecimals())
+
+
+class CommonDecimals(Formatter):
+    """Every tick on an axis printed with the same number of decimals; zero printed as 0."""
+
+    def __call__(self, x, pos=None):
+        if abs(x) < 1e-12:
+            return "$0$"
+        places = max((len(f"{v:g}".partition(".")[2]) for v in self.locs if "e" not in f"{v:g}"), default=0)
+        return f"${x:.{places}f}$"
+
+
+def _stokes_error(ax, nu, f, k, color):
+    """|fit - direct| / I_j at 1% noise and at the low noise level; dotted lines mark the noise levels.
+
+    For Q and U of E5 the 1%-noise fit with energy-independent azimuth is added in its dash-dot style.
+    """
+    I = f["S"][:, 0]
+    levels = [(PAPER.noise_frac, f["pred"], "high")]
+    if "pred_low" in f:
+        levels.append((f["noise_low"], f["pred_low"], "low"))
+    for frac, pred, style in levels:
+        ax.axhline(100 * frac, zorder=NOISE_ZORDER[style], **NOISE_STYLE)
+        err = 100 * np.abs(pred[:, k] - f["S"][:, k]) / I
+        ax.plot(nu, err, color=_err_color(color, style), zorder=2, **ERR_STYLE[style])
+    if k > 0 and "pred_free_factor" in f:
+        err = 100 * np.abs(f["pred_free_factor"][:, k] - f["S"][:, k]) / I
+        ax.plot(nu, err, color=fs.VERMILION, ls=FREE_FACTOR_LS, lw=FIT_LW, zorder=2)
+    ax.set_yscale("log", nonpositive="mask")
+    ax.set_ylim(*STOKES_ERR_LIM)
+    ax.yaxis.set_major_locator(FixedLocator(list(STOKES_ERR_TICKS)))
+    ax.yaxis.set_major_formatter(FuncFormatter(lambda v, _: STOKES_ERR_TICKS.get(v, f"{v:g}")))
+    ax.yaxis.set_minor_locator(NullLocator())
+
+
+def _polar(S, nu_ghz):
+    """(|P|/I, intrinsic angle in deg, mask |P|/I > POL_MIN) of spectra S (J, 3); angle unwrapped over frequency."""
+    I = S[:, 0]
+    lam2 = (2.99792458e8 / (nu_ghz * 1e9)) ** 2
+    P = (S[:, 1] + 1j * S[:, 2]) * np.exp(-2j * lam2 * PAPER.screen_mean)
+    frac = np.abs(P) / I
+    ok = frac > POL_MIN
+    two_chi = np.full(I.size, np.nan)
+    if ok.any():
+        two_chi[ok] = np.unwrap(np.angle(P[ok]))
+    return frac, np.degrees(0.5 * two_chi), ok
+
+
+def _polar_main(ax, nu, f, k, color, fit_i):
+    """|P|/I (k = 1) or intrinsic angle (k = 2): truth band, fit, data with 1-sigma bars, free-factor fit (E5)."""
+    tf, tc, ok = _polar(f["S"], nu)
+    pf, pc, _ = _polar(f["pred"], nu)
+    if k == 2:  # put the fit on the branch of the truth
+        pc = tc + ((pc - tc + 90.0) % 180.0 - 90.0)
+    ax.plot(nu, tf if k == 1 else tc, **TRUE_STYLE)
+    ax.plot(nu, pf if k == 1 else np.where(ok, pc, np.nan), color=color, lw=FIT_LW, zorder=3, path_effects=FIT_HALO)
+    if "pred_free_factor" in f:
+        ff, fc, _ = _polar(f["pred_free_factor"], nu)
+        fc = tc + ((fc - tc + 90.0) % 180.0 - 90.0)
+        ax.plot(nu, ff if k == 1 else np.where(ok, fc, np.nan), color=fs.VERMILION, ls=FREE_FACTOR_LS, lw=FIT_LW, zorder=3)
+    d = f["data_fit"]
+    sig = f["sigma"][fit_i, 1]
+    df, dc, dok = _polar(d, nu[fit_i])
+    if k == 1:
+        ax.errorbar(nu[fit_i], df, sig / d[:, 0], **DATA_STYLE)
+    else:
+        dc = tc[fit_i] + ((dc - tc[fit_i] + 90.0) % 180.0 - 90.0)
+        sel = dok & ok[fit_i]
+        ax.errorbar(nu[fit_i][sel], dc[sel], np.degrees(sig[sel] / (2 * df[sel] * d[sel, 0])), **DATA_STYLE)
+    if k == 2 and "pred_free_factor" in f:  # direct label below the right end of the dash-dot curve
+        j = np.flatnonzero(ok)[-1]
+        ax.annotate("energy-independent\nazimuth", (nu[j], fc[j]), xytext=(-2, -7), textcoords="offset points",
+                    ha="right", va="top", color=fs.VERMILION, fontsize="small", linespacing=1.0)
+    ax.yaxis.set_major_locator(MaxNLocator(3, steps=[1, 2, 2.5, 5], min_n_ticks=3))
+    ax.yaxis.set_major_formatter(CommonDecimals())
+
+
+def _shade_masked(ax, nu, ok, note=False):
+    """Light band over the frequencies where |P|/I <= POL_MIN, where the angle is not drawn."""
+    edges = np.sqrt(nu[1:] * nu[:-1])
+    lo = np.concatenate([[nu[0] ** 2 / edges[0]], edges])
+    hi = np.concatenate([edges, [nu[-1] ** 2 / edges[-1]]])
+    for i in np.flatnonzero(~ok):
+        ax.axvspan(lo[i], hi[i], color=MASK_SHADE, lw=0, zorder=0)
+    if note and not ok[0]:
+        x1 = hi[np.argmax(ok) - 1] if ok.any() else hi[-1]
+        ax.text(np.sqrt(ax.get_xlim()[0] * x1), 0.5, r"$|P|/I$" "\n" rf"$<{100 * POL_MIN:g}\%$",
+                transform=ax.get_xaxis_transform(), ha="center", va="center", color=GREY,
+                fontsize="small", linespacing=1.1)
+
+
+def _polar_error(ax, nu, f, k, color):
+    """| |P_fit|/I_fit - |P|/I | in percentage points (k = 1) or |chi_fit - chi| in degrees (k = 2), both noise levels."""
+    tf, tc, ok = _polar(f["S"], nu)
+    levels = [(PAPER.noise_frac, f["pred"], "high")]
+    if "pred_low" in f:
+        levels.append((f["noise_low"], f["pred_low"], "low"))
+    for frac, pred, style in levels:
+        pf, pc, _ = _polar(pred, nu)
+        if k == 1:
+            ax.axhline(100 * frac, zorder=3, **NOISE_STYLE)
+            ax.plot(nu, np.maximum(100 * np.abs(pf - tf), ERR_FLOOR), color=_err_color(color, style), zorder=2,
+                    **ERR_STYLE[style])
+        else:  # expected angle noise sigma/(2|P|) for this noise level, dotted
+            ax.plot(nu, np.where(ok, np.degrees(frac / (2 * tf)), np.nan), zorder=1, **NOISE_STYLE)
+            dchi = np.abs((pc - tc + 90.0) % 180.0 - 90.0)
+            ax.plot(nu, np.where(ok, np.maximum(dchi, ANGLE_ERR_LIM[0] * 2.5), np.nan), color=_err_color(color, style),
+                    zorder=2,
+                    **ERR_STYLE[style])
+    ax.set_yscale("log")
+    if k == 1:
+        ax.set_ylim(*STOKES_ERR_LIM)
+        ticks = ERR_TICKS
+    else:
+        ax.set_ylim(*ANGLE_ERR_LIM)
+        ticks = ANGLE_TICKS
+    ax.yaxis.set_major_locator(FixedLocator(list(ticks)))
+    ax.yaxis.set_major_formatter(FuncFormatter(lambda v, _: ticks.get(v, f"{v:g}")))
+    ax.yaxis.set_minor_locator(NullLocator())
+
+
+def _row_title(ax, name, R_star, color):
+    """Row title above the block's left panel, led by a short segment in the row's fit colour."""
+    swatch = DrawingArea(14, 6, 0, 0)
+    swatch.add_artist(Line2D([0, 14], [3, 3], color=color, lw=FIT_LW, path_effects=FIT_HALO))
+    text = TextArea(rf"{ROW_TITLE.get(name, name)}, $R_\star$ = {R_star}")
+    box = HPacker(children=[swatch, text], align="center", pad=0, sep=4)
+    ax.add_artist(AnnotationBbox(box, (0, 1), xycoords="axes fraction", xybox=(0, 4), boxcoords="offset points",
+                                 box_alignment=(0, 0), frameon=False, pad=0, annotation_clip=False))
+
+
+def fig_stokes_fit_gallery(D: dict, data: dict, rows: tuple[str, ...] = GALLERY_COMPACT, axis: dict = RADIO_AXIS,
+                           polar: bool = False):
+    """Columns I, |P|/I, intrinsic angle (polar=True) or I, Q, U; one block per ensemble: spectrum above a
+    flat error panel sharing the frequency axis."""
+    COLS = POLAR_COLUMNS if polar else STOKES_COLUMNS
+    bd = D["bands"]
+    nu = bd["centres"] / GHZ
+    fit_i = bd["fit_idx"]
+    h = STOKES_HEIGHTS
+    ratios = [h["gap"], h["main"], h["inner"], h["sub"]] * len(rows)
+    height = h["top"] + sum(ratios) + h["bottom"]
+    fig = plt.figure(figsize=(fs.WIDTH, height))
+    top = 1 - h["top"] / height
+    gs = fig.add_gridspec(len(ratios), 3, height_ratios=ratios, hspace=0, wspace=0.32, left=0.105, right=0.99,
+                          top=top, bottom=h["bottom"] / height)
+    share, columns = None, [[] for _ in COLS]
+    for r, name in enumerate(rows):
+        f, c = bd["fits"][name], COLOR[name]
+        last = r == len(rows) - 1
+        for col, (k, heading) in enumerate(COLS):
+            ax = fig.add_subplot(gs[4 * r + 1, col], sharex=share)
+            share = share or ax
+            sub = fig.add_subplot(gs[4 * r + 3, col], sharex=share)
+            if polar and k > 0:
+                _polar_main(ax, nu, f, k, c, fit_i)
+                _polar_error(sub, nu, f, k, c)
+                if k == 2:
+                    ok = _polar(f["S"], nu)[2]
+                    ghz_axis(ax, label=False, **axis)  # x limits set before the note is placed
+                    _shade_masked(ax, nu, ok, note=r == 0)
+                    _shade_masked(sub, nu, ok)
+                    sub.set_ylabel("[deg]", labelpad=1)
+            else:
+                _stokes_main(ax, nu, f, k, c, fit_i)
+                _stokes_error(sub, nu, f, k, c)
+            if col == 0:
+                sub.set_ylabel("Error\n" r"[\%]", linespacing=1.0, labelpad=2)  # two short lines fit the flat panel
+                _row_title(ax, name, f["R_star"], c)
+
+            for a in (ax, sub):
+                ghz_axis(a, label=False, **axis)
+                a.tick_params(labelbottom=(a is sub and last))
+            if r == 0:  # column heading centred over its column, regular weight as the row titles
+                pos = ax.get_position()
+                fig.text((pos.x0 + pos.x1) / 2, top + 3 / 72 / height, heading, ha="center",
+                         va="baseline", fontsize=plt.rcParams["axes.titlesize"])
+            columns[col] += [ax, sub]
+    for axes in columns:
+        fig.align_ylabels(axes)
+    mid = columns[1][-1].get_position()  # one frequency label, centred under the middle column
+    fig.text((mid.x0 + mid.x1) / 2, 0.03 / height, "Frequency [GHz]", ha="center", va="bottom",
+             fontsize=plt.rcParams["axes.labelsize"])
+
+    def row_lines(**kw):  # one short segment per row colour, as drawn in the panels
+        return tuple(Line2D([], [], color=COLOR[name], **kw) for name in rows)
+
+    low = 100 * bd["fits"][rows[0]].get("noise_low", 0.0)
+    data_handle = (Line2D([], [], marker="|", ls="", ms=7, mew=0.6, color=fs.INK),  # dot over a 1-sigma bar
+                   Line2D([], [], marker="o", ls="", ms=3, color=fs.INK))
+    # column-major fill with ncol=4: (true, data) | (the two fits) | (the two errors) | (noise level)
+    handles = [Line2D([], [], **{k: v for k, v in TRUE_STYLE.items() if k != "zorder"}),
+               data_handle,
+               row_lines(lw=FIT_LW, path_effects=FIT_HALO),
+               Line2D([], [], color=fs.VERMILION, ls=FREE_FACTOR_LS, lw=FIT_LW),
+               row_lines(**ERR_STYLE["high"]),
+               tuple(Line2D([], [], color=_err_color(COLOR[name], "low"), **ERR_STYLE["low"]) for name in rows),
+               Line2D([], [], **NOISE_LEGEND_STYLE)]
+    labels = ["true spectrum", r"data, $1\%$ noise",
+              "fit, full basis (row colour)", "fit, energy-independent azimuth",
+              r"fit error in \% of $I_j$, $1\%$ noise", rf"fit error in \% of $I_j$, ${low:g}\%$ noise", "noise level"]
+    fig.legend(handles=handles, labels=labels, loc="upper center", ncol=4, frameon=False,
+               bbox_to_anchor=(0.53, 1.0), columnspacing=1.2, handlelength=2.4, handletextpad=0.5,
+               handler_map={tuple: HandlerTuple(ndivide=None, pad=0.0), data_handle: HandlerTuple(ndivide=1)})
+    return fig
+
+
+# ----------------------------------------------------------------------------- moments_and_parameters
 def _range(*arrays, pad=0.08):
     v = np.concatenate([np.ravel(a) for a in arrays])
     lo, hi = float(np.min(v)), float(np.max(v))
@@ -322,23 +668,26 @@ def _panel_moments(axs, D, data, letter="a"):
     e2 = D["e2"]
     edges, gb = PAPER.edges, PAPER.gamma_b
     nnls = np.asarray(data["fits"]["ensembles"]["E2"]["nnls_witness"]["seeded_implied_a_b0"])
-    a_true, a_th = e2["a_true"].reshape(12, 3), e2["a_theta"]["comp"].reshape(12, 3)
-    a_ts = e2["a_tsvd"].reshape(12, 3)
+    a_true, a_th = e2["a_true"].reshape(-1, 3), e2["a_theta"]["comp"].reshape(-1, 3)
+    a_ts = e2["a_tsvd"].reshape(-1, 3)
     for r, ax in enumerate(axs):
         lo, hi = _range(a_true[:, r], a_th[:, r], a_ts[:, r], [0.0])
         if r == 0:
             hi = lo + (hi - lo) / 0.6  # two legend rows above the off-scale markers
         ax.stairs(a_true[:, r], edges, color=DIRECT, lw=1.1, baseline=None)
         ax.stairs(a_th[:, r], edges, color=COLOR["E2"], lw=1.1, ls="--", baseline=None)
-        ax.axhline(0, color="0.7", lw=0.5, zorder=0)
+        ax.axhline(0, color=GREY, lw=fs.LW_REF, zorder=0)
         ax.plot(gb, a_ts[:, r], "o", ms=3, mfc="white", mec="black", mew=0.8)
         ax.set(xscale="log", xlim=(edges[0], edges[-1]), ylim=(lo, hi))
         ax.set_ylabel([r"$a_{b0}$", r"$a_{b1}$", r"$a_{b2}$"][r])
     top = _range(a_true[:, 0], a_th[:, 0], a_ts[:, 0], [0.0])[1]
     ins = nnls <= top
-    axs[0].plot(gb[ins], nnls[ins], "D", ms=3, color=COLOR["E3"], mec="black", mew=0.4)
+    # The a_b0 scale ends at `top`; above it are the legend and the off-scale markers.
+    axs[0].spines["left"].set_bounds(axs[0].get_ylim()[0], top)
+    axs[0].yaxis.set_major_locator(FixedLocator([t for t in (0, 1, 2, 3, 4) if t <= top]))
+    axs[0].plot(gb[ins], nnls[ins], "D", ms=3, color=WITNESS, mec="black", mew=0.4)
     for g, v in zip(gb[~ins], nnls[~ins]):  # off scale: value written beside an upward triangle
-        axs[0].plot(g, top, "^", ms=4, color=COLOR["E3"], mec="black", mew=0.4)
+        axs[0].plot(g, top, "^", ms=4, color=WITNESS, mec="black", mew=0.4)
         right = g * 1.12 * 1.35 < edges[-1]
         axs[0].text(g * 1.12 if right else g / 1.12, top, f"{v:.0f}", va="center", ha="left" if right else "right")
     for ax in axs[:-1]:
@@ -347,7 +696,7 @@ def _panel_moments(axs, D, data, letter="a"):
     handles = [Line2D([], [], color=DIRECT, lw=1.1, label="true"),
                Line2D([], [], color=COLOR["E2"], lw=1.1, ls="--", label=r"$a(\hat\theta)$"),
                Line2D([], [], marker="o", ls="", ms=3, mfc="white", mec="black", label=r"min.-norm, $R_\star$"),
-               Line2D([], [], marker="D", ls="", ms=3, color=COLOR["E3"], mec="black", mew=0.4,
+               Line2D([], [], marker="D", ls="", ms=3, color=WITNESS, mec="black", mew=0.4,
                       label="nonneg. witness")]
     axs[0].legend(handles=handles, loc="upper left", frameon=False, ncol=2, columnspacing=1.2,
                   handlelength=1.4, handletextpad=0.4, borderaxespad=0.05)
@@ -444,7 +793,7 @@ def _panel_ridge(ax2, ax1, D, data, letter="d"):
     _ridge_contours(ax2, D, data, letter)
     _ridge_delta_chi2(ax1, data)
     handles = [Line2D([], [], color=COLOR["E2"], lw=1.1, label=r"support scales with $B$"),
-               Line2D([], [], color="black", ls="--", lw=0.9, label="support fixed"),
+               Line2D([], [], color=DIRECT, ls="--", lw=0.9, label="support fixed"),
                Line2D([], [], **RIDGE_LINE_HANDLE)]
     ax2.legend(handles=handles, **RIDGE_LEGEND)
     ax1.legend(handles=[Line2D([], [], color="0.3", lw=0.9, label="noise-free"),
@@ -461,7 +810,7 @@ def _ridge_contours(ax2, D, data, letter):
     lv = D["e2"]["levels_2d"][:1]
     xf, yf = np.linspace(lnl[0], lnl[-1], 161), np.linspace(dl[0], dl[-1], 161)
     styles = {"transformed": dict(colors=COLOR["E2"], linestyles="-", linewidths=1.1),
-              "fixed": dict(colors="black", linestyles="--", linewidths=0.9)}
+              "fixed": dict(colors=DIRECT, linestyles="--", linewidths=0.9)}
     for sup in ("transformed", "fixed"):
         grid = np.array([r[sup]["profile_grid_full_noisefree_chi2"] for r in rg["rows"]])
         best = min(np.min(grid), min(r[sup]["noisefree"]["full"]["chi2"] for r in rg["rows"]))
@@ -483,15 +832,16 @@ def _ridge_delta_chi2(ax1, data):
     lnl = np.asarray(rg["ln_lambda_grid"])
     sm = rg["summary"]
     ax1.axhline(1.0, color=GREY, lw=0.6, ls=":")
-    ax1.axhline(0.0, color="0.7", lw=0.5)
+    ax1.axhline(0.0, color=GREY, lw=fs.LW_REF)
     ax1.plot(lnl, sm["transformed/noisefree/full/delta_chi2_vs_lnlam"], color=COLOR["E2"], lw=1.1)
     ax1.plot(lnl, sm["transformed/seeded/full/delta_chi2_vs_lnlam"], "o", color=COLOR["E2"], ms=2.6, mfc="white", mew=0.8)
-    ax1.plot(lnl, sm["fixed/noisefree/full/delta_chi2_vs_lnlam"], color="black", ls="--", lw=0.9)
-    ax1.plot(lnl, sm["fixed/seeded/full/delta_chi2_vs_lnlam"], "o", color="black", ms=2.6, mfc="white", mew=0.7)
+    ax1.plot(lnl, sm["fixed/noisefree/full/delta_chi2_vs_lnlam"], color=DIRECT, ls="--", lw=0.9)
+    ax1.plot(lnl, sm["fixed/seeded/full/delta_chi2_vs_lnlam"], "s", color=DIRECT, ms=2.6, mfc="white", mew=0.7)
     ax1.set_ylim(-0.45, 1.3)
     ax1.set_xlabel(r"$\Delta\ln B$")
     ax1.set_ylabel(r"$\Delta\chi^2$ on ridge")
     ax1.set_xlim(lnl[0] - 0.02, lnl[-1] + 0.02)
+    ax1.text(lnl[0], 1.05, r"$\Delta\chi^2=1$", va="bottom", ha="left", color=fs.INK)
 
 
 RIDGE_SED_ORDERS = {"2": dict(lw_scale=1.0, alpha=1.0), "4": dict(lw_scale=0.75, alpha=0.5)}
@@ -509,8 +859,7 @@ def _ridge_sed(ax1, data):
     sm = rs["summary"]
     lines = {"transformed": dict(color=COLOR["E2"], ls="-", lw=1.1),
              "fixed": dict(color=DIRECT, ls="--", lw=0.9)}
-    marks = {"transformed": dict(marker="o", color=COLOR["E2"], mew=0.8),
-             "fixed": dict(marker="s", color=DIRECT, mew=0.7)}
+    marks = {"transformed": dict(marker="o", color=COLOR["E2"], mew=0.8), "fixed": dict(marker="s", color=DIRECT, mew=0.7)}
     for N, look in RIDGE_SED_ORDERS.items():
         for sup, st in lines.items():
             ax1.plot(x, 100 * np.asarray(sm[f"{sup}/N{N}/noisefree/sed_max"]), color=st["color"], ls=st["ls"],
@@ -525,8 +874,8 @@ def _ridge_sed(ax1, data):
     i0 = list(x).index(0.0)
     for N, xl in (("2", -0.12), ("4", -0.3)):
         y0 = 100 * sm[f"transformed/N{N}/noisefree/sed_max"][i0]
-        ax1.text(xl, y0 * 1.25, rf"$N={N}$", ha="center", va="bottom", color=DIRECT)
-    ax1.text(x[0], 100 * PAPER.noise_frac * 1.12, "noise", va="bottom", ha="left", color=DIRECT)
+        ax1.text(xl, y0 * 1.25, rf"$N={N}$", ha="center", va="bottom", color=fs.INK)
+    ax1.text(x[0], 100 * PAPER.noise_frac * 1.12, "noise", va="bottom", ha="left", color=fs.INK)
     ax1.set_xlabel(r"$\Delta\ln B$")
     ax1.set_ylabel(r"SED error [\% of $I_j$]")
     ax1.set_xlim(x[0] - 0.02, x[-1] + 0.02)

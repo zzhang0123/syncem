@@ -110,11 +110,12 @@ class OneD:
     """ln F on a fine ln x grid (from kernels.F); Bessel terms evaluated exactly."""
 
     def __init__(self, step=5e-4):
-        lx = np.arange(np.log(1e-6), np.log(XMAX) + step, step)
+        # lower end 1e-9 (was 1e-6): x = nu/(a1 B s gamma^2) reaches ~3e-8 for gamma = 2.96e6 (19 cells)
+        lx = np.arange(np.log(1e-9), np.log(XMAX) + step, step)
         self.lx_lo, self.lx_hi = lx[0], lx[-1]
         self.lnF = CubicSpline(lx, np.log(_K.F(np.exp(lx))))
         rng = np.random.default_rng(3)
-        xt = np.exp(rng.uniform(np.log(1e-6), np.log(XMAX) - 0.01, 3000))
+        xt = np.exp(rng.uniform(np.log(1e-9), np.log(XMAX) - 0.01, 3000))
         self.spline_check = float(np.max(np.abs(np.exp(self.lnF(np.log(xt))) / _K.F(xt) - 1)))
 
     def dW(self, x, order, which):
@@ -204,7 +205,8 @@ def field_nodes(kind):
 class Table:
     """H_W^{(r)}(s) = sum_k pref_k D^r W(e^s / c_k), s = ln(nu / gamma^2), splined in s."""
 
-    def __init__(self, od, b, wb, eta_s, weta, order, step, s_lo=-5.6, s_hi=12.0):
+    # s_lo -5.6 -> -12.4: s = ln(nu/gamma^2) reaches ln(0.8e8/2.96e6^2) - ln s_eta = -11.5 (19 cells)
+    def __init__(self, od, b, wb, eta_s, weta, order, step, s_lo=-12.4, s_hi=12.0):
         c = a1 * (b[:, None] * eta_s[None, :]).ravel()
         pref = (wb[:, None] * weta[None, :] * A1 * b[:, None] * eta_s[None, :]).ravel()
         s = np.arange(s_lo, s_hi + step, step)
@@ -255,7 +257,10 @@ def stokes(kI, kP):
 
 
 # ----------------------------------------------------------------------------- 4. bins, metric
-LE = np.linspace(np.log(300.0), np.log(1e5), 13)
+# 19 equal ln-gamma cells on [300, 2.96e6]; the first 12 are the earlier [300, 1e5] cells
+NB = 19
+G_HI = 300.0 * (1e5 / 300.0) ** (19 / 12)
+LE = np.linspace(np.log(300.0), np.log(G_HI), NB + 1)
 EDGES = np.exp(LE)
 H_B = 0.5 * (LE[1] - LE[0])
 GB = np.exp(0.5 * (LE[1:] + LE[:-1]))
@@ -264,12 +269,12 @@ WB = WB / WB.sum()
 
 
 def basis(tab, ch, N):
-    """C (41, 3, 12 (N+1)) and the raw D_r^I, D_r^P (N+1, 12, 41)."""
+    """C (41, 3, NB (N+1)) and the raw D_r^I, D_r^P (N+1, NB, 41)."""
     KI, KP = kbar(tab, ch, GB, N)
     fac = np.array([H_B**r / factorial(r) for r in range(N + 1)])[:, None, None]
     DI, DP = KI * fac, KP * fac
-    C = np.zeros((41, 3, 12 * (N + 1)))
-    for b in range(12):
+    C = np.zeros((41, 3, NB * (N + 1)))
+    for b in range(NB):
         for r in range(N + 1):
             C[:, :, b * (N + 1) + r] = WB[b] * stokes(DI[r, b], DP[r, b])
     return C, DI, DP
@@ -279,11 +284,11 @@ def basis(tab, ch, N):
 XG48, WG48 = leggauss(48)
 
 
-def smooth_nodes(n=48, lo=300.0, hi=1e5):
+def smooth_nodes(n=48, lo=300.0, hi=G_HI):
     """GL in ln gamma per bin (restricted to [lo, hi] within bins); (gamma, w, bin, x_b)."""
     t, w = leggauss(n)
     G, W, Bn, X = [], [], [], []
-    for b in range(12):
+    for b in range(NB):
         ua, ub = max(LE[b], np.log(lo)), min(LE[b + 1], np.log(hi))
         if ub <= ua:
             continue
@@ -305,7 +310,7 @@ def _gj(a, gc, alpha, n):
 def cut_nodes(gc, alpha, n=48, lo=300.0):
     """Nodes/weights for int f(gamma) (1 - gamma/gc)^alpha dgamma on [lo, gc] per bin."""
     G, W, Bn = [], [], []
-    for b in range(12):
+    for b in range(NB):
         glo, ghi = max(EDGES[b], lo), EDGES[b + 1]
         if gc <= glo or ghi <= lo:
             continue
@@ -329,7 +334,7 @@ def cut_nodes(gc, alpha, n=48, lo=300.0):
 
 
 def moments_from(g, w, bb, x, dens, N=2):
-    a = np.zeros((12, N + 1))
+    a = np.zeros((NB, N + 1))
     for r in range(N + 1):
         np.add.at(a[:, r], bb, w * dens * x**r)
     return (a / WB[:, None]).ravel()
@@ -587,11 +592,11 @@ def main():
 
     t = time.time()
     C2, DI, DP = basis(tabU, ch, 4)  # orders to 4 (for rho_3)
-    Cn2 = np.zeros((41, 3, 36))
-    for b in range(12):
+    Cn2 = np.zeros((41, 3, 3 * NB))
+    for b in range(NB):
         Cn2[:, :, 3 * b:3 * b + 3] = C2[:, :, 5 * b:5 * b + 3]
-    C3 = np.zeros((41, 3, 48))
-    for b in range(12):
+    C3 = np.zeros((41, 3, 4 * NB))
+    for b in range(NB):
         C3[:, :, 4 * b:4 * b + 4] = C2[:, :, 5 * b:5 * b + 4]
     tic("basis", t)
 
@@ -768,7 +773,7 @@ def main():
     t = time.time()
     nv = {}
     for N in (2, 3):
-        a = mom_PL(phiE1, N).reshape(12, N + 1)
+        a = mom_PL(phiE1, N).reshape(NB, N + 1)
         dSI = np.zeros(41)
         dSP = np.zeros(41, complex)
         for r in range(N + 1):

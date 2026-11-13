@@ -58,7 +58,7 @@ def tail_stats(v: np.ndarray, crit: float) -> dict:
 
 
 def one_ensemble(name, cols, S, a, zfR, zhR, crit) -> dict:
-    cplx = (np.arange(36, 72), np.arange(72, 108)) if name == "E5" else None
+    cplx = (np.arange(F.NE, 2 * F.NE), np.arange(2 * F.NE, 3 * F.NE)) if name == "E5" else None
     lf = F.LinearFit(name, F.basis_for(name, cols), S[name], a[name], cplx=cplx)
     zf, zh = F.seeded_noise()
     R_seed = int(lf.scan(lf.Sf + zf, lf.Sh + zh)["R_star"][0])

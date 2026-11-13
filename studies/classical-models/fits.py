@@ -8,11 +8,11 @@ Model d = C a + eps + n on the 21 fitted channels (63 data, I/Q/U), noise sd 0.0
   * Coverage of the noise-only 1-sigma intervals of beta over noise realisations (fixed R and
     per-realisation UPRE R), Picard outputs versus R, NNLS witness on 17 Chebyshev-Lobatto
     atoms per bin, Hausdorff conditions of the TSVD minimum-norm moments.
-  * E5: joint per-bin complex azimuth basis (108 columns) versus the separable basis with one
+  * E5: joint per-bin complex azimuth basis (9 n_bins = 171 columns) versus the separable basis with one
     free complex azimuth factor c (bilinear; variable projection: for each R the rank-R TSVD
     chi2 is minimised over c; UPRE counts R + 2 parameters), and the de-rotated angle chi(nu).
 
-Continuum (beaming-limit) kernels only; N = 2 basis (36 columns).  Seeds: fitted rows use the
+Continuum (beaming-limit) kernels only; N = 2 basis (3 n_bins = 57 columns).  Seeds: fitted rows use the
 paper draw (Config.draw_noise(21), seed 20260928); withheld rows of that realisation use seed
 20260929; the noise realisations use one standard-normal array from seed 20261027, shared by
 all ensembles.  Writes fits_results.json and fits_products.npz.  Run: python fits.py
@@ -30,6 +30,7 @@ from multiprocessing import get_context
 from pathlib import Path
 
 import numpy as np
+from scipy.linalg import svd as scipy_svd
 from scipy.optimize import minimize, nnls
 from scipy.stats import chi2 as chi2dist
 from scipy.stats import ncx2, norm
@@ -43,6 +44,7 @@ from provenance import provenance, write_json  # noqa: E402
 
 T0 = time.time()
 CFG = PAPER
+NE = 3 * CFG.n_bins  # energy columns at N = 2
 FIT, HELD = CFG.fit_idx, CFG.held_idx
 N_ORDER = 2
 N_REAL = 4000  # linear fits (coverage, R* distribution)
@@ -77,7 +79,12 @@ def stack_rows(X, rows):
 
 def svd_signed(A, rtol=1e-13):
     """Thin SVD with numerically zero directions dropped and signs fixed (largest |V| entry > 0)."""
-    u, s, vt = np.linalg.svd(A, full_matrices=False)
+    if not np.all(np.isfinite(A)):
+        raise ValueError("non-finite matrix passed to svd_signed")
+    try:
+        u, s, vt = np.linalg.svd(A, full_matrices=False)
+    except np.linalg.LinAlgError:  # gesdd non-convergence (seen with 57 columns): use gesvd
+        u, s, vt = scipy_svd(A, full_matrices=False, lapack_driver="gesvd")
     keep = s > s[0] * rtol
     u, s, vt = u[:, keep], s[keep], vt[keep]
     sgn = np.sign(vt[np.arange(s.size), np.argmax(np.abs(vt), axis=1)])
@@ -288,9 +295,9 @@ def seeded_report(lf, zf, zh, picard_R):
         "rep_bias_over_sigma": lf.bias[:R].tolist(),
         "max_abs_rep_bias_over_sigma": float(np.max(np.abs(lf.bias[:R]))),
         "max_finite_response_discrepancy_over_I": float(np.max(np.abs(lf.eps) / lf.S[:, 0:1])),
-        "hausdorff_tsvd": hausdorff_detail(a_hat[:36], scale),
-        "hausdorff_tsvd_noise_free": hausdorff_detail(lf.a_hat(nf["proj"][0], R)[:36], scale),
-        "hausdorff_true_moments_n_bins_violating": int(hausdorff(lf.a_true[:36], scale)[0]),
+        "hausdorff_tsvd": hausdorff_detail(a_hat[:NE], scale),
+        "hausdorff_tsvd_noise_free": hausdorff_detail(lf.a_hat(nf["proj"][0], R)[:NE], scale),
+        "hausdorff_true_moments_n_bins_violating": int(hausdorff(lf.a_true[:NE], scale)[0]),
     }
     rows = []
     for Rp in picard_R:
@@ -306,7 +313,7 @@ def seeded_report(lf, zf, zh, picard_R):
                      "noise_free_chi2_fit": float(nf["chi2_fit"][0, Rp - 1]),
                      "max_abs_rep_bias_over_sigma": float(np.max(np.abs(lf.bias[:Rp]))),
                      "chi2_held_predictive": float(lf.predictive_held(proj, lf.Sh + zh, Rp)[0]),
-                     "hausdorff_bins_violating": int(hausdorff(ah[:36], scale)[0])})
+                     "hausdorff_bins_violating": int(hausdorff(ah[:NE], scale)[0])})
     nmode = min(lf.k, max(picard_R) + 6)
     modes = {"s": lf.s[:nmode].tolist(),
              "abs_coeff_noise_free_|u^T S_w|": np.abs(nf["proj"][0, :nmode]).tolist(),
@@ -328,9 +335,9 @@ def realisation_report(lf, zf, zh, R0, picard_rows):
     kept = np.arange(lf.k)[None, :] < Rn[:, None]
     post = [float(inside[kept[:, i], i].mean()) for i in range(Rmax)]
     q = np.cumsum(dev**2, axis=1)
-    scale = float(np.max(np.abs(lf.a_true[:36].reshape(-1, 3)[:, 0])))
+    scale = float(np.max(np.abs(lf.a_true[:NE].reshape(-1, 3)[:, 0])))
     a_hat_n = ((sc["proj"] * kept) / lf.s) @ lf.vt
-    hz = hausdorff(a_hat_n[:, :36], scale)[0]
+    hz = hausdorff(a_hat_n[:, :NE], scale)[0]
     vals, cnt = np.unique(Rn, return_counts=True)
     sc["pred_held_star"] = lf.predictive_held_at(sc["proj"], zh + lf.Sh, Rn)
     out = {
@@ -459,6 +466,11 @@ class FreeFactorFit:
         proj = u.T @ dw
         return dw @ dw - np.cumsum(proj**2)
 
+    def chi2_at(self, c, dw, R):
+        """chi2 at rank R; beyond the numerical rank chi2 is flat, so the last value is used."""
+        curve = self.chi2_curve(c, dw)
+        return curve[min(R, curve.size) - 1]
+
     def solve(self, c, R, dw):
         """Rank-R TSVD at fixed c: moments, prediction (J, 3), withheld response H_R (60, R)."""
         C = self.columns(c)
@@ -470,7 +482,12 @@ class FreeFactorFit:
     def profile(self, dw, n_phase=24, amps=(0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.8, 1.0)):
         """For every R: c_R = argmin_c chi2(R; c) (grid start + Nelder-Mead); returns c (k,), chi2 (k,)."""
         grid = [a * np.exp(1j * ph) for a in amps for ph in np.linspace(-np.pi, np.pi, n_phase, endpoint=False)]
-        curves = np.array([self.chi2_curve(c, dw) for c in grid])
+        raw = [self.chi2_curve(c, dw) for c in grid]
+        # The numerical rank can differ between trial c when some columns are nearly empty (e.g.
+        # low-energy cells in the CMB window). chi2 is flat beyond each curve's rank, so each
+        # curve is padded to the longest one. Equal lengths (the radio window) are left unchanged.
+        k_max = max(r.size for r in raw)
+        curves = np.array([np.pad(r, (0, k_max - r.size), mode="edge") for r in raw])
         k = curves.shape[1]
         c_best, f_best = np.zeros(k, complex), np.zeros(k)
         for R in range(1, k + 1):
@@ -480,7 +497,10 @@ class FreeFactorFit:
             best = None
             for c0 in starts:
                 x0 = np.array([c0.real, c0.imag])
-                res = minimize(lambda v: self.chi2_curve(v[0] + 1j * v[1], dw)[R - 1], x0, method="Nelder-Mead",
+                # |c| = |<e^{2 i phi}>| <= 1; the bound |c| <= 2 stops the simplex drifting to
+                # overflow at ranks where chi2 barely depends on c (seen with 57 energy columns).
+                res = minimize(lambda v: (self.chi2_at(v[0] + 1j * v[1], dw, R)
+                                          if np.hypot(v[0], v[1]) <= 2.0 else np.inf), x0, method="Nelder-Mead",
                                options={"initial_simplex": [x0, x0 + [0.03, 0], x0 + [0, 0.03]],
                                         "xatol": 1e-7, "fatol": 1e-7, "maxiter": 600})
                 if best is None or res.fun < best.fun:
@@ -623,7 +643,7 @@ def nnls_inputs(name, cols, lf, zf, zh, zfR, zhR):
 def run_linear(name, cols, S, a, noise):
     zf, zh, zfR, zhR = noise
     t = time.time()
-    cplx = (np.arange(36, 72), np.arange(72, 108)) if name == "E5" else None
+    cplx = (np.arange(NE, 2 * NE), np.arange(2 * NE, 3 * NE)) if name == "E5" else None
     lf = LinearFit(name, basis_for(name, cols), S[name], a[name], cplx=cplx)
     picard_R = R_PICARD_E5 if name == "E5" else R_PICARD
     seeded, picard, prod = seeded_report(lf, zf, zh, picard_R)
@@ -649,13 +669,13 @@ def e5_joint_extras(lf, cols, prod, seeded_chi2, zf, zh, zfR, zhR):
     nn = nnls_report(wit, lf.Sf, lf.Sh, zf, zh, zfR[:N_REAL_NNLS], zhR[:N_REAL_NNLS], n_az=N_AZ_ATOMS,
                      tsvd_chi2=seeded_chi2)
     tic("nnls_E5_azimuth_atoms", t)
-    scale = float(np.max(lf.a_true[:36].reshape(-1, 3)[:, 0]))
+    scale = float(np.max(lf.a_true[:NE].reshape(-1, 3)[:, 0]))
     ah = prod["a_hat"]
-    m2 = ah[36:72] + 1j * ah[72:]
-    m2_true = lf.a_true[36:72] + 1j * lf.a_true[72:]
+    m2 = ah[NE:2 * NE] + 1j * ah[2 * NE:]
+    m2_true = lf.a_true[NE:2 * NE] + 1j * lf.a_true[2 * NE:]
     return {"nnls_witness_azimuth_atoms": nn,
-            "azimuth_bound_tsvd_bins_violating": int(azimuth_bound(ah[:36], m2, scale)[0]),
-            "azimuth_bound_true_bins_violating": int(azimuth_bound(lf.a_true[:36], m2_true, scale)[0])}
+            "azimuth_bound_tsvd_bins_violating": int(azimuth_bound(ah[:NE], m2, scale)[0]),
+            "azimuth_bound_true_bins_violating": int(azimuth_bound(lf.a_true[:NE], m2_true, scale)[0])}
 
 
 def run_free_factor(cols, S, zf, zh, zfR, zhR):
@@ -672,7 +692,7 @@ def run_free_factor(cols, S, zf, zh, zfR, zhR):
     restarts = []
     for j in np.argsort(dvals)[:5]:
         x0 = np.array([dense[j].real, dense[j].imag])
-        restarts.append(minimize(lambda v: ff.chi2_curve(v[0] + 1j * v[1], ff.Sf + zf)[R - 1], x0,
+        restarts.append(minimize(lambda v: ff.chi2_at(v[0] + 1j * v[1], ff.Sf + zf, R), x0,
                                  method="Nelder-Mead", options={"initial_simplex": [x0, x0 + [0.01, 0], x0 + [0, 0.01]],
                                                                 "xatol": 1e-8, "fatol": 1e-8, "maxiter": 2000}).fun)
     tic("free_factor_seeded", t)

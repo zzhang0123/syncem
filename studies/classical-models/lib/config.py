@@ -73,9 +73,11 @@ class Config:
     noise_frac: float = 0.01
     seed: int = 20260928
     # energy bins and reference metric
+    # 19 equal ln-gamma cells. The first 12 are the cells of [300, 1e5], so the range reaches
+    # 300 (1e5/300)^(19/12) = 2.96e6 and covers channels up to about 300 GHz.
     gamma_lo: float = 300.0
-    gamma_hi: float = 1e5
-    n_bins: int = 12
+    gamma_hi: float = 300.0 * (1e5 / 300.0) ** (19 / 12)
+    n_bins: int = 19
     ref_slope: float = 2.6
 
     # ------------------------------------------------------------ channels
@@ -203,3 +205,5 @@ class Config:
 
 PAPER = Config()
 PAPER_MAXWELL = replace(PAPER, b_kind="maxwell", n_b=96)
+# CMB window: same populations and geometry, 41 channels over 10-300 GHz.
+CMB = replace(PAPER, nu_lo=1e10, nu_hi=3e11)

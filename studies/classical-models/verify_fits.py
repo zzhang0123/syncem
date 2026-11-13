@@ -48,8 +48,12 @@ A1 = 3.0 * E_ESU * 1e-6 / (4.0 * np.pi * M_E * C_CGS)  # a_B per muG of B_perp [
 # ----------------------------------------------------------------------------- configuration
 NU = np.geomspace(1e8, 1e10, 41)
 FIT, HELD = np.arange(0, 41, 2), np.arange(1, 41, 2)
-NB, NORD = 12, 2
-LE = np.linspace(np.log(300.0), np.log(1e5), NB + 1)
+# 19 equal ln-gamma cells on [300, 300 (1e5/300)^(19/12) = 2.96e6]. The first 12 are the cells
+# of [300, 1e5].
+NB, NORD = 19, 2
+G_HI = 300.0 * (1e5 / 300.0) ** (19 / 12)
+NE = NB * (NORD + 1)  # energy columns
+LE = np.linspace(np.log(300.0), np.log(G_HI), NB + 1)
 HB = 0.5 * (LE[1] - LE[0])
 GB = np.exp(0.5 * (LE[1:] + LE[:-1]))
 _m = np.diff(np.exp(LE) ** (-1.6)) / (-1.6)
@@ -128,7 +132,9 @@ def kernel_checks():
     return out
 
 
-LV = np.linspace(np.log(4e-3), np.log(2.5e5), 12001)
+# ln v = ln(nu / (gamma^2 s_eta)): channel nodes 0.8e8..1.2e10 Hz, gamma 300..2.96e6 -> v in [9e-6, 1.6e5];
+# lower end lowered from 4e-3 (gamma <= 1e5) to 4e-6, same step (~1.5e-3) as before.
+LV = np.linspace(np.log(4e-6), np.log(2.5e5), 16621)
 
 
 def btable_exact(lv, bn, bw):
@@ -306,11 +312,11 @@ def tsvd(name, C, S, a_true, zf, zh, rng_real, pair_rtol=None, nreal=4000):
            "s_first8": s[:8].tolist()}
     if pair_rtol is not None:
         out["n_degenerate_pairs"] = int(np.sum(~allowed[:-1]))
-    # Hausdorff on the TSVD minimum-norm moments (first 36 entries)
-    a = a_hat[:36].reshape(NB, 3)
-    tol = 1e-12 * np.max(np.abs(a_true[:36]))
+    # Hausdorff on the TSVD minimum-norm moments (first NE entries)
+    a = a_hat[:NE].reshape(NB, 3)
+    tol = 1e-12 * np.max(np.abs(a_true[:NE]))
     viol = (a[:, 0] < -tol) | (np.abs(a[:, 1]) > a[:, 0] + tol) | (a[:, 2] < -tol) | (a[:, 2] > a[:, 0] + tol) | \
-           (a[:, 1] ** 2 > a[:, 0] * a[:, 2] + tol * np.max(np.abs(a_true[:36])))
+           (a[:, 1] ** 2 > a[:, 0] * a[:, 2] + tol * np.max(np.abs(a_true[:NE])))
     out["hausdorff_bins_violating"] = int(viol.sum())
     # noise realisations (independent seed)
     Zf = rng_real.standard_normal((nreal, 63))
@@ -376,7 +382,7 @@ def main():
     wI2, wP2 = basis(tabU, nt=2 * N_T)
     RES["checks"]["basis_channel_node_doubling_max_rel"] = float(max(
         np.max(np.abs(wI2 - wI)) / np.max(np.abs(wI)), np.max(np.abs(wP2 - wP)) / np.max(np.abs(wP))))
-    Csep = np.stack([wI, (AZ * wP).real, (AZ * wP).imag], axis=1)  # (41, 3, 36)
+    Csep = np.stack([wI, (AZ * wP).real, (AZ * wP).imag], axis=1)  # (41, 3, NE)
 
     # ensembles
     ens = {}
@@ -403,7 +409,7 @@ def main():
     RES["checks"]["kp_inner_qaws_rel"] = float(abs(measure(lambda g, o: (g / 1e4) ** -2.6 * o**0.6, gc=g0)[1].sum() / qa - 1))
     Kn = 1 / tot
     SK = np.zeros((41, 3))
-    aK = np.zeros(36)
+    aK = np.zeros(NE)
     col = 0.0
     for e, q in zip(ETA, QETA):
         mm = measure(lambda g, o: Kn * (g / 1e4) ** -2.6 * o**0.6, gc=gck(e))
@@ -477,7 +483,7 @@ def main():
     Cj = np.concatenate([
         np.stack([wI, Z, Z], 1),
         np.stack([Z, wP.real, wP.imag], 1),
-        np.stack([Z, -wP.imag, wP.real], 1)], axis=2)  # (41, 3, 108): [a, Re M2, Im M2]
+        np.stack([Z, -wP.imag, wP.real], 1)], axis=2)  # (41, 3, 3 NE): [a, Re M2, Im M2]
     a5full = np.concatenate([a5, M2.real, M2.imag])
     fj = tsvd("E5_joint", Cj, S5, a5full, zf, zh, np.random.default_rng(999), pair_rtol=1e-8)
     RES["ensembles"]["E5_joint"]["nnls_I_rows"] = nnls_witness(Csep, S5, zf, zh, rows=(0,))
@@ -508,13 +514,16 @@ def main():
         u, s, vt = svd_k(A)
         p = u.T @ dfw5
         c2 = dfw5 @ dfw5 - np.cumsum(p**2)
-        c2 = np.concatenate([c2, np.full(40 - c2.size, c2[-1])])
+        c2 = np.concatenate([c2, np.full(63 - c2.size, c2[-1])])  # chi2 flat beyond the numerical rank
         return c2
 
     grid = [a * np.exp(1j * ph) for a in np.linspace(0.02, 1.0, 50) for ph in np.linspace(-np.pi, np.pi, 96, endpoint=False)]
     gv = np.array([curve_c(c) for c in grid])
+    # numerical rank of the separable design (26 for both the 12- and the 19-cell grid)
+    K_SEP = svd_k((design(AZ)[FIT] / sig5[FIT, None, None]).reshape(63, -1))[1].size
+    RES["checks"]["E5_free_c_numerical_rank"] = int(K_SEP)
     best = {}
-    for R in range(1, 27):
+    for R in range(1, K_SEP + 1):
         cand = []
         for jj in np.argsort(gv[:, R - 1])[:4]:
             x0 = np.array([grid[jj].real, grid[jj].imag])
@@ -537,7 +546,7 @@ def main():
     chi_s = chi_deg(pred_s)
     RES["ensembles"]["E5_free_c"] = {
         "R_star": int(Rs_), "c": [float(cst.real), float(cst.imag)], "chi2_fit": float(best[Rs_][0]),
-        "full_rank_chi2_fit": float(best[26][0]), "chi2_held_raw": float(rh @ rh),
+        "full_rank_chi2_fit": float(best[K_SEP][0]), "chi2_held_raw": float(rh @ rh),
         "chi2_held_pred_fixed_c": float(rh @ np.linalg.inv(np.eye(60) + H @ H.T) @ rh),
         "max_err": float(np.max(np.abs(pred_s - S5) / S5[:, 0:1])),
         "upre_sep_minus_joint_seeded": float(upre_s[Rs_] - (fj[0]["chi2_fit"] + 2 * fj[0]["R_star"])),

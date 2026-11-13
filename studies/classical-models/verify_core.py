@@ -54,7 +54,11 @@ a1 = 3.0 * E_ESU * 1e-6 / (4 * np.pi * M_E * C_CGS)  # a_B per muG [Hz]
 NU = np.geomspace(1e8, 1e10, 41)
 FIT = np.arange(0, 41, 2)
 HELD = np.arange(1, 41, 2)
-G_LO, G_HI, NBIN = 300.0, 1e5, 12
+# 19 equal ln-gamma cells on [300, 300 (1e5/300)^(19/12) = 2.96e6]. The first 12 are the cells
+# of [300, 1e5]. The SVD regression against regression.py keeps that 12-cell geometry
+# (G_HI12, NBIN12), whose basis is the first 12 cells of this one.
+G_LO, G_HI, NBIN = 300.0, 300.0 * (1e5 / 300.0) ** (19 / 12), 19
+G_HI12, NBIN12 = 1e5, 12
 LEDGE = np.linspace(np.log(G_LO), np.log(G_HI), NBIN + 1)
 EDGE = np.exp(LEDGE)
 H = 0.5 * (LEDGE[1] - LEDGE[0])
@@ -165,7 +169,8 @@ def DrW_scaled(x, which, r):
 class PhiTable:
     """Phi_r(y) = sum_i c_i (D^r W)(y/s_i) for a discrete s-distribution (c_i = weight * s_i)."""
 
-    def __init__(self, s, c, rmax, ly=(np.log(1e-4), np.log(4e4)), dl=0.004):
+    # lower end 1e-7 (was 1e-4): y = nu/(a1 gamma^2) reaches 2e-6 at gamma = 2.96e6
+    def __init__(self, s, c, rmax, ly=(np.log(1e-7), np.log(4e4)), dl=0.004):
         self.ly = np.arange(ly[0], ly[1] + dl, dl)
         self.rmax = rmax
         y = np.exp(self.ly)
@@ -251,7 +256,7 @@ def design(CI, CP, zeta):
 
 # ----------------------------------------------------------------------------- energy measures
 def measure(dens, cut=None, n=N_E, nw=60):
-    """Bin-aligned nodes (gamma, mass, bin) for density dens(g) on [300, min(1e5, cut))."""
+    """Bin-aligned nodes (gamma, mass, bin) for density dens(g) on [300, min(G_HI, cut))."""
     g_all, m_all, b_all = [], [], []
     for b in range(NBIN):
         lo, hi = EDGE[b], EDGE[b + 1]
@@ -344,9 +349,6 @@ def main():
     S1 = stokes(sI, sP, ZETA)
     sIc, sPc = direct(TABc, measure(lambda g: K1 * g**-p, n=24), CHc)
     chk["E1_direct_coarse_quadrature_change_over_I"] = np.max(np.abs(stokes(sIc, sPc, ZETA) - S1) / S1[:, :1], 0).tolist()
-    if HARM.exists():
-        Sh = np.load(HARM)["truth"]
-        chk["E1_mine_minus_harmonic_truth_over_I_IQU"] = np.max(np.abs(S1 - Sh) / Sh[:, :1], 0).tolist()
     auth = json.load(open(HERE / "forward_results.json"))
     ADS = {k: np.array(v) for k, v in auth["direct_spectra_IQU_per_unit_column"].items()}
     chk["E1_mine_minus_author_direct_over_I_IQU"] = np.max(np.abs(S1 - ADS["E1"]) / S1[:, :1], 0).tolist()
@@ -356,20 +358,35 @@ def main():
     CI2c, CP2c = basis(TABc, 2, CHc)
     chk["N2_columns_coarse_change_over_I"] = float(np.max(np.abs(design(CI2c, CP2c, ZETA) - C2) / S1[:, :1, None]))
     a2 = a1m[:, :3]
-    sig = 0.01 * S1[:, :1] * np.ones((1, 3))
-    Dm = (C2[FIT] / sig[FIT][..., None]).reshape(-1, C2.shape[-1])
+    # regression on the original 12 cells [300, 1e5] (as regression.py): E1 normalised on that
+    # range, nodes of the first 12 cells, basis = first 3*12 columns of the 19-cell basis
+    K1r = (p - 1) / (G_LO ** (1 - p) - G_HI12 ** (1 - p))
+    m1r = measure(lambda g: K1r * g**-p)
+    m1r = tuple(v[m1r[2] < NBIN12] for v in m1r)
+    S1r = stokes(*direct(TAB, m1r), ZETA)
+    if HARM.exists():  # the harmonic truth is E1 on the original 12 cells [300, 1e5]
+        Sh = np.load(HARM)["truth"]
+        chk["E1_mine_minus_harmonic_truth_over_I_IQU"] = np.max(np.abs(S1r - Sh) / Sh[:, :1], 0).tolist()
+    else:
+        chk["E1_mine_minus_harmonic_truth_over_I_IQU"] = f"skipped: {HARM.relative_to(HERE).as_posix()} missing"
+    # reference masses w_b renormalised over the 12 cells (as in a 12-cell config)
+    w12 = WB[:NBIN12].sum()
+    C2r = C2[:, :, :3 * NBIN12] / w12
+    a2r = moments(m1r, 2)[:NBIN12] * w12
+    sig = 0.01 * S1r[:, :1] * np.ones((1, 3))
+    Dm = (C2r[FIT] / sig[FIT][..., None]).reshape(-1, C2r.shape[-1])
     u, s, vt = np.linalg.svd(Dm, full_matrices=False)
     keep = s >= 10.0
     R = int(keep.sum())
     noise = np.random.default_rng(SEED).normal(size=(21, 3))
-    d = S1[FIT] + noise * sig[FIT]
+    d = S1r[FIT] + noise * sig[FIT]
     beta = (u[:, keep].T @ (d / sig[FIT]).ravel()) / s[keep]
     ahat = vt[keep].T @ beta
-    pred = np.einsum("jsk,k->js", C2, ahat)
+    pred = np.einsum("jsk,k->js", C2r, ahat)
     chi2 = float(np.sum(((d - pred[FIT]) / sig[FIT]) ** 2))
-    eps = S1 - np.einsum("jsk,k->js", C2, a2.ravel())
+    eps = S1r - np.einsum("jsk,k->js", C2r, a2r.ravel())
     bias = u[:, keep].T @ (eps[FIT] / sig[FIT]).ravel()
-    dev = np.abs(pred - S1) / S1[:, :1]
+    dev = np.abs(pred - S1r) / S1r[:, :1]
     jmax = int(np.unravel_index(np.argmax(dev), dev.shape)[0])
     dof = d.size - R
     val["regression"] = {
@@ -379,8 +396,9 @@ def main():
         "chi2_pvalue_upper": float(scipy.stats.chi2.sf(chi2, dof)) if hasattr(scipy, "stats") else None,
         "max_fit_minus_direct_over_I_41ch": float(dev.max()), "argmax_channel": jmax,
         "argmax_is_withheld": bool(jmax % 2 == 1),
-        "max_finite_response_discrepancy_over_I": float(np.max(np.abs(eps) / S1[:, :1])),
-        "beta_hat_minus_beta_true_over_sigma": ((beta - vt[keep] @ a2.ravel()) * s[keep]).tolist(),
+        "max_finite_response_discrepancy_over_I": float(np.max(np.abs(eps) / S1r[:, :1])),
+        "beta_hat_minus_beta_true_over_sigma": ((beta - vt[keep] @ a2r.ravel()) * s[keep]).tolist(),
+        "geometry": "12 cells on [300, 1e5] (first 36 columns of the 19-cell basis)",
     }
 
     # --- E1 analytic checks

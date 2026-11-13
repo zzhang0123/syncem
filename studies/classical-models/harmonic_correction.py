@@ -276,7 +276,7 @@ def main():
         "gamma_scaling": scaling_summary(tab),
         "checks": checks,
         "propagation": prop,
-        "propagation_label": "run + gamma^-2 extrapolation (c from gamma = 300 applied for gamma in [300, 1e5])",
+        "propagation_label": f"run + gamma^-2 extrapolation (c from gamma = 300 applied for gamma in [{PAPER.gamma_lo:.3g}, {PAPER.gamma_hi:.3g}])",
         "timings_s": timings,
     }
     out["tables_npz_sha256"] = sha256(HERE / "harmonic_correction_tables.npz")

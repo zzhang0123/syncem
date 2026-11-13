@@ -50,7 +50,7 @@ HERE = Path(__file__).resolve().parent
 OUT_FIG, OUT_TAB = HERE / "figures", HERE / "tables"
 sys.path.insert(0, str(HERE / "lib"))
 sys.path.insert(0, str(HERE))
-from figure_style import WIDTH, configure  # noqa: E402
+from figure_style_paper import WIDTH, configure  # noqa: E402
 
 import figure_data as FD  # noqa: E402
 import figure_plots as FP  # noqa: E402
@@ -182,7 +182,7 @@ def main() -> None:
                "moments_and_parameters": save(FP.fig_moments_and_parameters(D, data), "moments_and_parameters"),
                "galprop_fit": save(FP.fig_galprop_fit(D, data), "galprop_fit")}
     compact = {"reference_ensembles": lambda: FP.fig_reference_ensembles_compact(D, data),
-               "moment_fit_gallery": lambda: FP.fig_moment_fit_gallery(D, data, rows=FP.GALLERY_COMPACT),
+               "moment_fit_gallery": lambda: FP.fig_stokes_fit_gallery(D, data),
                "moments_and_parameters": lambda: FP.fig_moments_and_parameters_compact(D, data)}
     outputs.update({f"{k}_compact": save(draw(), f"{k}_compact") for k, draw in compact.items()})
     outputs["field_energy_ridge"] = save(FP.fig_field_energy_ridge(D, data), "field_energy_ridge")
@@ -198,7 +198,7 @@ def main() -> None:
              for k, v in D["modes"].items()}
     lib_inputs = [HERE / n for n in ("figure_data.py", "figure_plots.py", "figure_tables.py", "paramlib.py",
                                      "baselines.py", "baseline_models.py")]
-    lib_inputs.append(HERE / "lib" / "figure_style.py")
+    lib_inputs.append(HERE / "lib" / "figure_style_paper.py")
     prov = provenance(__file__, t0, inputs=[*map(Path, input_shas), *lib_inputs])
     write_json(HERE / "make_figures_results.json", {
         "description": "Figures and LaTeX tables of the classical-model section, drawn from saved results "

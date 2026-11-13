@@ -16,7 +16,7 @@ before channel integration and no noise added. Two emission-only fits of the 21 
 intensities are compared on the withheld channels:
   * the free-coefficient N = 2 basis at the centred reference points (TSVD, UPRE rank)
   * nonnegative least squares on direct channel kernels at 192 and at 384 log-spaced
-    energies on [300, 1e5], with a free normalisation per energy column. This tests a finite
+    energies on [300, 2.96e6], with a free normalisation per energy column. This tests a finite
     nonnegative grid, not all nonnegative electron distributions.
 
 All errors are fractions of the noise-free channel intensity. Changing the reference point

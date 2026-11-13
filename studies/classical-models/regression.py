@@ -3,6 +3,7 @@
 Paper power-law truth (E1), 1% noise with seed 20260928, 21 fitted channels, absolute
 SVD threshold s >= 10 (noise sd <= 0.1 in w_b-scaled coordinates).  Compared with the
 paper's numbers and with the frozen harmonic caches (inputs/harmonic-radio-fit, read only).
+The regression keeps the 12 cells on [300, 1e5] of those caches, not the 19 cells of PAPER.
 Writes regression_results.json.  Run: python regression.py
 """
 from __future__ import annotations
@@ -76,8 +77,10 @@ def analyse(cfg, C, S, a_true, noise):
 
 
 def main():
-    cfg = PAPER
-    e1 = E.PowerLaw()
+    # The harmonic caches cover 12 cells on [300, 1e5]. PAPER has 19 cells on [300, 2.96e6] whose
+    # first 12 are those cells, so the regression keeps the 12-cell grid.
+    cfg = replace(PAPER, gamma_hi=1e5, n_bins=12)
+    e1 = E.PowerLaw(hi=1e5)
     timings = {}
     t = time.time()
     S = e1.direct(cfg, n=24)

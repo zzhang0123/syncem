@@ -65,7 +65,7 @@ PRODUCERS = {"fits": "fits.py", "forward": "forward.py", "params": "params.py",
              "kp_pseudo": "kp_pseudotruth.py", "ridge_sed": "ridge_sed.py"}
 
 ENSEMBLES = ("E1", "E2", "E3", "E4-JP", "E4-KP", "E5", "E1M")
-GALLERY = ("E1", "E2", "E4-KP", "E5")  # moment_fit_gallery rows (E3 stays in the tables)
+GALLERY = ("E1", "E2", "E4-KP", "E5")  # Fig. 9 rows (E3 stays in the tables)
 PSEUDO = "E4-KP"  # plotted against the JP(t_eff) pseudo-truth moments (kp_pseudotruth.py)
 GALPROP_R_HIGH = 12  # second moment-basis rank drawn in galprop_fit (the first is the MC median R*)
 GALPROP_LAWS = ("logcubic", "eSBPL")  # four-parameter law and electron family drawn in galprop_fit
@@ -232,6 +232,7 @@ def fit_bands(fits_npz: dict, fits: dict, kp_npz: dict) -> dict:
             checks[f"{name}_C_a_pseudo_vs_saved_pred_pseudo"] = float(np.max(np.abs(fwd - kp_npz["pred_pseudo"]) / I))
             checks[f"{name}_S_direct_vs_pseudo_npz_S_kp"] = float(np.max(np.abs(S - kp_npz["S_kp"]) / I))
         out[name] = {"S": S, "pred": pred, "forward_true": fwd, "sd_I": np.sqrt(G[:, 0, 0]),
+                     "sd_Q": np.sqrt(G[:, 1, 1]), "sd_U": np.sqrt(G[:, 2, 2]),
                      "sd_absP": np.sqrt(var_p), "sigma": fits_npz[f"{k}_sigma"],
                      "data_fit": fits_npz[f"{k}_data_fit"], "data_held": fits_npz[f"{k}_data_held"],
                      "R_star": R}

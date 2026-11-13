@@ -6,7 +6,7 @@ validated on the 20 withheld channels:
   * spectral laws (spectral_laws.py): PySM s1 (k = 2), s3 (3), beta-moment with omega_1 = 0
     (bmom3, 3), log-cubic (4), beta-moment with omega_1 free (bmom4, 4), each integrated
     through the same channel responses;
-  * the moment basis (N = 2, 36 columns), noise-whitened TSVD on intensity rows, at the UPRE
+  * the moment basis (N = 2, 57 columns), noise-whitened TSVD on intensity rows, at the UPRE
     rank R* searched over R <= 14 (the Picard range; the uncapped R* over R = 1..rank is
     kept as moment_UPRE_uncapped) and at R = 2, 3, 4 (equal count);
   * electron-spectrum families through the same basis (ePL 2, eLP 3, eSBPL 4 parameters).
@@ -19,7 +19,7 @@ validated on the 20 withheld channels:
 Part B (GALPROP): published |b| >= 60 deg intensity (inputs/galprop-benchmark/regional_spectra.csv),
 native nodes 0.114-9.1 GHz (original indices 26..50), even indices fitted (13), odd withheld (12),
 monochromatic evaluation with the paper's B ~ U[4,6] muG and eta ~ U[-1/2,1/2], moment basis on
-[300, 1e5] with 12 bins, N = 2, versus the same laws and families.  Weights and UPRE use an
+[300, 2.96e6] with 19 bins, N = 2, versus the same laws and families.  Weights and UPRE use an
 assumed 1% noise sd; reported both noise-free (representation) and over 1% noise realisations.
 
 Writes baselines_results.json and baselines_plotdata.npz.  Run: python baselines.py
@@ -498,7 +498,7 @@ def main():
         "models": {
             "laws": {law: SL.n_params(law) for law in SL.LAWS},
             "families": {f: BM.family_n_params(f) for f in BM.FAMILIES},
-            "moment": ("TSVD of whitened intensity rows, N = 2, 12 bins on [300, 1e5]; UPRE R* = argmin chi2_fit + 2R "
+            "moment": ("TSVD of whitened intensity rows, N = 2, 19 bins on [300, 2.96e6]; UPRE R* = argmin chi2_fit + 2R "
                        f"over R <= {BM.R_CAP} (moment_UPRE); moment_UPRE_uncapped searches R = 1..rank"),
             "law_pivot_GHz": 1.0,
             "law_P": "none; with_assumption = local power-law fraction (see spectral_laws.py)",

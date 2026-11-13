@@ -7,7 +7,7 @@ One evaluation returns all 123 rows (41 channels x I, Q, U).
         averaged kernel at every node (ensembles.direct_from_measure);
   (ii)  cached fine gamma table: Kbar at fixed gamma nodes, precomputed once; one evaluation is
         the density at the nodes and a (123 x n_gamma) matrix-vector product;
-  (iii) moment basis: family moments a(theta) (12 x 3) and a (123 x 36) matrix-vector product.
+  (iii) moment basis: family moments a(theta) (n_bins x 3) and a (123 x 3 n_bins) matrix-vector product.
 Families: E2 smoothly broken power law (no kink) and E4-JP (cut-off that moves with theta).
 Timings: one process, BLAS forced single-threaded, each call timed individually
 (time.perf_counter_ns), medians of >= 50 calls after warm-up.
@@ -16,7 +16,7 @@ Counts: kernel calls and columns to build the continuum basis (analytic derivati
 paper's 5-point stencil for comparison), the harmonic basis (5-point stencil; per-call times
 read from the survey memo, not re-run here), and one (gamma, B) joint case: JP ageing with
 synchrotron losses in the local field B ~ U[4, 6] muG (gamma_c depends on B), comparing a
-(gamma x B) table with a 12-bin x 6-monomial (total degree <= 2 in x_gamma, x_B) basis.
+(gamma x B) table with an n_bins x 6-monomial (total degree <= 2 in x_gamma, x_B) basis.
 
 Writes cost_results.json.  Run: python cost.py
 """
@@ -231,7 +231,7 @@ def one_d_case(cfg, table, C2, name) -> dict:
     a0 = fam(cfg, thetas[0], 2)[0].ravel()
     out["route_iii_parts"] = {"family_moments_only": timed(lambda th: fam(cfg, th, 2), thetas, N_FAST),
                               "matvec_123x36_only": timed(lambda a: C2 @ a, [a0], N_FAST)}
-    out["route_iii_moment_basis_36"] = {**timed(f_iii, thetas, N_FAST), "columns": 36,
+    out["route_iii_moment_basis_36"] = {**timed(f_iii, thetas, N_FAST), "columns": 3 * cfg.n_bins,
                                         "max_rel_err_vs_route_i": max(rel_err(f_iii(th), r)
                                                                       for th, r in zip(thetas, ref))}
     out["n_theta_cycled"] = len(thetas)
@@ -256,14 +256,14 @@ def build_counts(cfg, table) -> dict:
     out["kbar_order0_single_gamma"] = timed(lambda g: B.kbar(cfg, [g], order=0, table=table), gs, 240)
     out["kbar_order2_single_gamma"] = timed(lambda g: B.kbar(cfg, [g], order=2, table=table), gs, 240)
     out["continuum_analytic_basis"] = {
-        "kbar_calls": cfg.n_bins, "orders_per_call": 3, "columns": 36,
+        "kbar_calls": cfg.n_bins, "orders_per_call": 3, "columns": 3 * cfg.n_bins,
         **timed(lambda _: B.build_basis(cfg, 2, table=table), [0], 60)}
     out["continuum_stencil_basis"] = {
-        "kbar_calls": 5 * cfg.n_bins, "orders_per_call": 1, "columns": 36,
+        "kbar_calls": 5 * cfg.n_bins, "orders_per_call": 1, "columns": 3 * cfg.n_bins,
         **timed(lambda _: B.stencil_derivative_spectra(cfg, table=table), [0], 60)}
     out["harmonic_stencil_basis_read_from_survey"] = {
         "source": SURVEY,
-        "kbar_calls": 5 * cfg.n_bins, "half_step_check_calls": 5 * cfg.n_bins, "columns": 36,
+        "kbar_calls": 5 * cfg.n_bins, "half_step_check_calls": 5 * cfg.n_bins, "columns": 3 * cfg.n_bins,
         "per_call_s_adopted_settings": {"gamma_382": 1.32, "gamma_6977": 2.26, "gamma_78502": 2.89},
         "per_call_s_coarse_settings": {"gamma_382": 0.50, "gamma_6977": 0.82, "gamma_78502": 1.02},
         "recorded_logs_s": {"basis_refined": 134.7, "basis_halfstep": 49.1, "basis_coarse": 47.9,
@@ -286,7 +286,7 @@ def gamma_c_local(bval, t_myr=19.0, u_rad_ev=1.0):
 
 
 def joint_columns(cfg, tab0) -> np.ndarray:
-    """(41, 3, 72) columns of monomials x_gamma^r x_B^s / (r! s!) derivatives at (gamma_b, B0).
+    """(41, 3, 6 n_bins) columns of monomials x_gamma^r x_B^s / (r! s!) derivatives at (gamma_b, B0).
 
     B-derivatives from the continuum identity Kbar(u, B) = lam G(u + ln(lam)/2), lam = B/B0,
     G(u) = Kbar(u, B0):  d_eps K = G + G'/2,  (1/2) d_eps^2 K = G'/4 + G''/8,  d_u d_eps K = G' + G''/2.
@@ -335,9 +335,9 @@ def joint_columns_stencil_check(cfg, tab0, C72) -> dict:
 
 def stencil_columns_in_gamma_span(cfg, C72, cols, sig) -> dict:
     """Residual of each stencil-built B-derivative column (123 rows, whitened) after
-    least-squares projection onto the 36 gamma-derivative columns at B0."""
+    least-squares projection onto the 3 n_bins gamma-derivative columns at B0."""
     gidx = [b * 6 + MONOMIALS.index(m) for b in range(cfg.n_bins) for m in ((0, 0), (1, 0), (2, 0))]
-    G = C72.reshape(-1, 72)[:, gidx] / sig[:, None]
+    G = C72.reshape(-1, 6 * cfg.n_bins)[:, gidx] / sig[:, None]
     scale = float(np.max(np.linalg.norm(G, axis=0)))
     rel, glob = np.zeros((len(cols), cfg.n_bins)), np.zeros((len(cols), cfg.n_bins))
     for i, (m, c) in enumerate(cols.items()):
@@ -411,7 +411,7 @@ def joint_case(cfg, table, C2) -> dict:
     C72 = joint_columns(cfg, tab0)
     out["joint_basis_build_s"] = time.perf_counter() - s
     out["joint_basis_stencil_check"], st_cols = joint_columns_stencil_check(cfg, tab0, C72)
-    C72r = C72.reshape(-1, 72)
+    C72r = C72.reshape(-1, 6 * cfg.n_bins)
     xb = (bn - B0) / DB
 
     def joint_moments(th):
@@ -439,7 +439,7 @@ def joint_case(cfg, table, C2) -> dict:
     sig = 0.01 * np.repeat(S0[:, :1], 3, axis=1).ravel()
     out["stencil_B_columns_rel_residual_outside_gamma_span"] = stencil_columns_in_gamma_span(cfg, C72, st_cols, sig)
     # push-forward route: gamma' = gamma sqrt(B/B0) with weight B/B0, fixed-B0 36-column basis
-    C36_B0 = B.build_basis(cfg, 2, table=tab0).reshape(-1, 36)
+    C36_B0 = B.build_basis(cfg, 2, table=tab0).reshape(-1, 3 * cfg.n_bins)
     apf = np.zeros((cfg.n_bins, 3))
     for bv, wv in zip(bn, bw):
         mm = jp_measure(cfg, (A_unit, p, np.log(gamma_c_local(bv))))
@@ -452,7 +452,7 @@ def joint_case(cfg, table, C2) -> dict:
     apf /= cfg.w_b[:, None]
     out["pushforward_36_fixed_B0_max_rel_err"] = rel_err((C36_B0 @ apf.ravel()).reshape(-1, 3), S0)
     out["pushforward_note"] = ("continuum only: K(gamma, B) = (B/B0) K(gamma sqrt(B/B0), B0) maps any (gamma, B) "
-                               "ensemble onto gamma-moments at B0; nodes with gamma' outside [300, 1e5] are kept "
+                               f"ensemble onto gamma-moments at B0; nodes with gamma' outside [{cfg.gamma_lo:.3g}, {cfg.gamma_hi:.3g}] are kept "
                                "in the edge bins (|x| slightly > 1)")
 
     # table route: fixed gamma nodes (12 x 24) x 16 B nodes
@@ -484,11 +484,11 @@ def joint_case(cfg, table, C2) -> dict:
     out["route_ii_table"] = {**timed(table_eval, thetas, 200), "columns": int(T.shape[1]), "kernel_calls_to_build": int(T.shape[1]),
                              "max_rel_err_vs_route_i": max(rel_err(table_eval(th), r) for th, r in zip(thetas, refs))}
     out["route_iii_joint_moment_basis_72"] = {
-        **timed(moment_eval, thetas, 200), "columns": 72, "kernel_calls_to_build": cfg.n_bins,
+        **timed(moment_eval, thetas, 200), "columns": 6 * cfg.n_bins, "kernel_calls_to_build": cfg.n_bins,
         "max_rel_err_vs_route_i": max(rel_err(moment_eval(th), r) for th, r in zip(thetas, refs))}
     out["counts"] = {
         "table_nodes_n_gamma_x_n_B": [len(g), 16], "table_columns": int(T.shape[1]),
-        "table_entries": int(T.size), "moment_bins_x_monomials": [cfg.n_bins, 6], "moment_columns": 72,
+        "table_entries": int(T.size), "moment_bins_x_monomials": [cfg.n_bins, 6], "moment_columns": 6 * cfg.n_bins,
         "moment_entries": int(C72r.size),
         "continuum_kernel_calls_moment": f"{cfg.n_bins} at B0 (orders 0..2 in ln gamma; B derivatives by the scaling identity)",
         "generic_kernel_calls_moment_tensor_5pt_stencil": 25 * cfg.n_bins,
@@ -504,7 +504,7 @@ def main():
     cfg = PAPER
     idle = wait_for_idle()
     table = B.get_table(cfg)
-    C2 = B.build_basis(cfg, 2, table=table).reshape(-1, 36)
+    C2 = B.build_basis(cfg, 2, table=table).reshape(-1, 3 * cfg.n_bins)
     res = {"machine": machine_info(), "wait_for_idle": idle, "machine_start": busy()}
     res["one_d"] = {name: one_d_case(cfg, table, C2, name) for name in ("E2", "E4-JP")}
     res["build"] = build_counts(cfg, table)

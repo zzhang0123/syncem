@@ -118,8 +118,8 @@ class Ensemble1D:
     """Separable ensemble: N(gamma) on [lo, hi], isotropic pitch, paper angles/screen."""
 
     name: str = ""
-    lo: float = 300.0
-    hi: float = 1e5
+    lo: float = PAPER.gamma_lo
+    hi: float = PAPER.gamma_hi
     kinks: tuple = ()
 
     # subclasses define shape(g) (unnormalised); optional cut-off exponent
@@ -439,7 +439,7 @@ class KardashevPacholczyk:
 # ----------------------------------------------------------------------------- two-zone E5
 @dataclass(frozen=True)
 class TwoZone:
-    """E5: zones A (steep) and B (flat), power laws on [300, 1e5], zone azimuth densities
+    """E5: zones A (steep) and B (flat), power laws on [300, PAPER.gamma_hi], zone azimuth densities
     [1 + 0.8 cos 2(phi - phi_z)]/(2 pi); fractions set so that I_A = I_B at the crossing
     channel (1 GHz).  Common known screen."""
 
@@ -528,7 +528,7 @@ def _smooth_family_moments(cfg: Config, f, theta, N):
 
 
 def powerlaw_moments(cfg: Config, theta, N=2):
-    """theta = (A, p): N = (A/GAMMA0)(gamma/GAMMA0)^-p on [300, 1e5]."""
+    """theta = (A, p): N = (A/GAMMA0)(gamma/GAMMA0)^-p on the cfg energy range."""
     return _smooth_family_moments(cfg, lambda g, th: (g / GAMMA0) ** (-th[:, 0]), theta, N)
 
 

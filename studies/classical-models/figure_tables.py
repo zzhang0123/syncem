@@ -76,7 +76,7 @@ def ensembles_table(data: dict) -> str:
     p1, p2, p3, kp, e5 = (ens[k]["params"] for k in ("E1", "E2", "E3", "E4-KP", "E5"))
     fA = ens["E5"]["fractions_A_B_crossing_channel"][0]
     dphi = math.degrees(e5["phi_b"] - e5["phi_a"])
-    sup = rf"[{num(p1['lo'])},\,10^{{{round(math.log10(p1['hi']))}}}]"
+    sup = rf"[{num(p1['lo'])},\,{num(p1['hi'])}]"
     rows = [
         rf"E1 & power law & $p={num(p1['p'], 2)}$ on ${sup}$ & analytic limit, edge, $\Pi$ & Rybicki \& Lightman (1979) \\",
         rf"E2 & smoothly broken power law & $p_1={num(p2['p1'], 2)}$, $p_2={num(p2['p2'], 2)}$, $s={num(p2['s'], 1)}$, "
@@ -288,7 +288,8 @@ def cost_table(data: dict) -> str:
     rows = []
     for case in ("E2", "E4-JP"):
         o = c["one_d"][case]
-        ri, rii, riii = o["route_i_recompute"], o["route_ii_table_288"], o["route_iii_moment_basis_36"]
+        ri, riii = o["route_i_recompute"], o["route_iii_moment_basis_36"]
+        rii = next(v for k, v in o.items() if k.startswith("route_ii_table_"))  # size in key name
         rows += [
             rf"{case} & (i) recompute & {ri['kernel_nodes_per_eval']} nodes/eval & -- & {_t(ri['median_s'])} & -- \\",
             rf" & (ii) $\gamma$ table & {rii['columns']} & {_t(rii['build_s'])} & {_t(rii['median_s'])} & "

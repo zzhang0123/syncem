@@ -42,7 +42,7 @@ def kernel_identity_one(lam, I_ref):
     cfg1, tab1 = PAPER, B.get_table(PAPER)
     cl = scaled_cfg(PAPER, lam)
     tabl = table_for(cl)
-    g = np.geomspace(300.0, 1e5, 49)
+    g = np.geomspace(PAPER.gamma_lo, PAPER.gamma_hi, 49)
     kIl, kQl = B.kbar(cl, g, order=0, table=tabl)
     kI1, kQ1 = B.kbar(cfg1, g * np.sqrt(lam), order=0, table=tab1)
     sc = np.max(np.abs(kIl[0]), axis=1, keepdims=True)
