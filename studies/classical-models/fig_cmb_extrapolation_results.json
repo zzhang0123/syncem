@@ -151,12 +151,12 @@
   }
  },
  "figures": {
-  "figures/cmb_extrapolation.pdf": "788e1fc4177f34226965e357607b70dae13d09d763112f9e8c992932d1b59cc6",
-  "figures/cmb_extrapolation.png": "ddeaf29d9a1e10e75d95f987c69581d4ed83f3ff6e57f8c24d4a8bc51ea56868"
+  "figures/cmb_extrapolation.pdf": "1cd65035c80f16965c6bdabe1a1825a76224a1902691e404577ae669ae570ac9",
+  "figures/cmb_extrapolation.png": "82bad73e806a945e73d5cd076dbc78c80653a377432d53d897e1a65d51e6633b"
  },
  "provenance": {
   "script": "fig_cmb_extrapolation.py",
-  "script_sha256": "01a4f8b1f815bc410bdfe33c5fd20c6ce43198b59e53d3e3b7d299be211b74fb",
+  "script_sha256": "50b3a646e92013c5be505efabc93c68a567ed95e3bb7896503c7eb1bd1c5306a",
   "lib_sha256": {
    "kernels.py": "b0983233f8fee93b12b10c299c0ea0d0011d72a106884029ec46107ba4121570",
    "config.py": "78aaca6292cd15db1d820d25651c288ed47d14213b8da3d55440b7d4546e887c",
@@ -179,7 +179,7 @@
    "scipy": "1.16.3",
    "matplotlib": "3.10.8"
   },
-  "wall_clock_s": 18.441503047943115,
-  "finished": "2026-11-13T16:51:03+0000"
+  "wall_clock_s": 18.833472967147827,
+  "finished": "2026-11-13T16:55:32+0000"
  }
 }

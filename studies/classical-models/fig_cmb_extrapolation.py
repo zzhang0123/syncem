@@ -48,7 +48,7 @@ from concurrent.futures import ProcessPoolExecutor  # noqa: E402
 from matplotlib.legend_handler import HandlerTuple  # noqa: E402
 from matplotlib.lines import Line2D  # noqa: E402
 from matplotlib.patches import Patch  # noqa: E402
-from matplotlib.ticker import FixedLocator, FuncFormatter, NullFormatter  # noqa: E402
+from matplotlib.ticker import FixedLocator, FuncFormatter, LogLocator, NullFormatter  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE / "lib"))
@@ -188,10 +188,12 @@ def prediction_bands(z, cv) -> tuple[dict, dict]:
     return bands, checks
 
 
-def freq_axis(ax, labels, lo=NU_LO, ticks=(1, 10, 40, 100, 300), shade=True):
+def freq_axis(ax, labels, lo=NU_LO, ticks=(1, 10, 40, 300), shade=True):
+    """Log frequency axis. In (a, b) 100 GHz is a minor tick, since its label would crowd the 40 GHz one."""
     ax.set_xscale("log")
     ax.set_xlim(lo, NU_HI)
     ax.xaxis.set_major_locator(FixedLocator(list(ticks)))
+    ax.xaxis.set_minor_locator(LogLocator(base=10, subs=np.arange(1, 10)))
     ax.xaxis.set_minor_formatter(NullFormatter())
     if shade:
         ax.axvspan(lo, NU_FIT_HI, color=FIT_FILL, lw=0, zorder=0)
