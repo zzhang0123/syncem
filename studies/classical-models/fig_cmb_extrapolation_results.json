@@ -1,5 +1,5 @@
 {
- "description": "CMB-window extrapolation figure: right and wrong electron models fitted through the basis.\n\nTwo columns, (E2) smoothly broken power law and (E3) index mixture, 1% noise.\nTop row, from extrap_curves.npz (extrap_curves.py, first noise realisation): intensity divided by a\npower law fitted to the truth over 1-40 GHz, with the fitted data, the truth, the right electron\nmodel and one wrong electron model that the in-band chi2 accepts, over 1-300 GHz.\nBelow each panel, at half its height, from fits_extrap_products.npz and fits_extrap_results.json\n(fits_extrap.py): intensity error |dI|/I of the same two models (median and 16-84% band over\nrealisations) with the 1% noise level as reference.\nAll panels share a uniform 1-300 GHz logarithmic frequency axis with the fitted part (below 40 GHz)\nshaded.\nThe plotted medians and 84th percentiles are checked against the JSON summary, and the in-band\nchi2/dof, rejection rates and 300 GHz errors of the drawn families are recorded with the check.\nText positions of the labels are placed by hand. Style: lib/figure_style_paper.py.\n\nReads fits_extrap_products.npz, fits_extrap_results.json (python fits_extrap.py) and\nextrap_curves.npz (python extrap_curves.py).\nWrites figures/cmb_extrapolation.{pdf,png} and fig_cmb_extrapolation_results.json.\nRun: python fig_cmb_extrapolation.py\n",
+ "description": "CMB-window extrapolation figure: right and wrong electron models fitted through the basis.\n\nTwo columns, (E2) smoothly broken power law and (E3) index mixture, 1% noise.\nTop row, from extrap_curves.npz (extrap_curves.py, first noise realisation): intensity divided by a\npower law fitted to the truth over 1-40 GHz, with the fitted data, the truth, the right electron\nmodel and one wrong electron model that the in-band chi2 accepts, over 1-300 GHz.\nBelow each panel, at half its height, from fits_extrap_products.npz and fits_extrap_results.json\n(fits_extrap.py): intensity error |dI|/I of the same two models (median and 16-84% band over\nrealisations) with the 1% noise level as reference.\nAll panels share a uniform 1-300 GHz logarithmic frequency axis with the fitted part (below 40 GHz)\nshaded.\nThe plotted medians and 84th percentiles are checked against the JSON summary, and the in-band\nchi2/dof, rejection rates and 300 GHz errors of the drawn families are recorded with the check.\nA figure legend in the style of the fit gallery names the curves, and the family names are written on the curves. Text positions of the labels are placed by hand. Style: lib/figure_style_paper.py.\n\nReads fits_extrap_products.npz, fits_extrap_results.json (python fits_extrap.py) and\nextrap_curves.npz (python extrap_curves.py).\nWrites figures/cmb_extrapolation.{pdf,png} and fig_cmb_extrapolation_results.json.\nRun: python fig_cmb_extrapolation.py\n",
  "noise": "0.01",
  "panels": [
   [
@@ -89,12 +89,12 @@
   ]
  },
  "figures": {
-  "figures/cmb_extrapolation.pdf": "e04a5148b960f2f472a8e88f470e79f53dd82e8f4c4761a41b99de0dedc5b302",
-  "figures/cmb_extrapolation.png": "37a2c8b2869ac98abea0fd473929e7b343c73f4a4d8db997b3fa408220d5ec51"
+  "figures/cmb_extrapolation.pdf": "de68add218cbc016569bacbaeb1f8d1e7857c0822697ddd553b0f35d8eda9c24",
+  "figures/cmb_extrapolation.png": "b59b3eba503f312dd9a70ade5e26b2c6cd6c63cd2c69ca66cb92e524ef9b557a"
  },
  "provenance": {
   "script": "fig_cmb_extrapolation.py",
-  "script_sha256": "f048db0cb05e575e7e2546a8084f99360b7db3d8e6c6f979c7112915caca14c2",
+  "script_sha256": "62af65bd4caba6d53fdfcbd8267bb73adb12c5015341986ebbda153a82f6592d",
   "lib_sha256": {
    "kernels.py": "b0983233f8fee93b12b10c299c0ea0d0011d72a106884029ec46107ba4121570",
    "config.py": "78aaca6292cd15db1d820d25651c288ed47d14213b8da3d55440b7d4546e887c",
@@ -114,7 +114,7 @@
    "scipy": "1.16.3",
    "matplotlib": "3.10.8"
   },
-  "wall_clock_s": 0.40976810455322266,
-  "finished": "2026-11-13T14:21:12+0000"
+  "wall_clock_s": 0.4222428798675537,
+  "finished": "2026-11-13T15:41:58+0000"
  }
 }

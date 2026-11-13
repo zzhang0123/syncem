@@ -11,7 +11,7 @@ All panels share a uniform 1-300 GHz logarithmic frequency axis with the fitted 
 shaded.
 The plotted medians and 84th percentiles are checked against the JSON summary, and the in-band
 chi2/dof, rejection rates and 300 GHz errors of the drawn families are recorded with the check.
-Text positions of the labels are placed by hand. Style: lib/figure_style_paper.py.
+A figure legend in the style of the fit gallery names the curves, and the family names are written on the curves. Text positions of the labels are placed by hand. Style: lib/figure_style_paper.py.
 
 Reads fits_extrap_products.npz, fits_extrap_results.json (python fits_extrap.py) and
 extrap_curves.npz (python extrap_curves.py).
@@ -30,6 +30,9 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
+from matplotlib.legend_handler import HandlerTuple  # noqa: E402
+from matplotlib.lines import Line2D  # noqa: E402
+from matplotlib.patches import Patch  # noqa: E402
 from matplotlib.ticker import FixedLocator, NullFormatter  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
@@ -138,22 +141,13 @@ def error_panel(ax, z, ens, right, wrong):
     ax.yaxis.set_minor_formatter(NullFormatter())
 
 
-def label_sed(a, b, cv):
-    """Family names on the curves (their roles are in the caption) and the truth label."""
+def label_sed(a, b):
+    """Family names on the curves. The legend gives the roles and the other curves."""
     kw = dict(fontsize=FS)
-    a.text(1.1, 0.59, r"data (1\% noise)", color=fs.INK, **kw)
     a.text(100, 0.94, "eSBPL", color=fs.BLUE, ha="right", **kw)
     a.text(200, 0.59, "eLP", color=WRONG_TEXT, ha="right", **kw)
     b.text(160, 1.077, "eLP", color=fs.BLUE, ha="right", **kw)
     b.text(300, 0.991, "ePL", color=WRONG_TEXT, ha="right", **kw)
-    # E2: leader from below the curves to the truth at 300 GHz. E3: text under the truth curve,
-    # on the side away from the right-family curve, without a leader.
-    nu = cv["nu_dense"] / 1e9
-    truth = cv["truth_E2"][:, 0]
-    a.annotate("truth", xy=(300, float(truth[-1] / reference_law(nu, truth)(300))), xytext=(300, 0.815),
-               color=TEXT_GREY, ha="right", va="center", arrowprops=dict(arrowstyle="-", color=TEXT_GREY, lw=0.5),
-               **kw)
-    b.text(300, 1.046, "truth", color=TEXT_GREY, ha="right", va="top", **kw)
     for ax, (ens, *_) in zip((a, b), PANELS):
         ax.set_ylim(*SED_LIM[ens])
     b.set_yticks([0.98, 1.0, 1.02, 1.04, 1.06, 1.08])
@@ -162,13 +156,27 @@ def label_sed(a, b, cv):
 def label_err(axes):
     for ax in axes:
         ax.text(np.sqrt(NU_FIT_HI), 0.06, "fit: 1--40 GHz", color=TEXT_GREY, ha="center", va="bottom", fontsize=FS)
-        ax.text(np.sqrt(NU_FIT_HI), 0.011, r"1\% noise", color=TEXT_GREY, ha="center", va="bottom", fontsize=FS)
+
+
+def legend(fig):
+    """Figure legend in the style of the fit gallery: one row of frameless entries above the panels."""
+    data = (Line2D([], [], marker="|", ls="", ms=6, mew=0.5, color=fs.INK),
+            Line2D([], [], marker="o", ls="", ms=2.6, color=fs.INK))
+    band = (Patch(color=fs.BLUE, alpha=ALPHA_RIGHT, lw=0), Patch(color=fs.VERMILION, alpha=ALPHA_WRONG, lw=0))
+    handles = [Line2D([], [], **{k: v for k, v in TRUTH_KW.items() if k != "zorder"}), data,
+               Line2D([], [], color=fs.BLUE, lw=1.2), Line2D([], [], color=fs.VERMILION, lw=1.2, ls=LS_WRONG),
+               band, Line2D([], [], color=NOISE_GREY, lw=1.0, ls=(0, (1, 1.5)))]
+    labels = ["true spectrum", r"data, $1\%$ noise", "fit, correct electron family",
+              "fit, incorrect electron family", r"$16$--$84\%$ of 500 realisations", "noise level"]
+    fig.legend(handles=handles, labels=labels, loc="upper center", ncol=3, bbox_to_anchor=(0.54, 1.0),
+               columnspacing=1.2, handlelength=2.4, handletextpad=0.5,
+               handler_map={tuple: HandlerTuple(ndivide=None, pad=0.0), data: HandlerTuple(ndivide=1)})
 
 
 def layout(fig):
     """Two columns, each an intensity panel over an error panel of half its height."""
     grid = fig.add_gridspec(2, 2, height_ratios=(2, 1), hspace=0.055, wspace=0.19, left=0.11, right=0.985,
-                            bottom=0.15, top=0.91)
+                            bottom=0.135, top=0.825)
     top = [fig.add_subplot(grid[0, k]) for k in range(2)]
     return top, [fig.add_subplot(grid[1, k], sharex=top[k]) for k in range(2)]
 
@@ -198,14 +206,15 @@ def main():
     summ = json.loads(RESULTS.read_text())["summary"]
     cv = np.load(CURVES)
     checks = check_against_json(z, summ)
-    fig = plt.figure(figsize=(fs.WIDTH, 3.05))
+    fig = plt.figure(figsize=(fs.WIDTH, 3.45))
     top, low = layout(fig)
     sed = {}
     for ax, (ens, right, wrong, title) in zip(top, PANELS):
         sed[ens] = sed_panel(ax, cv, ens, right, wrong, title)
     for ax, (ens, right, wrong, _) in zip(low, PANELS):
         error_panel(ax, z, ens, right, wrong)
-    label_sed(*top, cv)
+    label_sed(*top)
+    legend(fig)
     label_err(low)
     top[0].set_ylabel(r"Intensity / power law")
     low[0].set_ylabel(r"Error $|\Delta I|/I$")
