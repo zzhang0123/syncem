@@ -22,7 +22,7 @@ The 500-realisation statistics of the drawn families (in-band chi2/dof, rejectio
 and 16-84% error at 40 and 300 GHz, signed 16-84% range of I_pred/I - 1 at 300 GHz) are recorded
 from fits_extrap_products.npz after checking that they reproduce fits_extrap_results.json. The
 errors drawn in (c) are checked against fits_cmb_results.json. A figure legend in the style of the fit gallery names the curves, and the
-family names are written on the curves. Text positions of the labels are placed by hand.
+family names and the free-moment fit are written on the curves. Text positions of the labels are placed by hand.
 Style: lib/figure_style_paper.py.
 
 Reads fits_extrap_products.npz, fits_extrap_results.json (python fits_extrap.py),
@@ -81,7 +81,7 @@ TEXT_GREY = "#555555"
 WRONG_TEXT = "#A84200"  # darkened vermilion for text: darker than the grey labels in greyscale
 FREE_TEXT = "#8A5A00"  # darkened orange for text
 LS_WRONG = (0, (4, 1.6))
-LS_FREE = (0, (5, 1.2, 1.2, 1.2))  # dash-dot: the free-moment fit
+LS_FREE = "-"  # solid like the full-basis fit of Fig. 5, where dash-dot marks a misspecified model
 FIT_FILL = "#F2F2F2"
 NOISE_GREY = "#999999"
 NOISE_LS = (0, (1, 1.5))
@@ -284,6 +284,7 @@ def label_panels(a, b, c, ce):
     for ax, y, va in ((a, 0.04, "bottom"), (b, 0.96, "top")):  # clear of the data in each panel
         ax.text(np.sqrt(NU_LO * NU_FIT_HI), y, "fit: 1--40 GHz", transform=ax.get_xaxis_transform(),
                 color=TEXT_GREY, ha="center", va=va, **kw)
+    c.text(290, 1.026, "free moments", color=FREE_TEXT, ha="right", va="bottom", **kw)
     ce.text(12, 2.6, r"$1\%$ noise", color=FREE_TEXT, ha="left", va="bottom", **kw)
     ce.text(12, 2.0e-5, r"$0.01\%$ noise", color=FREE_TEXT, ha="left", va="bottom", **kw)
 

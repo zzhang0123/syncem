@@ -1,5 +1,5 @@
 {
- "description": "CMB-window figure: electron families fitted over 1-40 GHz and free moments fitted over 10-300 GHz.\n\nThree columns, 1% noise.\n(a) E2, smoothly broken power law, and (b) E3, index mixture, from extrap_curves.npz\n(extrap_curves.py, first noise realisation): intensity divided by a power law fitted to the truth\nover 1-40 GHz, with the fitted data, the truth, the correct electron family and one incorrect\nfamily that the in-band chi2 accepts, over 1-300 GHz. The fitted part (below 40 GHz) is shaded grey.\nAbove 40 GHz a light band of each family's colour gives the 16-84% range of its predicted intensity\nover the 500 noise realisations of fits_extrap.py. The bands are computed here: the 500 family fits\nof fits_extrap.py are repeated (fits_extrap.family_fit, same seed and noise) and predicted on the\n25 prediction channels and on the 121 dense channels of extrap_curves.py. The script stops unless\nthe prediction-channel errors reproduce the saved |dI|/I arrays of fits_extrap_products.npz, the\nfirst realisation reproduces the dense curves of extrap_curves.npz, and the two grids agree at\n300 GHz.\n(c) E2 fitted with free moments over 10-300 GHz, from fits_cmb_products.npz (fits_cmb.py): the same\nratio with a power law fitted to the truth over 10-300 GHz, the fitted data and the fit at 1%\nnoise. Below it, at half its height, the intensity error |fit - true|/I_j in per cent in each of\nthe 41 channels (21 fitted, 20 withheld) at 1% and 0.01% noise (one realisation, scaled), with the\ntwo noise levels as reference. Panel (c) has no shading, since the whole window is fitted.\n\nThe 500-realisation statistics of the drawn families (in-band chi2/dof, rejection rate, median\nand 16-84% error at 40 and 300 GHz, signed 16-84% range of I_pred/I - 1 at 300 GHz) are recorded\nfrom fits_extrap_products.npz after checking that they reproduce fits_extrap_results.json. The\nerrors drawn in (c) are checked against fits_cmb_results.json. A figure legend in the style of the fit gallery names the curves, and the\nfamily names are written on the curves. Text positions of the labels are placed by hand.\nStyle: lib/figure_style_paper.py.\n\nReads fits_extrap_products.npz, fits_extrap_results.json (python fits_extrap.py),\nextrap_curves.npz (python extrap_curves.py), fits_cmb_products.npz and fits_cmb_results.json\n(python fits_cmb.py).\nWrites figures/cmb_extrapolation.{pdf,png} and fig_cmb_extrapolation_results.json.\nRun: python fig_cmb_extrapolation.py\n",
+ "description": "CMB-window figure: electron families fitted over 1-40 GHz and free moments fitted over 10-300 GHz.\n\nThree columns, 1% noise.\n(a) E2, smoothly broken power law, and (b) E3, index mixture, from extrap_curves.npz\n(extrap_curves.py, first noise realisation): intensity divided by a power law fitted to the truth\nover 1-40 GHz, with the fitted data, the truth, the correct electron family and one incorrect\nfamily that the in-band chi2 accepts, over 1-300 GHz. The fitted part (below 40 GHz) is shaded grey.\nAbove 40 GHz a light band of each family's colour gives the 16-84% range of its predicted intensity\nover the 500 noise realisations of fits_extrap.py. The bands are computed here: the 500 family fits\nof fits_extrap.py are repeated (fits_extrap.family_fit, same seed and noise) and predicted on the\n25 prediction channels and on the 121 dense channels of extrap_curves.py. The script stops unless\nthe prediction-channel errors reproduce the saved |dI|/I arrays of fits_extrap_products.npz, the\nfirst realisation reproduces the dense curves of extrap_curves.npz, and the two grids agree at\n300 GHz.\n(c) E2 fitted with free moments over 10-300 GHz, from fits_cmb_products.npz (fits_cmb.py): the same\nratio with a power law fitted to the truth over 10-300 GHz, the fitted data and the fit at 1%\nnoise. Below it, at half its height, the intensity error |fit - true|/I_j in per cent in each of\nthe 41 channels (21 fitted, 20 withheld) at 1% and 0.01% noise (one realisation, scaled), with the\ntwo noise levels as reference. Panel (c) has no shading, since the whole window is fitted.\n\nThe 500-realisation statistics of the drawn families (in-band chi2/dof, rejection rate, median\nand 16-84% error at 40 and 300 GHz, signed 16-84% range of I_pred/I - 1 at 300 GHz) are recorded\nfrom fits_extrap_products.npz after checking that they reproduce fits_extrap_results.json. The\nerrors drawn in (c) are checked against fits_cmb_results.json. A figure legend in the style of the fit gallery names the curves, and the\nfamily names and the free-moment fit are written on the curves. Text positions of the labels are placed by hand.\nStyle: lib/figure_style_paper.py.\n\nReads fits_extrap_products.npz, fits_extrap_results.json (python fits_extrap.py),\nextrap_curves.npz (python extrap_curves.py), fits_cmb_products.npz and fits_cmb_results.json\n(python fits_cmb.py).\nWrites figures/cmb_extrapolation.{pdf,png} and fig_cmb_extrapolation_results.json.\nRun: python fig_cmb_extrapolation.py\n",
  "noise": "0.01",
  "panels": [
   [
@@ -151,12 +151,12 @@
   }
  },
  "figures": {
-  "figures/cmb_extrapolation.pdf": "1cd65035c80f16965c6bdabe1a1825a76224a1902691e404577ae669ae570ac9",
-  "figures/cmb_extrapolation.png": "82bad73e806a945e73d5cd076dbc78c80653a377432d53d897e1a65d51e6633b"
+  "figures/cmb_extrapolation.pdf": "f5bbf88d562ae5382d145bc228975150b0acf5c300bd5fcba8d3ac13b4f9db94",
+  "figures/cmb_extrapolation.png": "88d81ff88bcf7acfcfb5becb8b35c366180194da593a7ebb208835c4d4809c26"
  },
  "provenance": {
   "script": "fig_cmb_extrapolation.py",
-  "script_sha256": "50b3a646e92013c5be505efabc93c68a567ed95e3bb7896503c7eb1bd1c5306a",
+  "script_sha256": "66bcec5314ac839a8a821abd13bf377481a5ff89904bdfe35bdcbc6ad57334b7",
   "lib_sha256": {
    "kernels.py": "b0983233f8fee93b12b10c299c0ea0d0011d72a106884029ec46107ba4121570",
    "config.py": "78aaca6292cd15db1d820d25651c288ed47d14213b8da3d55440b7d4546e887c",
@@ -179,7 +179,7 @@
    "scipy": "1.16.3",
    "matplotlib": "3.10.8"
   },
-  "wall_clock_s": 18.833472967147827,
-  "finished": "2026-11-13T16:55:32+0000"
+  "wall_clock_s": 18.466341733932495,
+  "finished": "2026-11-13T17:00:04+0000"
  }
 }
