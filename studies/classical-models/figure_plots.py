@@ -51,7 +51,6 @@ GHZ = 1e9
 
 
 RADIO_AXIS = dict(xlim=(0.09, 11.0), ticks=(0.1, 1.0, 10.0))
-CMB_AXIS = dict(xlim=(9.0, 330.0), ticks=(10.0, 30.0, 100.0, 300.0))
 
 
 def ghz_axis(ax, label=True, xlim=RADIO_AXIS["xlim"], ticks=RADIO_AXIS["ticks"]):
@@ -387,15 +386,7 @@ def fig_moment_fit_gallery(D: dict, data: dict, rows: tuple[str, ...] | None = N
 # ----------------------------------------------------------------------------- Stokes gallery (moment_fit_gallery_compact)
 # Column headings carry the plotted quantity, so the panels need no y labels.
 STOKES_COLUMNS = ((0, r"(a) Intensity / power law, $I_j/I_{\rm PL}$"), (1, r"(b) Stokes $Q_j/I_j$"), (2, r"(c) Stokes $U_j/I_j$"))
-# Polarisation shown as fraction and intrinsic angle (Faraday rotation of the mean depth removed):
-# the same information as Q and U, read directly as depolarisation and rotation.
-POLAR_COLUMNS = ((0, r"(a) Intensity, $I_j/I_{\rm PL}$"), (1, r"(b) Polarisation fraction, $|P_j|/I_j$"),
-                 (2, r"(c) Intrinsic angle [deg]"))  # chi_j - lambda_j^2 Psi_bar, defined in the caption
-POL_MIN = 0.03  # the angle is drawn only where |P|/I exceeds 3% (as in fits.py)
-ANGLE_ERR_LIM = (4e-4, 30.0)  # degrees
-ANGLE_TICKS = {1e-3: r"$\leq\!10^{-3}$", 0.1: "0.1", 10.0: "10"}  # degrees; the unit is in the heading
-MASK_SHADE = "#F3F3F3"  # frequencies where the angle is not drawn
-# Row titles: the model in plain words as in Sec. 5 and Table 3, its code in parentheses.
+# Row titles: the model in plain words, its code in parentheses.
 ROW_TITLE = {"E1": "Power law (E1)", "E2": "Smoothly broken power law (E2)",
              "E3": "Index mixture (E3)", "E4-JP": "Ageing, isotropised pitch angles (E4-JP)",
              "E4-KP": "Ageing, fixed pitch angles (E4-KP)", "E5": "Two power-law zones (E5)",
@@ -403,8 +394,6 @@ ROW_TITLE = {"E1": "Power law (E1)", "E2": "Smoothly broken power law (E2)",
 # inches; "gap" is the band above each block that holds its row title
 STOKES_HEIGHTS = dict(main=0.80, inner=0.05, sub=0.38, gap=0.24, top=0.56, bottom=0.36)
 STOKES_ERR_LIM = (4e-5, 12.0)  # per cent of I_j; the axis line sits below the floor, the top clears the E5 dash-dot error
-ERR_FLOOR = 1e-4  # per cent of I_j; smaller errors are drawn at this labelled level
-ERR_TICKS = {1e-4: r"$\leq\!10^{-4}$", 1e-2: "0.01", 1.0: "1"}
 # Q/U/I error panels are not clipped: errors below the axis leave the panel through the bottom
 STOKES_ERR_TICKS = {1e-4: r"$10^{-4}$", 1e-2: "0.01", 1.0: "1"}
 # error curves: the 1% fit heavy in the row colour, the low-noise fit thin in a darker tone of it
@@ -484,92 +473,6 @@ def _stokes_error(ax, nu, f, k, color):
     ax.yaxis.set_minor_locator(NullLocator())
 
 
-def _polar(S, nu_ghz):
-    """(|P|/I, intrinsic angle in deg, mask |P|/I > POL_MIN) of spectra S (J, 3); angle unwrapped over frequency."""
-    I = S[:, 0]
-    lam2 = (2.99792458e8 / (nu_ghz * 1e9)) ** 2
-    P = (S[:, 1] + 1j * S[:, 2]) * np.exp(-2j * lam2 * PAPER.screen_mean)
-    frac = np.abs(P) / I
-    ok = frac > POL_MIN
-    two_chi = np.full(I.size, np.nan)
-    if ok.any():
-        two_chi[ok] = np.unwrap(np.angle(P[ok]))
-    return frac, np.degrees(0.5 * two_chi), ok
-
-
-def _polar_main(ax, nu, f, k, color, fit_i):
-    """|P|/I (k = 1) or intrinsic angle (k = 2): truth band, fit, data with 1-sigma bars, free-factor fit (E5)."""
-    tf, tc, ok = _polar(f["S"], nu)
-    pf, pc, _ = _polar(f["pred"], nu)
-    if k == 2:  # put the fit on the branch of the truth
-        pc = tc + ((pc - tc + 90.0) % 180.0 - 90.0)
-    ax.plot(nu, tf if k == 1 else tc, **TRUE_STYLE)
-    ax.plot(nu, pf if k == 1 else np.where(ok, pc, np.nan), color=color, lw=FIT_LW, zorder=3, path_effects=FIT_HALO)
-    if "pred_free_factor" in f:
-        ff, fc, _ = _polar(f["pred_free_factor"], nu)
-        fc = tc + ((fc - tc + 90.0) % 180.0 - 90.0)
-        ax.plot(nu, ff if k == 1 else np.where(ok, fc, np.nan), color=fs.VERMILION, ls=FREE_FACTOR_LS, lw=FIT_LW, zorder=3)
-    d = f["data_fit"]
-    sig = f["sigma"][fit_i, 1]
-    df, dc, dok = _polar(d, nu[fit_i])
-    if k == 1:
-        ax.errorbar(nu[fit_i], df, sig / d[:, 0], **DATA_STYLE)
-    else:
-        dc = tc[fit_i] + ((dc - tc[fit_i] + 90.0) % 180.0 - 90.0)
-        sel = dok & ok[fit_i]
-        ax.errorbar(nu[fit_i][sel], dc[sel], np.degrees(sig[sel] / (2 * df[sel] * d[sel, 0])), **DATA_STYLE)
-    if k == 2 and "pred_free_factor" in f:  # direct label below the right end of the dash-dot curve
-        j = np.flatnonzero(ok)[-1]
-        ax.annotate("energy-independent\nazimuth", (nu[j], fc[j]), xytext=(-2, -7), textcoords="offset points",
-                    ha="right", va="top", color=fs.VERMILION, fontsize="small", linespacing=1.0)
-    ax.yaxis.set_major_locator(MaxNLocator(3, steps=[1, 2, 2.5, 5], min_n_ticks=3))
-    ax.yaxis.set_major_formatter(CommonDecimals())
-
-
-def _shade_masked(ax, nu, ok, note=False):
-    """Light band over the frequencies where |P|/I <= POL_MIN, where the angle is not drawn."""
-    edges = np.sqrt(nu[1:] * nu[:-1])
-    lo = np.concatenate([[nu[0] ** 2 / edges[0]], edges])
-    hi = np.concatenate([edges, [nu[-1] ** 2 / edges[-1]]])
-    for i in np.flatnonzero(~ok):
-        ax.axvspan(lo[i], hi[i], color=MASK_SHADE, lw=0, zorder=0)
-    if note and not ok[0]:
-        x1 = hi[np.argmax(ok) - 1] if ok.any() else hi[-1]
-        ax.text(np.sqrt(ax.get_xlim()[0] * x1), 0.5, r"$|P|/I$" "\n" rf"$<{100 * POL_MIN:g}\%$",
-                transform=ax.get_xaxis_transform(), ha="center", va="center", color=GREY,
-                fontsize="small", linespacing=1.1)
-
-
-def _polar_error(ax, nu, f, k, color):
-    """| |P_fit|/I_fit - |P|/I | in percentage points (k = 1) or |chi_fit - chi| in degrees (k = 2), both noise levels."""
-    tf, tc, ok = _polar(f["S"], nu)
-    levels = [(PAPER.noise_frac, f["pred"], "high")]
-    if "pred_low" in f:
-        levels.append((f["noise_low"], f["pred_low"], "low"))
-    for frac, pred, style in levels:
-        pf, pc, _ = _polar(pred, nu)
-        if k == 1:
-            ax.axhline(100 * frac, zorder=3, **NOISE_STYLE)
-            ax.plot(nu, np.maximum(100 * np.abs(pf - tf), ERR_FLOOR), color=_err_color(color, style), zorder=2,
-                    **ERR_STYLE[style])
-        else:  # expected angle noise sigma/(2|P|) for this noise level, dotted
-            ax.plot(nu, np.where(ok, np.degrees(frac / (2 * tf)), np.nan), zorder=1, **NOISE_STYLE)
-            dchi = np.abs((pc - tc + 90.0) % 180.0 - 90.0)
-            ax.plot(nu, np.where(ok, np.maximum(dchi, ANGLE_ERR_LIM[0] * 2.5), np.nan), color=_err_color(color, style),
-                    zorder=2,
-                    **ERR_STYLE[style])
-    ax.set_yscale("log")
-    if k == 1:
-        ax.set_ylim(*STOKES_ERR_LIM)
-        ticks = ERR_TICKS
-    else:
-        ax.set_ylim(*ANGLE_ERR_LIM)
-        ticks = ANGLE_TICKS
-    ax.yaxis.set_major_locator(FixedLocator(list(ticks)))
-    ax.yaxis.set_major_formatter(FuncFormatter(lambda v, _: ticks.get(v, f"{v:g}")))
-    ax.yaxis.set_minor_locator(NullLocator())
-
-
 def _row_title(ax, name, R_star, color):
     """Row title above the block's left panel, led by a short segment in the row's fit colour."""
     swatch = DrawingArea(14, 6, 0, 0)
@@ -580,11 +483,9 @@ def _row_title(ax, name, R_star, color):
                                  box_alignment=(0, 0), frameon=False, pad=0, annotation_clip=False))
 
 
-def fig_stokes_fit_gallery(D: dict, data: dict, rows: tuple[str, ...] = GALLERY_COMPACT, axis: dict = RADIO_AXIS,
-                           polar: bool = False):
-    """Columns I, |P|/I, intrinsic angle (polar=True) or I, Q, U; one block per ensemble: spectrum above a
-    flat error panel sharing the frequency axis."""
-    COLS = POLAR_COLUMNS if polar else STOKES_COLUMNS
+def fig_stokes_fit_gallery(D: dict, data: dict, rows: tuple[str, ...] = GALLERY_COMPACT):
+    """Columns I, Q, U. One block per ensemble: spectrum above a flat error panel sharing the frequency axis."""
+    COLS = STOKES_COLUMNS
     bd = D["bands"]
     nu = bd["centres"] / GHZ
     fit_i = bd["fit_idx"]
@@ -603,24 +504,14 @@ def fig_stokes_fit_gallery(D: dict, data: dict, rows: tuple[str, ...] = GALLERY_
             ax = fig.add_subplot(gs[4 * r + 1, col], sharex=share)
             share = share or ax
             sub = fig.add_subplot(gs[4 * r + 3, col], sharex=share)
-            if polar and k > 0:
-                _polar_main(ax, nu, f, k, c, fit_i)
-                _polar_error(sub, nu, f, k, c)
-                if k == 2:
-                    ok = _polar(f["S"], nu)[2]
-                    ghz_axis(ax, label=False, **axis)  # x limits set before the note is placed
-                    _shade_masked(ax, nu, ok, note=r == 0)
-                    _shade_masked(sub, nu, ok)
-                    sub.set_ylabel("[deg]", labelpad=1)
-            else:
-                _stokes_main(ax, nu, f, k, c, fit_i)
-                _stokes_error(sub, nu, f, k, c)
+            _stokes_main(ax, nu, f, k, c, fit_i)
+            _stokes_error(sub, nu, f, k, c)
             if col == 0:
                 sub.set_ylabel("Error\n" r"[\%]", linespacing=1.0, labelpad=2)  # two short lines fit the flat panel
                 _row_title(ax, name, f["R_star"], c)
 
             for a in (ax, sub):
-                ghz_axis(a, label=False, **axis)
+                ghz_axis(a, label=False)
                 a.tick_params(labelbottom=(a is sub and last))
             if r == 0:  # column heading centred over its column, regular weight as the row titles
                 pos = ax.get_position()

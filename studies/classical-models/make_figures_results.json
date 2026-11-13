@@ -1,5 +1,5 @@
 {
- "description": "Figures and LaTeX tables of the classical-model section, drawn from saved results (galprop_fit: moment basis at R = 12 recomputed, see galprop/* checks). reference_ensembles_compact, moment_fit_gallery_compact and field_energy_ridge are Figs. 5, 7 and 8 of the paper. The *_compact tables cross-check the entries of Tables 3 and 4 of the paper.",
+ "description": "Figures and LaTeX tables of the classical-model section, drawn from saved results (galprop_fit: moment basis at R = 12 recomputed, see galprop/* checks). The *_compact tables cross-check entries of the fit-summary and baselines tables of the paper. README.md maps the figures and tables to those of the paper.",
  "figures": {
   "reference_ensembles": {
    "files": {
@@ -601,7 +601,7 @@
  ],
  "provenance": {
   "script": "make_figures.py",
-  "script_sha256": "48bd91218c397932efb80417976bd35ab42303b103a55fb21762bef98b57ddb9",
+  "script_sha256": "d952f85bf10ef9eec9ec30a2d50c8dac9ec31ce2e2ab3ec97486cf34ce5042e5",
   "lib_sha256": {
    "kernels.py": "b0983233f8fee93b12b10c299c0ea0d0011d72a106884029ec46107ba4121570",
    "config.py": "78aaca6292cd15db1d820d25651c288ed47d14213b8da3d55440b7d4546e887c",
@@ -624,9 +624,9 @@
    "ridge_sed_results.json": "bc71ac7e2ab134761e31e57cdbf4aebbcdcf6b75324f559e6c9745285d89141e",
    "fits_lownoise_results.json": "48ed3547f58107c400ae0fafbc1c4f2c63ff68b9997ec86bdf6c0d01e3c633fc",
    "fits_lownoise_products.npz": "09c9e97e524f336e11cd5d2fca02fe73acb4182c522b05e63fc176e8a9e42c29",
-   "figure_data.py": "5b93d20c2e0823450f0d7402ff873ff619f4f5f8dd1fb81628293506e6975280",
-   "figure_plots.py": "e5e14aaf8b8267d99fb56b945bd646a9499d8be86fe0f28c333cb64a13704066",
-   "figure_tables.py": "cbab48e0b9ba0bb97461e8997e842fa5ff29826fe0a4f4009a774e17a4602580",
+   "figure_data.py": "7776f872126550c10cce8a0c000df77f967d78ee615a2d5f97940b202e89dd7b",
+   "figure_plots.py": "a8062b7490b835f0a7261cbfc4ccb27b0cb129e7196c271cb379bdae84033dd5",
+   "figure_tables.py": "b22b8e89297f55531f24d8903701d4058a9f490c624c2a3dee53cc02529559a7",
    "paramlib.py": "523da25c34f774acf6c4e21f6af5b43ece5429af6b00fed58f632818e80ab437",
    "baselines.py": "1cb0fe5febd024d4b17d727d125983145a711197dec12dd681d1ad01689fd9c3",
    "baseline_models.py": "66ec3e3c109838713139c49956417e6f8a6a2c1c901e0475bc697181246daff7",
@@ -638,7 +638,7 @@
    "scipy": "1.16.3",
    "matplotlib": "3.10.8"
   },
-  "wall_clock_s": 20.071111917495728,
-  "finished": "2026-11-13T02:45:39+0000"
+  "wall_clock_s": 21.486976146697998,
+  "finished": "2026-11-13T04:19:59+0000"
  }
 }

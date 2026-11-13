@@ -67,7 +67,7 @@ PRODUCERS = {"fits": "fits.py", "forward": "forward.py", "params": "params.py",
              "kp_pseudo": "kp_pseudotruth.py", "ridge_sed": "ridge_sed.py", "fits_low": "fits_lownoise.py"}
 
 ENSEMBLES = ("E1", "E2", "E3", "E4-JP", "E4-KP", "E5", "E1M")
-GALLERY = ("E1", "E2", "E4-KP", "E5")  # Fig. 9 rows (E3 stays in the tables)
+GALLERY = ("E1", "E2", "E4-KP", "E5")  # moment_fit_gallery rows (E3 stays in the tables)
 PSEUDO = "E4-KP"  # plotted against the JP(t_eff) pseudo-truth moments (kp_pseudotruth.py)
 GALPROP_R_HIGH = 12  # second moment-basis rank drawn in galprop_fit (the first is the MC median R*)
 GALPROP_LAWS = ("logcubic", "eSBPL")  # four-parameter law and electron family drawn in galprop_fit

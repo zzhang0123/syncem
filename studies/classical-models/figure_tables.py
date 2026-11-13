@@ -331,9 +331,9 @@ def cost_table(data: dict) -> str:
 
 
 # ----------------------------------------------------------------------------- compact tables
-# The layout of Tables 4 and 5 of the paper, to cross-check their entries: the fit summary with an N=2
-# forward-error column (Table 4), and the baselines as one block of "noise-free / 1% median" cells
-# (Table 5).  Notation follows the paper ($R_\star$).
+# Compact layouts that cross-check entries of the paper's tables: the fit summary with an N=2
+# forward-error column, and the baselines as one block of "noise-free / 1% median" cells.
+# Notation follows the paper ($R_\star$). README.md maps them to the tables of the paper.
 
 # forward_results.json summary key of the basis used in each fit (E1M is fitted with the uniform-field basis)
 FWD_KEY = {"E1": "E1", "E2": "E2", "E3": "E3", "E4-JP": "E4-JP", "E5": "E5", "E1M": "E1M_U46_basis"}

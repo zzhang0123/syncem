@@ -1,4 +1,4 @@
-"""Regenerate the classical-model figures (Figs. 5, 7 and 8 of the paper, and more) and LaTeX tables from saved results.
+"""Regenerate the classical-model figures and LaTeX tables from saved results.
 
 Run: python make_figures.py
 
@@ -16,13 +16,12 @@ Needs verify_fits_results.json (python verify_fits.py) besides the producing scr
 Outputs (this directory only):
   figures/{reference_ensembles,moment_fit_gallery,moments_and_parameters,galprop_fit}.{pdf,png}
   figures/{reference_ensembles,moment_fit_gallery,moments_and_parameters}_compact.{pdf,png}
-      (fewer panels, same panel functions. Figs. 5 and 7 of the paper are the first two. The full figures
-       have all panels.)
+      (fewer panels, same panel functions. The full figures have all panels.)
   figures/field_energy_ridge.{pdf,png}
-      (Fig. 8 of the paper: the ridge contours of moments_and_parameters above and the SED error along
-       the ridge at N = 2 and 4 below, from ridge_sed_results.json)
+      (the ridge contours of moments_and_parameters above and the SED error along the ridge at
+       N = 2 and 4 below, from ridge_sed_results.json)
   tables/{ensembles,fit_summary,parameter_recovery,baselines,cost}.tex
-  tables/{fit_summary,baselines}_compact.tex (cross-checks of the entries of Tables 3 and 4 of the paper)
+  tables/{fit_summary,baselines}_compact.tex (cross-checks of entries of the fit-summary and baselines tables of the paper)
   make_figures_results.json (provenance, every consistency check, output hashes)
   make_figures_data.npz     (the derived display arrays drawn in the figures)
 
@@ -206,9 +205,8 @@ def main() -> None:
     write_json(HERE / "make_figures_results.json", {
         "description": "Figures and LaTeX tables of the classical-model section, drawn from saved results "
                        "(galprop_fit: moment basis at R = 12 recomputed, see galprop/* checks). "
-                       "reference_ensembles_compact, moment_fit_gallery_compact and field_energy_ridge are Figs. 5, "
-                       "7 and 8 of the paper. The *_compact tables cross-check the entries of Tables 3 and 4 of "
-                       "the paper.",
+                       "The *_compact tables cross-check entries of the fit-summary and baselines tables of the "
+                       "paper. README.md maps the figures and tables to those of the paper.",
         "figures": outputs, "tables": tables, "data_npz": relative(HERE / "make_figures_data.npz"),
         "producer_script_hashes": hashes, "checks": status, "e5_mode_pairs": modes,
         "e2_contour_levels_delta_chi2": D["e2"]["levels_2d"], "provenance": prov})
