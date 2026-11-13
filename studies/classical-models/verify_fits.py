@@ -14,7 +14,10 @@ here:
   * channel response, screen, azimuth factor, basis columns, ensembles (E1, E2, E3, E4-JP,
     E4-KP, E5, E1M), seeded noise, whitened TSVD/UPRE, coverage over an independent set of
     4000 noise realisations (different seed from the author), NNLS witness, Hausdorff,
-    E5 joint and free-factor fits, de-rotated angle.
+    E5 joint and free-factor fits, de-rotated angle;
+  * the 0.01% fits of fits_lownoise.py: E2 and E4-KP refitted here, all rows read back from
+    fits_lownoise_products.npz;
+  * the joint coverage at fixed R against the value predicted from the representation bias.
 Writes verify_fits_results.json next to this script.  Run: python verify_fits.py
 """
 from __future__ import annotations
@@ -351,6 +354,75 @@ def tsvd(name, C, S, a_true, zf, zh, rng_real, pair_rtol=None, nreal=4000):
     return out, dict(u=u, s=s, vt=vt, R=R, a_hat=a_hat, proj=proj, Af=Af, dfw=dfw, sig=sig, pred=pred)
 
 
+def seeded_upre(C, S, zf, frac):
+    """UPRE rank and largest |fit - direct| / I of one seeded fit with noise sd frac * I_j."""
+    sig = frac * S[:, 0]
+    u, s, vt = svd_k((C[FIT] / sig[FIT, None, None]).reshape(63, -1))
+    d = (S[FIT] / sig[FIT, None]).ravel() + zf.ravel()
+    p = d @ u
+    R = int(np.argmin(d @ d - np.cumsum(p**2) + 2 * np.arange(1, s.size + 1))) + 1
+    pred = np.einsum("jsn,n->js", C, vt[:R].T @ (p[:R] / s[:R]))
+    return R, float(np.max(np.abs(pred - S) / S[:, :1]))
+
+
+def low_noise_checks(fits_ens, zf):
+    """fits_lownoise.py: values read back from its npz, and an independent refit of E2 and E4-KP.
+
+    fits_ens maps an ensemble name to (basis C, direct spectrum S) of this verifier.  E5 is read
+    back only (its joint basis has the pair rule of fits.py).
+    """
+    low = json.loads((HERE / "fits_lownoise_results.json").read_text())
+    z = np.load(HERE / "fits_lownoise_products.npz")
+    prod = np.load(HERE / "fits_products.npz")
+    out = {}
+    for frac in low["noise_fracs"]:
+        tag = f"{frac:g}"
+        for name in low["rows"]:
+            k = name.replace("-", "_")
+            S = z[f"{k}_S_direct"]
+            rec = low["summary"][tag][name]
+            err = float(np.max(np.abs(z[f"{k}_pred_{tag}"] - S) / S[:, :1]))
+            row = {"R_star_json": rec["R_star"], "R_star_npz_minus_json": int(z[f"{k}_R_star_{tag}"]) - rec["R_star"],
+                   "max_err_json": rec["max_fit_minus_direct_over_I"],
+                   "max_err_npz_minus_json": err - rec["max_fit_minus_direct_over_I"]}
+            if tag == list(low["summary"])[0]:
+                row["S_direct_vs_fits_products_max_over_I"] = float(
+                    np.max(np.abs(S - prod[f"{k}_S_direct"]) / S[:, :1]))
+            if name in fits_ens:
+                R, e = seeded_upre(*fits_ens[name], zf, frac)
+                row.update(R_star_verifier=R, max_err_verifier=e,
+                           R_star_verifier_minus_json=R - rec["R_star"],
+                           max_err_verifier_minus_json=e - rec["max_fit_minus_direct_over_I"])
+            out[f"{name}_{tag}"] = row
+    return out
+
+
+def coverage_vs_representation_bias(fits_json):
+    """Joint 68.3% coverage at fixed R predicted from the N = 2 representation bias.
+
+    The retained combinations at fixed R are shifted by b_i = rep_bias_over_sigma[i] (noise sd),
+    so the joint ellipsoid covers the truth with probability P[ncx2(R, |b|^2) < chi2_R^-1(0.683)].
+    The predicted value is compared with the empirical coverage of fits.py in binomial sd.
+    """
+    cover = float(chi2d.cdf(1.0, 1))
+    out = {}
+    for name in ("E1", "E2", "E3", "E4-JP", "E5", "E4-KP", "E1M"):
+        e = fits_json["ensembles"][name]
+        cf = e["realisations"]["coverage_fixed_R"]
+        R, n = cf["R"], e["realisations"]["n_realisations"]
+        b = np.asarray(e["picard"]["per_mode"]["rep_bias_over_sigma"][:R])
+        lam = float(b @ b)
+        pred = float(ncx2.cdf(chi2d.ppf(cover, R), R, lam)) if lam > 0 else cover
+        emp = cf["joint_ellipsoid_empirical"]
+        out[name] = {"R": R, "abs_bias": float(np.sqrt(lam)), "predicted": pred, "empirical": emp,
+                     "analytic_json": cf["joint_ellipsoid_analytic"],
+                     "empirical_minus_predicted_over_sd": (emp - pred) / np.sqrt(pred * (1 - pred) / n),
+                     "empirical_minus_nominal_over_sd": (emp - cover) / cf["binomial_sd_at_nominal"]}
+    out["max_abs_empirical_minus_predicted_over_sd"] = max(
+        abs(v["empirical_minus_predicted_over_sd"]) for v in out.values())
+    return out
+
+
 def nnls_witness(C36, S, zf, zh, rows=(0, 1, 2)):
     xq = np.cos(np.pi * np.arange(17) / 16)
     pw = np.stack([xq**r for r in range(3)])
@@ -459,6 +531,9 @@ def main():
         RES["ensembles"][k]["s_vs_author_max_rel"] = float(np.max(np.abs(
             fits[k][1]["s"] - prod[keymap[k] + "_s"][:fits[k][1]["s"].size]) / prod[keymap[k] + "_s"][0]))
         RES["ensembles"][k]["nnls"] = nnls_witness(Csep, ens[k][0], zf, zh)
+    RES["checks"]["low_noise"] = low_noise_checks({k: (Csep, ens[k][0]) for k in ("E2", "E4-KP")}, zf)
+    RES["checks"]["joint_coverage_vs_representation_bias"] = coverage_vs_representation_bias(
+        json.loads((HERE / "fits_results.json").read_text()))
     # E1 regression rule s >= 10
     f1 = fits["E1"][1]
     R10 = int(np.sum(f1["s"] >= 10))
@@ -568,7 +643,8 @@ if __name__ == "__main__":
     src = Path(__file__).read_bytes()
     RES["provenance"] = {"script": Path(__file__).name, "script_sha256": hashlib.sha256(src).hexdigest(),
                          "inputs_sha256": {f: hashlib.sha256((HERE / f).read_bytes()).hexdigest()
-                                           for f in ("lib/kernels.py", "fits_products.npz", "fits_results.json")},
+                                           for f in ("lib/kernels.py", "fits_products.npz", "fits_results.json",
+                                                     "fits_lownoise_results.json", "fits_lownoise_products.npz")},
                          "numpy": np.__version__, "scipy": scipy.__version__, "mpmath": mp.__version__,
                          "wall_clock_s": time.time() - T0}
     (HERE / "verify_fits_results.json").write_text(json.dumps(RES, indent=1, default=float))

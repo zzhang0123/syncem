@@ -37,13 +37,16 @@ PRODUCERS = (
     ("regression.py", ()),
     ("forward.py", ()),
     ("fits.py", ("forward_spectra.npz", "regression_results.json")),
+    ("fits_lownoise.py", ("fits_results.json", "fits_products.npz")),
     ("fits_tails.py", ("forward_spectra.npz",)),
     ("params.py", ("forward_spectra.npz",)),
     ("ridge_sed.py", ("params_results.json",)),
     ("kp_pseudotruth.py", ("forward_spectra.npz", "fits_results.json", "params_results.json")),
     ("baselines.py", ("forward_spectra.npz",)),
+    ("baselines_noise_sweep.py", ("baselines_results.json",)),
     ("sensitivity.py", ()),
     ("cost.py", ()),
+    ("cost_reference_check.py", ()),
     ("kp_bridge.py", ()),
     ("harmonic_correction.py", ("forward_spectra.npz", "kp_bridge_results.json")),
     ("bridge_mpmath_check.py", ()),
@@ -54,16 +57,19 @@ PRODUCERS = (
 )
 VERIFIERS = (
     ("verify_core.py", ("forward_results.json", "regression_results.json")),
-    ("verify_fits.py", ("fits_results.json", "fits_products.npz")),
+    ("verify_fits.py", ("fits_results.json", "fits_products.npz", "fits_lownoise_results.json",
+                        "fits_lownoise_products.npz")),
     ("verify_params.py", ("params_results.json", "params_realisations.npz")),
-    ("verify_baselines.py", ("baselines_results.json", "forward_spectra.npz")),
+    ("verify_baselines.py", ("baselines_results.json", "forward_spectra.npz",
+                             "baselines_noise_sweep_results.json")),
     ("verify_kpbridge.py", ("kp_bridge_results.json",)),
     ("verify_bridge.py", ("bridge_results.json", "bridge_harmonic_probe.npz")),
 )
 FIGURE_INPUTS = ("fits_results.json", "fits_products.npz", "forward_results.json",
                  "forward_spectra.npz", "params_results.json", "baselines_results.json",
                  "baselines_plotdata.npz", "cost_results.json", "kp_pseudotruth_results.json",
-                 "kp_pseudotruth.npz", "verify_fits_results.json", "ridge_sed_results.json")
+                 "kp_pseudotruth.npz", "verify_fits_results.json", "ridge_sed_results.json",
+                 "fits_lownoise_results.json", "fits_lownoise_products.npz")
 FIGURES = (("make_figures.py", FIGURE_INPUTS),
            ("render_classical_limit.py", ("recover_classical_limit_a_results.json",)))
 STAGES = (("producing scripts", PRODUCERS), ("verify scripts", VERIFIERS), ("figures", FIGURES))

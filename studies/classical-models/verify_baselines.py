@@ -15,6 +15,10 @@ Quadrature differs from the author's on purpose: B 24-node GL on [4,6], eta 20-n
 [0,1/2], channel 600-node GL on the bump, gamma 30 panels x 20 nodes in ln gamma, JP cut-off
 panel mapped by u = u_c - Delta tau^5 (integrand analytic in tau).
 
+The noise sweep of baselines_noise_sweep.py is checked for consistency, not recomputed: its 1%
+block must equal the Monte Carlo medians of baselines_results.json (same seeds and code path),
+and its median withheld rms at every noise level is copied into noise_sweep for the record.
+
 Writes verify_baselines_results.json.  Run: python verify_baselines.py
 """
 from __future__ import annotations
@@ -36,6 +40,7 @@ T0 = time.time()
 HERE = Path(__file__).resolve().parent
 GALPROP_CSV = HERE / "inputs" / "galprop-benchmark" / "regional_spectra.csv"
 AUTHOR_JSON = HERE / "baselines_results.json"
+SWEEP_JSON = HERE / "baselines_noise_sweep_results.json"
 OUT_JSON = HERE / "verify_baselines_results.json"
 
 # ----------------------------------------------------------------------------- constants (cgs)
@@ -396,11 +401,28 @@ def fit_family(name, C_fit, d, sig, starts):
     return phi, A
 
 
+# ----------------------------------------------------------------------------- noise sweep
+def noise_sweep_consistency(AJ: dict, sweep: dict) -> dict:
+    """1% block of the sweep against the Monte Carlo medians of baselines_results.json."""
+    one = sweep["results"][f"{0.01:g}"]["compact_median_rms_held"]
+    diffs = {}
+    for e, rec in one.items():
+        ref = AJ[e]["monte_carlo"]["summary"]
+        for m, v in rec.items():
+            if m in ref and "rms_res_held" in ref[m]:
+                diffs[f"{e}/{m}"] = abs(v - ref[m]["rms_res_held"]["median"])
+    medians = {tag: blk["compact_median_rms_held"] for tag, blk in sweep["results"].items()}
+    return {"n_compared": len(diffs), "max_abs_diff_1pct_vs_baselines_results": max(diffs.values()),
+            "agree": bool(max(diffs.values()) <= 1e-12), "rank_cap": sweep["rank_cap"], "n_real": sweep["n_real"],
+            "median_rms_held_by_noise": medians}
+
+
 # ----------------------------------------------------------------------------- main
 def main():
     out = {"script": Path(__file__).name, "script_sha256": sha(__file__),
            "inputs_sha256": {"inputs/galprop-benchmark/regional_spectra.csv": sha(GALPROP_CSV), "lib/kernels.py": sha(HERE / "lib" / "kernels.py"),
-                             "baselines_results.json (author, read as data)": sha(AUTHOR_JSON)},
+                             "baselines_results.json (author, read as data)": sha(AUTHOR_JSON),
+                             "baselines_noise_sweep_results.json (author, read as data)": sha(SWEEP_JSON)},
            "versions": {"python": platform.python_version(), "numpy": np.__version__, "scipy": scipy.__version__}}
     AJ = json.loads(AUTHOR_JSON.read_text())["results"]
 
@@ -766,7 +788,8 @@ def main():
         for m in ("s1", "s3", "logcubic", "bmom4"):
             row(f"{e} {m} noise-free max|res|/I (%)", 100 * A_(e, m), 100 * synth[e][f"{m}_max_res_all"])
         row(f"{e} bmom3 omega2", A_(e, "bmom3", "params")[2] / A_(e, "bmom3", "params")[1], synth[e]["bmom3_omega2"], tol_rel=0.05)
-        for R in (2, 7, 9):
+        row(f"{e} moment R=4 noise-free max|res|/I (%)", 100 * A_(e, "moment_R4"), 100 * synth[e]["moment_R4_max_res_all"])
+        for R in (2, 4, 7, 9):
             row(f"{e} TSVD R={R} noise-free max|res|/I (%)", 100 * AJ[e]["noise_free_tsvd_curve"][R - 1]["max_res_all"],
                 100 * synth[e][f"moment_R{R}_max_res_all"])
             row(f"{e} TSVD R={R} tr(HH^T) held", AJ[e]["noise_free_tsvd_curve"][R - 1]["tr_HHt_held"], synth[e][f"moment_R{R}_tr_HHt_held"])
@@ -793,6 +816,7 @@ def main():
     row("GALPROP eSBPL held RMS (%)", 100 * G_["noise_free"]["eSBPL"]["rms_res_held"], gal["eSBPL_held_rms_max_pct"][0], tol_rel=0.1)
     row("GALPROP bmom3 omega2", G_["noise_free"]["bmom3"]["params"][2] / G_["noise_free"]["bmom3"]["params"][1], gal["bmom3_omega2"])
     out["comparison"] = cmp_rows
+    out["noise_sweep"] = noise_sweep_consistency(AJ, json.loads(SWEEP_JSON.read_text()))
     OUT_JSON.write_text(json.dumps(out, indent=1, default=float))
     for r in cmp_rows:
         print(f"{r['quantity']:<48s} {r['author']:>12.5g} {r['verifier']:>12.5g} {'OK' if r['agree'] else 'DIFF'}")

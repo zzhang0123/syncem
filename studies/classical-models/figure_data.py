@@ -58,11 +58,13 @@ INPUTS = {
     "kp_pseudo_npz": HERE / "kp_pseudotruth.npz",
     "baselines_npz": HERE / "baselines_plotdata.npz",
     "ridge_sed": HERE / "ridge_sed_results.json",
+    "fits_low": HERE / "fits_lownoise_results.json",
+    "fits_low_npz": HERE / "fits_lownoise_products.npz",
 }
 # Producing scripts whose recorded SHA-256 is compared with the file on disk.
 PRODUCERS = {"fits": "fits.py", "forward": "forward.py", "params": "params.py",
              "baselines": "baselines.py", "cost": "cost.py", "verify_fits": "verify_fits.py",
-             "kp_pseudo": "kp_pseudotruth.py", "ridge_sed": "ridge_sed.py"}
+             "kp_pseudo": "kp_pseudotruth.py", "ridge_sed": "ridge_sed.py", "fits_low": "fits_lownoise.py"}
 
 ENSEMBLES = ("E1", "E2", "E3", "E4-JP", "E4-KP", "E5", "E1M")
 GALLERY = ("E1", "E2", "E4-KP", "E5")  # Fig. 9 rows (E3 stays in the tables)
@@ -453,11 +455,37 @@ def galprop_fit(bl: dict, z: dict) -> dict:
             "pl_coeff": c, "models": models, "checks": checks}
 
 
+def add_low_noise(bands: dict, low: dict, low_npz: dict) -> dict:
+    """Attach the low-noise seeded fit (fits_lownoise.py) to each gallery row it covers."""
+    frac = min(low["noise_fracs"])
+    tag = f"{frac:g}"
+    fits = dict(bands["fits"])
+    checks = dict(bands["checks"])
+    for name in low["rows"]:
+        k = npz_key(name)
+        f = dict(fits[name])
+        I = f["S"][:, :1]
+        checks[f"{name}_low_S_direct_vs_fits_npz"] = float(np.max(np.abs(low_npz[f"{k}_S_direct"] - f["S"]) / I))
+        checks[f"{name}_low_pred_1pct_vs_fits_npz"] = float(
+            np.max(np.abs(low_npz[f"{k}_pred_{PAPER.noise_frac:g}"] - f["pred"]) / I))
+        f.update(pred_low=low_npz[f"{k}_pred_{tag}"], R_star_low=int(low_npz[f"{k}_R_star_{tag}"]),
+                 noise_low=frac)
+        fits[name] = f
+    if "E5_free_factor_pred" in low_npz and "E5" in fits:
+        f = dict(fits["E5"])
+        f["pred_free_factor"] = low_npz["E5_free_factor_pred"]
+        checks["E5_low_free_factor_R_star_minus_archive"] = float(low["checks"]["E5_free_factor_R_star_minus_archive"])
+        checks["E5_low_free_factor_c_minus_archive"] = float(low["checks"]["E5_free_factor_c_minus_archive"])
+        fits["E5"] = f
+    return {**bands, "fits": fits, "checks": checks}
+
+
 def build_all(data: dict) -> dict:
     """All derived display data; each block carries its own checks."""
     return {"electrons": electron_curves(data["forward"]),
             "intrinsic": intrinsic_spectra(data["forward"], data["forward_npz"]),
-            "bands": fit_bands(data["fits_npz"], data["fits"], data["kp_pseudo_npz"]),
+            "bands": add_low_noise(fit_bands(data["fits_npz"], data["fits"], data["kp_pseudo_npz"]),
+                                   data["fits_low"], data["fits_low_npz"]),
             "modes": mode_deviations(data["fits"], data["fits_npz"], data["kp_pseudo"], data["kp_pseudo_npz"]),
             "e2": e2_parameters(data["params"], data["fits_npz"]),
             "galprop": galprop_fit(data["baselines"], data["baselines_npz"])}

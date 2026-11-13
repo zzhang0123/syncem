@@ -5,7 +5,8 @@ Run: python make_figures.py
 Inputs (read only, SHA-256 recorded): fits_results.json, fits_products.npz,
 forward_results.json, forward_spectra.npz, params_results.json, baselines_results.json,
 cost_results.json, verify_fits_results.json, kp_pseudotruth_results.json, kp_pseudotruth.npz,
-baselines_plotdata.npz, ridge_sed_results.json.  The producing scripts' recorded hashes are compared with the
+baselines_plotdata.npz, ridge_sed_results.json, fits_lownoise_results.json,
+fits_lownoise_products.npz.  The producing scripts' recorded hashes are compared with the
 files on disk.
 galprop_fit recomputes one curve (moment basis at R = 12, not saved) with baselines.py's functions;
 see figure_data.galprop_fit and the galprop/* checks.
@@ -70,6 +71,8 @@ CHECK_LIMITS = {  # (substring of the check name, largest allowed |value|)
     "dense_at_nodes": 1e-12, "median_rank": 0, "plotdata_sha256_mismatch": 0, "rank_json_minus_npz": 0,
     # ridge_sed.py at N = 2 against params_results.json E2_ridge (same data, start and code path)
     "N2_vs_params_E2_ridge": 1e-8,
+    # fits_lownoise.py: same direct spectra and 1% predictions as fits_products.npz
+    "_low_": 1e-12,
 }
 
 
