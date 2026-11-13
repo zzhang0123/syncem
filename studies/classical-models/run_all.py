@@ -3,10 +3,12 @@
 Run: python run_all.py
      python run_all.py --checksums-only   (only rewrite SHA256SUMS from the files on disk)
 
-The producing scripts run first, then the verify scripts, then make_figures.py, which comes
-last because it reads verify_fits_results.json, and render_classical_limit.py (Fig. 3). Each script runs in its own process with this
-interpreter, from this directory, with its default arguments. The run stops at the first script
-that exits with a non-zero status. The wall time of each script is printed. kp_bridge_tables.py
+The producing scripts run first, then the verify scripts, then the figure scripts:
+make_figures.py, which comes after the verify scripts because it reads verify_fits_results.json,
+render_classical_limit.py, fig_cmb_extrapolation.py, emission_windows.py and
+derivative_spectra_figure.py. Each script runs in its own process with this interpreter, from
+this directory, with its default arguments. The run stops at the first script that exits with a
+non-zero status. The wall time of each script is printed. kp_bridge_tables.py
 only prints the tables of kp_bridge_results.json and is not run.
 
 SOURCE_DATE_EPOCH is set to 2026-10-27 00:00 UTC unless it is already set, so that matplotlib
@@ -78,7 +80,9 @@ FIGURE_INPUTS = ("fits_results.json", "fits_products.npz", "forward_results.json
 FIGURES = (("make_figures.py", FIGURE_INPUTS),
            ("render_classical_limit.py", ("recover_classical_limit_a_results.json",)),
            ("fig_cmb_extrapolation.py", ("extrap_curves.npz", "fits_extrap_products.npz",
-                                         "fits_extrap_results.json")))
+                                         "fits_extrap_results.json")),
+           ("emission_windows.py", ()),
+           ("derivative_spectra_figure.py", ()))
 STAGES = (("producing scripts", PRODUCERS), ("verify scripts", VERIFIERS), ("figures", FIGURES))
 
 CHECKSUM_FILE = HERE / "SHA256SUMS"
