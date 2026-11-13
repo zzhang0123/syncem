@@ -405,10 +405,10 @@ NOISE_STYLE = dict(color="#8C8C8C", lw=0.5, dashes=(1, 2))
 NOISE_ZORDER = {"high": 3, "low": 1.5}  # above the heavy 1% curve, below the thin low-noise curve
 NOISE_LEGEND_STYLE = dict(color="#8C8C8C", lw=1.0, dashes=(1, 1.5))  # heavier so the handle shows at legend size
 FREE_FACTOR_LS = "-."
-TRUE_STYLE = dict(color="#DCDCDC", lw=2.6, solid_capstyle="round", zorder=1)  # wide light line under the fit
-FIT_LW = 1.1
+TRUE_STYLE = dict(color="#C8C8C8", lw=4.5, solid_capstyle="round", zorder=1)  # wide light band under the fit
+FIT_LW = 0.9
 # thin dark underlay: the fit stays darker than the true-spectrum band in greyscale, whatever the row colour
-FIT_HALO = [pe.Stroke(linewidth=FIT_LW + 0.6, foreground=fs.INK, alpha=0.55), pe.Normal()]
+FIT_HALO = [pe.Stroke(linewidth=FIT_LW + 0.4, foreground=fs.INK, alpha=0.55), pe.Normal()]
 DATA_STYLE = dict(fmt="o", ms=2.4, color=fs.INK, mec=fs.INK, elinewidth=0.6, capsize=0, zorder=4)
 
 
@@ -531,7 +531,7 @@ def fig_stokes_fit_gallery(D: dict, data: dict, rows: tuple[str, ...] = GALLERY_
     data_handle = (Line2D([], [], marker="|", ls="", ms=7, mew=0.6, color=fs.INK),  # dot over a 1-sigma bar
                    Line2D([], [], marker="o", ls="", ms=3, color=fs.INK))
     # column-major fill with ncol=4: (true, data) | (the two fits) | (the two errors) | (noise level)
-    handles = [Line2D([], [], **{k: v for k, v in TRUE_STYLE.items() if k != "zorder"}),
+    handles = [Line2D([], [], **{**{k: v for k, v in TRUE_STYLE.items() if k != "zorder"}, "solid_capstyle": "butt"}),
                data_handle,
                row_lines(lw=FIT_LW, path_effects=FIT_HALO),
                Line2D([], [], color=fs.VERMILION, ls=FREE_FACTOR_LS, lw=FIT_LW),
