@@ -18,7 +18,7 @@
     "vs_new_ref": 0.001170597557454361
    }
   },
-  "wall_s": 676.9477739334106
+  "wall_s": 690.8340077400208
  },
  "E4-JP": {
   "n_theta": 60,
@@ -41,7 +41,7 @@
   },
   "gamma_c_max_over_thetas": 22163.432022099343,
   "gamma_hi_table": 2962642.632683605,
-  "wall_s": 349.10118675231934
+  "wall_s": 362.089998960495
  },
  "E6": {
   "n_theta": 5,
@@ -59,12 +59,12 @@
     "vs_new_ref": 0.008665563669490155
    }
   },
-  "wall_s": 1799.2951350212097
+  "wall_s": 1813.822839975357
  },
- "description": "Independent reference for the accuracy column of the kernel-table cost table (cost.py).\n\ncost.py measures each route against route (i), ``direct_from_measure`` on ``E.measure_1d``\nwith 24 Gauss-Legendre nodes per ln-gamma panel and panels split at the 19 bin edges.  For E2\n(no kinks, support [gamma_lo, gamma_hi]) these are the same 456 nodes and weights as the\n456-energy table (``fixed_gamma_nodes(cfg, 24)``), so that comparison is circular.  For E6 the\nreference and the table share the 16 Gauss-Legendre field nodes on [4, 6] muG.\n\nHere the reference is recomputed on an independent quadrature:\n  * energy: 96 Gauss-Legendre nodes per panel (4x), panels offset by half a bin (breakpoints at\n    the bin centres instead of the bin edges); for JP the panel that ends at gamma_c keeps\n    Gauss-Jacobi with weight (u_c - u)^(p-2), also with 96 nodes;\n  * field (E6): 64 Gauss-Legendre nodes on [4, 6] muG (4x, none coincides with the 16 nodes).\nA second reference with 8x / offset nodes on a subset of parameter vectors checks that the new\nreference itself has converged.  The kernel (B-averaged spline table, channel/eta/screen\naverages) is the same in all routes, as in cost.py: this checks the quadrature over the\nelectron (and field) distribution only.\n\nErrors are max over channels and parameter vectors of |S - S_ref| / I_ref (cost.rel_err).\nWrites cost_reference_check_results.json.  Run: python cost_reference_check.py\n",
+ "description": "Independent reference for the accuracy column of the kernel-table cost table (cost.py).\n\ncost.py measures each route against route (i), ``direct_from_measure`` on ``E.measure_1d``\nwith 24 Gauss-Legendre nodes per ln-gamma panel and panels split at the 19 bin edges.  For E2\n(no kinks, support [gamma_lo, gamma_hi]) these are the same 456 nodes and weights as the\n456-energy table (``fixed_gamma_nodes(cfg, 24)``), so that comparison is circular.  For E6 the\nreference and the table share the 16 Gauss-Legendre field nodes on [4, 6] muG.\n\nHere the reference is recomputed on an independent quadrature:\n  * energy: 96 Gauss-Legendre nodes per panel (4x), panels offset by half a bin (breakpoints at\n    the bin centres instead of the bin edges). For JP the panel that ends at gamma_c keeps\n    Gauss-Jacobi with weight (u_c - u)^(p-2), also with 96 nodes.\n  * field (E6): 64 Gauss-Legendre nodes on [4, 6] muG (4x, none coincides with the 16 nodes).\nA second reference with 8x / offset nodes on a subset of parameter vectors checks that the new\nreference itself has converged.  The kernel (B-averaged spline table, channel/eta/screen\naverages) is the same in all routes, as in cost.py: this checks the quadrature over the\nelectron (and field) distribution only.\n\nErrors are max over channels and parameter vectors of |S - S_ref| / I_ref (cost.rel_err).\nWrites cost_reference_check_results.json.  Run: python cost_reference_check.py\n",
  "provenance": {
   "script": "cost_reference_check.py",
-  "script_sha256": "b4eeeb76403871293fb6abcd435af2be75b7ace327a30d62bbd5ac1260e6edc6",
+  "script_sha256": "439e72a49c361305faad32b690360eb2b0697d10c6c9a77a3b4beea0886c2bb7",
   "lib_sha256": {
    "kernels.py": "b0983233f8fee93b12b10c299c0ea0d0011d72a106884029ec46107ba4121570",
    "config.py": "78aaca6292cd15db1d820d25651c288ed47d14213b8da3d55440b7d4546e887c",
@@ -80,7 +80,7 @@
    "numpy": "2.3.5",
    "scipy": "1.16.3"
   },
-  "wall_clock_s": 1799.6469900608063,
-  "finished": "2026-11-13T02:13:56+0000"
+  "wall_clock_s": 1814.1868920326233,
+  "finished": "2026-11-13T04:44:07+0000"
  }
 }

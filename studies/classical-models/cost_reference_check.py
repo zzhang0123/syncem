@@ -8,8 +8,8 @@ reference and the table share the 16 Gauss-Legendre field nodes on [4, 6] muG.
 
 Here the reference is recomputed on an independent quadrature:
   * energy: 96 Gauss-Legendre nodes per panel (4x), panels offset by half a bin (breakpoints at
-    the bin centres instead of the bin edges); for JP the panel that ends at gamma_c keeps
-    Gauss-Jacobi with weight (u_c - u)^(p-2), also with 96 nodes;
+    the bin centres instead of the bin edges). For JP the panel that ends at gamma_c keeps
+    Gauss-Jacobi with weight (u_c - u)^(p-2), also with 96 nodes.
   * field (E6): 64 Gauss-Legendre nodes on [4, 6] muG (4x, none coincides with the 16 nodes).
 A second reference with 8x / offset nodes on a subset of parameter vectors checks that the new
 reference itself has converged.  The kernel (B-averaged spline table, channel/eta/screen
@@ -60,7 +60,7 @@ def offset_panels(cfg, lo, hi):
 
 
 def ref_measure(cfg, density, lo, hi, n, cut=None, alpha=None, regular=None):
-    """(gamma, w) of N(gamma) dgamma on offset panels; Gauss-Jacobi on the panel ending at cut."""
+    """(gamma, w) of N(gamma) dgamma on offset panels, with Gauss-Jacobi on the panel ending at cut."""
     t, wt = leggauss(n)
     gs, ws = [], []
     for ua, ub in offset_panels(cfg, lo, hi):
