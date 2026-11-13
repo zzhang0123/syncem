@@ -14,21 +14,21 @@ Frozen outputs and code of the harmonic pipeline: the linear radio fit of the pa
 | `trusted_basis_refined.npz` | `a1d08f02c17dd00ea94782aff57e6e0813d79d20509dcb47d60ebf6d16f38c53` | `regression.py`, `bridge_harmonic_probe.py`, `bridge.py`, `verify_bridge.py` |
 | `trusted_truth.npz` | `e9a5b95341412d4659abcee465fc0c51a9ad34577aae3a7437b72542ca0fb3e2` | `bridge.py`, `verify_bridge.py` |
 | `trusted_truth_refined.npz` | `c4048e3d501259f960b2ed386ffb5a9301cd0104cf6915c3890806a42cecc939` | `regression.py`, `bridge.py`, `verify_bridge.py`, `verify_core.py` |
-| `stable_lines.py` | `c661ba3235bae5c5343651b2fdc995d9fb7228dfc329619255456adc51cc6768` | imported by `radio_numerics.py` and by part G of `kp_bridge.py`; hashed by `bridge.py`, `verify_bridge.py`, `kp_bridge.py` |
-| `radio_numerics.py` | `a70738408d68928c87c8557ffa11643d51a4c13380026b36bd2d02f273fce4b0` (edited copy) | imported by `bridge_harmonic_probe.py` and `verify_bridge.py`; hashed by `bridge.py`, `verify_bridge.py` |
-| `finalize.py` | `d2604b42535a4d9c822b5273962b8c86a586caa866c85ad043eeba93b3419c3f` (edited copy) | hashed by `bridge.py` (the fit driver that wrote `results_final.json`; not run here) |
+| `stable_lines.py` | `c661ba3235bae5c5343651b2fdc995d9fb7228dfc329619255456adc51cc6768` | imported by `radio_numerics.py` and by part G of `kp_bridge.py`, hashed by `bridge.py`, `verify_bridge.py` and `kp_bridge.py` |
+| `radio_numerics.py` | `a70738408d68928c87c8557ffa11643d51a4c13380026b36bd2d02f273fce4b0` (edited copy) | imported by `bridge_harmonic_probe.py` and `verify_bridge.py`, hashed by `bridge.py` and `verify_bridge.py` |
+| `finalize.py` | `d2604b42535a4d9c822b5273962b8c86a586caa866c85ad043eeba93b3419c3f` (edited copy) | hashed by `bridge.py` (the fit driver that wrote `results_final.json`, not run here) |
 
 `radio_numerics.py` and `stable_lines.py` import the package by its earlier name, `syncmoments`. The scripts that import them call `lib/syncem_compat.py` first. It imports `syncem` from the package root of this repository, checks that the code these modules call is unchanged since d51f9be apart from the rename, and registers `syncem` under the earlier name. The check covers the whole of `syncem.constants` and, in `syncem.model.high_order_harmonic`, the functions `_geometry` and `high_order_line_powers` with every module-level name they reach. It compares SHA-256 digests of the syntax trees with docstrings removed, so edits to comments and docstrings pass.
 
-The five npz files were written by the pipeline's `generate_cache.py` through `cache_io.py`. Each records, under `sources` in its `metadata_json`, the SHA-256 of the pipeline's `generate_cache.py`, `cache_io.py`, `radio_numerics.py` and `stable_lines.py`. `generate_cache.py` and `cache_io.py` are not distributed. `finalize.py` wrote `results_final.json` and is included for its SHA-256 only. It imports `cache_io`, which is not distributed, and running it would rewrite `results_final.json`; do not run it here.
+The five npz files were written by the pipeline's `generate_cache.py` through `cache_io.py`. Each records, under `sources` in its `metadata_json`, the SHA-256 of the pipeline's `generate_cache.py`, `cache_io.py`, `radio_numerics.py` and `stable_lines.py`. `generate_cache.py` and `cache_io.py` are not distributed. `finalize.py` wrote `results_final.json` and is included for its SHA-256 only. It imports `cache_io`, which is not distributed, Running it would rewrite `results_final.json`, so it is not run here.
 
 ### Edited copies
 
-Each of these two files contained one absolute path to a temporary directory of the machine that ran the pipeline. That line was replaced; the rest of each file is unchanged.
+Each of these two files contained one absolute path to a temporary directory of the machine that ran the pipeline. That line was replaced. The rest of each file is unchanged.
 
 | File | SHA-256 of the pipeline's file | Edited line |
 |---|---|---|
-| `radio_numerics.py` | `bd477ecadf9b015fe7a7fc37c59c3cf9847a797cd93a3d135c90b67eecdd6320` | `PACKAGE`, the directory of the pinned package snapshot, is now `Path(__file__).resolve().parents[4]`, the package root of this repository. The module puts it on `sys.path`; the package is found through `lib/syncem_compat.py`. |
+| `radio_numerics.py` | `bd477ecadf9b015fe7a7fc37c59c3cf9847a797cd93a3d135c90b67eecdd6320` | `PACKAGE`, the directory of the pinned package snapshot, is now `Path(__file__).resolve().parents[4]`, the package root of this repository. The module puts it on `sys.path`, and the package is found through `lib/syncem_compat.py`. |
 | `finalize.py` | `67c4db4b22bd8c0e9afcc6b5543853365e4b2771f0b8180def391214952b64d9` | The `MPLCONFIGDIR` default is now `.mplcache` next to the file. |
 
 The study's earlier results record the pipeline's SHA-256 for these two files. Results written with these copies record the SHA-256 of the copies.
@@ -41,7 +41,7 @@ Output of the validation script `harmonic_continuum_check.py` (harmonic against 
 |---|---|---|
 | `harmonic_continuum_results.json` | `aad5d7140bfa7e66818a0659c3982b6496fb18e87e439e7375e2feceba55cd12` | `harmonic_correction.py` (harmonic-versus-continuum kernels at θ = π/3), `render_classical_limit.py` (Fig. 3(b, c)) |
 
-`lib/figure_style.py` is a byte copy of the style module used for the paper's figures (SHA-256 `e2f37e065b7e0b4f927a16819faba9f406e2733eb61977af70529e22d20cd003`), used by `bridge.py`. `lib/figure_style_paper.py` is a byte copy of the later version of that module (SHA-256 `9bf0aa49a7b84b4c382588b915c6db6b49b6cd6d411dd8266987270c0f9262e3`), with the palette and the row packing, used by `make_figures.py` (through `figure_plots.py`), `render_classical_limit.py`, `fig_cmb_extrapolation.py`, `emission_windows.py` and `derivative_spectra_figure.py`.
+`lib/figure_style.py` is a byte copy of an earlier version of the style module of the paper's figures (SHA-256 `e2f37e065b7e0b4f927a16819faba9f406e2733eb61977af70529e22d20cd003`), used by `bridge.py`. `lib/figure_style_paper.py` is a byte copy of the later version of that module (SHA-256 `9bf0aa49a7b84b4c382588b915c6db6b49b6cd6d411dd8266987270c0f9262e3`), with the palette and the row packing, used by `make_figures.py` (through `figure_plots.py`), `render_classical_limit.py`, `fig_cmb_extrapolation.py`, `emission_windows.py` and `derivative_spectra_figure.py`.
 
 ## `manuscript-fig3/`
 
@@ -60,7 +60,7 @@ Regional spectra of the published GALPROP synchrotron intensity cube of model z1
 
 **Reduction.** `regional_spectra.csv` gives, at each of the 76 frequencies (column `frequency_ghz`, in GHz), the intensity in erg cm⁻² s⁻¹ sr⁻¹ Hz⁻¹ averaged over equal-area pixels (the mean of the intensity, not of its logarithm) in three regions fixed before any fit: the whole sky (`all_sky`), 20° ≤ |b| < 60° (`mid_latitude`) and |b| ≥ 60° (`high_latitude`). The reduction script `curvature_pilot.py` wrote it together with `curvature_results.json` (polynomial fits of degree 1–3 to ln I against ln ν), and `moment_fit.py` wrote `moment_fit_results.json`. Neither script is distributed.
 
-**Caveats of the published file.** The FITS frequency column is labelled MeV, but its values are frequencies in Hz, and the intensity unit reads `unknown`; the units above follow the GALPROP manual. The header has no COORDSYS keyword, and Galactic coordinates are assumed as stated in the publication. No matching galdef file, code revision or convergence record was obtained, so the absorption settings of the run cannot be audited from the file. Orlando & Strong (2013) include free-free absorption, so the spectrum is not treated as absorption-free. `galprop_absorption.py` estimates the absorption from the low-frequency turnover of the spectrum (`baselines_results.json → absorption_caveat`). `curvature_results.json` records the source URL, the cube SHA-256 and these caveats (`source_url`, `input_sha256`, `metadata_caveats`).
+**Caveats of the published file.** The FITS frequency column is labelled MeV, but its values are frequencies in Hz, and the intensity unit reads `unknown`. The units above follow the GALPROP manual. The header has no COORDSYS keyword, and Galactic coordinates are assumed as stated in the publication. No matching galdef file, code revision or convergence record was obtained, so the absorption settings of the run cannot be audited from the file. Orlando & Strong (2013) include free-free absorption, so the spectrum is not treated as absorption-free. `galprop_absorption.py` estimates the absorption from the low-frequency turnover of the spectrum (`baselines_results.json → absorption_caveat`). `curvature_results.json` records the source URL, the cube SHA-256 and these caveats (`source_url`, `input_sha256`, `metadata_caveats`).
 
 | File | SHA-256 | Read by |
 |---|---|---|

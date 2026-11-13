@@ -8,7 +8,7 @@ Continuum (beaming-limit) radiation only: K_I = A_θ F(x), K_Q = −A_θ G(x), n
 import sys
 sys.path.insert(0, "lib")  # from studies/classical-models
 import kernels as K, basis as B, ensembles as E
-from config import PAPER, PAPER_MAXWELL, CMB, Config
+from config import PAPER, PAPER_MAXWELL, Config
 ```
 
 The modules import each other by bare name (`kernels`, `config`, `basis`, `ensembles`, `provenance`), so `lib/` must be on `sys.path`. The scripts run from `studies/classical-models` and put `lib/` on `sys.path` themselves. Set `OPENBLAS_NUM_THREADS` before importing numpy when you run many processes. All functions are single-process. Every call below is cheap enough to run in each worker of a process pool. Kernel tables are cached on disk in `cache/` (atomic write), keyed by the B distribution and by the source hashes of `kernels.py` and `basis.py`.
@@ -21,7 +21,7 @@ The modules import each other by bare name (`kernels`, `config`, `basis`, `ensem
 - Moments: a_br = (1/w_b) ∫_bin x_b^r dN, with `cfg.w_b` the reference bin masses of p0 ∝ γ^−2.6 (sum 1). Moment arrays have shape `(n_bins, N+1)`, `(19, N+1)` for `PAPER`.
 - Column index: `b*(N+1) + r`. For N = 2 this is the harmonic pipeline's 3b + r.
 - Derivatives: `kbar(..., order=n)[r]` is d^r K̄/d(ln γ)^r. The columns use D_{j;br} = (h^r/r!) d^r K̄/d(ln γ)^r = (1/r!) ∂^r_{x_b} K̄ at x_b = 0.
-- Equation labels: some docstrings cite LaTeX labels of the paper. They correspond to these equations of the manuscript of 2026-11-13:
+- Equation labels: some docstrings cite LaTeX labels of the paper. They correspond to these equations of the version of the manuscript that contains the extrapolation test of Sec. 5.3:
 
 | Label | Equation |
 |---|---|
@@ -58,7 +58,7 @@ Methods:
 - `draw_noise(n_rows, seed=None) -> (n_rows, 3)` returns standard normals from `default_rng(seed)`. `draw_noise(21)` with the paper seed is the harmonic pipeline's draw: data = S[fit_idx] + draw × σ[fit_idx].
 - `describe() -> dict`.
 
-Module objects: `PAPER = Config()`, `PAPER_MAXWELL = replace(PAPER, b_kind="maxwell", n_b=96)` (E1M), `CMB = replace(PAPER, nu_lo=1e10, nu_hi=3e11)` (41 channels over 10–300 GHz with the same populations and geometry), `Z1` (= ∫ρ₁ = 1.2069003), `rho1(t)`, `gl_interval(n, lo, hi)`.
+Module objects: `PAPER = Config()`, `PAPER_MAXWELL = replace(PAPER, b_kind="maxwell", n_b=96)` (E1M), `CMB = replace(PAPER, nu_lo=1e10, nu_hi=3e11)` (41 channels over 10–300 GHz with the same populations and geometry, not used by any study script, since `fits_extrap.py` defines its own 1–40 GHz and 40–300 GHz configurations), `Z1` (= ∫ρ₁ = 1.2069003), `rho1(t)`, `gl_interval(n, lo, hi)`.
 
 Variants use `dataclasses.replace`:
 - intrinsic polarisation: `replace(PAPER, screen_mean=0, screen_sd=0, azimuth_amp=2.0, azimuth_phase=0.0)`, which gives azimuth factor 1.

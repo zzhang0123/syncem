@@ -45,8 +45,19 @@
   energy-basis-spectrum figures (`emission_windows.py`,
   `derivative_spectra_figure.py`). `run_all.py` runs them in dependency
   order.
-- `lib/config.py` adds the `CMB` configuration, and the spline tables of
-  `lib/basis.py` extend to lower ln y for γ up to 3e6 at 0.1 GHz.
+- Added the expansion-order, reference-point and absorbing-slab checks
+  (`sensitivity.py`), the SED error along the E2 field-energy ridge
+  (`ridge_sed.py`) and the figure `field_energy_ridge` drawn by
+  `make_figures.py`.
+- Added Fig. 3 of the paper: `render_classical_limit.py` draws it from
+  `inputs/validation/harmonic_continuum_results.json` and from the panel (a)
+  curves that `recover_classical_limit_a.py` recovers from the vector paths
+  of the earlier figure (`inputs/manuscript-fig3/`). `lib/figure_style_paper.py`
+  is the style module of the paper figures. Both scripts write a provenance
+  block.
+- `lib/config.py` adds the `CMB` configuration (10–300 GHz), which no study
+  script uses. The spline tables of `lib/basis.py` extend to lower ln y for
+  γ up to 3e6 at 0.1 GHz.
 - `figure_tables.py` prints the upper energy limit of E1 at its value.
 - `lib/syncem_compat.py` checks the syntax trees, with docstrings removed, of
   `syncem.constants` and of the functions of
@@ -54,8 +65,8 @@
   in place of the bytes of the two files. The earlier check failed on a
   docstring edit already present at 0.6.0.
 - The README maps each figure and table of the paper to its scripts and
-  outputs, and the outputs archive is
-  `classical-models-outputs-v0.7.1.tar.gz`.
+  outputs. The npz products and figures are to be attached to the v0.7.1
+  release as `classical-models-outputs-v0.7.1.tar.gz`.
 
 ## 0.7.0 (2026-11-09)
 
