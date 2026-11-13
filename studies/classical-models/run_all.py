@@ -47,6 +47,9 @@ PRODUCERS = (
     ("sensitivity.py", ()),
     ("cost.py", ()),
     ("cost_reference_check.py", ()),
+    ("fits_extrap.py", ()),
+    ("fits_extrap_noisefree.py", ("fits_extrap_results.json",)),
+    ("extrap_curves.py", ("fits_extrap_products.npz",)),
     ("kp_bridge.py", ()),
     ("harmonic_correction.py", ("forward_spectra.npz", "kp_bridge_results.json")),
     ("bridge_mpmath_check.py", ()),
@@ -64,6 +67,8 @@ VERIFIERS = (
                              "baselines_noise_sweep_results.json")),
     ("verify_kpbridge.py", ("kp_bridge_results.json",)),
     ("verify_bridge.py", ("bridge_results.json", "bridge_harmonic_probe.npz")),
+    ("verify_extrap.py", ("fits_extrap_results.json", "fits_extrap_products.npz",
+                          "fits_extrap_noisefree_results.json", "extrap_curves.npz")),
 )
 FIGURE_INPUTS = ("fits_results.json", "fits_products.npz", "forward_results.json",
                  "forward_spectra.npz", "params_results.json", "baselines_results.json",
@@ -71,7 +76,9 @@ FIGURE_INPUTS = ("fits_results.json", "fits_products.npz", "forward_results.json
                  "kp_pseudotruth.npz", "verify_fits_results.json", "ridge_sed_results.json",
                  "fits_lownoise_results.json", "fits_lownoise_products.npz")
 FIGURES = (("make_figures.py", FIGURE_INPUTS),
-           ("render_classical_limit.py", ("recover_classical_limit_a_results.json",)))
+           ("render_classical_limit.py", ("recover_classical_limit_a_results.json",)),
+           ("fig_cmb_extrapolation.py", ("extrap_curves.npz", "fits_extrap_products.npz",
+                                         "fits_extrap_results.json")))
 STAGES = (("producing scripts", PRODUCERS), ("verify scripts", VERIFIERS), ("figures", FIGURES))
 
 CHECKSUM_FILE = HERE / "SHA256SUMS"
