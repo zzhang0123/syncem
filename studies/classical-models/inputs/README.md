@@ -4,7 +4,7 @@ External files that the scripts of `studies/classical-models` read or hash. Each
 
 ## `harmonic-radio-fit/`
 
-Frozen outputs and code of the harmonic pipeline: the linear radio fit of the paper with finite-γ harmonic line powers (41 channels over 0.1–10 GHz, N = 2, 36 moments). The pipeline pinned SyncMoments commit d51f9bef4fa744a536a60c3da821b1033818a232.
+Frozen outputs and code of the harmonic pipeline: the linear radio fit of the paper with finite-γ harmonic line powers (41 channels over 0.1–10 GHz, 12 cells in ln γ on [300, 1e5], N = 2, 36 moments). The study now uses 19 cells on [300, 2.96e6], whose first 12 are these cells, and `regression.py` compares with this fit on the 12 cells. The pipeline pinned SyncMoments commit d51f9bef4fa744a536a60c3da821b1033818a232.
 
 | File | SHA-256 | Read or hashed by |
 |---|---|---|
@@ -18,7 +18,7 @@ Frozen outputs and code of the harmonic pipeline: the linear radio fit of the pa
 | `radio_numerics.py` | `a70738408d68928c87c8557ffa11643d51a4c13380026b36bd2d02f273fce4b0` (edited copy) | imported by `bridge_harmonic_probe.py` and `verify_bridge.py`; hashed by `bridge.py`, `verify_bridge.py` |
 | `finalize.py` | `d2604b42535a4d9c822b5273962b8c86a586caa866c85ad043eeba93b3419c3f` (edited copy) | hashed by `bridge.py` (the fit driver that wrote `results_final.json`; not run here) |
 
-`radio_numerics.py` and `stable_lines.py` import the package by its earlier name, `syncmoments`. The scripts that import them call `lib/syncem_compat.py` first. It imports `syncem` from the package root of this repository, checks that `syncem.constants` and `syncem.model.high_order_harmonic` equal their d51f9be sources up to the rename, and registers `syncem` under the earlier name.
+`radio_numerics.py` and `stable_lines.py` import the package by its earlier name, `syncmoments`. The scripts that import them call `lib/syncem_compat.py` first. It imports `syncem` from the package root of this repository, checks that the code these modules call is unchanged since d51f9be apart from the rename, and registers `syncem` under the earlier name. The check covers the whole of `syncem.constants` and, in `syncem.model.high_order_harmonic`, the functions `_geometry` and `high_order_line_powers` with every module-level name they reach. It compares SHA-256 digests of the syntax trees with docstrings removed, so edits to comments and docstrings pass.
 
 The five npz files were written by the pipeline's `generate_cache.py` through `cache_io.py`. Each records, under `sources` in its `metadata_json`, the SHA-256 of the pipeline's `generate_cache.py`, `cache_io.py`, `radio_numerics.py` and `stable_lines.py`. `generate_cache.py` and `cache_io.py` are not distributed. `finalize.py` wrote `results_final.json` and is included for its SHA-256 only. It imports `cache_io`, which is not distributed, and running it would rewrite `results_final.json`; do not run it here.
 
@@ -41,7 +41,7 @@ Output of the validation script `harmonic_continuum_check.py` (harmonic against 
 |---|---|---|
 | `harmonic_continuum_results.json` | `aad5d7140bfa7e66818a0659c3982b6496fb18e87e439e7375e2feceba55cd12` | `harmonic_correction.py` (harmonic-versus-continuum kernels at θ = π/3), `render_classical_limit.py` (Fig. 3(b, c)) |
 
-`lib/figure_style.py` is a byte copy of the style module used for the paper's figures (SHA-256 `e2f37e065b7e0b4f927a16819faba9f406e2733eb61977af70529e22d20cd003`), used by `bridge.py` and `make_figures.py`. `lib/figure_style_paper.py` is a byte copy of the later version of that module (SHA-256 `9bf0aa49a7b84b4c382588b915c6db6b49b6cd6d411dd8266987270c0f9262e3`), with the palette and the row packing, used by `render_classical_limit.py`.
+`lib/figure_style.py` is a byte copy of the style module used for the paper's figures (SHA-256 `e2f37e065b7e0b4f927a16819faba9f406e2733eb61977af70529e22d20cd003`), used by `bridge.py`. `lib/figure_style_paper.py` is a byte copy of the later version of that module (SHA-256 `9bf0aa49a7b84b4c382588b915c6db6b49b6cd6d411dd8266987270c0f9262e3`), with the palette and the row packing, used by `make_figures.py` (through `figure_plots.py`), `render_classical_limit.py`, `fig_cmb_extrapolation.py`, `emission_windows.py` and `derivative_spectra_figure.py`.
 
 ## `manuscript-fig3/`
 

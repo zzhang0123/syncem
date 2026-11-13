@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.7.1 (unreleased)
 
 ### Fixed
 
@@ -30,6 +30,32 @@
   Clauses became separate sentences, and index notation such as
   `(h; l,k; r,s,b)` is unchanged. No claim, error kind or manuscript
   label changed.
+
+### Classical-model study
+
+- The study uses 19 cells in ln γ on [300, 2.96e6] in place of 12 cells on
+  [300, 1e5]. The first 12 cells are the earlier ones. `regression.py` keeps
+  the 12-cell grid of the frozen harmonic fit. Every results JSON, table and
+  figure was regenerated.
+- Added the extrapolation test from 1–40 GHz to 40–300 GHz (`fits_extrap.py`,
+  `fits_extrap_noisefree.py`, `extrap_curves.py`, `fig_cmb_extrapolation.py`,
+  `verify_extrap.py`), the low-noise fits (`fits_lownoise.py`), the
+  baseline noise sweep (`baselines_noise_sweep.py`), the energy-table
+  reference check (`cost_reference_check.py`) and the emission-window and
+  energy-basis-spectrum figures (`emission_windows.py`,
+  `derivative_spectra_figure.py`). `run_all.py` runs them in dependency
+  order.
+- `lib/config.py` adds the `CMB` configuration, and the spline tables of
+  `lib/basis.py` extend to lower ln y for γ up to 3e6 at 0.1 GHz.
+- `figure_tables.py` prints the upper energy limit of E1 at its value.
+- `lib/syncem_compat.py` checks the syntax trees, with docstrings removed, of
+  `syncem.constants` and of the functions of
+  `syncem.model.high_order_harmonic` that the frozen harmonic modules call,
+  in place of the bytes of the two files. The earlier check failed on a
+  docstring edit already present at 0.6.0.
+- The README maps each figure and table of the paper to its scripts and
+  outputs, and the outputs archive is
+  `classical-models-outputs-v0.7.1.tar.gz`.
 
 ## 0.7.0 (2026-11-09)
 
