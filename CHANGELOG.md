@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.3 (2026-11-13)
+
+### Classical-model study
+
+- Fig. 5 (`figure_plots.py`) draws the true spectrum as a wider grey band
+  under a thinner fit line, so the two are easier to tell apart.
+
 ## 0.7.2 (2026-11-13)
 
 ### Classical-model study
