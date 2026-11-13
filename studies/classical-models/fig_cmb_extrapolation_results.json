@@ -1,0 +1,120 @@
+{
+ "description": "CMB-window extrapolation figure: right and wrong electron models fitted through the basis.\n\nTwo columns, (E2) smoothly broken power law and (E3) index mixture, 1% noise.\nTop row, from extrap_curves.npz (extrap_curves.py, first noise realisation): intensity divided by a\npower law fitted to the truth over 1-40 GHz, with the fitted data, the truth, the right electron\nmodel and one wrong electron model that the in-band chi2 accepts, over 1-300 GHz.\nBottom row, from fits_extrap_products.npz and fits_extrap_results.json (fits_extrap.py): intensity\nerror |dI|/I of the same two models (median and 16-84% band over realisations) with the 1% noise\nlevel as reference.\nBoth rows share a 1-300 GHz logarithmic frequency axis whose fitted part (below 40 GHz, shaded) is\ndrawn at one third of the logarithmic scale of the predicted part.\nThe plotted medians and 84th percentiles are checked against the JSON summary, and the in-band\nchi2/dof, rejection rates and 300 GHz errors of the drawn families are recorded with the check.\nText positions of the labels are placed by hand. Style: lib/figure_style_paper.py.\n\nReads fits_extrap_products.npz, fits_extrap_results.json (python fits_extrap.py) and\nextrap_curves.npz (python extrap_curves.py).\nWrites figures/cmb_extrapolation.{pdf,png} and fig_cmb_extrapolation_results.json.\nRun: python fig_cmb_extrapolation.py\n",
+ "noise": "0.01",
+ "panels": [
+  [
+   "E2",
+   "eSBPL",
+   "eLP",
+   "(a) Smoothly broken power law (E2)"
+  ],
+  [
+   "E3",
+   "eLP",
+   "ePL",
+   "(b) Index mixture (E3)"
+  ]
+ ],
+ "checks": {
+  "E2_eSBPL_median_max_rel_diff": 0.0,
+  "E2_eSBPL_p84_max_rel_diff": 0.0,
+  "E2_eLP_median_max_rel_diff": 0.0,
+  "E2_eLP_p84_max_rel_diff": 0.0,
+  "E3_eLP_median_max_rel_diff": 0.0,
+  "E3_eLP_p84_max_rel_diff": 0.0,
+  "E3_ePL_median_max_rel_diff": 0.0,
+  "E3_ePL_p84_max_rel_diff": 0.0
+ },
+ "values": {
+  "E2_eSBPL": {
+   "role": "right",
+   "chi2_median": 58.800387908621204,
+   "dof": 59,
+   "chi2_median_over_dof": 0.9966167442139187,
+   "frac_rejected_p001": 0.0,
+   "dI_over_I_300GHz_median_p16_p84": [
+    0.025698981876226667,
+    0.009470977374330999,
+    0.05230882564131925
+   ],
+   "dI_over_I_40GHz_median": 0.004598530357705683,
+   "seed0_rel_intensity_offset_300GHz": -0.008904685998026407
+  },
+  "E2_eLP": {
+   "role": "wrong",
+   "chi2_median": 65.34549466546571,
+   "dof": 60,
+   "chi2_median_over_dof": 1.0890915777577619,
+   "frac_rejected_p001": 0.002,
+   "dI_over_I_300GHz_median_p16_p84": [
+    0.19837957458816113,
+    0.1745133861402043,
+    0.2195096420265433
+   ],
+   "dI_over_I_40GHz_median": 0.011244194108407643,
+   "seed0_rel_intensity_offset_300GHz": -0.19053288574739669
+  },
+  "E3_eLP": {
+   "role": "right",
+   "chi2_median": 59.249321753971365,
+   "dof": 60,
+   "chi2_median_over_dof": 0.9874886958995227,
+   "frac_rejected_p001": 0.0,
+   "dI_over_I_300GHz_median_p16_p84": [
+    0.018807641220216085,
+    0.0055139667287805285,
+    0.03830457810723359
+   ],
+   "dI_over_I_40GHz_median": 0.004238851178798028,
+   "seed0_rel_intensity_offset_300GHz": 0.007702616991918099
+  },
+  "E3_ePL": {
+   "role": "wrong",
+   "chi2_median": 66.98103461697309,
+   "dof": 61,
+   "chi2_median_over_dof": 1.098049747819231,
+   "frac_rejected_p001": 0.002,
+   "dI_over_I_300GHz_median_p16_p84": [
+    0.06715987855966137,
+    0.05872577430366336,
+    0.07514967342007682
+   ],
+   "dI_over_I_40GHz_median": 0.010969407569511199,
+   "seed0_rel_intensity_offset_300GHz": -0.06078645982672559
+  },
+  "nu_fit_last_nu_pred_first_last_GHz": [
+   40.0,
+   40.0,
+   300.0
+  ]
+ },
+ "figures": {
+  "figures/cmb_extrapolation.pdf": "9d29f17e69ac93876723927e54921dfaaaa2f9783d0a4980031b319ed4fc284f",
+  "figures/cmb_extrapolation.png": "40649858ccdc54a97db00a43c4d134fea16a263e29ca89ca1f486b0f362c5155"
+ },
+ "provenance": {
+  "script": "fig_cmb_extrapolation.py",
+  "script_sha256": "c78268c4bca2b11f4eaae5d4f1c339bf9944efb299fd745c7e1a956905f552b6",
+  "lib_sha256": {
+   "kernels.py": "b0983233f8fee93b12b10c299c0ea0d0011d72a106884029ec46107ba4121570",
+   "config.py": "78aaca6292cd15db1d820d25651c288ed47d14213b8da3d55440b7d4546e887c",
+   "basis.py": "438afd89638545dbddfd9acf51cbef67d67d8484a24dcd28d2a1755b6697eace",
+   "ensembles.py": "608dc23a9f795bd7cf4af10b84bfb618c41d3d0d5d858e878aacb410fcbc7c60",
+   "provenance.py": "32dc912a4bc75a4460d6264b1ffcf8e278e7da1c6db8e0a43e810fa31f737590"
+  },
+  "inputs_sha256": {
+   "fits_extrap_products.npz": "bffdae2ab108c383ff6513065450707687a920df37c7eb485a36b0798e649d51",
+   "fits_extrap_results.json": "a769c32d656bb7022d8ee3e3b45868913126ee0666c70b7d62e73e8443d404d7",
+   "extrap_curves.npz": "02327edff2c2a09f03d3c9b8f6f12d6ef776cbde4d80f938d1b6e6a224942103",
+   "lib/figure_style_paper.py": "9bf0aa49a7b84b4c382588b915c6db6b49b6cd6d411dd8266987270c0f9262e3"
+  },
+  "versions": {
+   "python": "3.12.9",
+   "numpy": "2.3.5",
+   "scipy": "1.16.3",
+   "matplotlib": "3.10.8"
+  },
+  "wall_clock_s": 0.39963483810424805,
+  "finished": "2026-11-13T02:45:41+0000"
+ }
+}

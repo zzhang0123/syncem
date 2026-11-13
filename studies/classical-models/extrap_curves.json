@@ -1,0 +1,211 @@
+{
+ "description": "Dense 1-300 GHz model curves of one realisation of the extrapolation test (for SED-fit panels).\n\nUses the fits_extrap.py setup and its first noise realisation (seed 20261112, 1% noise): fits on the\n21 channels over 1-40 GHz exactly as fits_extrap.py does (basis TSVD/UPRE, electron families through\nthe basis, spectral laws with P = c <I_law screen>), then evaluates every fitted model and the truth\non 121 log-spaced channels over 1-300 GHz with the same channel response.\n\nThe dense grid shares its first channel (1 GHz) with the fitted grid and its last channel (300 GHz)\nwith the prediction grid, so verify_extrap.py compares the curves there with fits_extrap_products.npz.\n\nReads fits_extrap_products.npz (python fits_extrap.py).\nWrites extrap_curves.npz: nu_dense (Hz), nu_fit, data_fit_<E> (21,3), sigma_fit_<E> (21,),\ntruth_<E> (121,3), <E>_<model> (121,3), R_star_<E>; and extrap_curves.json with the fitted\nparameters and a provenance block.  Run: python extrap_curves.py\n",
+ "noise_frac": 0.01,
+ "fits": {
+  "E2_ePL": {
+   "params": [
+    0.016535279118508002,
+    2.948376854492627
+   ],
+   "chi2": 456.82419398328705,
+   "dof": 61
+  },
+  "E2_eLP": {
+   "params": [
+    0.017066290994287435,
+    2.7446230592342147,
+    0.16373365795015957
+   ],
+   "chi2": 48.50757235870305,
+   "dof": 60
+  },
+  "E2_eSBPL": {
+   "params": [
+    0.03216993482920025,
+    2.1568415511628944,
+    3.2161732363623816,
+    9.118913642651469
+   ],
+   "chi2": 44.497214611868415,
+   "dof": 59
+  },
+  "E2_s1": {
+   "params": [
+    -0.9756750964197333,
+    2.4010225341338005e-30
+   ],
+   "chi2_I": 391.65154738408216
+  },
+  "E2_s3": {
+   "params": [
+    -0.839421664045195,
+    -0.037242831820876794,
+    2.226853491742369e-30
+   ],
+   "chi2_I": 22.329015151639002
+  },
+  "E2_logcubic": {
+   "params": [
+    -0.8094013199914489,
+    -0.05831662053575485,
+    0.003829507414642453,
+    2.2096300547509513e-30
+   ],
+   "chi2_I": 18.73274223291301
+  },
+  "E2_bmom3": {
+   "params": [
+    -0.8652591457617989,
+    2.2475795287821247e-30,
+    -1.1501028407762062e-31
+   ],
+   "chi2_I": 33.754103459751185
+  },
+  "E2_bmom4": {
+   "params": [
+    -1.3947132188954015,
+    2.211261738026867e-30,
+    1.2851554922653117e-30,
+    5.180475749381933e-31
+   ],
+   "chi2_I": 18.75588140688028
+  },
+  "E2_check_note": "dense grid nodes nearest to prediction centres (not identical channels)",
+  "E2_basis_pred_seed0_max_rel_diff_nearest": 0.02774082770559839,
+  "E3_ePL": {
+   "params": [
+    0.004913743197756082,
+    2.566087697469461
+   ],
+   "chi2": 52.25893156533246,
+   "dof": 61
+  },
+  "E3_eLP": {
+   "params": [
+    0.0049048640421230725,
+    2.5977113439462425,
+    -0.02031792446743046
+   ],
+   "chi2": 44.74717053802857,
+   "dof": 60
+  },
+  "E3_eSBPL": {
+   "params": [
+    0.018490925286721104,
+    2.76780988130376,
+    2.537828940048961,
+    8.671914395412278
+   ],
+   "chi2": 44.42885601571435,
+   "dof": 59
+  },
+  "E3_s1": {
+   "params": [
+    -0.7839923882718773,
+    6.588244254951604e-31
+   ],
+   "chi2_I": 26.13193331637786
+  },
+  "E3_s3": {
+   "params": [
+    -0.8034830545559167,
+    0.005304810685173924,
+    6.6631136809960246e-31
+   ],
+   "chi2_I": 18.824716363341807
+  },
+  "E3_logcubic": {
+   "params": [
+    -0.8115326453288181,
+    0.010945994671629657,
+    -0.0010237503890384754,
+    6.6770932035087275e-31
+   ],
+   "chi2_I": 18.566732247033997
+  },
+  "E3_bmom3": {
+   "params": [
+    -0.8042931982307535,
+    6.664947612673427e-31,
+    7.599132797773385e-33
+   ],
+   "chi2_I": 18.774790876100056
+  },
+  "E3_bmom4": {
+   "params": [
+    -0.913910103473396,
+    6.678136506849444e-31,
+    6.770162205703766e-32,
+    2.2990687068785187e-32
+   ],
+   "chi2_I": 18.561287790730283
+  },
+  "E3_check_note": "dense grid nodes nearest to prediction centres (not identical channels)",
+  "E3_basis_pred_seed0_max_rel_diff_nearest": 0.019968621466624526,
+  "E5_s1": {
+   "params": [
+    -0.6957696313708716,
+    3.570955095188032e-31
+   ],
+   "chi2_I": 183.4497721362456
+  },
+  "E5_s3": {
+   "params": [
+    -0.788637864531976,
+    0.025233943547737208,
+    3.7726597177082976e-31
+   ],
+   "chi2_I": 20.37863564218781
+  },
+  "E5_logcubic": {
+   "params": [
+    -0.8101628938751493,
+    0.040308491656606354,
+    -0.0027341949985799567,
+    3.7939146497491488e-31
+   ],
+   "chi2_I": 18.535284740887253
+  },
+  "E5_bmom3": {
+   "params": [
+    -0.8093329644476821,
+    3.794465283133454e-31,
+    2.80076982559835e-32
+   ],
+   "chi2_I": 18.626994739968787
+  },
+  "E5_bmom4": {
+   "params": [
+    -0.7980895343509589,
+    3.792390454477068e-31,
+    -3.2613607572122625e-33,
+    2.6471113192764824e-32
+   ],
+   "chi2_I": 18.59706065143864
+  },
+  "E5_check_note": "dense grid nodes nearest to prediction centres (not identical channels)",
+  "E5_basis_pred_seed0_max_rel_diff_nearest": 0.022346188967357978
+ },
+ "provenance": {
+  "script": "extrap_curves.py",
+  "script_sha256": "06a31bcef31dea235bdabc3d717713ef06ba0fb1cf8167692e3caf5e170b1970",
+  "lib_sha256": {
+   "kernels.py": "b0983233f8fee93b12b10c299c0ea0d0011d72a106884029ec46107ba4121570",
+   "config.py": "78aaca6292cd15db1d820d25651c288ed47d14213b8da3d55440b7d4546e887c",
+   "basis.py": "438afd89638545dbddfd9acf51cbef67d67d8484a24dcd28d2a1755b6697eace",
+   "ensembles.py": "608dc23a9f795bd7cf4af10b84bfb618c41d3d0d5d858e878aacb410fcbc7c60",
+   "provenance.py": "32dc912a4bc75a4460d6264b1ffcf8e278e7da1c6db8e0a43e810fa31f737590"
+  },
+  "inputs_sha256": {
+   "fits_extrap_products.npz": "bffdae2ab108c383ff6513065450707687a920df37c7eb485a36b0798e649d51",
+   "fits_extrap.py": "5df3f7dd13136da42f37dbf5a6f3c4ab413b5f6fbdcc7a20c21a5affa0bb6b30"
+  },
+  "versions": {
+   "python": "3.12.9",
+   "numpy": "2.3.5",
+   "scipy": "1.16.3"
+  },
+  "wall_clock_s": 56.81241297721863,
+  "finished": "2026-11-13T02:17:30+0000"
+ }
+}

@@ -1,0 +1,197 @@
+{
+ "description": "Checks of the extrapolation test (fits_extrap.py and the scripts that read its outputs).\n\nThe values of the extrapolation table are recomputed from the per-realisation arrays of\nfits_extrap_products.npz and compared with fits_extrap_results.json:\n  * per prediction channel, the median and 84th percentile of |dI|/I, |d|P||/I and |d chi| for\n    every model and noise level;\n  * per electron family, the median in-band chi2 and the fraction rejected at p < 0.001.\nThe values that have no key in fits_extrap_results.json are computed and stored here: the\n16th percentile of |dI|/I at 300 GHz, the table row of each family (chi2/dof, rejection rate,\nmedian and 16-84% range of |dI|/I at 300 GHz), and the fraction of realisations in which the\nin-band chi2 of the right family is lower than that of the wrong family by more than the\np = 0.01 point of chi2 with one degree of freedom.\n\nThe basis diagnostics are recomputed with numpy from the whitened fit design (not through\nfits.LinearFit): the norm fraction of the 300 GHz intensity row outside the retained right\nsingular vectors at the median R*, compared with fits_extrap_noisefree_results.json.\n\nThe electron families are refitted to the noise-free fit-band data, and the 300 GHz intensity error\nof each fit is recorded. For the right family this is the extrapolation error that remains without\nnoise (N = 2 representation and the shape of the family), not a pass/fail check.\n\nThe dense curves of extrap_curves.npz share the first channel (1 GHz) with the fit grid and the\nlast channel (300 GHz) with the prediction grid. There the seed-0 data, truth and model curves\nmust equal the arrays of fits_extrap_products.npz.\n\nThe column setup (fits_extrap.columns, fits_extrap.truth) and the family fit\n(baseline_models.fit_family) are imported from the study code, so this is a consistency check of\nthe saved results, not an independent rebuild of the kernels.\n\nWrites verify_extrap_results.json.  Run: python verify_extrap.py\n",
+ "noise": "0.01",
+ "pairs": [
+  [
+   "E2",
+   "eSBPL",
+   "eLP"
+  ],
+  [
+   "E3",
+   "eLP",
+   "ePL"
+  ]
+ ],
+ "limits": {
+  "summary_rel": 1e-09,
+  "chi2_rel": 1e-12,
+  "rejected_abs": 0.0,
+  "noisefree_row_abs": 1e-08,
+  "curves_rel": 1e-09
+ },
+ "summary_vs_arrays_max_rel": {
+  "median": 0.0,
+  "p84": 0.0,
+  "max_over_channels_of_median": 0.0
+ },
+ "family_checks": {
+  "chi2_median_rel": 0.0,
+  "frac_rejected_abs": 0.0,
+  "n_failed": 0
+ },
+ "table_rows": {
+  "E2_ePL": {
+   "chi2_over_dof_median": 7.8074863938402785,
+   "rejected_pct": 100.0,
+   "dI_over_I_300GHz_pct_median_p16_p84": [
+    34.68361293215,
+    33.576433320964014,
+    35.790474750158694
+   ],
+   "largest_median_at_300GHz": true
+  },
+  "E2_eLP": {
+   "chi2_over_dof_median": 1.0890915777577619,
+   "rejected_pct": 0.2,
+   "dI_over_I_300GHz_pct_median_p16_p84": [
+    19.837957458816113,
+    17.451338614020433,
+    21.95096420265433
+   ],
+   "largest_median_at_300GHz": true
+  },
+  "E2_eSBPL": {
+   "chi2_over_dof_median": 0.9966167442139187,
+   "rejected_pct": 0.0,
+   "dI_over_I_300GHz_pct_median_p16_p84": [
+    2.5698981876226665,
+    0.9470977374330999,
+    5.230882564131925
+   ],
+   "largest_median_at_300GHz": true
+  },
+  "E3_ePL": {
+   "chi2_over_dof_median": 1.098049747819231,
+   "rejected_pct": 0.2,
+   "dI_over_I_300GHz_pct_median_p16_p84": [
+    6.715987855966136,
+    5.872577430366336,
+    7.514967342007682
+   ],
+   "largest_median_at_300GHz": true
+  },
+  "E3_eLP": {
+   "chi2_over_dof_median": 0.9874886958995227,
+   "rejected_pct": 0.0,
+   "dI_over_I_300GHz_pct_median_p16_p84": [
+    1.8807641220216085,
+    0.5513966728780528,
+    3.8304578107233587
+   ],
+   "largest_median_at_300GHz": true
+  },
+  "E3_eSBPL": {
+   "chi2_over_dof_median": 0.9966832864199664,
+   "rejected_pct": 0.0,
+   "dI_over_I_300GHz_pct_median_p16_p84": [
+    3.8430916643760944,
+    1.4743526150802948,
+    11.744398679247967
+   ],
+   "largest_median_at_300GHz": true
+  }
+ },
+ "selection": {
+  "threshold": 6.634896601021216,
+  "E2": {
+   "right": "eSBPL",
+   "wrong": "eLP",
+   "fraction_right_lower_by_more_than_threshold": 0.478,
+   "median_chi2_wrong_minus_right": 6.43585590473058
+  },
+  "E3": {
+   "right": "eLP",
+   "wrong": "ePL",
+   "fraction_right_lower_by_more_than_threshold": 0.55,
+   "median_chi2_wrong_minus_right": 7.140141058560069
+  }
+ },
+ "row300_outside_VR": {
+  "E2_0.01": {
+   "R": 7,
+   "verifier": 0.8814346156195111,
+   "noisefree_json": 0.8814346156195111
+  },
+  "E3_0.01": {
+   "R": 7,
+   "verifier": 0.8984293620695182,
+   "noisefree_json": 0.8984293620695182
+  },
+  "E5_0.01": {
+   "R": 19,
+   "verifier": 0.9082550506162,
+   "noisefree_json": 0.9082550506162
+  },
+  "E2_0.0001": {
+   "R": 14,
+   "verifier": 0.39928654596021024,
+   "noisefree_json": 0.39928654596021024
+  },
+  "E3_0.0001": {
+   "R": 13,
+   "verifier": 0.4363522908508372,
+   "noisefree_json": 0.4363522908508372
+  },
+  "E5_0.0001": {
+   "R": 37,
+   "verifier": 0.7808181205509589,
+   "noisefree_json": 0.7808181205509589
+  },
+  "max_abs_diff": 0.0
+ },
+ "noisefree_family_fits": {
+  "E2_eSBPL": {
+   "role": "right",
+   "chi2_noisefree": 0.02047479662582182,
+   "dI_over_I_300GHz": 0.002281824304989716,
+   "max_dI_over_I_40_300GHz": 0.002281824304989716
+  },
+  "E2_eLP": {
+   "role": "wrong",
+   "chi2_noisefree": 6.423368802824678,
+   "dI_over_I_300GHz": 0.1976815261782471,
+   "max_dI_over_I_40_300GHz": 0.1976815261782471
+  },
+  "E3_eLP": {
+   "role": "right",
+   "chi2_noisefree": 0.00931583943293303,
+   "dI_over_I_300GHz": 0.00013597794759072742,
+   "max_dI_over_I_40_300GHz": 0.00031487492978275186
+  },
+  "E3_ePL": {
+   "role": "wrong",
+   "chi2_noisefree": 7.278210328137131,
+   "dI_over_I_300GHz": 0.06720862118471023,
+   "max_dI_over_I_40_300GHz": 0.06720862118471023
+  }
+ },
+ "curves": {
+  "max_rel_diff_at_shared_channels": 1.1105011936831363e-14
+ },
+ "failed": [],
+ "provenance": {
+  "script": "verify_extrap.py",
+  "script_sha256": "66171344a0f7627f1bbaa41f1a94bff1906afed1e4869bca00eeffcddba625fc",
+  "lib_sha256": {
+   "kernels.py": "b0983233f8fee93b12b10c299c0ea0d0011d72a106884029ec46107ba4121570",
+   "config.py": "78aaca6292cd15db1d820d25651c288ed47d14213b8da3d55440b7d4546e887c",
+   "basis.py": "438afd89638545dbddfd9acf51cbef67d67d8484a24dcd28d2a1755b6697eace",
+   "ensembles.py": "608dc23a9f795bd7cf4af10b84bfb618c41d3d0d5d858e878aacb410fcbc7c60",
+   "provenance.py": "32dc912a4bc75a4460d6264b1ffcf8e278e7da1c6db8e0a43e810fa31f737590"
+  },
+  "inputs_sha256": {
+   "fits_extrap_products.npz": "bffdae2ab108c383ff6513065450707687a920df37c7eb485a36b0798e649d51",
+   "fits_extrap_results.json": "a769c32d656bb7022d8ee3e3b45868913126ee0666c70b7d62e73e8443d404d7",
+   "fits_extrap_noisefree_results.json": "87fcb8681c1af22e081057866c99b20c985f37a4e5411473fdca02e8b0923ac8",
+   "extrap_curves.npz": "02327edff2c2a09f03d3c9b8f6f12d6ef776cbde4d80f938d1b6e6a224942103"
+  },
+  "versions": {
+   "python": "3.12.9",
+   "numpy": "2.3.5",
+   "scipy": "1.16.3"
+  },
+  "wall_clock_s": 25.068217039108276,
+  "finished": "2026-11-13T02:45:19+0000"
+ }
+}

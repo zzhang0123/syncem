@@ -1,0 +1,68 @@
+{
+ "description": "Noise-free minimum-norm extrapolation of the free-moment basis in the extrapolation test.\n\nFor E2, E3 and E5 at the median R* of each noise level in fits_extrap_results.json, with the setup\nof fits_extrap.py (fit 1-40 GHz, predict 40-300 GHz, cells 4-19):\n  * the largest noise-free minimum-norm prediction error |dI|/I over 40-300 GHz;\n  * the share of the true 300 GHz intensity carried by the directions outside span(V_R);\n  * the norm fraction of the 300 GHz intensity row outside span(V_R).\n\nReads fits_extrap_results.json (python fits_extrap.py).\nWrites fits_extrap_noisefree_results.json.  Run: python fits_extrap_noisefree.py\n",
+ "results": {
+  "0.01": {
+   "E2": {
+    "R": 7,
+    "noisefree_max_dI_over_I": 0.41837587157996675,
+    "share_300GHz_discarded": 0.4173616180649187,
+    "row300_norm_fraction_outside_VR": 0.8814346156195111
+   },
+   "E3": {
+    "R": 7,
+    "noisefree_max_dI_over_I": 0.6630053293560965,
+    "share_300GHz_discarded": 0.6629940224434646,
+    "row300_norm_fraction_outside_VR": 0.8984293620695182
+   },
+   "E5": {
+    "R": 19,
+    "noisefree_max_dI_over_I": 0.7478758280530898,
+    "share_300GHz_discarded": 0.7478650921970749,
+    "row300_norm_fraction_outside_VR": 0.9082550506162
+   }
+  },
+  "0.0001": {
+   "E2": {
+    "R": 14,
+    "noisefree_max_dI_over_I": 0.15949324106737864,
+    "share_300GHz_discarded": 0.18698818250778487,
+    "row300_norm_fraction_outside_VR": 0.39928654596021024
+   },
+   "E3": {
+    "R": 13,
+    "noisefree_max_dI_over_I": 0.15182711646848637,
+    "share_300GHz_discarded": 0.15738653705653197,
+    "row300_norm_fraction_outside_VR": 0.4363522908508372
+   },
+   "E5": {
+    "R": 37,
+    "noisefree_max_dI_over_I": 0.5744345906753803,
+    "share_300GHz_discarded": 0.5680014639518696,
+    "row300_norm_fraction_outside_VR": 0.7808181205509589
+   }
+  }
+ },
+ "provenance": {
+  "script": "fits_extrap_noisefree.py",
+  "script_sha256": "70d80b13901b59424b6436484bc0cfb117379a3656890c0397887d5dcc6fe358",
+  "lib_sha256": {
+   "kernels.py": "b0983233f8fee93b12b10c299c0ea0d0011d72a106884029ec46107ba4121570",
+   "config.py": "78aaca6292cd15db1d820d25651c288ed47d14213b8da3d55440b7d4546e887c",
+   "basis.py": "438afd89638545dbddfd9acf51cbef67d67d8484a24dcd28d2a1755b6697eace",
+   "ensembles.py": "608dc23a9f795bd7cf4af10b84bfb618c41d3d0d5d858e878aacb410fcbc7c60",
+   "provenance.py": "32dc912a4bc75a4460d6264b1ffcf8e278e7da1c6db8e0a43e810fa31f737590"
+  },
+  "inputs_sha256": {
+   "fits_extrap_results.json": "a769c32d656bb7022d8ee3e3b45868913126ee0666c70b7d62e73e8443d404d7",
+   "fits_extrap.py": "5df3f7dd13136da42f37dbf5a6f3c4ab413b5f6fbdcc7a20c21a5affa0bb6b30",
+   "fits.py": "58df6f2a0060fc26f9c54c7384102fb4c9a3aa6526f45bcce9d8bfbf546e2d7e"
+  },
+  "versions": {
+   "python": "3.12.9",
+   "numpy": "2.3.5",
+   "scipy": "1.16.3"
+  },
+  "wall_clock_s": 25.082215309143066,
+  "finished": "2026-11-13T02:15:25+0000"
+ }
+}

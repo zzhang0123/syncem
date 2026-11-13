@@ -1,0 +1,65 @@
+{
+ "description": "Energy basis spectra D_{j;br} of three cells (figures/harmonic_derivative_spectra).\n\nColumns D^X_{j;br}, r = 0, 1, 2, of three energy cells, from basis.derivative_spectra: the continuum\n(beaming-limit) kernels averaged over the field-strength, field-direction, azimuth and screen\ndistributions of the paper configuration and integrated over the channel response (k = 1,\nh_j = 0.2 nu_j). A column is a smooth function of the channel centre, so the curves evaluate it\nfor DENSE log-spaced centres over 0.1-10 GHz. Every tenth of them is one of the 41 paper channels\n(checked to equality). The polarised columns are P = <e^{2i phi}> D^Q, drawn after removing the\nmean screen rotation at each centre, P exp(-2i <Psi> lambda_j^2). The \"field\" frame used here also\nremoves the phase of <e^{2i phi}>, so Q' and U' are in the frame of the mean projected field.\nAll panels are divided by A = max_{j, b shown} D^I_{j;b0} over the 41 channels.\n\nThe results JSON records the largest |U'| of the highest cell at r = 2 (panel i), whose curve is\nleft unlabelled because it stays within CAPTION_BOUND of zero, with that check. Label positions\nare placed automatically, except those in LABEL_AT, which are placed by hand.\nStyle: lib/figure_style_paper.py.\n\nWrites figures/harmonic_derivative_spectra.{pdf,png}, derivative_spectra_figure.npz (the plotted\narrays) and derivative_spectra_figure_results.json.  Run: python derivative_spectra_figure.py\n",
+ "bins": [
+  3,
+  6,
+  8
+ ],
+ "gamma_b": [
+  1632.9048868244722,
+  6977.190408210105,
+  18372.166218659113
+ ],
+ "A": 8.166920779588193e-29,
+ "frame": "field",
+ "dense_centres": 401,
+ "dense_vs_paper_channels": "equal (checked in columns())",
+ "hand_placed_labels": {
+  "a_2": [
+   4.5,
+   3.6
+  ],
+  "d_2": [
+   8.3,
+   -0.045
+  ]
+ },
+ "unlabelled_curves": {
+  "panel_i_cell_2": {
+   "gamma_b": 18372.166218659113,
+   "order": 2,
+   "component": "U'",
+   "max_abs_over_A": 0.0001373385121796803,
+   "bound": 0.0002,
+   "within_bound": true
+  }
+ },
+ "npz": "derivative_spectra_figure.npz",
+ "npz_sha256": "7c4bdd14699e2c185edd00c418cc9a7f762d7f530f9df83b2a9d812cf546a0bd",
+ "figures": {
+  "figures/harmonic_derivative_spectra.pdf": "2e893c1c4b02dda373bd4e5cc46624d154f678a239e60c5c685cc380b919abc2",
+  "figures/harmonic_derivative_spectra.png": "796a1f9b882b850e9bffa6d8cd09859d41a237f80a5ada6c68856c6518fa93e6"
+ },
+ "provenance": {
+  "script": "derivative_spectra_figure.py",
+  "script_sha256": "6e6e34c9a8878d4cd636d8593fcf0bd616dd9e7b233f997c0c445adbd20817da",
+  "lib_sha256": {
+   "kernels.py": "b0983233f8fee93b12b10c299c0ea0d0011d72a106884029ec46107ba4121570",
+   "config.py": "78aaca6292cd15db1d820d25651c288ed47d14213b8da3d55440b7d4546e887c",
+   "basis.py": "438afd89638545dbddfd9acf51cbef67d67d8484a24dcd28d2a1755b6697eace",
+   "ensembles.py": "608dc23a9f795bd7cf4af10b84bfb618c41d3d0d5d858e878aacb410fcbc7c60",
+   "provenance.py": "32dc912a4bc75a4460d6264b1ffcf8e278e7da1c6db8e0a43e810fa31f737590"
+  },
+  "inputs_sha256": {
+   "lib/figure_style_paper.py": "9bf0aa49a7b84b4c382588b915c6db6b49b6cd6d411dd8266987270c0f9262e3"
+  },
+  "versions": {
+   "python": "3.12.9",
+   "numpy": "2.3.5",
+   "scipy": "1.16.3",
+   "matplotlib": "3.10.8"
+  },
+  "wall_clock_s": 5.927639007568359,
+  "finished": "2026-11-13T02:53:19+0000"
+ }
+}

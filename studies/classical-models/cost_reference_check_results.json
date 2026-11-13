@@ -1,0 +1,86 @@
+{
+ "E2": {
+  "n_theta": 60,
+  "ref_nodes_per_eval": 1920,
+  "new_ref_8x_vs_4x_max_rel": 4.149719938084876e-15,
+  "old_ref_vs_new_ref_max_rel": 3.669242572081912e-15,
+  "max_rel_err": {
+   "table_456": {
+    "vs_old_ref": 3.251966997166536e-15,
+    "vs_new_ref": 5.727751401727895e-15
+   },
+   "table_152": {
+    "vs_old_ref": 8.299052987652282e-14,
+    "vs_new_ref": 8.397851237505277e-14
+   },
+   "basis_57": {
+    "vs_old_ref": 0.0011705975574564376,
+    "vs_new_ref": 0.001170597557454361
+   }
+  },
+  "wall_s": 676.9477739334106
+ },
+ "E4-JP": {
+  "n_theta": 60,
+  "ref_nodes_per_eval": null,
+  "new_ref_8x_vs_4x_max_rel": 3.882813410723527e-15,
+  "old_ref_vs_new_ref_max_rel": 1.3952152217636188e-14,
+  "max_rel_err": {
+   "table_456": {
+    "vs_old_ref": 0.0036815313689727053,
+    "vs_new_ref": 0.003681531368968177
+   },
+   "table_152": {
+    "vs_old_ref": 0.019448166866456514,
+    "vs_new_ref": 0.01944816686645579
+   },
+   "basis_57": {
+    "vs_old_ref": 0.011380032354956661,
+    "vs_new_ref": 0.01138003235496246
+   }
+  },
+  "gamma_c_max_over_thetas": 22163.432022099343,
+  "gamma_hi_table": 2962642.632683605,
+  "wall_s": 349.10118675231934
+ },
+ "E6": {
+  "n_theta": 5,
+  "ref_B_nodes": 64,
+  "ref_gamma_nodes_per_panel": 96,
+  "new_ref_8x_vs_4x_max_rel_theta0": 2.1156674717617307e-15,
+  "old_ref_vs_new_ref_max_rel": 3.1063093259552575e-09,
+  "max_rel_err": {
+   "table_7296": {
+    "vs_old_ref": 0.0008897409975021943,
+    "vs_new_ref": 0.0008897409975043045
+   },
+   "joint_basis_114": {
+    "vs_old_ref": 0.008665560536262919,
+    "vs_new_ref": 0.008665563669490155
+   }
+  },
+  "wall_s": 1799.2951350212097
+ },
+ "description": "Independent reference for the accuracy column of the kernel-table cost table (cost.py).\n\ncost.py measures each route against route (i), ``direct_from_measure`` on ``E.measure_1d``\nwith 24 Gauss-Legendre nodes per ln-gamma panel and panels split at the 19 bin edges.  For E2\n(no kinks, support [gamma_lo, gamma_hi]) these are the same 456 nodes and weights as the\n456-energy table (``fixed_gamma_nodes(cfg, 24)``), so that comparison is circular.  For E6 the\nreference and the table share the 16 Gauss-Legendre field nodes on [4, 6] muG.\n\nHere the reference is recomputed on an independent quadrature:\n  * energy: 96 Gauss-Legendre nodes per panel (4x), panels offset by half a bin (breakpoints at\n    the bin centres instead of the bin edges); for JP the panel that ends at gamma_c keeps\n    Gauss-Jacobi with weight (u_c - u)^(p-2), also with 96 nodes;\n  * field (E6): 64 Gauss-Legendre nodes on [4, 6] muG (4x, none coincides with the 16 nodes).\nA second reference with 8x / offset nodes on a subset of parameter vectors checks that the new\nreference itself has converged.  The kernel (B-averaged spline table, channel/eta/screen\naverages) is the same in all routes, as in cost.py: this checks the quadrature over the\nelectron (and field) distribution only.\n\nErrors are max over channels and parameter vectors of |S - S_ref| / I_ref (cost.rel_err).\nWrites cost_reference_check_results.json.  Run: python cost_reference_check.py\n",
+ "provenance": {
+  "script": "cost_reference_check.py",
+  "script_sha256": "b4eeeb76403871293fb6abcd435af2be75b7ace327a30d62bbd5ac1260e6edc6",
+  "lib_sha256": {
+   "kernels.py": "b0983233f8fee93b12b10c299c0ea0d0011d72a106884029ec46107ba4121570",
+   "config.py": "78aaca6292cd15db1d820d25651c288ed47d14213b8da3d55440b7d4546e887c",
+   "basis.py": "438afd89638545dbddfd9acf51cbef67d67d8484a24dcd28d2a1755b6697eace",
+   "ensembles.py": "608dc23a9f795bd7cf4af10b84bfb618c41d3d0d5d858e878aacb410fcbc7c60",
+   "provenance.py": "32dc912a4bc75a4460d6264b1ffcf8e278e7da1c6db8e0a43e810fa31f737590"
+  },
+  "inputs_sha256": {
+   "cost.py": "cee5bde0846fc3bbf7edc5385b2613c6b37aa92bc8589f5b8aaf4e275b1916fb"
+  },
+  "versions": {
+   "python": "3.12.9",
+   "numpy": "2.3.5",
+   "scipy": "1.16.3"
+  },
+  "wall_clock_s": 1799.6469900608063,
+  "finished": "2026-11-13T02:13:56+0000"
+ }
+}

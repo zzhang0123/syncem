@@ -3338,268 +3338,268 @@
  "propagation": {
   "E1": {
    "gamma300_xm23": {
-    "max_abs_dI_over_I": 3.906971064762211e-07,
+    "max_abs_dI_over_I": 3.9062170475467753e-07,
     "at_GHz_I": 0.1,
-    "max_abs_dP_over_I": 1.585401192836917e-08,
+    "max_abs_dP_over_I": 1.58296596604113e-08,
     "at_GHz_P": 0.6309573444801944,
     "max_abs_dQ_dU_over_I": [
-     1.4422980739750479e-08,
-     1.420117473985122e-08
+     1.4397797451767635e-08,
+     1.4179342149819315e-08
     ],
     "c_eff_I_range": [
-     -1.6757862117609117,
-     -1.672316814283791
+     -1.6757921656096457,
+     -1.6757919168835884
     ],
-    "dP_over_I_over_mean_inv_g2_max": 0.5314518749603423,
+    "dP_over_I_over_mean_inv_g2_max": 0.5317452917910392,
     "mean_inv_g2_range": [
-     2.410788138966379e-09,
-     2.3314257136993485e-07
+     2.331006467323706e-09,
+     2.3309674839900863e-07
     ],
-    "max_emission_fraction_x_below_1e-3": 0.00024372091513220456,
-    "max_emission_fraction_x_above_grid": 4.086060543097062e-14
+    "max_emission_fraction_x_below_1e-3": 0.0004403307782525946,
+    "max_emission_fraction_x_above_grid": 3.9780500489824095e-14
    },
-   "check_continuum_I_vs_forward_max_rel": 4.095318275609827e-07,
-   "check_continuum_P_vs_forward_max_over_I": 1.194120787041684e-07,
+   "check_continuum_I_vs_forward_max_rel": 3.9712395238922227e-07,
+   "check_continuum_P_vs_forward_max_over_I": 1.1591857257670916e-07,
    "mean_inv_g2_at_0.1_1_10_GHz": [
-    2.3314257136993485e-07,
-    2.3371254328765637e-08,
-    2.410788138966379e-09
+    2.3309674839900863e-07,
+    2.3309701558668825e-08,
+    2.331006467323706e-09
    ],
    "mean_inv_g2_pow_minus_half_at_0.1_1_10_GHz": [
-    2071.0434432313305,
-    6541.223514070224,
-    20366.69111998222
+    2071.24699969573,
+    6549.854361936913,
+    20712.296800418553
    ],
    "gamma300_clamp": {
-    "max_abs_dI_over_I": 3.906966231905866e-07,
+    "max_abs_dI_over_I": 3.906204172202247e-07,
     "at_GHz_I": 0.1,
-    "max_abs_dP_over_I": 1.585401192836917e-08,
+    "max_abs_dP_over_I": 1.582962396561926e-08,
     "at_GHz_P": 0.6309573444801944,
     "max_abs_dQ_dU_over_I": [
-     1.4422980739750479e-08,
-     1.420117473985122e-08
+     1.4397764990901798e-08,
+     1.417931017547044e-08
     ],
     "c_eff_I_range": [
-     -1.6757841388420462,
-     -1.672316814283791
+     -1.6757866423192154,
+     -1.6757866178130327
     ],
-    "dP_over_I_over_mean_inv_g2_max": 0.5314518749603423,
+    "dP_over_I_over_mean_inv_g2_max": 0.5317441407268194,
     "mean_inv_g2_range": [
-     2.410788138966379e-09,
-     2.3314257136993485e-07
+     2.331006467323706e-09,
+     2.3309674839900863e-07
     ],
-    "max_emission_fraction_x_below_1e-3": 0.00024372091513220456,
-    "max_emission_fraction_x_above_grid": 4.086060543097062e-14
+    "max_emission_fraction_x_below_1e-3": 0.0004403307782525946,
+    "max_emission_fraction_x_above_grid": 3.9780500489824095e-14
    },
    "gamma100_xm23": {
-    "max_abs_dI_over_I": 3.9068355351929766e-07,
+    "max_abs_dI_over_I": 3.9060815119432777e-07,
     "at_GHz_I": 0.1,
-    "max_abs_dP_over_I": 1.5853500807669586e-08,
+    "max_abs_dP_over_I": 1.5829148271726204e-08,
     "at_GHz_P": 0.6309573444801944,
     "max_abs_dQ_dU_over_I": [
-     1.4422515878531334e-08,
-     1.4200716882351819e-08
+     1.4397332320435393e-08,
+     1.4178884075837065e-08
     ],
     "c_eff_I_range": [
-     -1.6757280801342258,
-     -1.672260089741941
+     -1.6757340199614255,
+     -1.6757337718184295
     ],
-    "dP_over_I_over_mean_inv_g2_max": 0.5314348736558687,
+    "dP_over_I_over_mean_inv_g2_max": 0.5317281135100771,
     "mean_inv_g2_range": [
-     2.410788138966379e-09,
-     2.3314257136993485e-07
+     2.331006467323706e-09,
+     2.3309674839900863e-07
     ],
-    "max_emission_fraction_x_below_1e-3": 0.00024372091513220456,
-    "max_emission_fraction_x_above_grid": 4.086060543097062e-14
+    "max_emission_fraction_x_below_1e-3": 0.0004403307782525946,
+    "max_emission_fraction_x_above_grid": 3.9780500489824095e-14
    },
-   "check_channel_nodes_200_vs_100_dI_over_I_max_abs_diff": 4.943269986495112e-16
+   "check_channel_nodes_200_vs_100_dI_over_I_max_abs_diff": 4.942742708485446e-16
   },
   "E2": {
    "gamma300_xm23": {
-    "max_abs_dI_over_I": 3.0205505914492873e-07,
+    "max_abs_dI_over_I": 3.020344436401464e-07,
     "at_GHz_I": 0.1,
-    "max_abs_dP_over_I": 1.4394043492557775e-08,
+    "max_abs_dP_over_I": 1.438780173705934e-08,
     "at_GHz_P": 0.6309573444801944,
     "max_abs_dQ_dU_over_I": [
-     1.3316387734730221e-08,
-     1.2837174750048997e-08
+     1.3309849389929723e-08,
+     1.2831603002020302e-08
     ],
     "c_eff_I_range": [
-     -1.7322126386764753,
-     -1.5827191623517722
+     -1.7332946512893266,
+     -1.5827218795420812
     ],
-    "dP_over_I_over_mean_inv_g2_max": 0.5593443569443666,
+    "dP_over_I_over_mean_inv_g2_max": 0.559540634788269,
     "mean_inv_g2_range": [
-     2.847169696329827e-09,
-     1.908456448433361e-07
+     2.812217819540364e-09,
+     1.9083229185378551e-07
     ],
-    "max_emission_fraction_x_below_1e-3": 0.00012448941644339448,
-    "max_emission_fraction_x_above_grid": 5.011049422961942e-14
+    "max_emission_fraction_x_below_1e-3": 0.00019446976935348867,
+    "max_emission_fraction_x_above_grid": 4.9482514543511106e-14
    },
-   "check_continuum_I_vs_forward_max_rel": 6.135199968060334e-07,
-   "check_continuum_P_vs_forward_max_over_I": 1.8181184718661808e-07,
+   "check_continuum_I_vs_forward_max_rel": 6.061127113543563e-07,
+   "check_continuum_P_vs_forward_max_over_I": 1.796731750285024e-07,
    "mean_inv_g2_at_0.1_1_10_GHz": [
-    1.908456448433361e-07,
-    2.3416199686394396e-08,
-    2.847169696329827e-09
+    1.9083229185378551e-07,
+    2.339887612645515e-08,
+    2.812217819540364e-09
    ],
    "mean_inv_g2_pow_minus_half_at_0.1_1_10_GHz": [
-    2289.0689433137245,
-    6534.942844162647,
-    18741.024295746687
+    2289.149027713251,
+    6537.361497252735,
+    18857.126830964145
    ],
    "gamma300_clamp": {
-    "max_abs_dI_over_I": 3.020548193771834e-07,
+    "max_abs_dI_over_I": 3.0203391589745933e-07,
     "at_GHz_I": 0.1,
-    "max_abs_dP_over_I": 1.4394043492557775e-08,
+    "max_abs_dP_over_I": 1.4387795021869941e-08,
     "at_GHz_P": 0.6309573444801944,
     "max_abs_dQ_dU_over_I": [
-     1.3316387734730221e-08,
-     1.2837174750048997e-08
+     1.3309843534645692e-08,
+     1.2831596940183519e-08
     ],
     "c_eff_I_range": [
-     -1.7322126386764753,
-     -1.5827179060079581
+     -1.733294165499151,
+     -1.582719114063126
     ],
-    "dP_over_I_over_mean_inv_g2_max": 0.5593443569443666,
+    "dP_over_I_over_mean_inv_g2_max": 0.5595405293357297,
     "mean_inv_g2_range": [
-     2.847169696329827e-09,
-     1.908456448433361e-07
+     2.812217819540364e-09,
+     1.9083229185378551e-07
     ],
-    "max_emission_fraction_x_below_1e-3": 0.00012448941644339448,
-    "max_emission_fraction_x_above_grid": 5.011049422961942e-14
+    "max_emission_fraction_x_below_1e-3": 0.00019446976935348867,
+    "max_emission_fraction_x_above_grid": 4.9482514543511106e-14
    },
    "gamma100_xm23": {
-    "max_abs_dI_over_I": 3.0204553485368605e-07,
+    "max_abs_dI_over_I": 3.020249187945699e-07,
     "at_GHz_I": 0.1,
-    "max_abs_dP_over_I": 1.4393637849848534e-08,
+    "max_abs_dP_over_I": 1.4387395969818197e-08,
     "at_GHz_P": 0.6309573444801944,
     "max_abs_dQ_dU_over_I": [
-     1.3316011111903948e-08,
-     1.283681321826579e-08
+     1.33094726466321e-08,
+     1.283124136435477e-08
     ],
     "c_eff_I_range": [
-     -1.7321510117148595,
-     -1.5826692566216705
+     -1.7332326239524052,
+     -1.5826719674151346
     ],
-    "dP_over_I_over_mean_inv_g2_max": 0.5593255282692657,
+    "dP_over_I_over_mean_inv_g2_max": 0.5595217087636554,
     "mean_inv_g2_range": [
-     2.847169696329827e-09,
-     1.908456448433361e-07
+     2.812217819540364e-09,
+     1.9083229185378551e-07
     ],
-    "max_emission_fraction_x_below_1e-3": 0.00012448941644339448,
-    "max_emission_fraction_x_above_grid": 5.011049422961942e-14
+    "max_emission_fraction_x_below_1e-3": 0.00019446976935348867,
+    "max_emission_fraction_x_above_grid": 4.9482514543511106e-14
    }
   },
   "E4-JP": {
    "gamma300_xm23": {
-    "max_abs_dI_over_I": 4.1560032203411064e-07,
+    "max_abs_dI_over_I": 4.156003220341111e-07,
     "at_GHz_I": 0.1,
-    "max_abs_dP_over_I": 1.9232769356521842e-08,
+    "max_abs_dP_over_I": 1.9232769356521855e-08,
     "at_GHz_P": 0.6309573444801944,
     "max_abs_dQ_dU_over_I": [
-     1.772703478116387e-08,
-     1.726215139062916e-08
+     1.772703478116389e-08,
+     1.7262151390629173e-08
     ],
     "c_eff_I_range": [
-     -2.1062023706059185,
-     -1.6827231334155084
+     -2.1062023706059207,
+     -1.68272313341551
     ],
-    "dP_over_I_over_mean_inv_g2_max": 0.7193449403397878,
+    "dP_over_I_over_mean_inv_g2_max": 0.7193449403397886,
     "mean_inv_g2_range": [
-     5.710221937244509e-09,
-     2.469808097250946e-07
+     5.710221937244517e-09,
+     2.4698080972509464e-07
     ],
     "max_emission_fraction_x_below_1e-3": 0.0,
-    "max_emission_fraction_x_above_grid": 2.7300136821830006e-13
+    "max_emission_fraction_x_above_grid": 2.730013682182731e-13
    },
-   "check_continuum_I_vs_forward_max_rel": 2.5534668968152374e-06,
-   "check_continuum_P_vs_forward_max_over_I": 8.074886097025924e-07,
+   "check_continuum_I_vs_forward_max_rel": 2.5534529741744194e-06,
+   "check_continuum_P_vs_forward_max_over_I": 8.074840169004216e-07,
    "mean_inv_g2_at_0.1_1_10_GHz": [
-    2.469808097250946e-07,
-    2.9213606724892493e-08,
-    5.710221937244509e-09
+    2.4698080972509464e-07,
+    2.9213606724892463e-08,
+    5.710221937244517e-09
    ],
    "mean_inv_g2_pow_minus_half_at_0.1_1_10_GHz": [
-    2012.1872598377784,
-    5850.694354385803,
-    13233.46295347948
+    2012.1872598377781,
+    5850.694354385807,
+    13233.462953479471
    ],
    "gamma300_clamp": {
-    "max_abs_dI_over_I": 4.1560032203411064e-07,
+    "max_abs_dI_over_I": 4.156003220341111e-07,
     "at_GHz_I": 0.1,
-    "max_abs_dP_over_I": 1.9232769356521842e-08,
+    "max_abs_dP_over_I": 1.9232769356521855e-08,
     "at_GHz_P": 0.6309573444801944,
     "max_abs_dQ_dU_over_I": [
-     1.772703478116387e-08,
-     1.726215139062916e-08
+     1.772703478116389e-08,
+     1.7262151390629173e-08
     ],
     "c_eff_I_range": [
-     -2.1062023706059185,
-     -1.6827231334155084
+     -2.1062023706059207,
+     -1.68272313341551
     ],
-    "dP_over_I_over_mean_inv_g2_max": 0.7193449403397878,
+    "dP_over_I_over_mean_inv_g2_max": 0.7193449403397886,
     "mean_inv_g2_range": [
-     5.710221937244509e-09,
-     2.469808097250946e-07
+     5.710221937244517e-09,
+     2.4698080972509464e-07
     ],
     "max_emission_fraction_x_below_1e-3": 0.0,
-    "max_emission_fraction_x_above_grid": 2.7300136821830006e-13
+    "max_emission_fraction_x_above_grid": 2.730013682182731e-13
    },
    "gamma100_xm23": {
-    "max_abs_dI_over_I": 4.155860534548755e-07,
+    "max_abs_dI_over_I": 4.1558605345487576e-07,
     "at_GHz_I": 0.1,
-    "max_abs_dP_over_I": 1.9232148642455062e-08,
+    "max_abs_dP_over_I": 1.923214864245508e-08,
     "at_GHz_P": 0.6309573444801944,
     "max_abs_dQ_dU_over_I": [
-     1.7726461776591805e-08,
-     1.7261594426421713e-08
+     1.7726461776591822e-08,
+     1.726159442642173e-08
     ],
     "c_eff_I_range": [
-     -2.1061028044615977,
-     -1.682665361399735
+     -2.1061028044616,
+     -1.6826653613997358
     ],
-    "dP_over_I_over_mean_inv_g2_max": 0.7193119068989368,
+    "dP_over_I_over_mean_inv_g2_max": 0.7193119068989378,
     "mean_inv_g2_range": [
-     5.710221937244509e-09,
-     2.469808097250946e-07
+     5.710221937244517e-09,
+     2.4698080972509464e-07
     ],
     "max_emission_fraction_x_below_1e-3": 0.0,
-    "max_emission_fraction_x_above_grid": 2.7300136821830006e-13
+    "max_emission_fraction_x_above_grid": 2.730013682182731e-13
    }
   }
  },
- "propagation_label": "run + gamma^-2 extrapolation (c from gamma = 300 applied for gamma in [300, 1e5])",
+ "propagation_label": "run + gamma^-2 extrapolation (c from gamma = 300 applied for gamma in [300, 2.96e+06])",
  "timings_s": {
-  "tables_s": 0.9776098728179932,
-  "checks_s": 0.05591297149658203,
-  "integer_sum_s": 1.047023057937622,
-  "propagation_s": 109.52147507667542
+  "tables_s": 0.9082958698272705,
+  "checks_s": 0.047698974609375,
+  "integer_sum_s": 0.9031400680541992,
+  "propagation_s": 146.38653588294983
  },
- "tables_npz_sha256": "6ae49f8e6c5d20156aae10649d66dafaf8128363039a69e0c001e0af49ae83b0",
+ "tables_npz_sha256": "75b875158f80415ba2bb535e9607919e1a126235fa039925bf7787b6899f3c61",
  "provenance": {
   "script": "harmonic_correction.py",
-  "script_sha256": "855fd963a947540115e41b9d5e3450f195a8413465b7247ae5eb54df13784f9d",
+  "script_sha256": "950f108743a6fbf3c2dcbf5777092a88966c5cb134cb96e74f71e9ac8c06093e",
   "lib_sha256": {
    "kernels.py": "b0983233f8fee93b12b10c299c0ea0d0011d72a106884029ec46107ba4121570",
-   "config.py": "f5577f60bd12158c413ffb1f8edc9361b1c202f66bc25d9cf812d466816831c6",
-   "basis.py": "2188cf4adbc3fc4e0148a36c3c43ce7d0b444224f5a1c58f58a3fb24f8c6ceb3",
-   "ensembles.py": "a224faeeba1a2f16b8db4f98f95a60126913ff3e7dd9a6c37304cd09ec8e6655",
+   "config.py": "78aaca6292cd15db1d820d25651c288ed47d14213b8da3d55440b7d4546e887c",
+   "basis.py": "438afd89638545dbddfd9acf51cbef67d67d8484a24dcd28d2a1755b6697eace",
+   "ensembles.py": "608dc23a9f795bd7cf4af10b84bfb618c41d3d0d5d858e878aacb410fcbc7c60",
    "provenance.py": "32dc912a4bc75a4460d6264b1ffcf8e278e7da1c6db8e0a43e810fa31f737590"
   },
   "inputs_sha256": {
    "harmonic_cells.py": "0a37f630f88013cfd7b166e698c4580f4ec150f4f72bd21c7a5a21682f34a8e7",
    "kp_harmonic.py": "c6e8036c0a04771bd26648194467e16d498f6b78c766e5007143c421a00ab0c7",
-   "kp_bridge_results.json": "46ae4bbf4199b83c79d2ce24179b4d7c70d0e09dc4cac91d28c2f2d1abb2f9fa",
+   "kp_bridge_results.json": "dbcb655574393842be0d268536d1323d314d5834fcc9e3a2361947e81a5e50fb",
    "inputs/validation/harmonic_continuum_results.json": "aad5d7140bfa7e66818a0659c3982b6496fb18e87e439e7375e2feceba55cd12",
-   "forward_spectra.npz": "e9f5d7c3d3c216b1b8c31e36165f91577cc605d6d6180273c353e3ad79f2e9d8"
+   "forward_spectra.npz": "9b9469c65fc5df489fc65f4d058decba15a48efe2ecb6e03ff47990f0f00841c"
   },
   "versions": {
    "python": "3.12.9",
    "numpy": "2.3.5",
    "scipy": "1.16.3"
   },
-  "wall_clock_s": 111.73138880729675,
-  "finished": "2026-10-27T14:45:20+0000"
+  "wall_clock_s": 148.3376109600067,
+  "finished": "2026-11-13T02:29:38+0000"
  }
 }

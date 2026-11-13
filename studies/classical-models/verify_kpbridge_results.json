@@ -1994,7 +1994,7 @@
   "script": "verify_kpbridge.py",
   "script_sha256": "01308f3756c28adaeb6a9a768d96b3451859beab19da54232725ab58f743919e",
   "inputs_sha256": {
-   "kp_bridge_results.json": "46ae4bbf4199b83c79d2ce24179b4d7c70d0e09dc4cac91d28c2f2d1abb2f9fa",
+   "kp_bridge_results.json": "dbcb655574393842be0d268536d1323d314d5834fcc9e3a2361947e81a5e50fb",
    "lib/kernels.py": "b0983233f8fee93b12b10c299c0ea0d0011d72a106884029ec46107ba4121570"
   },
   "versions": {
@@ -2003,7 +2003,7 @@
    "scipy": "1.16.3"
   },
   "workers": 24,
-  "wall_clock_s": 14.32746171951294,
-  "finished": "2026-10-27T16:07:07+0000"
+  "wall_clock_s": 13.689297914505005,
+  "finished": "2026-11-13T02:43:44+0000"
  }
 }

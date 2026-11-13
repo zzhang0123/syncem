@@ -11,8 +11,8 @@
   "inputs/harmonic-radio-fit/radio_numerics.py": "a70738408d68928c87c8557ffa11643d51a4c13380026b36bd2d02f273fce4b0",
   "inputs/harmonic-radio-fit/stable_lines.py": "c661ba3235bae5c5343651b2fdc995d9fb7228dfc329619255456adc51cc6768",
   "bridge_harmonic_probe.npz": "80e2e8763d4d776760177b9c0233b8527ce6013b5bf65388a21965432b49af7a",
-  "bridge_results.json": "8707f022ab6e7a5fbe87dde66afd1baa41a5a8499c5407791a3a9f6650da51c6",
-  "lib/syncem_compat.py": "a69218aa824ac5ed96ebbfed512d530107a5db45d559f6f86e549f87ab28f45d"
+  "bridge_results.json": "3a3f0e0e96621972160ba6d0aaaff1df09bbec7de8c02624b76c31b1d42c2e34",
+  "lib/syncem_compat.py": "68fb9a43f1807137ff86c000792b0c265602d0bf9ab0a23762d9c116ff1ab458"
  },
  "versions": {
   "python": "3.12.9",
@@ -20,16 +20,19 @@
   "scipy": "1.16.3",
   "mpmath": "1.3.0",
   "jax": "0.10.0",
-  "syncem": "0.6.0"
+  "syncem": "0.7.1.dev0"
  },
  "syncem_check": {
   "package": "syncem",
-  "version": "0.6.0",
+  "version": "0.7.1.dev0",
   "resolved_to_package_root_of_this_repository": true,
-  "modules_equal_to_SyncMoments_d51f9be_up_to_the_rename": [
-   "constants.py",
-   "model/high_order_harmonic.py"
-  ],
+  "code_equal_to_SyncMoments_d51f9be_up_to_the_rename_and_docstrings": {
+   "constants.py": "whole module",
+   "model/high_order_harmonic.py": [
+    "_geometry",
+    "high_order_line_powers"
+   ]
+  },
   "SyncMoments_pin": "d51f9bef4fa744a536a60c3da821b1033818a232"
  },
  "inputs_and_layout": {
@@ -138,14 +141,14 @@
   "bump_area_gl256_minus_quad_rel": -2.4424906541753444e-15,
   "bump_area_gl4096_minus_quad_rel": 2.831068712794149e-13
  },
- "continuum_seconds_wall": 22.27420633425936,
+ "continuum_seconds_wall": 20.58179687501979,
  "harmonic_spotcheck_max_abs_over_max": {
   "probe adopted k=5 (gamma=1000)": 0.0,
   "probe adopted k=20 (gamma=31623)": 0.0,
   "cache pure_coefficients[6,0] (bin-centre, adopted)": 0.0,
   "probe refined k=10 (gamma=3162)": 0.0
  },
- "harmonic_spotcheck_seconds": 6.1968490825966,
+ "harmonic_spotcheck_seconds": 5.374820458004251,
  "columns": {
   "channel_nodes_400_vs_800_basis_max_over_colmax": 1.7055385466012586e-10,
   "harm_minus_cont_fd04_max_over_colmax_IQU": [
@@ -963,5 +966,5 @@
   "refined_harmonic_minus_continuum_bins8_11_max": 1.5383321684774356e-08,
   "adopted_harmonic_minus_continuum_bins8_11_max": 4.22413234168885e-06
  },
- "wall_seconds": 77.15787500003353
+ "wall_seconds": 69.13112141701276
 }

@@ -28935,26 +28935,26 @@
   "script_sha256": "c13a2059c3bc7699b4328c8c7f8c1108d0d04b8e8255f4d631c6a4b8cbc5e218",
   "lib_sha256": {
    "kernels.py": "b0983233f8fee93b12b10c299c0ea0d0011d72a106884029ec46107ba4121570",
-   "config.py": "f5577f60bd12158c413ffb1f8edc9361b1c202f66bc25d9cf812d466816831c6",
-   "basis.py": "2188cf4adbc3fc4e0148a36c3c43ce7d0b444224f5a1c58f58a3fb24f8c6ceb3",
-   "ensembles.py": "a224faeeba1a2f16b8db4f98f95a60126913ff3e7dd9a6c37304cd09ec8e6655",
+   "config.py": "78aaca6292cd15db1d820d25651c288ed47d14213b8da3d55440b7d4546e887c",
+   "basis.py": "438afd89638545dbddfd9acf51cbef67d67d8484a24dcd28d2a1755b6697eace",
+   "ensembles.py": "608dc23a9f795bd7cf4af10b84bfb618c41d3d0d5d858e878aacb410fcbc7c60",
    "provenance.py": "32dc912a4bc75a4460d6264b1ffcf8e278e7da1c6db8e0a43e810fa31f737590"
   },
   "inputs_sha256": {
    "kp_harmonic.py": "c6e8036c0a04771bd26648194467e16d498f6b78c766e5007143c421a00ab0c7",
    "inputs/beaming-survey/check_beaming.json": "031476ca56ab042f2948b72571f491517ede9e3be1f43083e45cbcdeebdc81f6",
    "inputs/harmonic-radio-fit/stable_lines.py": "c661ba3235bae5c5343651b2fdc995d9fb7228dfc329619255456adc51cc6768",
-   "lib/syncem_compat.py": "a69218aa824ac5ed96ebbfed512d530107a5db45d559f6f86e549f87ab28f45d"
+   "lib/syncem_compat.py": "68fb9a43f1807137ff86c000792b0c265602d0bf9ab0a23762d9c116ff1ab458"
   },
   "versions": {
    "python": "3.12.9",
    "numpy": "2.3.5",
    "scipy": "1.16.3",
    "jax": "0.10.0",
-   "syncem": "0.6.0"
+   "syncem": "0.7.1.dev0"
   },
-  "wall_clock_s": 226.39336609840393,
-  "finished": "2026-10-27T14:43:27+0000",
+  "wall_clock_s": 215.1728961467743,
+  "finished": "2026-11-13T02:27:09+0000",
   "mpmath": "1.3.0",
   "workers": 26
  }

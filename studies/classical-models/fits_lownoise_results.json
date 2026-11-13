@@ -1,0 +1,88 @@
+{
+ "description": "Seeded UPRE fits of the moment_fit_gallery_compact rows repeated at a lower noise level.\n\nThe rows are E2, E4-KP and E5. The fits use the fits.py basis, direct spectra, true moments and\nthe same standard-normal draw (paper seed) for the seeded realisation, with the noise sd set to\nfrac * I_j for frac = 1% and 0.01%. The 1% run must reproduce the predictions and ranks saved in\nfits_products.npz, which checks the driver. For E5 the separable fit with one free complex\nazimuth factor (fits.FreeFactorFit) is repeated at 1% and compared with fits_results.json.\n\nReads fits_results.json and fits_products.npz (python fits.py).\nWrites fits_lownoise_products.npz and fits_lownoise_results.json.  Run: python fits_lownoise.py\n",
+ "rows": [
+  "E2",
+  "E4-KP",
+  "E5"
+ ],
+ "noise_fracs": [
+  0.01,
+  0.0001
+ ],
+ "summary": {
+  "0.01": {
+   "E2": {
+    "R_star": 7,
+    "chi2_fit": 49.92861746918061,
+    "dof_fit": 56,
+    "max_fit_minus_direct_over_I": 0.008584399581892459
+   },
+   "E4-KP": {
+    "R_star": 9,
+    "chi2_fit": 48.40112487250008,
+    "dof_fit": 54,
+    "max_fit_minus_direct_over_I": 0.009947532099575012
+   },
+   "E5": {
+    "R_star": 17,
+    "chi2_fit": 43.16593433381058,
+    "dof_fit": 46,
+    "max_fit_minus_direct_over_I": 0.011293396490520226
+   }
+  },
+  "0.0001": {
+   "E2": {
+    "R_star": 16,
+    "chi2_fit": 40.726903438568115,
+    "dof_fit": 47,
+    "max_fit_minus_direct_over_I": 0.00026213609924541603
+   },
+   "E4-KP": {
+    "R_star": 16,
+    "chi2_fit": 40.817827224731445,
+    "dof_fit": 47,
+    "max_fit_minus_direct_over_I": 0.00026579212036118276
+   },
+   "E5": {
+    "R_star": 34,
+    "chi2_fit": 29.518600463867188,
+    "dof_fit": 29,
+    "max_fit_minus_direct_over_I": 0.0003904491752674912
+   }
+  }
+ },
+ "checks": {
+  "E2_pred_vs_archive_max_over_I": 0.0,
+  "E2_R_star_minus_archive": 0,
+  "E4-KP_pred_vs_archive_max_over_I": 0.0,
+  "E4-KP_R_star_minus_archive": 0,
+  "E5_pred_vs_archive_max_over_I": 0.0,
+  "E5_R_star_minus_archive": 0,
+  "E5_free_factor_R_star_minus_archive": 0,
+  "E5_free_factor_chi2_fit_minus_archive": 0.0,
+  "E5_free_factor_c_minus_archive": 0.0
+ },
+ "provenance": {
+  "script": "fits_lownoise.py",
+  "script_sha256": "322cdf363cd9aae86afced3e7e44e1a6a602f94b7d49b09cec132bc46a63f0c1",
+  "lib_sha256": {
+   "kernels.py": "b0983233f8fee93b12b10c299c0ea0d0011d72a106884029ec46107ba4121570",
+   "config.py": "78aaca6292cd15db1d820d25651c288ed47d14213b8da3d55440b7d4546e887c",
+   "basis.py": "438afd89638545dbddfd9acf51cbef67d67d8484a24dcd28d2a1755b6697eace",
+   "ensembles.py": "608dc23a9f795bd7cf4af10b84bfb618c41d3d0d5d858e878aacb410fcbc7c60",
+   "provenance.py": "32dc912a4bc75a4460d6264b1ffcf8e278e7da1c6db8e0a43e810fa31f737590"
+  },
+  "inputs_sha256": {
+   "fits_products.npz": "e5d686263806ef58849e9d8599720d64871bbe3baf2bf42f081d3a72bed90fa2",
+   "fits_results.json": "6517c712d8d9c0cb244e478761eff17e51f92609bbc029c262308f2330976a43",
+   "fits.py": "58df6f2a0060fc26f9c54c7384102fb4c9a3aa6526f45bcce9d8bfbf546e2d7e"
+  },
+  "versions": {
+   "python": "3.12.9",
+   "numpy": "2.3.5",
+   "scipy": "1.16.3"
+  },
+  "wall_clock_s": 22.580001831054688,
+  "finished": "2026-11-13T01:31:41+0000"
+ }
+}

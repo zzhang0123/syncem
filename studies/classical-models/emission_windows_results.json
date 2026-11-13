@@ -1,0 +1,92 @@
+{
+ "description": "Where the reference ensembles emit, and where their spectra are cut off (schematic figure).\n\nMonochromatic continuum emission with the paper's default geometry (B ~ U[4, 6] muG,\neta ~ U[-1/2, 1/2], isotropic pitch angles, <e^{2 i phi}> = 0.4 e^{0.5 i}, Gaussian screen with\nmean 8 and sd 0.5 rad m^-2).  The directional continuum kernels are A_theta F(x) for I and\n-A_theta G(x) for Q in the field frame, x = nu / (nu_0 gamma^2 sin theta), nu_0 = 3 e B/(4 pi m c).\nThe script checks this monochromatic implementation against the study kernels (lib/basis.py)\non narrow channels.\n\nStokes V vanishes for the symmetric eta distribution.  Panel (c) shows |V|/I for one field\ninclination, theta = 75 deg, from the power-law fit of Pandya et al. (2016, Eq. 33), which is\nvalid where the spectrum follows the power law (fit error up to 25%).\n\nThe results JSON records the intensity relative to the power law at fixed frequencies (read\nfrom the saved curves), |V|/I, the screen rotation of the polarisation angle at 1 GHz\n(lambda^2 times the mean rotation measure) and the screen depolarisation factor at 0.2 GHz.\nThe 0.2 GHz of the panel (b) annotation is placed by hand and is recorded as such. Text positions\nof all labels are placed by hand. Style: lib/figure_style_paper.py.\n\nWrites emission_windows_results.json, emission_windows_curves.npz and\nfigures/emission_windows.{pdf,png}.\nRun: python emission_windows.py   (python emission_windows.py --replot redraws from the npz only)\n",
+ "I_over_PL_at_GHz": {
+  "0.1": {
+   "old_range": 0.9998027583886229,
+   "new_range": 0.9999999082919399,
+   "aged_E4JP": 0.8888492502579342
+  },
+  "1": {
+   "old_range": 0.9973518131712262,
+   "new_range": 0.9999987536832433,
+   "aged_E4JP": 0.6409472379705631
+  },
+  "10": {
+   "old_range": 0.9660548964369602,
+   "new_range": 0.9999830664546214,
+   "aged_E4JP": 0.12478377467935643
+  },
+  "30": {
+   "old_range": 0.8917978178697483,
+   "new_range": 0.9999412361150134,
+   "aged_E4JP": 0.007682080873620828
+  },
+  "100": {
+   "old_range": 0.6609976336095623,
+   "new_range": 0.9997704723982573,
+   "aged_E4JP": 1.5568406993406186e-06
+  },
+  "300": {
+   "old_range": 0.27203541851122254,
+   "new_range": 0.9992059388895436,
+   "aged_E4JP": 3.952771358462787e-16
+  }
+ },
+ "V_over_I_theta75_at_GHz": {
+  "0.1": 0.0001881976499302428,
+  "1": 5.95133224070596e-05,
+  "10": 1.881976499302428e-05,
+  "100": 5.951332240705959e-06,
+  "300": 3.436003271208484e-06
+ },
+ "screen": {
+  "rotation_deg_at_GHz": {
+   "1": 41.195902845716475
+  },
+  "depolarisation_factor_exp(-2 lambda^4 sd^2)_at_GHz": {
+   "0.2": 0.08011816089474973
+  },
+  "abs_P_over_I_at_GHz": {
+   "0.2": 0.023515863827008387,
+   "1": 0.2907224676564904,
+   "10": 0.29190033400766713
+  },
+  "depolarisation_annotation_GHz": 0.2,
+  "depolarisation_annotation_note": "frequency placed by hand in the panel (b) text, not computed"
+ },
+ "checks": {
+  "monochromatic_vs_study_kernel_E1_narrow_channels": {
+   "I_shape_max_rel": 2.0325243044183594e-08,
+   "P_over_I_max_rel": 0.018006542155967642
+  },
+  "I_over_PL_from_npz_minus_computed_max_abs": 0.0
+ },
+ "curves_npz": "emission_windows_curves.npz",
+ "curves_npz_sha256": "3d290dfa4508f39b00c38d28fda4d5d1f88349909b6f4a5ddc183cb365af200f",
+ "figures": {
+  "figures/emission_windows.pdf": "3fe40eec6ef8362782d38f6f7d10bd23b5a47980a7fea5214b76a43984905300",
+  "figures/emission_windows.png": "d7b53955b49b9d339a955cd4b7738c9cfa16f038c7adc8b42f03347de49c2a8d"
+ },
+ "provenance": {
+  "script": "emission_windows.py",
+  "script_sha256": "9a5a11aed7be1df88378163ca89dd66d387dc06a34b79a91ab265d95199b6672",
+  "lib_sha256": {
+   "kernels.py": "b0983233f8fee93b12b10c299c0ea0d0011d72a106884029ec46107ba4121570",
+   "config.py": "78aaca6292cd15db1d820d25651c288ed47d14213b8da3d55440b7d4546e887c",
+   "basis.py": "438afd89638545dbddfd9acf51cbef67d67d8484a24dcd28d2a1755b6697eace",
+   "ensembles.py": "608dc23a9f795bd7cf4af10b84bfb618c41d3d0d5d858e878aacb410fcbc7c60",
+   "provenance.py": "32dc912a4bc75a4460d6264b1ffcf8e278e7da1c6db8e0a43e810fa31f737590"
+  },
+  "inputs_sha256": {
+   "lib/figure_style_paper.py": "9bf0aa49a7b84b4c382588b915c6db6b49b6cd6d411dd8266987270c0f9262e3"
+  },
+  "versions": {
+   "python": "3.12.9",
+   "numpy": "2.3.5",
+   "scipy": "1.16.3",
+   "matplotlib": "3.10.8"
+  },
+  "wall_clock_s": 451.08319067955017,
+  "finished": "2026-11-13T02:53:12+0000"
+ }
+}

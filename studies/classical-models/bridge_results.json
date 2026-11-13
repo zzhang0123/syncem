@@ -23,7 +23,7 @@
   "energy_nodes_8_vs_32_moments_max_abs": 1.3877787807814457e-15,
   "analytic_vs_fd04_max_over_column_max": 0.0012218165440197922,
   "analytic_vs_fd01_max_over_column_max": 4.6987581434718474e-06,
-  "seconds": 73.58810324966908
+  "seconds": 62.612821999995504
  },
  "column_differences_over_column_max_I": {
   "harmonic_minus_continuum_fd04_matched": {
@@ -3905,7 +3905,7 @@
    "inputs/harmonic-radio-fit/radio_numerics.py": "a70738408d68928c87c8557ffa11643d51a4c13380026b36bd2d02f273fce4b0",
    "inputs/harmonic-radio-fit/stable_lines.py": "c661ba3235bae5c5343651b2fdc995d9fb7228dfc329619255456adc51cc6768",
    "bridge_harmonic_probe.npz": "80e2e8763d4d776760177b9c0233b8527ce6013b5bf65388a21965432b49af7a",
-   "bridge_harmonic_probe.json": "1867d69924ce06305d0322e674240408ce71b0e986c40e6dadb22c65d20e0043",
+   "bridge_harmonic_probe.json": "c5bd5278c13527b2735be34e984e295391c6384fa03324dd4d895c99295bf5bd",
    "bridge_continuum.py": "9c940f407a5be48f4f1b5688521d03a31869e820929c0a624ef6f452ebec8c15",
    "bridge_harmonic_probe.py": "a1045366e2615a9b8d76881b55b9031276d5f771a3e775f08bb4d992455e1c57",
    "lib/figure_style.py": "e2f37e065b7e0b4f927a16819faba9f406e2733eb61977af70529e22d20cd003"
@@ -3916,7 +3916,7 @@
    "scipy": "1.16.3",
    "matplotlib": "3.10.8"
   },
-  "runtime_seconds": 78.53276445763186,
-  "utc": "2026-10-27T14:53:21Z"
+  "runtime_seconds": 66.95345358402119,
+  "utc": "2026-11-13T02:36:42Z"
  }
 }

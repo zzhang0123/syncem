@@ -19,340 +19,340 @@
   "process": "single Python process, no multiprocessing"
  },
  "wait_for_idle": {
-  "waited_s": 45.15346312522888,
+  "waited_s": 30.120939016342163,
   "last": {
-   "time": "14:33:08",
+   "time": "01:37:11",
    "loadavg": [
-    5.01953125,
-    5.423828125,
-    4.62060546875
+    5.947265625,
+    6.24609375,
+    4.84814453125
    ],
-   "other_processes_pcpu": 79.7
+   "other_processes_pcpu": 35.6
   },
-  "n_samples": 4,
+  "n_samples": 3,
   "limits": {
    "other_processes_pcpu": 400.0,
    "load_1min": 6.0
   }
  },
  "machine_start": {
-  "time": "14:33:09",
+  "time": "01:37:12",
   "loadavg": [
-   5.01953125,
-   5.423828125,
-   4.62060546875
+   5.947265625,
+   6.24609375,
+   4.84814453125
   ],
-  "other_processes_pcpu": 64.7
+  "other_processes_pcpu": 28.4
  },
  "one_d": {
   "E2": {
    "route_i_recompute": {
     "n": 60,
-    "median_s": 1.3343439790000002,
-    "p16_s": 1.33078920504,
-    "p84_s": 1.34093884352,
-    "min_s": 1.3245632090000001,
+    "median_s": 1.8084474165000002,
+    "p16_s": 1.79945386,
+    "p84_s": 1.81609343,
+    "min_s": 1.7880670420000002,
     "machine_after": {
-     "time": "14:34:33",
+     "time": "01:39:06",
      "loadavg": [
-      3.5087890625,
-      4.7978515625,
-      4.453125
+      2.39208984375,
+      4.79248046875,
+      4.4453125
      ],
-     "other_processes_pcpu": 37.8
+     "other_processes_pcpu": 18.7
     },
-    "kernel_nodes_per_eval": 288
+    "kernel_nodes_per_eval": 456
    },
-   "route_ii_table_288": {
+   "route_ii_table_456": {
     "n": 2000,
-    "median_s": 1.6916000000000002e-05,
-    "p16_s": 1.5208e-05,
-    "p84_s": 1.7083000000000002e-05,
-    "min_s": 1.3375000000000002e-05,
+    "median_s": 2.3708e-05,
+    "p16_s": 2.1083e-05,
+    "p84_s": 2.3834000000000003e-05,
+    "min_s": 1.9292e-05,
     "machine_after": {
-     "time": "14:34:34",
+     "time": "01:39:07",
      "loadavg": [
-      3.5087890625,
-      4.7978515625,
-      4.453125
+      2.39208984375,
+      4.79248046875,
+      4.4453125
      ],
-     "other_processes_pcpu": 40.6
+     "other_processes_pcpu": 19.3
     },
-    "build_s": 1.340868208091706,
-    "columns": 288,
-    "max_rel_err_vs_route_i": 2.3794437189811917e-15
+    "build_s": 1.8097614170110319,
+    "columns": 456,
+    "max_rel_err_vs_route_i": 3.251966997166536e-15
    },
-   "route_ii_table_96": {
+   "route_ii_table_152": {
     "n": 2000,
-    "median_s": 9.542000000000001e-06,
-    "p16_s": 9.250000000000001e-06,
-    "p84_s": 9.708000000000001e-06,
-    "min_s": 7.417e-06,
+    "median_s": 1.1833e-05,
+    "p16_s": 1.1458000000000001e-05,
+    "p84_s": 1.1958000000000001e-05,
+    "min_s": 9.167e-06,
     "machine_after": {
-     "time": "14:34:35",
+     "time": "01:39:08",
      "loadavg": [
-      3.5087890625,
-      4.7978515625,
-      4.453125
+      2.39208984375,
+      4.79248046875,
+      4.4453125
      ],
-     "other_processes_pcpu": 40.1
+     "other_processes_pcpu": 50.4
     },
-    "build_s": 0.4471698752604425,
-    "columns": 96,
-    "max_rel_err_vs_route_i": 8.404528622572583e-14
+    "build_s": 0.6138543330016546,
+    "columns": 152,
+    "max_rel_err_vs_route_i": 8.299052987652282e-14
    },
    "route_iii_parts": {
     "family_moments_only": {
      "n": 2000,
-     "median_s": 2.0834e-05,
-     "p16_s": 2.0709e-05,
-     "p84_s": 2.1125000000000002e-05,
-     "min_s": 2.0458e-05,
+     "median_s": 2.5542e-05,
+     "p16_s": 2.5458000000000003e-05,
+     "p84_s": 2.5708000000000002e-05,
+     "min_s": 2.5208e-05,
      "machine_after": {
-      "time": "14:34:35",
+      "time": "01:39:08",
       "loadavg": [
-       3.5087890625,
-       4.7978515625,
-       4.453125
+       2.39208984375,
+       4.79248046875,
+       4.4453125
       ],
-      "other_processes_pcpu": 40.1
+      "other_processes_pcpu": 39.8
      }
     },
     "matvec_123x36_only": {
      "n": 2000,
-     "median_s": 7.92e-07,
-     "p16_s": 7.91e-07,
-     "p84_s": 8.33e-07,
-     "min_s": 7.08e-07,
+     "median_s": 9.59e-07,
+     "p16_s": 9.58e-07,
+     "p84_s": 1.0000000000000002e-06,
+     "min_s": 9.160000000000001e-07,
      "machine_after": {
-      "time": "14:34:35",
+      "time": "01:39:08",
       "loadavg": [
-       3.5087890625,
-       4.7978515625,
-       4.453125
+       2.39208984375,
+       4.79248046875,
+       4.4453125
       ],
-      "other_processes_pcpu": 40.1
+      "other_processes_pcpu": 39.8
      }
     }
    },
    "route_iii_moment_basis_36": {
     "n": 2000,
-    "median_s": 2.2458e-05,
-    "p16_s": 2.2333e-05,
-    "p84_s": 2.2833e-05,
-    "min_s": 2.2041e-05,
+    "median_s": 2.7417000000000002e-05,
+    "p16_s": 2.7292000000000002e-05,
+    "p84_s": 2.7542e-05,
+    "min_s": 2.7083e-05,
     "machine_after": {
-     "time": "14:34:35",
+     "time": "01:39:08",
      "loadavg": [
-      3.5087890625,
-      4.7978515625,
-      4.453125
+      2.39208984375,
+      4.79248046875,
+      4.4453125
      ],
-     "other_processes_pcpu": 42.199999999999996
+     "other_processes_pcpu": 29.9
     },
-    "columns": 36,
-    "max_rel_err_vs_route_i": 0.0011822871267127006
+    "columns": 57,
+    "max_rel_err_vs_route_i": 0.0011705975574564376
    },
    "n_theta_cycled": 60
   },
   "E4-JP": {
    "route_i_recompute": {
     "n": 60,
-    "median_s": 1.003086458,
-    "p16_s": 1.00028009048,
-    "p84_s": 1.017952017,
-    "min_s": 0.9954522920000001,
+    "median_s": 0.8555805000000001,
+    "p16_s": 0.849854155,
+    "p84_s": 0.85950438452,
+    "min_s": 0.8472712910000001,
     "machine_after": {
-     "time": "14:35:38",
+     "time": "01:40:02",
      "loadavg": [
-      2.849609375,
-      4.3642578125,
-      4.31396484375
+      1.857421875,
+      4.23095703125,
+      4.255859375
      ],
-     "other_processes_pcpu": 94.5
+     "other_processes_pcpu": 24.0
     },
     "kernel_nodes_per_eval": 216
    },
-   "route_ii_table_288": {
+   "route_ii_table_456": {
     "n": 2000,
-    "median_s": 1.7250000000000003e-05,
-    "p16_s": 1.5167e-05,
-    "p84_s": 1.7375000000000002e-05,
-    "min_s": 1.3625e-05,
+    "median_s": 2.2875e-05,
+    "p16_s": 2.0958e-05,
+    "p84_s": 2.3042e-05,
+    "min_s": 1.9375e-05,
     "machine_after": {
-     "time": "14:35:40",
+     "time": "01:40:04",
      "loadavg": [
-      2.849609375,
-      4.3642578125,
-      4.31396484375
+      1.78857421875,
+      4.17724609375,
+      4.236328125
      ],
-     "other_processes_pcpu": 43.1
+     "other_processes_pcpu": 15.4
     },
-    "build_s": 1.3480832921341062,
-    "columns": 288,
-    "max_rel_err_vs_route_i": 0.0036815313690047127
+    "build_s": 1.7981772499915678,
+    "columns": 456,
+    "max_rel_err_vs_route_i": 0.0036815313689727053
    },
-   "route_ii_table_96": {
+   "route_ii_table_152": {
     "n": 2000,
-    "median_s": 1.0417e-05,
-    "p16_s": 1.0083840000000001e-05,
-    "p84_s": 1.0542e-05,
-    "min_s": 8.125000000000001e-06,
+    "median_s": 1.2334e-05,
+    "p16_s": 1.2083000000000001e-05,
+    "p84_s": 1.25e-05,
+    "min_s": 9.5e-06,
     "machine_after": {
-     "time": "14:35:40",
+     "time": "01:40:05",
      "loadavg": [
-      2.849609375,
-      4.3642578125,
-      4.31396484375
+      1.78857421875,
+      4.17724609375,
+      4.236328125
      ],
-     "other_processes_pcpu": 66.8
+     "other_processes_pcpu": 21.7
     },
-    "build_s": 0.4547759583219886,
-    "columns": 96,
-    "max_rel_err_vs_route_i": 0.019448166866622634
+    "build_s": 0.6059808749996591,
+    "columns": 152,
+    "max_rel_err_vs_route_i": 0.019448166866456514
    },
    "route_iii_parts": {
     "family_moments_only": {
      "n": 2000,
-     "median_s": 4.6750000000000005e-05,
-     "p16_s": 4.6334e-05,
-     "p84_s": 4.975e-05,
-     "min_s": 4.5875000000000004e-05,
+     "median_s": 5.6542e-05,
+     "p16_s": 5.6375e-05,
+     "p84_s": 5.6833e-05,
+     "min_s": 5.5917e-05,
      "machine_after": {
-      "time": "14:35:40",
+      "time": "01:40:05",
       "loadavg": [
-       2.849609375,
-       4.3642578125,
-       4.31396484375
+       1.78857421875,
+       4.17724609375,
+       4.236328125
       ],
-      "other_processes_pcpu": 75.8
+      "other_processes_pcpu": 17.8
      }
     },
     "matvec_123x36_only": {
      "n": 2000,
-     "median_s": 7.91e-07,
-     "p16_s": 7.5e-07,
-     "p84_s": 7.92e-07,
-     "min_s": 7.08e-07,
+     "median_s": 9.59e-07,
+     "p16_s": 9.58e-07,
+     "p84_s": 1.0000000000000002e-06,
+     "min_s": 8.750000000000001e-07,
      "machine_after": {
-      "time": "14:35:40",
+      "time": "01:40:05",
       "loadavg": [
-       2.849609375,
-       4.3642578125,
-       4.31396484375
+       1.78857421875,
+       4.17724609375,
+       4.236328125
       ],
-      "other_processes_pcpu": 77.3
+      "other_processes_pcpu": 17.8
      }
     }
    },
    "route_iii_moment_basis_36": {
     "n": 2000,
-    "median_s": 4.8583000000000006e-05,
-    "p16_s": 4.8368440000000005e-05,
-    "p84_s": 5.0881559999999995e-05,
-    "min_s": 4.7959000000000006e-05,
+    "median_s": 5.8834000000000006e-05,
+    "p16_s": 5.8666000000000004e-05,
+    "p84_s": 5.9167000000000005e-05,
+    "min_s": 5.8167e-05,
     "machine_after": {
-     "time": "14:35:41",
+     "time": "01:40:05",
      "loadavg": [
-      2.849609375,
-      4.3642578125,
-      4.31396484375
+      1.78857421875,
+      4.17724609375,
+      4.236328125
      ],
-     "other_processes_pcpu": 77.0
+     "other_processes_pcpu": 18.7
     },
-    "columns": 36,
-    "max_rel_err_vs_route_i": 0.011380032355271172
+    "columns": 57,
+    "max_rel_err_vs_route_i": 0.011380032354956661
    },
    "n_theta_cycled": 60
   }
  },
  "build": {
-  "kernel_table_build_s_single": 3.02734754094854,
+  "kernel_table_build_s_single": 3.78473854099866,
   "kernel_table": {
-   "y_nodes": 10132,
+   "y_nodes": 13817,
    "B_nodes": 16,
    "kernels": 2,
    "orders": 7,
-   "F_or_G_quadratures": 324224,
+   "F_or_G_quadratures": 442144,
    "u_nodes_each": 200
   },
   "kbar_call_definition": "one averaged kernel Kbar(gamma): eta (12) x channel (41 x 400 nodes) x screen average of the B-averaged spline, for I, Q, U",
   "spline_evaluations_per_kbar_call_per_kernel": 196800,
   "kbar_order0_single_gamma": {
    "n": 240,
-   "median_s": 0.004466479000000001,
-   "p16_s": 0.0043331761600000004,
-   "p84_s": 0.0046501486800000005,
-   "min_s": 0.0041497090000000006,
+   "median_s": 0.0042311250000000005,
+   "p16_s": 0.0041466830800000005,
+   "p84_s": 0.004336443,
+   "min_s": 0.004053583,
    "machine_after": {
-    "time": "14:35:45",
+    "time": "01:40:10",
     "loadavg": [
-     2.861328125,
-     4.34130859375,
-     4.30615234375
+     1.88525390625,
+     4.1572265625,
+     4.22900390625
     ],
-    "other_processes_pcpu": 97.0
+    "other_processes_pcpu": 20.0
    }
   },
   "kbar_order2_single_gamma": {
    "n": 240,
-   "median_s": 0.008963375,
-   "p16_s": 0.00863243508,
-   "p84_s": 0.009310607,
-   "min_s": 0.008165542000000001,
+   "median_s": 0.0082685415,
+   "p16_s": 0.00815993192,
+   "p84_s": 0.00845382884,
+   "min_s": 0.007998041000000001,
    "machine_after": {
-    "time": "14:35:47",
+    "time": "01:40:12",
     "loadavg": [
-     3.1123046875,
-     4.36865234375,
-     4.31591796875
+     1.88525390625,
+     4.1572265625,
+     4.22900390625
     ],
-    "other_processes_pcpu": 59.5
+    "other_processes_pcpu": 18.7
    }
   },
   "continuum_analytic_basis": {
-   "kbar_calls": 12,
+   "kbar_calls": 19,
    "orders_per_call": 3,
-   "columns": 36,
+   "columns": 57,
    "n": 60,
-   "median_s": 0.09301516700000001,
-   "p16_s": 0.092214845,
-   "p84_s": 0.09382739552000001,
-   "min_s": 0.091420916,
+   "median_s": 0.15021456300000002,
+   "p16_s": 0.14942955000000002,
+   "p84_s": 0.151160708,
+   "min_s": 0.14891358300000002,
    "machine_after": {
-    "time": "14:35:53",
+    "time": "01:40:21",
     "loadavg": [
-     3.10302734375,
-     4.345703125,
-     4.30810546875
+     1.74853515625,
+     4.052734375,
+     4.19091796875
     ],
-    "other_processes_pcpu": 71.10000000000001
+    "other_processes_pcpu": 22.2
    }
   },
   "continuum_stencil_basis": {
-   "kbar_calls": 60,
+   "kbar_calls": 95,
    "orders_per_call": 1,
-   "columns": 36,
+   "columns": 57,
    "n": 60,
-   "median_s": 0.281061938,
-   "p16_s": 0.27942618348000003,
-   "p84_s": 0.28651981800000004,
-   "min_s": 0.27638425,
+   "median_s": 0.3815960835,
+   "p16_s": 0.37966471656,
+   "p84_s": 0.38489943,
+   "min_s": 0.37832375,
    "machine_after": {
-    "time": "14:36:11",
+    "time": "01:40:46",
     "loadavg": [
-     3.091796875,
-     4.27978515625,
-     4.28466796875
+     1.7490234375,
+     3.86962890625,
+     4.1201171875
     ],
-    "other_processes_pcpu": 68.0
+    "other_processes_pcpu": 18.7
    }
   },
   "harmonic_stencil_basis_read_from_survey": {
    "source": "survey memo of the harmonic pipeline, section 3; not distributed with the study (it records local paths); the values below are copied from it by hand",
-   "kbar_calls": 60,
-   "half_step_check_calls": 60,
-   "columns": 36,
+   "kbar_calls": 95,
+   "half_step_check_calls": 95,
+   "columns": 57,
    "per_call_s_adopted_settings": {
     "gamma_382": 1.32,
     "gamma_6977": 2.26,
@@ -403,122 +403,122 @@
     2
    ]
   ],
-  "fixed_B_table_build_s": 0.1911734170280397,
-  "fixed_B_tables_16_build_s": 2.5422819582745433,
+  "fixed_B_table_build_s": 0.2523902499815449,
+  "fixed_B_tables_16_build_s": 2.764419542014366,
   "gamma_c_range": [
    16949.547601292757,
    22901.385886443808
   ],
   "A_unit_column": 0.006000558809723244,
-  "direct_one_eval_s": 16.011903167236596,
-  "direct_node_doubling_max_rel": 7.062597991159654e-16,
-  "scaling_identity_max_rel": 1.7635273370872895e-14,
-  "joint_basis_build_s": 0.09532533306628466,
+  "direct_one_eval_s": 13.746968541992828,
+  "direct_node_doubling_max_rel": 8.828247488824103e-16,
+  "scaling_identity_max_rel": 2.576797907758455e-14,
+  "joint_basis_build_s": 0.15200724999886006,
   "joint_basis_stencil_check": {
-   "I_(0, 1)_max_abs_diff_over_col_max": 2.091992702202067e-09,
-   "I_(0, 2)_max_abs_diff_over_col_max": 3.2446150947600916e-09,
-   "I_(1, 1)_max_abs_diff_over_col_max": 9.883606226439812e-09,
-   "P_(0, 1)_max_abs_diff_over_col_max": 3.279040031143965e-09,
-   "P_(0, 2)_max_abs_diff_over_col_max": 3.1397291053533235e-09,
-   "P_(1, 1)_max_abs_diff_over_col_max": 9.838964516392809e-09
+   "I_(0, 1)_max_abs_diff_over_col_max": 2.0919936240987688e-09,
+   "I_(0, 2)_max_abs_diff_over_col_max": 3.2446808759362922e-09,
+   "I_(1, 1)_max_abs_diff_over_col_max": 9.883605778180449e-09,
+   "P_(0, 1)_max_abs_diff_over_col_max": 3.2790502441391928e-09,
+   "P_(0, 2)_max_abs_diff_over_col_max": 3.142473493743996e-09,
+   "P_(1, 1)_max_abs_diff_over_col_max": 9.838965441058662e-09
   },
-  "joint_moments_vs_measure_max_abs": 2.9559688030644793e-15,
-  "moment_route_72_max_rel_err": 0.007808321078184797,
-  "preaveraged_36_with_marginal_moments_max_rel_err": 0.08365175273548485,
+  "joint_moments_vs_measure_max_abs": 3.524958103184872e-15,
+  "moment_route_72_max_rel_err": 0.007808321077944934,
+  "preaveraged_36_with_marginal_moments_max_rel_err": 0.0836517527347217,
   "stencil_B_columns_rel_residual_outside_gamma_span": {
-   "max_over_own_norm_all_bins": 0.00040712858919792497,
-   "max_over_own_norm_bins_3_11": 1.6144792598488023e-11,
-   "max_over_largest_gamma_column_norm": 7.049814319578559e-13,
+   "max_over_own_norm_all_bins": 0.00040715593565770927,
+   "max_over_own_norm_bins_3_11": 1.5850169212196377e-11,
+   "max_over_largest_gamma_column_norm": 7.052680320537162e-13,
    "note": "stencil step 0.04 in x_B; residual includes the stencil's own truncation error"
   },
-  "pushforward_36_fixed_B0_max_rel_err": 0.0037105939493409963,
-  "pushforward_note": "continuum only: K(gamma, B) = (B/B0) K(gamma sqrt(B/B0), B0) maps any (gamma, B) ensemble onto gamma-moments at B0; nodes with gamma' outside [300, 1e5] are kept in the edge bins (|x| slightly > 1)",
-  "table_build_s": 21.61860066698864,
+  "pushforward_36_fixed_B0_max_rel_err": 0.0037105939491832054,
+  "pushforward_note": "continuum only: K(gamma, B) = (B/B0) K(gamma sqrt(B/B0), B0) maps any (gamma, B) ensemble onto gamma-moments at B0; nodes with gamma' outside [300, 2.96e+06] are kept in the edge bins (|x| slightly > 1)",
+  "table_build_s": 28.69420958298724,
   "route_i_recompute": {
    "n": 5,
-   "median_s": 16.623059125,
-   "p16_s": 16.39967167024,
-   "p84_s": 16.81393033988,
-   "min_s": 16.126149084,
+   "median_s": 13.638286708,
+   "p16_s": 13.62392179012,
+   "p84_s": 13.88648969788,
+   "min_s": 13.609741417,
    "machine_after": {
-    "time": "14:39:40",
+    "time": "01:43:56",
     "loadavg": [
-     3.22998046875,
-     3.5712890625,
-     3.95654296875
+     1.51171875,
+     2.80859375,
+     3.6181640625
     ],
-    "other_processes_pcpu": 156.8
+    "other_processes_pcpu": 21.099999999999998
    },
    "kernel_nodes_per_eval": 3456,
    "note": "5 calls only (each evaluation recomputes 16 fixed-B channel averages)"
   },
   "route_ii_table": {
    "n": 200,
-   "median_s": 0.0001482705,
-   "p16_s": 0.00014749328,
-   "p84_s": 0.00016389972,
-   "min_s": 0.000146792,
+   "median_s": 0.000218208,
+   "p16_s": 0.00021774344,
+   "p84_s": 0.00021918684000000002,
+   "min_s": 0.000217209,
    "machine_after": {
-    "time": "14:39:40",
+    "time": "01:43:56",
     "loadavg": [
-     3.22998046875,
-     3.5712890625,
-     3.95654296875
+     1.51171875,
+     2.80859375,
+     3.6181640625
     ],
-    "other_processes_pcpu": 155.9
+    "other_processes_pcpu": 21.0
    },
-   "columns": 4608,
-   "kernel_calls_to_build": 4608,
-   "max_rel_err_vs_route_i": 0.0008897409975087183
+   "columns": 7296,
+   "kernel_calls_to_build": 7296,
+   "max_rel_err_vs_route_i": 0.0008897409975021943
   },
   "route_iii_joint_moment_basis_72": {
    "n": 200,
-   "median_s": 0.000409021,
-   "p16_s": 0.00038707728000000007,
-   "p84_s": 0.00046046828000000003,
-   "min_s": 0.00036995800000000004,
+   "median_s": 0.0007172495,
+   "p16_s": 0.00071377788,
+   "p84_s": 0.00073674212,
+   "min_s": 0.000702834,
    "machine_after": {
-    "time": "14:39:41",
+    "time": "01:43:56",
     "loadavg": [
-     3.22998046875,
-     3.5712890625,
-     3.95654296875
+     1.51171875,
+     2.80859375,
+     3.6181640625
     ],
-    "other_processes_pcpu": 137.5
+    "other_processes_pcpu": 21.1
    },
-   "columns": 72,
-   "kernel_calls_to_build": 12,
-   "max_rel_err_vs_route_i": 0.008665560536513144
+   "columns": 114,
+   "kernel_calls_to_build": 19,
+   "max_rel_err_vs_route_i": 0.008665560536262919
   },
   "counts": {
    "table_nodes_n_gamma_x_n_B": [
-    288,
+    456,
     16
    ],
-   "table_columns": 4608,
-   "table_entries": 566784,
+   "table_columns": 7296,
+   "table_entries": 897408,
    "moment_bins_x_monomials": [
-    12,
+    19,
     6
    ],
-   "moment_columns": 72,
-   "moment_entries": 8856,
-   "continuum_kernel_calls_moment": "12 at B0 (orders 0..2 in ln gamma; B derivatives by the scaling identity)",
-   "generic_kernel_calls_moment_tensor_5pt_stencil": 300,
+   "moment_columns": 114,
+   "moment_entries": 14022,
+   "continuum_kernel_calls_moment": "19 at B0 (orders 0..2 in ln gamma; B derivatives by the scaling identity)",
+   "generic_kernel_calls_moment_tensor_5pt_stencil": 475,
    "generic_kernel_calls_moment_note": "no scaling identity (e.g. harmonic): 5-point stencils along x_gamma and x_B and their tensor product for the mixed term need 25 evaluations per bin",
-   "table_kernel_calls": 4608
+   "table_kernel_calls": 7296
   }
  },
  "machine_end": {
-  "time": "14:39:41",
+  "time": "01:43:56",
   "loadavg": [
-   3.22998046875,
-   3.5712890625,
-   3.95654296875
+   1.51171875,
+   2.80859375,
+   3.6181640625
   ],
-  "other_processes_pcpu": 137.5
+  "other_processes_pcpu": 37.6
  },
- "description": "Cost of one parametric evaluation and of building the bases; continuum kernel.\n\nAll three routes use the same continuum kernel: the B-averaged spline table of F and G\n(basis.KernelTable) and the eta-, channel- and screen-averaging of basis.channel_kernels.\nOne evaluation returns all 123 rows (41 channels x I, Q, U).\n  (i)   recompute: build the energy quadrature of the parametric density and evaluate the\n        averaged kernel at every node (ensembles.direct_from_measure);\n  (ii)  cached fine gamma table: Kbar at fixed gamma nodes, precomputed once; one evaluation is\n        the density at the nodes and a (123 x n_gamma) matrix-vector product;\n  (iii) moment basis: family moments a(theta) (12 x 3) and a (123 x 36) matrix-vector product.\nFamilies: E2 smoothly broken power law (no kink) and E4-JP (cut-off that moves with theta).\nTimings: one process, BLAS forced single-threaded, each call timed individually\n(time.perf_counter_ns), medians of >= 50 calls after warm-up.\n\nCounts: kernel calls and columns to build the continuum basis (analytic derivatives, and the\npaper's 5-point stencil for comparison), the harmonic basis (5-point stencil; per-call times\nread from the survey memo, not re-run here), and one (gamma, B) joint case: JP ageing with\nsynchrotron losses in the local field B ~ U[4, 6] muG (gamma_c depends on B), comparing a\n(gamma x B) table with a 12-bin x 6-monomial (total degree <= 2 in x_gamma, x_B) basis.\n\nWrites cost_results.json.  Run: python cost.py\n",
+ "description": "Cost of one parametric evaluation and of building the bases; continuum kernel.\n\nAll three routes use the same continuum kernel: the B-averaged spline table of F and G\n(basis.KernelTable) and the eta-, channel- and screen-averaging of basis.channel_kernels.\nOne evaluation returns all 123 rows (41 channels x I, Q, U).\n  (i)   recompute: build the energy quadrature of the parametric density and evaluate the\n        averaged kernel at every node (ensembles.direct_from_measure);\n  (ii)  cached fine gamma table: Kbar at fixed gamma nodes, precomputed once; one evaluation is\n        the density at the nodes and a (123 x n_gamma) matrix-vector product;\n  (iii) moment basis: family moments a(theta) (n_bins x 3) and a (123 x 3 n_bins) matrix-vector product.\nFamilies: E2 smoothly broken power law (no kink) and E4-JP (cut-off that moves with theta).\nTimings: one process, BLAS forced single-threaded, each call timed individually\n(time.perf_counter_ns), medians of >= 50 calls after warm-up.\n\nCounts: kernel calls and columns to build the continuum basis (analytic derivatives, and the\npaper's 5-point stencil for comparison), the harmonic basis (5-point stencil; per-call times\nread from the survey memo, not re-run here), and one (gamma, B) joint case: JP ageing with\nsynchrotron losses in the local field B ~ U[4, 6] muG (gamma_c depends on B), comparing a\n(gamma x B) table with an n_bins x 6-monomial (total degree <= 2 in x_gamma, x_B) basis.\n\nWrites cost_results.json.  Run: python cost.py\n",
  "config": {
   "nu_lo": 100000000.0,
   "nu_hi": 10000000000.0,
@@ -540,8 +540,8 @@
   "noise_frac": 0.01,
   "seed": 20260928,
   "gamma_lo": 300.0,
-  "gamma_hi": 100000.0,
-  "n_bins": 12,
+  "gamma_hi": 2962642.632683605,
+  "n_bins": 19,
   "ref_slope": 2.6,
   "azimuth_factor": [
    0.3510330247561491,
@@ -554,12 +554,12 @@
  },
  "provenance": {
   "script": "cost.py",
-  "script_sha256": "b9ba1c0557b7107091249e558b1941b307d1e5aa2335dd44050d4dae887da685",
+  "script_sha256": "cee5bde0846fc3bbf7edc5385b2613c6b37aa92bc8589f5b8aaf4e275b1916fb",
   "lib_sha256": {
    "kernels.py": "b0983233f8fee93b12b10c299c0ea0d0011d72a106884029ec46107ba4121570",
-   "config.py": "f5577f60bd12158c413ffb1f8edc9361b1c202f66bc25d9cf812d466816831c6",
-   "basis.py": "2188cf4adbc3fc4e0148a36c3c43ce7d0b444224f5a1c58f58a3fb24f8c6ceb3",
-   "ensembles.py": "a224faeeba1a2f16b8db4f98f95a60126913ff3e7dd9a6c37304cd09ec8e6655",
+   "config.py": "78aaca6292cd15db1d820d25651c288ed47d14213b8da3d55440b7d4546e887c",
+   "basis.py": "438afd89638545dbddfd9acf51cbef67d67d8484a24dcd28d2a1755b6697eace",
+   "ensembles.py": "608dc23a9f795bd7cf4af10b84bfb618c41d3d0d5d858e878aacb410fcbc7c60",
    "provenance.py": "32dc912a4bc75a4460d6264b1ffcf8e278e7da1c6db8e0a43e810fa31f737590"
   },
   "inputs_sha256": {},
@@ -568,7 +568,7 @@
    "numpy": "2.3.5",
    "scipy": "1.16.3"
   },
-  "wall_clock_s": 437.24276208877563,
-  "finished": "2026-10-27T14:39:41+0000"
+  "wall_clock_s": 435.1358599662781,
+  "finished": "2026-11-13T01:43:56+0000"
  }
 }
