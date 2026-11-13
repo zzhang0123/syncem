@@ -3,7 +3,7 @@
 The values of the extrapolation table are recomputed from the per-realisation arrays of
 fits_extrap_products.npz and compared with fits_extrap_results.json:
   * per prediction channel, the median and 84th percentile of |dI|/I, |d|P||/I and |d chi| for
-    every model and noise level;
+    every model and noise level,
   * per electron family, the median in-band chi2 and the fraction rejected at p < 0.001.
 The values that have no key in fits_extrap_results.json are computed and stored here: the
 16th percentile of |dI|/I at 300 GHz, the table row of each family (chi2/dof, rejection rate,
@@ -157,7 +157,7 @@ def row300_outside(summ, noisefree, cf, cp, Sf) -> dict:
 
 
 def noisefree_families(full_f, full_p, Sf, Sp) -> dict:
-    """Families fitted to noise-free fit-band I, Q, U (1% weights); |dI|/I at 300 GHz."""
+    """|dI|/I at 300 GHz of the families fitted to noise-free fit-band I, Q, U (1% weights)."""
     out = {}
     for name, right, wrong in PAIRS:
         sig = X.NOISE[0] * Sf[name][:, 0]

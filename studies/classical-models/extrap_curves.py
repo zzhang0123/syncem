@@ -1,16 +1,17 @@
 """Dense 1-300 GHz model curves of one realisation of the extrapolation test (for SED-fit panels).
 
-Uses the fits_extrap.py setup and its first noise realisation (seed 20261112, 1% noise): fits on the
-21 channels over 1-40 GHz exactly as fits_extrap.py does (basis TSVD/UPRE, electron families through
-the basis, spectral laws with P = c <I_law screen>), then evaluates every fitted model and the truth
-on 121 log-spaced channels over 1-300 GHz with the same channel response.
+Uses the fits_extrap.py setup and its first noise realisation (seed 20261112, 1% noise).  The fits
+on the 21 channels over 1-40 GHz call the code of fits_extrap.py: fits.LinearFit for the basis
+(TSVD, UPRE rank), fits_extrap.family_fit for the electron families through the basis and
+fits_extrap.law_predict for the spectral laws (P = c <I_law screen>).  Every fitted model and the
+truth are evaluated on 121 log-spaced channels over 1-300 GHz with the same channel response.
 
 The dense grid shares its first channel (1 GHz) with the fitted grid and its last channel (300 GHz)
 with the prediction grid, so verify_extrap.py compares the curves there with fits_extrap_products.npz.
 
-Reads fits_extrap_products.npz (python fits_extrap.py).
-Writes extrap_curves.npz: nu_dense (Hz), nu_fit, data_fit_<E> (21,3), sigma_fit_<E> (21,),
-truth_<E> (121,3), <E>_<model> (121,3), R_star_<E>; and extrap_curves.json with the fitted
+Reads no results file.
+Writes extrap_curves.npz, with nu_dense (Hz), nu_fit, data_fit_<E> (21,3), sigma_fit_<E> (21,),
+truth_<E> (121,3), <E>_<model> (121,3) and R_star_<E>, and extrap_curves.json with the fitted
 parameters and a provenance block.  Run: python extrap_curves.py
 """
 from __future__ import annotations
@@ -30,7 +31,6 @@ import spectral_laws as SL  # noqa: E402
 from config import PAPER  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
-PRODUCTS = HERE / "fits_extrap_products.npz"
 DENSE_CFG = replace(PAPER, nu_lo=1e9, nu_hi=3e11, n_channels=121)
 FRAC = 0.01
 T0 = time.time()
@@ -52,7 +52,6 @@ def main() -> None:
     g_dense = SL.channel_grid(DENSE_CFG.chan_nu, DENSE_CFG.chan_w)
     out = {"nu_dense": DENSE_CFG.centres, "nu_fit": X.FIT_CFG.centres, "nu_pred": X.PRED_CFG.centres}
     params = {}
-    ref = np.load(PRODUCTS)
     for name in X.ROWS:
         key = "joint" if name == "E5" else "sep"
         d = Sf[name] + FRAC * Sf[name][:, :1] * z0
@@ -68,27 +67,19 @@ def main() -> None:
         out[f"{name}_basis"] = F.B.predict(cd[key], lf.a_hat(sc["proj"][0], R))
         if name != "E5":
             for fam in X.FAMILIES:
-                res = BM.fit_family(fam, full_f.reshape(-1, full_f.shape[-1]), d.ravel(), np.repeat(sig, 3))
-                out[f"{name}_{fam}"] = F.B.predict(full_d, res["params"][0] * BM.family_moments(fam, res["params"][1:]).ravel())
-                params[f"{name}_{fam}"] = {"params": res["params"].tolist(), "chi2": res["chi2"],
+                fitted = X.family_fit((fam, full_f.reshape(-1, full_f.shape[-1]), d.ravel(), np.repeat(sig, 3), full_d))
+                if fitted is None:
+                    raise RuntimeError(f"{name} {fam}: family fit failed")
+                out[f"{name}_{fam}"], chi2, theta = fitted
+                params[f"{name}_{fam}"] = {"params": theta.tolist(), "chi2": chi2,
                                            "dof": int(3 * nf - BM.family_n_params(fam))}
         for law in X.LAWS:
             res = SL.fit(law, g_fit, d[:, 0], sig)
-            shape_fit = X.screened(law, res["params"], X.FIT_CFG)
-            w = 1.0 / sig**2
-            c = np.sum(w * np.conj(shape_fit) * (d[:, 1] + 1j * d[:, 2])) / np.sum(w * np.abs(shape_fit) ** 2)
-            P = c * X.screened(law, res["params"], DENSE_CFG)
-            out[f"{name}_{law}"] = np.stack([SL.predict(law, res["params"], g_dense), P.real, P.imag], axis=-1)
+            out[f"{name}_{law}"] = X.law_predict(law, res["params"], d, sig, g_dense, DENSE_CFG)
             params[f"{name}_{law}"] = {"params": res["params"].tolist(), "chi2_I": res["chi2"]}
-        # consistency with fits_extrap.py: the dense curves at the prediction centres reproduce seed-0 predictions
-        jj = [int(np.argmin(np.abs(DENSE_CFG.centres - n))) for n in X.PRED_CFG.centres]
-        params[f"{name}_check_note"] = "dense grid nodes nearest to prediction centres (not identical channels)"
-        params[f"{name}_basis_pred_seed0_max_rel_diff_nearest"] = float(
-            np.max(np.abs(out[f"{name}_basis"][jj, 0] - ref[f"{name}_0.01_basis_pred_seed0"][:, 0]) / Sp[name][:, 0]))
     np.savez(HERE / "extrap_curves.npz", **out)
     F.write_json(HERE / "extrap_curves.json", {"description": __doc__, "noise_frac": FRAC, "fits": params,
-                                               "provenance": F.provenance(__file__, T0, inputs=(PRODUCTS, HERE / "fits_extrap.py"))})
-    print({k: v for k, v in params.items() if "max_rel_diff" in k})
+                                               "provenance": F.provenance(__file__, T0, inputs=(HERE / "fits_extrap.py",))})
     print("done", round(time.time() - T0, 1), "s")
 
 

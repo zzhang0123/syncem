@@ -104,7 +104,7 @@
   },
   "inputs_sha256": {
    "fits_extrap_products.npz": "bffdae2ab108c383ff6513065450707687a920df37c7eb485a36b0798e649d51",
-   "fits_extrap_results.json": "a769c32d656bb7022d8ee3e3b45868913126ee0666c70b7d62e73e8443d404d7",
+   "fits_extrap_results.json": "e9fe576f26da7078acdcfc1b1524a8cea559f709e9f2b738db17273bd21fb9c7",
    "extrap_curves.npz": "02327edff2c2a09f03d3c9b8f6f12d6ef776cbde4d80f938d1b6e6a224942103",
    "lib/figure_style_paper.py": "9bf0aa49a7b84b4c382588b915c6db6b49b6cd6d411dd8266987270c0f9262e3"
   },
@@ -114,7 +114,7 @@
    "scipy": "1.16.3",
    "matplotlib": "3.10.8"
   },
-  "wall_clock_s": 0.39963483810424805,
-  "finished": "2026-11-13T02:45:41+0000"
+  "wall_clock_s": 0.4332427978515625,
+  "finished": "2026-11-13T04:20:01+0000"
  }
 }

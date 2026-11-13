@@ -1,5 +1,5 @@
 {
- "description": "Extrapolation test for the CMB window: fit 1-40 GHz, predict 40-300 GHz.\n\nSame populations (truth on [300, 2.96e6]), geometry, N = 2 basis and noise model as fits.py.\nFit channels: 21 log-spaced centres over 1-40 GHz; prediction channels: 25 over 40-300 GHz\n(both with the paper's channel response, h_j = 0.2 nu_j).  The basis keeps cells 4-19 of the\ncommon 19-cell grid (gamma >= 1.28e3); the omitted electrons contribute < 1e-8 of I_j over\n0.8-360 GHz (recorded below).  Truth, moments and columns are computed on the full grid and the\nretained cells are selected.  E5 zone fractions keep the radio definition (equal I at 1 GHz).\n\nFits reuse fits.LinearFit (whitened TSVD, UPRE rank, E5 complex pairs) with FIT = fit channels\nand HELD = prediction channels.  Spectral laws (spectral_laws.py: s1, s3, logcubic, bmom3, bmom4)\nare fitted to I on the same channels; their polarisation follows the PySM convention of a fixed\npolarisation fraction and intrinsic angle, P = c <I_law x screen>_channel with one complex c fitted to\nQ, U (the same known Faraday screen as the basis).  Electron-spectrum families through the basis\n(baseline_models.py: ePL, eLP, eSBPL; all 19 cells, since a family sets every cell's moments) are\nfitted to I, Q, U of E2 and E3 with the paper's azimuth factor (separable columns); E5, whose\nazimuth depends on energy, has no family fit.\n\nPer ensemble and noise level: N_REAL realisations; for each prediction channel the errors\n|I_pred - I|/I, |(|P_pred| - |P|)|/I and |chi_pred - chi| (deg, where P/I > 3%) are summarised by\ntheir median and 84th percentile (the full error arrays are saved). Electron families also record\nthe in-band chi2 of every realisation. verify_extrap.py checks the summary against the arrays.\n\nWrites fits_extrap_results.json and fits_extrap_products.npz.  Run: python fits_extrap.py\n",
+ "description": "Extrapolation test for the CMB window: fit 1-40 GHz, predict 40-300 GHz.\n\nSame populations (truth on [300, 2.96e6]), geometry, N = 2 basis and noise model as fits.py.\nThe fit channels are 21 log-spaced centres over 1-40 GHz and the prediction channels 25 centres\nover 40-300 GHz, both with the paper's channel response, h_j = 0.2 nu_j.  The basis keeps cells\n4-19 of the common 19-cell grid (gamma >= 1.28e3).  The omitted electrons contribute < 1e-8 of\nI_j over 0.8-360 GHz (recorded below).  Truth, moments and columns are computed on the full grid\nand the retained cells are selected.  E5 zone fractions keep the radio definition (equal I at 1 GHz).\n\nFits reuse fits.LinearFit (whitened TSVD, UPRE rank, E5 complex pairs) with FIT = fit channels\nand HELD = prediction channels.  Spectral laws (spectral_laws.py: s1, s3, logcubic, bmom3, bmom4)\nare fitted to I on the same channels.  Their polarisation follows the PySM convention of a fixed\npolarisation fraction and intrinsic angle, P = c <I_law x screen>_channel with one complex c fitted to\nQ, U (the same known Faraday screen as the basis).  Electron-spectrum families through the basis\n(baseline_models.py: ePL, eLP and eSBPL, over all 19 cells, since a family sets the moments of every\ncell) are fitted to I, Q, U of E2 and E3 with the paper's azimuth factor (separable columns).  E5,\nwhose azimuth depends on energy, has no family fit.\n\nEach ensemble and noise level has N_REAL realisations.  For each prediction channel the errors\n|I_pred - I|/I, |(|P_pred| - |P|)|/I and |chi_pred - chi| (deg, where P/I > 3%) are summarised by\ntheir median and 84th percentile (the full error arrays are saved). Electron families also record\nthe in-band chi2 of every realisation. verify_extrap.py checks the summary against the arrays.\n\nWrites fits_extrap_results.json and fits_extrap_products.npz.  Run: python fits_extrap.py\n",
  "rows": [
   "E2",
   "E3",
@@ -8519,7 +8519,7 @@
  },
  "provenance": {
   "script": "fits_extrap.py",
-  "script_sha256": "5df3f7dd13136da42f37dbf5a6f3c4ab413b5f6fbdcc7a20c21a5affa0bb6b30",
+  "script_sha256": "062a00f300bfb2925e5965ab9a820a394898546ba8c5c52fc968d9806d0774de",
   "lib_sha256": {
    "kernels.py": "b0983233f8fee93b12b10c299c0ea0d0011d72a106884029ec46107ba4121570",
    "config.py": "78aaca6292cd15db1d820d25651c288ed47d14213b8da3d55440b7d4546e887c",
@@ -8537,7 +8537,7 @@
    "numpy": "2.3.5",
    "scipy": "1.16.3"
   },
-  "wall_clock_s": 62.41309404373169,
-  "finished": "2026-11-13T02:14:59+0000"
+  "wall_clock_s": 71.27017998695374,
+  "finished": "2026-11-13T04:15:05+0000"
  }
 }

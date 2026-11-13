@@ -51,7 +51,7 @@ PRODUCERS = (
     ("cost_reference_check.py", ()),
     ("fits_extrap.py", ()),
     ("fits_extrap_noisefree.py", ("fits_extrap_results.json",)),
-    ("extrap_curves.py", ("fits_extrap_products.npz",)),
+    ("extrap_curves.py", ()),
     ("kp_bridge.py", ()),
     ("harmonic_correction.py", ("forward_spectra.npz", "kp_bridge_results.json")),
     ("bridge_mpmath_check.py", ()),

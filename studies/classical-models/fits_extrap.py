@@ -1,22 +1,22 @@
 """Extrapolation test for the CMB window: fit 1-40 GHz, predict 40-300 GHz.
 
 Same populations (truth on [300, 2.96e6]), geometry, N = 2 basis and noise model as fits.py.
-Fit channels: 21 log-spaced centres over 1-40 GHz; prediction channels: 25 over 40-300 GHz
-(both with the paper's channel response, h_j = 0.2 nu_j).  The basis keeps cells 4-19 of the
-common 19-cell grid (gamma >= 1.28e3); the omitted electrons contribute < 1e-8 of I_j over
-0.8-360 GHz (recorded below).  Truth, moments and columns are computed on the full grid and the
-retained cells are selected.  E5 zone fractions keep the radio definition (equal I at 1 GHz).
+The fit channels are 21 log-spaced centres over 1-40 GHz and the prediction channels 25 centres
+over 40-300 GHz, both with the paper's channel response, h_j = 0.2 nu_j.  The basis keeps cells
+4-19 of the common 19-cell grid (gamma >= 1.28e3).  The omitted electrons contribute < 1e-8 of
+I_j over 0.8-360 GHz (recorded below).  Truth, moments and columns are computed on the full grid
+and the retained cells are selected.  E5 zone fractions keep the radio definition (equal I at 1 GHz).
 
 Fits reuse fits.LinearFit (whitened TSVD, UPRE rank, E5 complex pairs) with FIT = fit channels
 and HELD = prediction channels.  Spectral laws (spectral_laws.py: s1, s3, logcubic, bmom3, bmom4)
-are fitted to I on the same channels; their polarisation follows the PySM convention of a fixed
+are fitted to I on the same channels.  Their polarisation follows the PySM convention of a fixed
 polarisation fraction and intrinsic angle, P = c <I_law x screen>_channel with one complex c fitted to
 Q, U (the same known Faraday screen as the basis).  Electron-spectrum families through the basis
-(baseline_models.py: ePL, eLP, eSBPL; all 19 cells, since a family sets every cell's moments) are
-fitted to I, Q, U of E2 and E3 with the paper's azimuth factor (separable columns); E5, whose
-azimuth depends on energy, has no family fit.
+(baseline_models.py: ePL, eLP and eSBPL, over all 19 cells, since a family sets the moments of every
+cell) are fitted to I, Q, U of E2 and E3 with the paper's azimuth factor (separable columns).  E5,
+whose azimuth depends on energy, has no family fit.
 
-Per ensemble and noise level: N_REAL realisations; for each prediction channel the errors
+Each ensemble and noise level has N_REAL realisations.  For each prediction channel the errors
 |I_pred - I|/I, |(|P_pred| - |P|)|/I and |chi_pred - chi| (deg, where P/I > 3%) are summarised by
 their median and 84th percentile (the full error arrays are saved). Electron families also record
 the in-band chi2 of every realisation. verify_extrap.py checks the summary against the arrays.
@@ -94,19 +94,27 @@ def stokes_errors(pred, true):
 
 
 def law_fit(args):
-    """One realisation, one law: fit I on the fit grid, P = c I_law; predict the prediction grid."""
+    """One realisation, one law: fit I on the fit grid and predict the prediction grid (law_predict)."""
     law, d_fit, sig_fit, g_fit, g_pred = args
     try:
         res = SL.fit(law, g_fit, d_fit[:, 0], sig_fit)
     except Exception:  # pragma: no cover - a failed nonlinear fit is recorded, not hidden
         return None
-    I_pred = SL.predict(law, res["params"], g_pred)
+    return law_predict(law, res["params"], d_fit, sig_fit, g_pred, PRED_CFG)
+
+
+def law_predict(law, params, d_fit, sig_fit, g_out, cfg_out):
+    """(I, Q, U) of a fitted law on the channels cfg_out (grid g_out), with P = c <I_law x screen>.
+
+    The complex factor c is the weighted least-squares fit of Q + iU on the fit channels.
+    """
+    I_out = SL.predict(law, params, g_out)
     w = 1.0 / sig_fit**2
     Pd = d_fit[:, 1] + 1j * d_fit[:, 2]
-    shape_fit = screened(law, res["params"], FIT_CFG)
+    shape_fit = screened(law, params, FIT_CFG)
     c = np.sum(w * np.conj(shape_fit) * Pd) / np.sum(w * np.abs(shape_fit) ** 2)
-    P = c * screened(law, res["params"], PRED_CFG)
-    return np.stack([I_pred, P.real, P.imag], axis=-1)
+    P = c * screened(law, params, cfg_out)
+    return np.stack([I_out, P.real, P.imag], axis=-1)
 
 
 def screened(law, params, cfg):

@@ -1,5 +1,5 @@
 {
- "description": "Dense 1-300 GHz model curves of one realisation of the extrapolation test (for SED-fit panels).\n\nUses the fits_extrap.py setup and its first noise realisation (seed 20261112, 1% noise): fits on the\n21 channels over 1-40 GHz exactly as fits_extrap.py does (basis TSVD/UPRE, electron families through\nthe basis, spectral laws with P = c <I_law screen>), then evaluates every fitted model and the truth\non 121 log-spaced channels over 1-300 GHz with the same channel response.\n\nThe dense grid shares its first channel (1 GHz) with the fitted grid and its last channel (300 GHz)\nwith the prediction grid, so verify_extrap.py compares the curves there with fits_extrap_products.npz.\n\nReads fits_extrap_products.npz (python fits_extrap.py).\nWrites extrap_curves.npz: nu_dense (Hz), nu_fit, data_fit_<E> (21,3), sigma_fit_<E> (21,),\ntruth_<E> (121,3), <E>_<model> (121,3), R_star_<E>; and extrap_curves.json with the fitted\nparameters and a provenance block.  Run: python extrap_curves.py\n",
+ "description": "Dense 1-300 GHz model curves of one realisation of the extrapolation test (for SED-fit panels).\n\nUses the fits_extrap.py setup and its first noise realisation (seed 20261112, 1% noise).  The fits\non the 21 channels over 1-40 GHz call the code of fits_extrap.py: fits.LinearFit for the basis\n(TSVD, UPRE rank), fits_extrap.family_fit for the electron families through the basis and\nfits_extrap.law_predict for the spectral laws (P = c <I_law screen>).  Every fitted model and the\ntruth are evaluated on 121 log-spaced channels over 1-300 GHz with the same channel response.\n\nThe dense grid shares its first channel (1 GHz) with the fitted grid and its last channel (300 GHz)\nwith the prediction grid, so verify_extrap.py compares the curves there with fits_extrap_products.npz.\n\nReads no results file.\nWrites extrap_curves.npz, with nu_dense (Hz), nu_fit, data_fit_<E> (21,3), sigma_fit_<E> (21,),\ntruth_<E> (121,3), <E>_<model> (121,3) and R_star_<E>, and extrap_curves.json with the fitted\nparameters and a provenance block.  Run: python extrap_curves.py\n",
  "noise_frac": 0.01,
  "fits": {
   "E2_ePL": {
@@ -70,8 +70,6 @@
    ],
    "chi2_I": 18.75588140688028
   },
-  "E2_check_note": "dense grid nodes nearest to prediction centres (not identical channels)",
-  "E2_basis_pred_seed0_max_rel_diff_nearest": 0.02774082770559839,
   "E3_ePL": {
    "params": [
     0.004913743197756082,
@@ -140,8 +138,6 @@
    ],
    "chi2_I": 18.561287790730283
   },
-  "E3_check_note": "dense grid nodes nearest to prediction centres (not identical channels)",
-  "E3_basis_pred_seed0_max_rel_diff_nearest": 0.019968621466624526,
   "E5_s1": {
    "params": [
     -0.6957696313708716,
@@ -182,13 +178,11 @@
     2.6471113192764824e-32
    ],
    "chi2_I": 18.59706065143864
-  },
-  "E5_check_note": "dense grid nodes nearest to prediction centres (not identical channels)",
-  "E5_basis_pred_seed0_max_rel_diff_nearest": 0.022346188967357978
+  }
  },
  "provenance": {
   "script": "extrap_curves.py",
-  "script_sha256": "06a31bcef31dea235bdabc3d717713ef06ba0fb1cf8167692e3caf5e170b1970",
+  "script_sha256": "6d735e9b53129036618114bee20f5e3bf94432abc38b899f607d81c62030f3ae",
   "lib_sha256": {
    "kernels.py": "b0983233f8fee93b12b10c299c0ea0d0011d72a106884029ec46107ba4121570",
    "config.py": "78aaca6292cd15db1d820d25651c288ed47d14213b8da3d55440b7d4546e887c",
@@ -197,15 +191,14 @@
    "provenance.py": "32dc912a4bc75a4460d6264b1ffcf8e278e7da1c6db8e0a43e810fa31f737590"
   },
   "inputs_sha256": {
-   "fits_extrap_products.npz": "bffdae2ab108c383ff6513065450707687a920df37c7eb485a36b0798e649d51",
-   "fits_extrap.py": "5df3f7dd13136da42f37dbf5a6f3c4ab413b5f6fbdcc7a20c21a5affa0bb6b30"
+   "fits_extrap.py": "062a00f300bfb2925e5965ab9a820a394898546ba8c5c52fc968d9806d0774de"
   },
   "versions": {
    "python": "3.12.9",
    "numpy": "2.3.5",
    "scipy": "1.16.3"
   },
-  "wall_clock_s": 56.81241297721863,
-  "finished": "2026-11-13T02:17:30+0000"
+  "wall_clock_s": 67.10268783569336,
+  "finished": "2026-11-13T04:16:42+0000"
  }
 }

@@ -1,5 +1,5 @@
 {
- "description": "Checks of the extrapolation test (fits_extrap.py and the scripts that read its outputs).\n\nThe values of the extrapolation table are recomputed from the per-realisation arrays of\nfits_extrap_products.npz and compared with fits_extrap_results.json:\n  * per prediction channel, the median and 84th percentile of |dI|/I, |d|P||/I and |d chi| for\n    every model and noise level;\n  * per electron family, the median in-band chi2 and the fraction rejected at p < 0.001.\nThe values that have no key in fits_extrap_results.json are computed and stored here: the\n16th percentile of |dI|/I at 300 GHz, the table row of each family (chi2/dof, rejection rate,\nmedian and 16-84% range of |dI|/I at 300 GHz), and the fraction of realisations in which the\nin-band chi2 of the right family is lower than that of the wrong family by more than the\np = 0.01 point of chi2 with one degree of freedom.\n\nThe basis diagnostics are recomputed with numpy from the whitened fit design (not through\nfits.LinearFit): the norm fraction of the 300 GHz intensity row outside the retained right\nsingular vectors at the median R*, compared with fits_extrap_noisefree_results.json.\n\nThe electron families are refitted to the noise-free fit-band data, and the 300 GHz intensity error\nof each fit is recorded. For the right family this is the extrapolation error that remains without\nnoise (N = 2 representation and the shape of the family), not a pass/fail check.\n\nThe dense curves of extrap_curves.npz share the first channel (1 GHz) with the fit grid and the\nlast channel (300 GHz) with the prediction grid. There the seed-0 data, truth and model curves\nmust equal the arrays of fits_extrap_products.npz.\n\nThe column setup (fits_extrap.columns, fits_extrap.truth) and the family fit\n(baseline_models.fit_family) are imported from the study code, so this is a consistency check of\nthe saved results, not an independent rebuild of the kernels.\n\nWrites verify_extrap_results.json.  Run: python verify_extrap.py\n",
+ "description": "Checks of the extrapolation test (fits_extrap.py and the scripts that read its outputs).\n\nThe values of the extrapolation table are recomputed from the per-realisation arrays of\nfits_extrap_products.npz and compared with fits_extrap_results.json:\n  * per prediction channel, the median and 84th percentile of |dI|/I, |d|P||/I and |d chi| for\n    every model and noise level,\n  * per electron family, the median in-band chi2 and the fraction rejected at p < 0.001.\nThe values that have no key in fits_extrap_results.json are computed and stored here: the\n16th percentile of |dI|/I at 300 GHz, the table row of each family (chi2/dof, rejection rate,\nmedian and 16-84% range of |dI|/I at 300 GHz), and the fraction of realisations in which the\nin-band chi2 of the right family is lower than that of the wrong family by more than the\np = 0.01 point of chi2 with one degree of freedom.\n\nThe basis diagnostics are recomputed with numpy from the whitened fit design (not through\nfits.LinearFit): the norm fraction of the 300 GHz intensity row outside the retained right\nsingular vectors at the median R*, compared with fits_extrap_noisefree_results.json.\n\nThe electron families are refitted to the noise-free fit-band data, and the 300 GHz intensity error\nof each fit is recorded. For the right family this is the extrapolation error that remains without\nnoise (N = 2 representation and the shape of the family), not a pass/fail check.\n\nThe dense curves of extrap_curves.npz share the first channel (1 GHz) with the fit grid and the\nlast channel (300 GHz) with the prediction grid. There the seed-0 data, truth and model curves\nmust equal the arrays of fits_extrap_products.npz.\n\nThe column setup (fits_extrap.columns, fits_extrap.truth) and the family fit\n(baseline_models.fit_family) are imported from the study code, so this is a consistency check of\nthe saved results, not an independent rebuild of the kernels.\n\nWrites verify_extrap_results.json.  Run: python verify_extrap.py\n",
  "noise": "0.01",
  "pairs": [
   [
@@ -172,7 +172,7 @@
  "failed": [],
  "provenance": {
   "script": "verify_extrap.py",
-  "script_sha256": "66171344a0f7627f1bbaa41f1a94bff1906afed1e4869bca00eeffcddba625fc",
+  "script_sha256": "c91d80b432788a673983257c498c74bc9ed31bc69549ac51bea8f3ec91e1e633",
   "lib_sha256": {
    "kernels.py": "b0983233f8fee93b12b10c299c0ea0d0011d72a106884029ec46107ba4121570",
    "config.py": "78aaca6292cd15db1d820d25651c288ed47d14213b8da3d55440b7d4546e887c",
@@ -182,8 +182,8 @@
   },
   "inputs_sha256": {
    "fits_extrap_products.npz": "bffdae2ab108c383ff6513065450707687a920df37c7eb485a36b0798e649d51",
-   "fits_extrap_results.json": "a769c32d656bb7022d8ee3e3b45868913126ee0666c70b7d62e73e8443d404d7",
-   "fits_extrap_noisefree_results.json": "87fcb8681c1af22e081057866c99b20c985f37a4e5411473fdca02e8b0923ac8",
+   "fits_extrap_results.json": "e9fe576f26da7078acdcfc1b1524a8cea559f709e9f2b738db17273bd21fb9c7",
+   "fits_extrap_noisefree_results.json": "8aab8abfc8867809ea6462f27aac357cf00737357cfcb5a687ffbd987d01b35f",
    "extrap_curves.npz": "02327edff2c2a09f03d3c9b8f6f12d6ef776cbde4d80f938d1b6e6a224942103"
   },
   "versions": {
@@ -191,7 +191,7 @@
    "numpy": "2.3.5",
    "scipy": "1.16.3"
   },
-  "wall_clock_s": 25.068217039108276,
-  "finished": "2026-11-13T02:45:19+0000"
+  "wall_clock_s": 29.624287128448486,
+  "finished": "2026-11-13T04:18:23+0000"
  }
 }

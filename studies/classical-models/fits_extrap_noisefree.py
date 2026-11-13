@@ -2,8 +2,8 @@
 
 For E2, E3 and E5 at the median R* of each noise level in fits_extrap_results.json, with the setup
 of fits_extrap.py (fit 1-40 GHz, predict 40-300 GHz, cells 4-19):
-  * the largest noise-free minimum-norm prediction error |dI|/I over 40-300 GHz;
-  * the share of the true 300 GHz intensity carried by the directions outside span(V_R);
+  * the largest noise-free minimum-norm prediction error |dI|/I over 40-300 GHz,
+  * the share of the true 300 GHz intensity carried by the directions outside span(V_R),
   * the norm fraction of the 300 GHz intensity row outside span(V_R).
 
 Reads fits_extrap_results.json (python fits_extrap.py).
