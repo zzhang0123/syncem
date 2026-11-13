@@ -6,7 +6,11 @@
 
 - Fig. 6 has a panel (c), the free-moment fit of E2 over 10-300 GHz from the
   new `fits_cmb.py`, with its error panel. The error panels under (a) and (b)
-  are removed. The numbers of (a) and (b) are unchanged.
+  are removed. (a) and (b) shade the 16-84% range of the predicted intensity
+  over the 500 realisations instead, from family fits repeated by
+  `fig_cmb_extrapolation.py` and checked against `fits_extrap_products.npz`.
+  The error axis of (c) is in per cent with the ticks of Fig. 5. The numbers
+  of (a) and (b) are unchanged.
 
 ## 0.7.4 (2026-11-13)
 

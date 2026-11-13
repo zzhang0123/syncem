@@ -4,17 +4,24 @@ Three columns, 1% noise.
 (a) E2, smoothly broken power law, and (b) E3, index mixture, from extrap_curves.npz
 (extrap_curves.py, first noise realisation): intensity divided by a power law fitted to the truth
 over 1-40 GHz, with the fitted data, the truth, the correct electron family and one incorrect
-family that the in-band chi2 accepts, over 1-300 GHz. The fitted part (below 40 GHz) is shaded.
+family that the in-band chi2 accepts, over 1-300 GHz. The fitted part (below 40 GHz) is shaded grey.
+Above 40 GHz a light band of each family's colour gives the 16-84% range of its predicted intensity
+over the 500 noise realisations of fits_extrap.py. The bands are computed here: the 500 family fits
+of fits_extrap.py are repeated (fits_extrap.family_fit, same seed and noise) and predicted on the
+25 prediction channels and on the 121 dense channels of extrap_curves.py. The script stops unless
+the prediction-channel errors reproduce the saved |dI|/I arrays of fits_extrap_products.npz, the
+first realisation reproduces the dense curves of extrap_curves.npz, and the two grids agree at
+300 GHz.
 (c) E2 fitted with free moments over 10-300 GHz, from fits_cmb_products.npz (fits_cmb.py): the same
 ratio with a power law fitted to the truth over 10-300 GHz, the fitted data and the fit at 1%
-noise. Below it, at half its height, the intensity error |fit - true|/I_j in each of the 41
-channels at 1% and 0.01% noise (one realisation, scaled), with the two noise levels as reference.
-Panel (c) has no shading, since the whole window is fitted.
+noise. Below it, at half its height, the intensity error |fit - true|/I_j in per cent in each of
+the 41 channels (21 fitted, 20 withheld) at 1% and 0.01% noise (one realisation, scaled), with the
+two noise levels as reference. Panel (c) has no shading, since the whole window is fitted.
 
 The 500-realisation statistics of the drawn families (in-band chi2/dof, rejection rate, median
-and 16-84% error at 40 and 300 GHz) are recorded from fits_extrap_products.npz after checking that
-they reproduce fits_extrap_results.json. The errors drawn in (c) are checked against
-fits_cmb_results.json. A figure legend in the style of the fit gallery names the curves, and the
+and 16-84% error at 40 and 300 GHz, signed 16-84% range of I_pred/I - 1 at 300 GHz) are recorded
+from fits_extrap_products.npz after checking that they reproduce fits_extrap_results.json. The
+errors drawn in (c) are checked against fits_cmb_results.json. A figure legend in the style of the fit gallery names the curves, and the
 family names are written on the curves. Text positions of the labels are placed by hand.
 Style: lib/figure_style_paper.py.
 
@@ -37,14 +44,20 @@ matplotlib.use("Agg")
 import matplotlib.patheffects as pe  # noqa: E402
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
+from concurrent.futures import ProcessPoolExecutor  # noqa: E402
 from matplotlib.legend_handler import HandlerTuple  # noqa: E402
 from matplotlib.lines import Line2D  # noqa: E402
-from matplotlib.ticker import FixedLocator, NullFormatter  # noqa: E402
+from matplotlib.patches import Patch  # noqa: E402
+from matplotlib.ticker import FixedLocator, FuncFormatter, NullFormatter  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE / "lib"))
 import figure_style_paper as fs  # noqa: E402
 from provenance import provenance, relative, sha256, write_json  # noqa: E402
+import extrap_curves as EC  # noqa: E402
+import fits as F  # noqa: E402
+import fits_extrap as X  # noqa: E402
+from config import PAPER  # noqa: E402
 
 T0 = time.time()
 PRODUCTS = HERE / "fits_extrap_products.npz"
@@ -59,8 +72,10 @@ CMB_TAGS = ("0.01", "0.0001")
 NAME = "cmb_extrapolation"
 NU_LO, NU_FIT_HI, NU_HI = 0.9, 40.0, 330.0  # GHz: x range of (a, b) and fit-band edge
 NU_LO_C = 9.0  # GHz: lower x limit of (c)
-ERR_LIM_C = (5e-8, 0.6)  # intensity error in (c), fraction of I
-SED_LIM = {"E2": (0.56, 1.1), "E3": (0.97, 1.095), "c": (0.955, 1.04)}  # no error bar clipped
+ERR_LIM_C = (1e-5, 40.0)  # intensity error in (c), per cent of I_j; the lowest 0.01%-noise channel is 1.3e-5 %
+ERR_TICKS_C = {1e-4: r"$10^{-4}$", 1e-2: "0.01", 1.0: "1"}  # the Fig. 5 error axis
+ALPHA_WRONG, ALPHA_RIGHT = 0.25, 0.33  # 16-84% bands of the drawn families
+SED_LIM = {"E2": (0.56, 1.1), "E3": (0.97, 1.11), "c": (0.955, 1.04)}  # no error bar or band clipped
 FS = 8
 TEXT_GREY = "#555555"
 WRONG_TEXT = "#A84200"  # darkened vermilion for text: darker than the grey labels in greyscale
@@ -77,7 +92,7 @@ TRUTH_KW = dict(color="#ADADAD", lw=3.2, solid_capstyle="butt", zorder=1)
 DATA_KW = dict(fmt="o", ms=2.0, color=fs.INK, ecolor=fs.INK, elinewidth=0.5, capsize=0, zorder=5)
 # (ensemble, right family, wrong family accepted by the in-band chi2, title)
 PANELS = (
-    ("E2", "eSBPL", "eLP", "(a) Broken power law (E2)"),
+    ("E2", "eSBPL", "eLP", "(a) Smoothly broken power law (E2)"),
     ("E3", "eLP", "ePL", "(b) Index mixture (E3)"),
 )
 TITLE_C = "(c) Free moments (E2)"
@@ -122,6 +137,57 @@ def check_cmb(err, cmb) -> dict:
     return out
 
 
+def _refit(ens, fams):
+    """Repeat the 500 family fits of fits_extrap.py at 1% noise, predicting on the prediction and dense grids."""
+    pens = F.E.reference_ensembles(PAPER)
+    _, full_f = X.columns(X.FIT_CFG)
+    _, full_p = X.columns(X.PRED_CFG)
+    _, full_d = X.columns(EC.DENSE_CFG)
+    Sf, _, _ = X.truth(X.FIT_CFG, pens)
+    Z = np.random.default_rng(X.SEED).standard_normal((X.N_REAL, X.FIT_CFG.n_channels, 3))
+    rows, C, n_p = full_f.reshape(-1, full_f.shape[-1]), np.concatenate([full_p, full_d]), full_p.shape[0]
+    out = {}
+    for e in ens:
+        sig = float(TAG) * Sf[e][:, 0]
+        for fam in fams[e]:
+            jobs = [(fam, rows, (Sf[e] + (float(TAG) * Sf[e][:, :1]) * Z[i]).ravel(), np.repeat(sig, 3), C)
+                    for i in range(X.N_REAL)]
+            with ProcessPoolExecutor(max_workers=X.N_WORKERS) as pool:
+                res = list(pool.map(X.family_fit, jobs, chunksize=10))
+            if any(r is None for r in res):
+                raise SystemExit(f"{e} {fam}: a family fit failed, unlike fits_extrap.py")
+            pred = np.stack([r[0][:, 0] for r in res])
+            out[(e, fam)] = (pred[:, :n_p], pred[:, n_p:])
+    return out
+
+
+def prediction_bands(z, cv) -> tuple[dict, dict]:
+    """16-84% range of the predicted intensity of each drawn family over the 500 realisations.
+
+    Returns the bands on the dense grid and the checks: the refitted prediction-channel errors must
+    reproduce the saved |dI|/I (rtol 1e-9), the first realisation the dense curve of extrap_curves.npz,
+    and the 300 GHz channel of the two grids must agree.
+    """
+    refit = _refit([p[0] for p in PANELS], {p[0]: p[1:3] for p in PANELS})
+    bands, checks = {}, {}
+    for (ens, fam), (pp, pd) in refit.items():
+        S = z[f"{ens}_S_pred"][:, 0]
+        saved = z[f"{ens}_{TAG}_{fam}_err"][:, :, 0]
+        diffs = {"saved_err": float(np.max(np.abs(np.abs(pp - S) / S - saved) / saved)),
+                 "dense_seed0": float(np.max(np.abs(pd[0] - cv[f"{ens}_{fam}"][:, 0]) / cv[f"{ens}_{fam}"][:, 0])),
+                 "300GHz_grids": float(np.max(np.abs(pd[:, -1] - pp[:, -1]) / pp[:, -1]))}
+        for k, d in diffs.items():
+            if not d <= 1e-9:
+                raise SystemExit(f"{ens} {fam}: refitted predictions differ from {k} by {d:.3g}")
+            checks[f"{ens}_{fam}_refit_{k}_max_rel_diff"] = d
+        rel = pd / cv[f"truth_{ens}"][None, :, 0] - 1
+        bands[(ens, fam)] = {"lo": np.percentile(pd, 16, axis=0), "hi": np.percentile(pd, 84, axis=0),
+                             "signed_300GHz_median_p16_p84": [float(np.median(rel[:, -1])),
+                                                              float(np.percentile(rel[:, -1], 16)),
+                                                              float(np.percentile(rel[:, -1], 84))]}
+    return bands, checks
+
+
 def freq_axis(ax, labels, lo=NU_LO, ticks=(1, 10, 40, 100, 300), shade=True):
     ax.set_xscale("log")
     ax.set_xlim(lo, NU_HI)
@@ -144,11 +210,24 @@ def reference_law(nu, truth_i, hi=NU_FIT_HI):
     return lambda x: np.exp(icpt + slope * np.log(x))
 
 
-def sed_panel(ax, cv, ens, right, wrong, title):
+def draw_band(ax, nu, band, ref, colour, alpha):
+    """Fill the band above the fitted range, interpolated in log frequency from 40 GHz."""
+    x = np.geomspace(NU_FIT_HI, nu[-1], 200)
+    lo, hi = (np.interp(np.log(x), np.log(nu), band[k]) for k in ("lo", "hi"))
+    ax.fill_between(x, lo / ref(x), hi / ref(x), color=colour, alpha=alpha, lw=0, zorder=2)
+    return float(np.min(lo / ref(x))), float(np.max(hi / ref(x)))
+
+
+def sed_panel(ax, cv, ens, right, wrong, title, bands):
     nu, nf = cv["nu_dense"] / 1e9, cv["nu_fit"] / 1e9
     truth = cv[f"truth_{ens}"][:, 0]
     ref = reference_law(nu, truth)
     ax.plot(nu, truth / ref(nu), **TRUTH_KW)
+    extent = [draw_band(ax, nu, bands[(ens, f)], ref, c, a)
+              for f, c, a in ((wrong, fs.VERMILION, ALPHA_WRONG), (right, fs.BLUE, ALPHA_RIGHT))]
+    lo, hi = min(e[0] for e in extent), max(e[1] for e in extent)
+    if not SED_LIM[ens][0] < lo and hi < SED_LIM[ens][1]:
+        raise SystemExit(f"{ens}: band range {lo:.4f}-{hi:.4f} is clipped by SED_LIM {SED_LIM[ens]}")
     ax.plot(nu, cv[f"{ens}_{wrong}"][:, 0] / ref(nu), color=fs.VERMILION, lw=1.2, ls=LS_WRONG, zorder=3)
     ax.plot(nu, cv[f"{ens}_{right}"][:, 0] / ref(nu), color=fs.BLUE, lw=1.2, zorder=4)
     d = cv[f"data_fit_{ens}"][:, 0]
@@ -177,18 +256,18 @@ def sed_panel_c(ax, zc) -> dict:
 
 
 def error_panel_c(ax, zc, err) -> None:
-    """(c) lower panel: per-channel intensity error at 1% (heavy) and 0.01% (thin) noise."""
+    """(c) lower panel: per-channel intensity error in per cent at 1% (heavy) and 0.01% (thin) noise."""
     nu = zc["centres"] / 1e9
-    for frac in (0.01, 1e-4):
-        ax.axhline(frac, color=NOISE_GREY, lw=fs.LW_REF, ls=NOISE_LS, zorder=1)
-    ax.plot(nu, err["0.01"], color=FREE, lw=1.3, zorder=3)
-    ax.plot(nu, err["0.0001"], color=FREE_LOW, lw=0.75, zorder=3)
+    for pct in (1.0, 1e-2):
+        ax.axhline(pct, color=NOISE_GREY, lw=fs.LW_REF, ls=NOISE_LS, zorder=1)
+    ax.plot(nu, 100 * err["0.01"], color=FREE, lw=1.3, zorder=3)
+    ax.plot(nu, 100 * err["0.0001"], color=FREE_LOW, lw=0.75, zorder=3)
     freq_axis(ax, labels=True, lo=NU_LO_C, ticks=(10, 30, 100, 300), shade=False)
     ax.set_yscale("log")
     ax.set_ylim(*ERR_LIM_C)
-    ax.set_yticks([1e-4, 1e-2])
-    ax.set_yticklabels([r"$0.01\%$", r"$1\%$"])
-    ax.yaxis.set_minor_locator(FixedLocator([10.0**p for p in (-7, -6, -5, -3, -1)]))
+    ax.yaxis.set_major_locator(FixedLocator(list(ERR_TICKS_C)))
+    ax.yaxis.set_major_formatter(FuncFormatter(lambda v, _: ERR_TICKS_C.get(v, f"{v:g}")))
+    ax.yaxis.set_minor_locator(FixedLocator([10.0**p for p in (-5, -3, -1)]))
     ax.yaxis.set_minor_formatter(NullFormatter())
 
 
@@ -198,13 +277,13 @@ def label_panels(a, b, c, ce):
     a.text(55, 0.95, "eSBPL", color=fs.BLUE, ha="left", **kw)
     a.text(200, 0.59, "eLP", color=WRONG_TEXT, ha="right", **kw)
     b.text(160, 1.077, "eLP", color=fs.BLUE, ha="right", **kw)
-    b.text(300, 0.991, "ePL", color=WRONG_TEXT, ha="right", **kw)
-    b.set_yticks([0.98, 1.0, 1.02, 1.04, 1.06, 1.08])
+    b.text(300, 0.980, "ePL", color=WRONG_TEXT, ha="right", **kw)
+    b.set_yticks([0.98, 1.0, 1.02, 1.04, 1.06, 1.08, 1.1])
     for ax, y, va in ((a, 0.04, "bottom"), (b, 0.96, "top")):  # clear of the data in each panel
         ax.text(np.sqrt(NU_LO * NU_FIT_HI), y, "fit: 1--40 GHz", transform=ax.get_xaxis_transform(),
                 color=TEXT_GREY, ha="center", va=va, **kw)
-    ce.text(12, 2.6e-2, r"$1\%$ noise", color=FREE_TEXT, ha="left", va="bottom", **kw)
-    ce.text(12, 2.0e-7, r"$0.01\%$ noise", color=FREE_TEXT, ha="left", va="bottom", **kw)
+    ce.text(12, 2.6, r"$1\%$ noise", color=FREE_TEXT, ha="left", va="bottom", **kw)
+    ce.text(12, 2.0e-5, r"$0.01\%$ noise", color=FREE_TEXT, ha="left", va="bottom", **kw)
 
 
 def legend(fig):
@@ -213,11 +292,13 @@ def legend(fig):
             Line2D([], [], marker="o", ls="", ms=2.6, color=fs.INK))
     handles = [Line2D([], [], **{k: v for k, v in TRUTH_KW.items() if k != "zorder"}), data,
                Line2D([], [], color=fs.BLUE, lw=1.2), Line2D([], [], color=fs.VERMILION, lw=1.2, ls=LS_WRONG),
+               (Patch(color=fs.BLUE, alpha=ALPHA_RIGHT, lw=0), Patch(color=fs.VERMILION, alpha=ALPHA_WRONG, lw=0)),
                Line2D([], [], color=FREE, lw=1.2, ls=LS_FREE, path_effects=FREE_HALO),
                Line2D([], [], color=NOISE_GREY, lw=1.0, ls=NOISE_LS)]
     labels = ["true spectrum", r"data, $1\%$ noise", "fit, correct electron family",
-              "fit, incorrect electron family", "fit, free moments", "noise level"]
-    fig.legend(handles=handles, labels=labels, loc="upper center", ncol=3, bbox_to_anchor=(0.54, 1.0),
+              "fit, incorrect electron family", r"$16$--$84\%$ of 500 realisations", "fit, free moments",
+              "noise level"]
+    fig.legend(handles=handles, labels=labels, loc="upper center", ncol=4, bbox_to_anchor=(0.54, 1.0),
                columnspacing=1.2, handlelength=2.4, handletextpad=0.5,
                handler_map={tuple: HandlerTuple(ndivide=None, pad=0.0), data: HandlerTuple(ndivide=1)})
 
@@ -231,7 +312,7 @@ def layout(fig):
     return a, b, c, fig.add_subplot(grid[1, 2], sharex=c)
 
 
-def report(z, summ, sed, cmb, err, sed_c) -> dict:
+def report(z, summ, sed, cmb, err, sed_c, bands) -> dict:
     """Values of the drawn families (500 realisations) and of the free-moment fit drawn in (c)."""
     out = {}
     for ens, right, wrong, _ in PANELS:
@@ -243,7 +324,9 @@ def report(z, summ, sed, cmb, err, sed_c) -> dict:
                 "chi2_median_over_dof": i["chi2_median"] / i["dof"], "frac_rejected_p001": i["frac_rejected_p001"],
                 "dI_over_I_300GHz_median_p16_p84": [float(med[-1]), float(lo[-1]), float(hi[-1])],
                 "dI_over_I_40GHz_median": float(med[0]),
-                "seed0_rel_intensity_offset_300GHz": sed[ens][fam]}
+                "seed0_rel_intensity_offset_300GHz": sed[ens][fam],
+                "signed_rel_intensity_offset_300GHz_median_p16_p84":
+                    bands[(ens, fam)]["signed_300GHz_median_p16_p84"]}
             print(ens, fam, out[f"{ens}_{fam}"])
     out["nu_fit_last_nu_pred_first_last_GHz"] = [float(z["nu_fit"][-1] / 1e9), float(z["nu_pred"][0] / 1e9),
                                                  float(z["nu_pred"][-1] / 1e9)]
@@ -264,20 +347,21 @@ def main():
     zc = np.load(CMB_PRODUCTS)
     cmb = json.loads(CMB_RESULTS.read_text())
     err = cmb_errors(zc)
-    checks = {**check_against_json(z, summ), **check_cmb(err, cmb)}
+    bands, band_checks = prediction_bands(z, cv)
+    checks = {**check_against_json(z, summ), **check_cmb(err, cmb), **band_checks}
     fig = plt.figure(figsize=(fs.WIDTH, 2.75))
     a, b, c, ce = layout(fig)
     sed = {}
     for ax, (ens, right, wrong, title) in zip((a, b), PANELS):
-        sed[ens] = sed_panel(ax, cv, ens, right, wrong, title)
+        sed[ens] = sed_panel(ax, cv, ens, right, wrong, title, bands)
     sed_c = sed_panel_c(c, zc)
     error_panel_c(ce, zc, err)
     label_panels(a, b, c, ce)
     legend(fig)
     a.set_ylabel(r"Intensity / power law")
-    ce.set_ylabel(r"Error $|\Delta I|/I$")
+    ce.set_ylabel(r"Error [\%]")
     fs.tighten_y_labels((a, b, c, ce))
-    values = report(z, summ, sed, cmb, err, sed_c)
+    values = report(z, summ, sed, cmb, err, sed_c, bands)
     (HERE / "figures").mkdir(exist_ok=True)
     fs.save(fig, NAME)
     outputs = {relative(HERE / "figures" / f"{NAME}.{ext}"): sha256(HERE / "figures" / f"{NAME}.{ext}")
@@ -287,6 +371,7 @@ def main():
                           "checks": checks, "values": values, "figures": outputs,
                           "provenance": provenance(__file__, T0, inputs=(PRODUCTS, RESULTS, CURVES, CMB_PRODUCTS,
                                                                          CMB_RESULTS,
+                                                                         HERE / "fits_extrap.py",
                                                                          HERE / "lib" / "figure_style_paper.py"))})
 
 

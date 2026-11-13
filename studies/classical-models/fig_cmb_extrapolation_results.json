@@ -1,12 +1,12 @@
 {
- "description": "CMB-window figure: electron families fitted over 1-40 GHz and free moments fitted over 10-300 GHz.\n\nThree columns, 1% noise.\n(a) E2, smoothly broken power law, and (b) E3, index mixture, from extrap_curves.npz\n(extrap_curves.py, first noise realisation): intensity divided by a power law fitted to the truth\nover 1-40 GHz, with the fitted data, the truth, the correct electron family and one incorrect\nfamily that the in-band chi2 accepts, over 1-300 GHz. The fitted part (below 40 GHz) is shaded.\n(c) E2 fitted with free moments over 10-300 GHz, from fits_cmb_products.npz (fits_cmb.py): the same\nratio with a power law fitted to the truth over 10-300 GHz, the fitted data and the fit at 1%\nnoise. Below it, at half its height, the intensity error |fit - true|/I_j in each of the 41\nchannels at 1% and 0.01% noise (one realisation, scaled), with the two noise levels as reference.\nPanel (c) has no shading, since the whole window is fitted.\n\nThe 500-realisation statistics of the drawn families (in-band chi2/dof, rejection rate, median\nand 16-84% error at 40 and 300 GHz) are recorded from fits_extrap_products.npz after checking that\nthey reproduce fits_extrap_results.json. The errors drawn in (c) are checked against\nfits_cmb_results.json. A figure legend in the style of the fit gallery names the curves, and the\nfamily names are written on the curves. Text positions of the labels are placed by hand.\nStyle: lib/figure_style_paper.py.\n\nReads fits_extrap_products.npz, fits_extrap_results.json (python fits_extrap.py),\nextrap_curves.npz (python extrap_curves.py), fits_cmb_products.npz and fits_cmb_results.json\n(python fits_cmb.py).\nWrites figures/cmb_extrapolation.{pdf,png} and fig_cmb_extrapolation_results.json.\nRun: python fig_cmb_extrapolation.py\n",
+ "description": "CMB-window figure: electron families fitted over 1-40 GHz and free moments fitted over 10-300 GHz.\n\nThree columns, 1% noise.\n(a) E2, smoothly broken power law, and (b) E3, index mixture, from extrap_curves.npz\n(extrap_curves.py, first noise realisation): intensity divided by a power law fitted to the truth\nover 1-40 GHz, with the fitted data, the truth, the correct electron family and one incorrect\nfamily that the in-band chi2 accepts, over 1-300 GHz. The fitted part (below 40 GHz) is shaded grey.\nAbove 40 GHz a light band of each family's colour gives the 16-84% range of its predicted intensity\nover the 500 noise realisations of fits_extrap.py. The bands are computed here: the 500 family fits\nof fits_extrap.py are repeated (fits_extrap.family_fit, same seed and noise) and predicted on the\n25 prediction channels and on the 121 dense channels of extrap_curves.py. The script stops unless\nthe prediction-channel errors reproduce the saved |dI|/I arrays of fits_extrap_products.npz, the\nfirst realisation reproduces the dense curves of extrap_curves.npz, and the two grids agree at\n300 GHz.\n(c) E2 fitted with free moments over 10-300 GHz, from fits_cmb_products.npz (fits_cmb.py): the same\nratio with a power law fitted to the truth over 10-300 GHz, the fitted data and the fit at 1%\nnoise. Below it, at half its height, the intensity error |fit - true|/I_j in per cent in each of\nthe 41 channels (21 fitted, 20 withheld) at 1% and 0.01% noise (one realisation, scaled), with the\ntwo noise levels as reference. Panel (c) has no shading, since the whole window is fitted.\n\nThe 500-realisation statistics of the drawn families (in-band chi2/dof, rejection rate, median\nand 16-84% error at 40 and 300 GHz, signed 16-84% range of I_pred/I - 1 at 300 GHz) are recorded\nfrom fits_extrap_products.npz after checking that they reproduce fits_extrap_results.json. The\nerrors drawn in (c) are checked against fits_cmb_results.json. A figure legend in the style of the fit gallery names the curves, and the\nfamily names are written on the curves. Text positions of the labels are placed by hand.\nStyle: lib/figure_style_paper.py.\n\nReads fits_extrap_products.npz, fits_extrap_results.json (python fits_extrap.py),\nextrap_curves.npz (python extrap_curves.py), fits_cmb_products.npz and fits_cmb_results.json\n(python fits_cmb.py).\nWrites figures/cmb_extrapolation.{pdf,png} and fig_cmb_extrapolation_results.json.\nRun: python fig_cmb_extrapolation.py\n",
  "noise": "0.01",
  "panels": [
   [
    "E2",
    "eSBPL",
    "eLP",
-   "(a) Broken power law (E2)"
+   "(a) Smoothly broken power law (E2)"
   ],
   [
    "E3",
@@ -33,7 +33,19 @@
   "E3_ePL_median_max_rel_diff": 0.0,
   "E3_ePL_p84_max_rel_diff": 0.0,
   "c_0.01_max_dI_over_I_rel_diff": 0.0,
-  "c_0.0001_max_dI_over_I_rel_diff": 0.0
+  "c_0.0001_max_dI_over_I_rel_diff": 0.0,
+  "E2_eSBPL_refit_saved_err_max_rel_diff": 0.0,
+  "E2_eSBPL_refit_dense_seed0_max_rel_diff": 0.0,
+  "E2_eSBPL_refit_300GHz_grids_max_rel_diff": 0.0,
+  "E2_eLP_refit_saved_err_max_rel_diff": 0.0,
+  "E2_eLP_refit_dense_seed0_max_rel_diff": 0.0,
+  "E2_eLP_refit_300GHz_grids_max_rel_diff": 0.0,
+  "E3_eLP_refit_saved_err_max_rel_diff": 0.0,
+  "E3_eLP_refit_dense_seed0_max_rel_diff": 0.0,
+  "E3_eLP_refit_300GHz_grids_max_rel_diff": 0.0,
+  "E3_ePL_refit_saved_err_max_rel_diff": 0.0,
+  "E3_ePL_refit_dense_seed0_max_rel_diff": 0.0,
+  "E3_ePL_refit_300GHz_grids_max_rel_diff": 0.0
  },
  "values": {
   "E2_eSBPL": {
@@ -48,7 +60,12 @@
     0.05230882564131925
    ],
    "dI_over_I_40GHz_median": 0.004598530357705683,
-   "seed0_rel_intensity_offset_300GHz": -0.008904685998026407
+   "seed0_rel_intensity_offset_300GHz": -0.008904685998026407,
+   "signed_rel_intensity_offset_300GHz_median_p16_p84": [
+    -0.005317545537706969,
+    -0.04337440320229595,
+    0.029200267194210622
+   ]
   },
   "E2_eLP": {
    "role": "wrong",
@@ -62,7 +79,12 @@
     0.2195096420265433
    ],
    "dI_over_I_40GHz_median": 0.011244194108407643,
-   "seed0_rel_intensity_offset_300GHz": -0.19053288574739669
+   "seed0_rel_intensity_offset_300GHz": -0.19053288574739669,
+   "signed_rel_intensity_offset_300GHz_median_p16_p84": [
+    -0.19837957458816113,
+    -0.21950964202654327,
+    -0.17451338614020426
+   ]
   },
   "E3_eLP": {
    "role": "right",
@@ -76,7 +98,12 @@
     0.03830457810723359
    ],
    "dI_over_I_40GHz_median": 0.004238851178798028,
-   "seed0_rel_intensity_offset_300GHz": 0.007702616991918099
+   "seed0_rel_intensity_offset_300GHz": 0.007702616991918099,
+   "signed_rel_intensity_offset_300GHz_median_p16_p84": [
+    -0.0008837126998804679,
+    -0.02683066177783249,
+    0.027651617860301285
+   ]
   },
   "E3_ePL": {
    "role": "wrong",
@@ -90,7 +117,12 @@
     0.07514967342007682
    ],
    "dI_over_I_40GHz_median": 0.010969407569511199,
-   "seed0_rel_intensity_offset_300GHz": -0.06078645982672559
+   "seed0_rel_intensity_offset_300GHz": -0.06078645982672559,
+   "signed_rel_intensity_offset_300GHz_median_p16_p84": [
+    -0.06715987855966138,
+    -0.07514967342007683,
+    -0.05872577430366336
+   ]
   },
   "nu_fit_last_nu_pred_first_last_GHz": [
    40.0,
@@ -119,12 +151,12 @@
   }
  },
  "figures": {
-  "figures/cmb_extrapolation.pdf": "da4c538c69dc2eaec03a9032ce8c2548ed251682030ab97bd953f8f7a15dad92",
-  "figures/cmb_extrapolation.png": "66711774b586c6010c1de5931d8c3f4075b024c84a57a19c831e389528dec64d"
+  "figures/cmb_extrapolation.pdf": "788e1fc4177f34226965e357607b70dae13d09d763112f9e8c992932d1b59cc6",
+  "figures/cmb_extrapolation.png": "ddeaf29d9a1e10e75d95f987c69581d4ed83f3ff6e57f8c24d4a8bc51ea56868"
  },
  "provenance": {
   "script": "fig_cmb_extrapolation.py",
-  "script_sha256": "a05f6b4c6a236c8ef1b3e0ff5fdd5b2b79797f9b95c0d053c1f981c580c3f41f",
+  "script_sha256": "01a4f8b1f815bc410bdfe33c5fd20c6ce43198b59e53d3e3b7d299be211b74fb",
   "lib_sha256": {
    "kernels.py": "b0983233f8fee93b12b10c299c0ea0d0011d72a106884029ec46107ba4121570",
    "config.py": "78aaca6292cd15db1d820d25651c288ed47d14213b8da3d55440b7d4546e887c",
@@ -138,6 +170,7 @@
    "extrap_curves.npz": "02327edff2c2a09f03d3c9b8f6f12d6ef776cbde4d80f938d1b6e6a224942103",
    "fits_cmb_products.npz": "7579782a70eed99d32aad5b955982f0411dab344e300f8ee01d8ee2ae3cda878",
    "fits_cmb_results.json": "46bdf262a56d181223f961194f7f57141cac9f65df2a0958886a13dbf9b3ca28",
+   "fits_extrap.py": "062a00f300bfb2925e5965ab9a820a394898546ba8c5c52fc968d9806d0774de",
    "lib/figure_style_paper.py": "9bf0aa49a7b84b4c382588b915c6db6b49b6cd6d411dd8266987270c0f9262e3"
   },
   "versions": {
@@ -146,7 +179,7 @@
    "scipy": "1.16.3",
    "matplotlib": "3.10.8"
   },
-  "wall_clock_s": 0.3853340148925781,
-  "finished": "2026-11-13T16:43:59+0000"
+  "wall_clock_s": 18.441503047943115,
+  "finished": "2026-11-13T16:51:03+0000"
  }
 }
