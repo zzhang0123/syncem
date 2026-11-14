@@ -36,7 +36,7 @@ model            : finite joint response of channel Stokes spectra and spectral
 
 from __future__ import annotations
 
-__version__ = "0.7.6"
+__version__ = "0.7.7"
 
 import jax
 
