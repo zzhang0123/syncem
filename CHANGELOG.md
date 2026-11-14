@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+### Classical-model study
+
+- Fig. 6 is one row of three panels. Each is a spectrum over two error
+  subpanels, for fits to data with 1% and with 0.01% noise, on one error axis
+  with a dotted 1% reference line.
+- (a) and (b) keep the correct and incorrect electron families. Their error
+  subpanels come from the new `fits_family_noise.py`, which fits both
+  families at 1%, 0.01% and 0.001% noise and evaluates them over 1-300 GHz.
+- (c) replaces the 10-300 GHz fit with free-moment fits of one E2 data set
+  over its first 21, 26 and 32 channels (1-40, 1-100 and 1-304 GHz), from
+  the new `fits_cmb_bands.py`. Its spectrum shows, at 0.01% noise, the
+  realisation whose 300 GHz errors lie closest to the median in all three
+  bands. `fits_cmb.py` is kept but no longer drawn.
+
 ## 0.7.7 (2026-11-14)
 
 ### Classical-model study

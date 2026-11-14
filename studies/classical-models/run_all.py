@@ -53,6 +53,8 @@ PRODUCERS = (
     ("fits_extrap_noisefree.py", ("fits_extrap_results.json",)),
     ("extrap_curves.py", ()),
     ("fits_cmb.py", ()),
+    ("fits_cmb_bands.py", ("fits_extrap_products.npz",)),
+    ("fits_family_noise.py", ("fits_extrap_products.npz",)),
     ("kp_bridge.py", ()),
     ("harmonic_correction.py", ("forward_spectra.npz", "kp_bridge_results.json")),
     ("bridge_mpmath_check.py", ()),
@@ -81,8 +83,9 @@ FIGURE_INPUTS = ("fits_results.json", "fits_products.npz", "forward_results.json
 FIGURES = (("make_figures.py", FIGURE_INPUTS),
            ("render_classical_limit.py", ("recover_classical_limit_a_results.json",)),
            ("fig_cmb_extrapolation.py", ("extrap_curves.npz", "fits_extrap_products.npz",
-                                         "fits_extrap_results.json", "fits_cmb_products.npz",
-                                         "fits_cmb_results.json")),
+                                         "fits_extrap_results.json", "fits_cmb_bands_products.npz",
+                                         "fits_cmb_bands_results.json", "fits_family_noise_products.npz",
+                                         "fits_family_noise_results.json")),
            ("emission_windows.py", ()),
            ("derivative_spectra_figure.py", ()))
 STAGES = (("producing scripts", PRODUCERS), ("verify scripts", VERIFIERS), ("figures", FIGURES))

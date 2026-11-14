@@ -1,32 +1,31 @@
-"""CMB-window figure: electron families fitted over 1-40 GHz and free moments fitted over 10-300 GHz.
+"""CMB-window figure: extrapolation with electron families and with free moments, one row of three panels.
 
-Three columns, 1% noise in (a, b) and 0.01% noise in (c).
-(a) E2, smoothly broken power law, and (b) E3, index mixture, from extrap_curves.npz
-(extrap_curves.py, first noise realisation): intensity divided by a power law fitted to the truth
-over 1-40 GHz, with the fitted data, the truth, the correct electron family and one incorrect
-family that the in-band chi2 accepts, over 1-300 GHz. The fitted part (below 40 GHz) is shaded grey.
-Above 40 GHz a light band of each family's colour gives the 16-84% range of its predicted intensity
-over the 500 noise realisations of fits_extrap.py. The bands are computed here: the 500 family fits
-of fits_extrap.py are repeated (fits_extrap.family_fit, same seed and noise) and predicted on the
-25 prediction channels and on the 121 dense channels of extrap_curves.py. The script stops unless
-the prediction-channel errors reproduce the saved |dI|/I arrays of fits_extrap_products.npz, the
-first realisation reproduces the dense curves of extrap_curves.npz, and the two grids agree at
-300 GHz.
-(c) E2 fitted with free moments over 10-300 GHz, from fits_cmb_products.npz (fits_cmb.py): the same
-ratio with a power law fitted to the truth over 10-300 GHz, the fitted data and the fit at 0.01%
-noise. Below it, at half its height, the intensity error |fit - true|/I_j in per cent in each of
-the 41 channels (21 fitted, 20 withheld) at 0.01% noise, with that noise level as reference. Panel (c) has no shading, since the whole window is fitted.
-
-The 500-realisation statistics of the drawn families (in-band chi2/dof, rejection rate, median
-and 16-84% error at 40 and 300 GHz, signed 16-84% range of I_pred/I - 1 at 300 GHz) are recorded
-from fits_extrap_products.npz after checking that they reproduce fits_extrap_results.json. The
-errors drawn in (c) are checked against fits_cmb_results.json. A figure legend in the style of the fit gallery names the curves, and the
-family names and the free-moment fit are written on the curves. Text positions of the labels are placed by hand.
+Every panel is a spectrum over two error subpanels on a shared 1-300 GHz axis, laid out in inches (LAY).
+The spectra show I/I_PL, the intensity divided by a power law fitted to the truth over 1-40 GHz, for fits
+to data with 1% noise in (a, b) and 0.01% noise in (c). The error subpanels give the median |I_fit - I|/I over 500 noise realisations on
+the 121 dense channels of extrap_curves.py, in per cent, for fits to data with 1% and with 0.01% noise
+(named in each subpanel), on one error axis with a dotted 1% reference line.
+(a) E2, smoothly broken power law, and (b) E3, index mixture: the correct electron family and one
+incorrect family that the in-band chi2 accepts at 1% noise, fitted over 1-40 GHz (shaded grey). The
+spectra use extrap_curves.npz (first noise realisation) with the 1% data, and above 40 GHz a light band
+of each family's colour gives the 16-84% range of its predicted intensity. The bands come from repeating
+the 500 family fits of fits_extrap.py here (fits_extrap.family_fit, same seed and noise); the script
+stops unless the prediction-channel errors reproduce the saved |dI|/I arrays of fits_extrap_products.npz,
+the first realisation reproduces the dense curves of extrap_curves.npz, the two grids agree at 300 GHz,
+and the 1% medians equal those of fits_family_noise.py, which gives both error subpanels.
+(c) Free moments, as (a, b): the E2 data of a typical realisation (closest to the median 300 GHz error in
+all three bands, fits_cmb_bands.typical_realisation) on the 32 channels of fits_cmb_bands.py
+(1-304 GHz) and its fits over the first 21, 26 and 32 channels (1-40, 1-100 and 1-300 GHz), with the
+16-84% range over the realisations above the 40 and 100 GHz band edges. The fitted bands are nested grey
+shadings (1-100 GHz light, 1-40 GHz darker), the curve colour follows them (one orange hue, darker for a
+narrower band), and an in-panel legend pairs each shading with its curve.
+Every drawn median is checked against the JSON of its study. A figure legend names the curve roles.
 Style: lib/figure_style_paper.py.
 
 Reads fits_extrap_products.npz, fits_extrap_results.json (python fits_extrap.py),
-extrap_curves.npz (python extrap_curves.py), fits_cmb_products.npz and fits_cmb_results.json
-(python fits_cmb.py).
+extrap_curves.npz (python extrap_curves.py), fits_cmb_bands_products.npz and
+fits_cmb_bands_results.json (python fits_cmb_bands.py), fits_family_noise_products.npz and
+fits_family_noise_results.json (python fits_family_noise.py).
 Writes figures/cmb_extrapolation.{pdf,png} and fig_cmb_extrapolation_results.json.
 Run: python fig_cmb_extrapolation.py
 """
@@ -40,14 +39,13 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.patheffects as pe  # noqa: E402
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 from concurrent.futures import ProcessPoolExecutor  # noqa: E402
 from matplotlib.legend_handler import HandlerTuple  # noqa: E402
 from matplotlib.lines import Line2D  # noqa: E402
 from matplotlib.patches import Patch  # noqa: E402
-from matplotlib.ticker import FixedLocator, FuncFormatter, LogLocator, NullFormatter  # noqa: E402
+from matplotlib.ticker import FixedLocator, FuncFormatter, LogLocator, NullFormatter, NullLocator  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE / "lib"))
@@ -62,24 +60,49 @@ T0 = time.time()
 PRODUCTS = HERE / "fits_extrap_products.npz"
 RESULTS = HERE / "fits_extrap_results.json"
 CURVES = HERE / "extrap_curves.npz"
-CMB_PRODUCTS = HERE / "fits_cmb_products.npz"
-CMB_RESULTS = HERE / "fits_cmb_results.json"
+BANDS_PRODUCTS = HERE / "fits_cmb_bands_products.npz"
+BANDS_RESULTS = HERE / "fits_cmb_bands_results.json"
+FAMILY_PRODUCTS = HERE / "fits_family_noise_products.npz"
+FAMILY_RESULTS = HERE / "fits_family_noise_results.json"
 OUT_JSON = HERE / "fig_cmb_extrapolation_results.json"
 
 TAG = "0.01"
-CMB_TAGS = ("0.01", "0.0001")
-TAG_C = "0.0001"  # noise level drawn in (c)
 NAME = "cmb_extrapolation"
-NU_LO, NU_FIT_HI, NU_HI = 0.9, 40.0, 330.0  # GHz: x range of (a, b) and fit-band edge
-NU_LO_C = 9.0  # GHz: lower x limit of (c)
-ERR_LIM_C = (5e-6, 0.3)  # intensity error in (c), per cent of I_j; the lowest 0.01%-noise channel is 1.3e-5 %
-ERR_TICKS_C = {1e-4: r"$10^{-4}$", 1e-2: "0.01"}  # the Fig. 5 error axis
+NU_LO, NU_FIT_HI, NU_HI = 0.9, 40.0, 330.0  # GHz: x range of all panels and fit-band edge of (a-c)
+ERR_FREQ_TICKS = (1, 10, 40, 100, 300)  # GHz: (c, d) label the band edges 40 and 100 GHz
+ERR_TICKS = {1e-4: "0.0001", 1e-3: "0.001", 1e-2: "0.01", 1e-1: "0.1", 1.0: "1", 10.0: "10", 100.0: "100"}
+ERR_LIM = (2e-3, 60.0)  # median |dI|/I in per cent, the same in every error subpanel
+TICK_MIN_IN = 0.12  # inches: least distance between a labelled decade and the "noise" tick
+# Layout in inches (figure width fs.WIDTH): margins, column gap, legend block, panel title, spectrum and
+# error-subpanel heights, the gap between a spectrum and its subpanels, tick-label and axis-label rows.
+LAY = dict(left=0.42, right=0.10, gap=(0.30, 0.30), legend=0.40, title=0.17, sed=1.00, sub_gap=0.035, err=0.46,
+           ticks=0.17, xlabel=0.20, bottom=0.04)
+FIG_H = (LAY["legend"] + LAY["title"] + LAY["sed"] + 2 * (LAY["sub_gap"] + LAY["err"]) + LAY["ticks"]
+         + LAY["xlabel"] + LAY["bottom"])
+YLABEL_X_IN = 0.31  # inches left of the axes for every y label of the left column, so they align
+C_NOISE = ("0.01", "0.0001")  # (c): error subpanels at 1% and 0.01% noise, as (a, b)
+C_SED_NOISE = "0.0001"  # (c): the spectrum shows the free-moment fits at 0.01% noise
+BANDS = ("1-300", "1-100", "1-40")  # free-moment fitted bands of (c, d), in drawing order
+BAND_EDGES = {"1-40": 40.0, "1-100": 100.6, "1-300": 303.9}  # GHz: upper fitted channel centre (nested grid)
+# Each error subpanel has one noise level, drawn as one dotted line labelled "noise level"; curve labels name
+# methods or fitted bands, never a percentage. In (c, d) the fitted bands are nested grey shadings (1-100 GHz
+# light, 1-40 GHz darker on top of it; 1-300 GHz is the whole axis), and the curve colour follows the
+# shading: one orange hue stepped in OKLCH lightness, darker for a narrower band. Checked with the dataviz
+# palette validator (adjacent pairs, light surface): normal-vision and CVD Delta E >= 15.9; the light step's
+# 2.1:1 contrast is relieved by the direct labels. The middle step is drawn wide and the others thinner on
+# top, so curves that coincide inside the fitted bands stay visible.
+BAND_COLOUR = {"1-40": "#813C0B", "1-100": "#BB6802", "1-300": "#EFA000"}
+BAND_LW = {"1-40": 1.0, "1-100": 2.2, "1-300": 1.2}
+BAND_Z = {"1-40": 5, "1-100": 3, "1-300": 4}
+BAND_ALPHA = {"1-40": 0.22, "1-100": 0.30}  # 16-84% ranges above the band edge
+SHADE = {"1-100": "#F2F2F2", "1-40": "#E2E2E2"}  # nested fitted-band shading of (c, d)
 ALPHA_WRONG, ALPHA_RIGHT = 0.25, 0.33  # 16-84% bands of the drawn families
-SED_LIM = {"E2": (0.56, 1.1), "E3": (0.97, 1.11), "c": (0.965, 1.02)}  # no error bar or band clipped
+SED_LIM = {"E2": (0.48, 1.1), "E3": (0.97, 1.11)}  # no error bar or band clipped; (a) and (c) share the E2 range
 FS = 8
 TEXT_GREY = "#555555"
 WRONG_TEXT = "#A84200"  # darkened vermilion for text: darker than the grey labels in greyscale
 FREE_TEXT = "#8A5A00"  # darkened orange for text
+INK_TEXT = "#333333"  # direct labels of the free-moment fits in (c, d): ink, the line carries the colour
 LS_WRONG = (0, (4, 1.6))
 LS_FREE = "-"  # solid like the full-basis fit of Fig. 5, where dash-dot marks a misspecified model
 FIT_FILL = "#F2F2F2"
@@ -87,7 +110,6 @@ NOISE_GREY = "#999999"
 NOISE_LS = (0, (1, 1.5))
 FREE = fs.ENSEMBLE["E2"]  # the E2 row colour of the fit gallery
 FREE_LOW = "#9A6200"  # orange mixed with ink: the 0.01% error curve
-FREE_HALO = [pe.Stroke(linewidth=1.6, foreground=fs.INK, alpha=0.55), pe.Normal()]
 TRUTH_KW = dict(color="#ADADAD", lw=3.2, solid_capstyle="butt", zorder=1)
 DATA_KW = dict(fmt="o", ms=2.0, color=fs.INK, ecolor=fs.INK, elinewidth=0.5, capsize=0, zorder=5)
 # (ensemble, right family, wrong family accepted by the in-band chi2, title)
@@ -96,8 +118,7 @@ PANELS = (
     ("E3", "eLP", "ePL", "(b) Index mixture (E3)"),
 )
 TITLE_C = "(c) Free moments (E2)"
-
-
+AB_NOISE = ("0.01", "0.0001")  # (a, b) error subpanels: fits to data with 1% and 0.01% noise
 def stats(z, ens, model, tag=TAG):
     e = z[f"{ens}_{tag}_{model}_err"][:, :, 0]
     return (np.nanmedian(e, axis=0), np.nanpercentile(e, 16, axis=0),
@@ -116,24 +137,6 @@ def check_against_json(z, summ) -> dict:
                 if not diff <= 1e-9:
                     raise SystemExit(f"{ens} {m} {q}: recorded values differ from the JSON by {diff:.3g}")
                 out[f"{ens}_{m}_{q}_max_rel_diff"] = diff
-    return out
-
-
-def cmb_errors(zc) -> dict:
-    """|fit - true|/I_j of the free-moment fit in each channel, per noise level."""
-    S = zc["S_direct"]
-    return {t: np.abs(zc[f"pred_{t}"][:, 0] - S[:, 0]) / S[:, 0] for t in CMB_TAGS}
-
-
-def check_cmb(err, cmb) -> dict:
-    """The largest plotted error at each noise level must equal max_dI_over_I of fits_cmb_results.json."""
-    out = {}
-    for t in CMB_TAGS:
-        ref = cmb["summary"][t]["max_dI_over_I"]
-        diff = abs(float(np.max(err[t])) - ref) / ref
-        if not diff <= 1e-12:
-            raise SystemExit(f"(c) {t}: plotted maximum error differs from the JSON by {diff:.3g}")
-        out[f"c_{t}_max_dI_over_I_rel_diff"] = diff
     return out
 
 
@@ -182,6 +185,7 @@ def prediction_bands(z, cv) -> tuple[dict, dict]:
             checks[f"{ens}_{fam}_refit_{k}_max_rel_diff"] = d
         rel = pd / cv[f"truth_{ens}"][None, :, 0] - 1
         bands[(ens, fam)] = {"lo": np.percentile(pd, 16, axis=0), "hi": np.percentile(pd, 84, axis=0),
+                             "err_med": np.median(np.abs(rel), axis=0),
                              "signed_300GHz_median_p16_p84": [float(np.median(rel[:, -1])),
                                                               float(np.percentile(rel[:, -1], 16)),
                                                               float(np.percentile(rel[:, -1], 84))]}
@@ -228,62 +232,180 @@ def sed_panel(ax, cv, ens, right, wrong, title, bands):
     extent = [draw_band(ax, nu, bands[(ens, f)], ref, c, a)
               for f, c, a in ((wrong, fs.VERMILION, ALPHA_WRONG), (right, fs.BLUE, ALPHA_RIGHT))]
     lo, hi = min(e[0] for e in extent), max(e[1] for e in extent)
-    if not SED_LIM[ens][0] < lo and hi < SED_LIM[ens][1]:
+    if not (SED_LIM[ens][0] < lo and hi < SED_LIM[ens][1]):
         raise SystemExit(f"{ens}: band range {lo:.4f}-{hi:.4f} is clipped by SED_LIM {SED_LIM[ens]}")
     ax.plot(nu, cv[f"{ens}_{wrong}"][:, 0] / ref(nu), color=fs.VERMILION, lw=1.2, ls=LS_WRONG, zorder=3)
     ax.plot(nu, cv[f"{ens}_{right}"][:, 0] / ref(nu), color=fs.BLUE, lw=1.2, zorder=4)
     d = cv[f"data_fit_{ens}"][:, 0]
     ax.errorbar(nf, d / ref(nf), yerr=cv[f"sigma_fit_{ens}"] / ref(nf), **DATA_KW)
-    freq_axis(ax, labels=True)
+    freq_axis(ax, labels=False)
     fs.panel_title(ax, title)
     ax.set_ylim(*SED_LIM[ens])
     return {m: float(cv[f"{ens}_{m}"][-1, 0] / truth[-1] - 1) for m in (right, wrong)}
 
 
-def sed_panel_c(ax, zc) -> dict:
-    """(c): truth, 0.01% data on the 21 fitted channels and the free-moment fit at 0.01% noise."""
-    nu, S, fi = zc["centres"] / 1e9, zc["S_direct"][:, 0], zc["fit_idx"]
-    ref = reference_law(nu, S, hi=NU_HI)
-    ax.plot(nu, S / ref(nu), **TRUTH_KW)
-    ax.plot(nu, zc[f"pred_{TAG_C}"][:, 0] / ref(nu), color=FREE, lw=1.2, ls=LS_FREE, zorder=4,
-            path_effects=FREE_HALO)
-    ax.errorbar(nu[fi], zc[f"data_fit_{TAG_C}"][:, 0] / ref(nu[fi]), yerr=zc[f"sigma_{TAG_C}"][fi, 0] / ref(nu[fi]),
-                **DATA_KW)
-    freq_axis(ax, labels=False, lo=NU_LO_C, ticks=(10, 30, 100, 300), shade=False)
-    fs.panel_title(ax, TITLE_C)
-    ax.set_ylim(*SED_LIM["c"])
-    ax.text(0.5, 0.04, r"fit: 10--300 GHz, $0.01\%$ noise", transform=ax.transAxes, color=TEXT_GREY, ha="center", va="bottom",
-            fontsize=FS)
-    return {"truth_over_law_min_max": [float(np.min(S / ref(nu))), float(np.max(S / ref(nu)))]}
+def medians(ratio) -> np.ndarray:
+    """Median |I_fit/I - 1| over the realisations in each dense channel."""
+    return np.median(np.abs(ratio - 1), axis=0)
 
 
-def error_panel_c(ax, zc, err) -> None:
-    """(c) lower panel: per-channel intensity error in per cent at the 0.01% noise of the upper panel."""
-    nu = zc["centres"] / 1e9
-    ax.axhline(100 * float(TAG_C), color=NOISE_GREY, lw=fs.LW_REF, ls=NOISE_LS, zorder=1)
-    ax.plot(nu, 100 * err[TAG_C], color=FREE, lw=1.3, zorder=3)
-    freq_axis(ax, labels=True, lo=NU_LO_C, ticks=(10, 30, 100, 300), shade=False)
+def check_medians(drawn: dict, ref: dict, rtol=1e-12) -> dict:
+    """Every drawn median curve must reproduce its reference (JSON summary or refit)."""
+    out = {}
+    for key, m in drawn.items():
+        r = np.asarray(ref[key])
+        diff = float(np.max(np.abs(m - r) / r))
+        if not diff <= rtol:
+            raise SystemExit(f"{key}: drawn medians differ from the reference by {diff:.3g}")
+        out[f"{key}_median_rel_diff"] = diff
+    return out
+
+
+def error_axis(ax, row, shade=()):
+    """Error subpanel: frequency axis over 1-300 GHz with tick labels and a logarithmic median-error axis
+    labelled at every decade, or at every second decade where the decades are closer than TICK_MIN_IN.
+    The noise of the fitted data is the "data: x% noise" text; the dotted lines are reference error levels.
+    shade: (upper edge, colour) of fitted-band shadings, widest first."""
+    freq_axis(ax, labels=True, ticks=ERR_FREQ_TICKS, shade=False)
+    shade_bands(ax, shade)
     ax.set_yscale("log")
-    ax.set_ylim(*ERR_LIM_C)
-    ax.yaxis.set_major_locator(FixedLocator(list(ERR_TICKS_C)))
-    ax.yaxis.set_major_formatter(FuncFormatter(lambda v, _: ERR_TICKS_C.get(v, f"{v:g}")))
-    ax.yaxis.set_minor_locator(FixedLocator([10.0**p for p in (-5, -3, -1)]))
-    ax.yaxis.set_minor_formatter(NullFormatter())
+    lo, hi = ERR_LIM
+    ax.set_ylim(lo, hi)
+    in_per_decade = ax.get_position().height * ax.figure.get_figheight() / np.log10(hi / lo)
+    step = 1 if in_per_decade >= TICK_MIN_IN else 2
+    major = [10.0**p for p in range(-4, 3) if p % step == 0 and lo < 10.0**p < hi]
+    ax.yaxis.set_major_locator(FixedLocator(major))
+    ax.yaxis.set_major_formatter(FuncFormatter(lambda v, _: ERR_TICKS.get(v, f"{v:g}")))
+    ax.yaxis.set_minor_locator(NullLocator())
 
 
-def label_panels(a, b, c, ce):
-    """Family names on the curves and the fitted ranges. The legend gives the roles and the other curves."""
+def shade_bands(ax, shade):
+    for hi, colour in shade:
+        ax.axvspan(NU_LO, hi, color=colour, lw=0, zorder=0)
+        ax.axvline(hi, color=fs.GREY, lw=fs.LW_REF, zorder=0.5)
+
+
+REF_ERRORS = (1.0,)  # per cent: dotted reference level of every error subpanel
+
+
+def ref_lines(ax):
+    """Dotted reference level at 1% error, the same in every error subpanel, for comparison.
+    The noise of the fitted data is named in the subpanel text, not drawn."""
+    for y in REF_ERRORS:
+        ax.axhline(y, color=NOISE_GREY, lw=fs.LW_REF, ls=NOISE_LS, zorder=1)
+
+
+def family_error(ax, ens, right, wrong, tag, zf, jf, bands=None) -> tuple[dict, dict]:
+    """(a, b) subpanel: median |dI|/I of the correct and incorrect families fitted to data with the noise of
+    tag, on the dense channels. At 1% these are the fits drawn above; their medians must equal those of the
+    refitted fits of prediction_bands (bands)."""
+    nu = zf["centres_dense"] / 1e9
+    ref_lines(ax)
+    drawn, ref, out = {}, {}, {}
+    for fam, kw in ((wrong, dict(color=fs.VERMILION, lw=1.2, ls=LS_WRONG, zorder=3)), (right, dict(color=fs.BLUE, lw=1.2, zorder=4))):
+        m = medians(zf[f"{ens}_{fam}_{tag}_ratio"])
+        ax.plot(nu, 100 * m, **kw)
+        drawn[f"{ens}_{fam}_{tag}"] = m
+        ref[f"{ens}_{fam}_{tag}"] = jf["summary"][ens][fam][tag]["dI_over_I"]["median"]
+        out[f"{fam}_300GHz"] = float(100 * m[-1])
+    error_axis(ax, tag, shade=((NU_FIT_HI, FIT_FILL),))
+    noise_text(ax, tag, FIT_FILL)
+    checks = check_medians(drawn, ref)
+    if bands is not None:
+        checks.update(check_medians({f"{ens}_{f}_refit": drawn[f"{ens}_{f}_{tag}"] for f in (right, wrong)},
+                                    {f"{ens}_{f}_refit": bands[(ens, f)]["err_med"] for f in (right, wrong)}, rtol=1e-9))
+    return {f"{ens}_{tag}_error_percent": out}, checks
+
+
+NESTED = ((BAND_EDGES["1-100"], SHADE["1-100"]), (BAND_EDGES["1-40"], SHADE["1-40"]))
+
+
+def free_sed(ax, zb, noise, title) -> dict:
+    """(c) upper, as (a, b): the truth, the data of a typical realisation on the 32 channels and the
+    free-moment fits of those data over the first 21, 26 and 32 channels (1-40, 1-100 and 1-300 GHz), as
+    I/I_PL with the law fitted to the truth over 1-40 GHz, and the 16-84% range of each fit over the
+    realisations above its band edge when that edge is below 300 GHz."""
+    nu, truth = zb["centres_dense"] / 1e9, zb["truth_E2"]
+    ref = reference_law(nu, truth)
+    t = truth / ref(nu)
+    ax.plot(nu, t, **TRUTH_KW)
+    nf = zb["centres_fit"] / 1e9
+    ax.errorbar(nf, zb[f"data_E2_{noise}"][:, 0] / ref(nf), yerr=zb[f"sigma_E2_{noise}"] / ref(nf), **DATA_KW)
+    k = int(zb[f"typical_E2_{noise}"])  # typical realisation (fits_cmb_bands.typical_realisation)
+    lo_all, hi_all = [float(np.min(t))], [float(np.max(t))]
+    for band in BANDS:
+        r = zb[f"E2_{band}_{noise}_ratio"]
+        med, lo, hi = r[k], np.percentile(r, 16, axis=0), np.percentile(r, 84, axis=0)  # med: the drawn realisation
+        if band in BAND_ALPHA:
+            up = nu >= BAND_EDGES[band] * (1 - 1e-9)
+            ax.fill_between(nu[up], (lo * t)[up], (hi * t)[up], color=BAND_COLOUR[band], alpha=BAND_ALPHA[band],
+                            lw=0, zorder=2)
+            lo_all.append(float(np.min((lo * t)[up])))
+            hi_all.append(float(np.max((hi * t)[up])))
+        ax.plot(nu, med * t, color=BAND_COLOUR[band], lw=BAND_LW[band], zorder=BAND_Z[band], solid_capstyle="butt")
+    freq_axis(ax, labels=False, ticks=ERR_FREQ_TICKS, shade=False)
+    shade_bands(ax, NESTED)
+    ylim = SED_LIM["E2"]  # shared with (a)
+    if not (ylim[0] < min(lo_all) and max(hi_all) < ylim[1]):
+        raise SystemExit(f"(c): range {min(lo_all):.3f}-{max(hi_all):.3f} is clipped by SED_LIM {ylim}")
+    ax.set_ylim(*ylim)
+    ax.set_yticks([t for t in (0.2, 0.4, 0.6, 0.8, 1.0) if ylim[0] < t < ylim[1]])
+    fs.panel_title(ax, title)
+    return {"ylim": list(ylim), "truth_over_law_min_max": [float(np.min(t)), float(np.max(t))], "realisation": k}
+
+
+def noise_text(ax, tag, background):
+    """Names the noise of the fitted data in the top left corner of an error subpanel, on the colour of the
+    shading behind it so that the reference lines stop at the text."""
+    ax.text(0.015, 0.93, f"data: ${100 * float(tag):g}\\%$ noise", transform=ax.transAxes, color=TEXT_GREY,
+            ha="left", va="top", fontsize=FS, zorder=6,
+            bbox=dict(boxstyle="square,pad=0.12", facecolor=background, edgecolor="none"))
+
+
+def free_error(ax, zb, jb, noise) -> tuple[dict, dict]:
+    """(c) subpanel: median |dI|/I of the free-moment fits over the three bands at one noise level."""
+    nu = zb["centres_dense"] / 1e9
+    ref_lines(ax)
+    drawn, ref, out = {}, {}, {}
+    for band in BANDS:
+        m = medians(zb[f"E2_{band}_{noise}_ratio"])
+        ax.plot(nu, 100 * m, color=BAND_COLOUR[band], lw=BAND_LW[band], zorder=BAND_Z[band], solid_capstyle="butt")
+        drawn[f"{band}_{noise}"] = m
+        ref[f"{band}_{noise}"] = jb["summary"][band][noise]["E2"]["dI_over_I"]["median"]
+        out[f"{band}_300GHz"] = float(100 * m[-1])
+    error_axis(ax, noise, shade=NESTED)
+    noise_text(ax, noise, SHADE["1-40"])
+    return out, check_medians(drawn, ref)
+
+
+def band_legend(ax):
+    """In-panel legend of (c): each entry pairs the shading of a fitted band with the colour of its fit."""
+    def entry(band):
+        line = Line2D([], [], color=BAND_COLOUR[band], lw=min(BAND_LW[band], 1.6), solid_capstyle="butt")
+        if band in SHADE:
+            return (Patch(facecolor=SHADE[band], edgecolor=fs.GREY, lw=0.4), line)
+        return (Patch(facecolor="white", edgecolor=fs.GREY, lw=0.4), line)
+    handles = [entry(b) for b in ("1-40", "1-100", "1-300")]
+    labels = ["fit 1--40 GHz", "fit 1--100 GHz", "fit 1--300 GHz"]
+    leg = ax.legend(handles, labels, loc="lower left", bbox_to_anchor=(0.0, 0.14), handlelength=2.0,
+                    handletextpad=0.5, borderaxespad=0.4,
+                    labelspacing=0.3, frameon=True, framealpha=1.0, edgecolor="none", fontsize=FS,
+                    handler_map={tuple: HandlerTuple(ndivide=1, pad=0.0)})
+    leg.set_zorder(10)
+
+
+def label_panels(axes):
+    """Family names on the curves and the fitted ranges of (a, b), in the spectra and in the error subpanels."""
+    a, ae1, ae2, b, be1, be2, c, ce1, ce2 = axes
     kw = dict(fontsize=FS)
     a.text(55, 0.95, "eSBPL", color=fs.BLUE, ha="left", **kw)
     a.text(200, 0.59, "eLP", color=WRONG_TEXT, ha="right", **kw)
     b.text(160, 1.077, "eLP", color=fs.BLUE, ha="right", **kw)
     b.text(230, 0.980, "ePL", color=WRONG_TEXT, ha="right", **kw)
-    b.set_yticks([0.98, 1.0, 1.02, 1.04, 1.06, 1.08, 1.1])
+    b.set_yticks([0.98, 1.02, 1.06, 1.10])
     for ax, y, va in ((a, 0.04, "bottom"), (b, 0.96, "top")):  # clear of the data in each panel
-        ax.text(np.sqrt(NU_LO * NU_FIT_HI), y, "fit: 1--40 GHz\n" r"$1\%$ noise", linespacing=1.1, transform=ax.get_xaxis_transform(),
-                color=TEXT_GREY, ha="center", va=va, **kw)
-    c.text(11, 1.012, "free moments", color=FREE_TEXT, ha="left", va="bottom", **kw)
-    ce.text(12, 1.3e-2, r"$0.01\%$ noise", color=TEXT_GREY, ha="left", va="bottom", **kw)
+        ax.text(np.sqrt(NU_LO * NU_FIT_HI), y, "fit: 1--40 GHz\n" r"$1\%$ noise", linespacing=1.1,
+                transform=ax.get_xaxis_transform(), color=TEXT_GREY, ha="center", va=va, **kw)
 
 
 def legend(fig):
@@ -292,28 +414,55 @@ def legend(fig):
             Line2D([], [], marker="o", ls="", ms=2.6, color=fs.INK))
     handles = [Line2D([], [], **{k: v for k, v in TRUTH_KW.items() if k != "zorder"}), data,
                Line2D([], [], color=fs.BLUE, lw=1.2), Line2D([], [], color=fs.VERMILION, lw=1.2, ls=LS_WRONG),
-               (Patch(color=fs.BLUE, alpha=ALPHA_RIGHT, lw=0), Patch(color=fs.VERMILION, alpha=ALPHA_WRONG, lw=0)),
-               Line2D([], [], color=FREE, lw=1.2, ls=LS_FREE, path_effects=FREE_HALO),
-               Line2D([], [], color=NOISE_GREY, lw=1.0, ls=NOISE_LS)]
-    labels = ["true spectrum", "data", "fit, correct electron family",
-              "fit, incorrect electron family", r"$16$--$84\%$ of 500 realisations", "fit, free moments",
-              "noise level"]
-    fig.legend(handles=handles, labels=labels, loc="upper center", ncol=4, bbox_to_anchor=(0.54, 1.0),
+               (Patch(color=fs.BLUE, alpha=ALPHA_RIGHT, lw=0), Patch(color=fs.VERMILION, alpha=ALPHA_WRONG, lw=0),
+                Patch(color=BAND_COLOUR["1-100"], alpha=BAND_ALPHA["1-100"], lw=0)),
+               tuple(Line2D([], [], color=BAND_COLOUR[b], lw=1.4, solid_capstyle="butt") for b in ("1-40", "1-100", "1-300"))]
+    labels = ["true spectrum", "data", "fit, correct electron family", "fit, incorrect electron family",
+              r"$16$--$84\%$ of 500 realisations", "fit, free moments"]
+    fig.legend(handles=handles, labels=labels, loc="upper center", ncol=3, bbox_to_anchor=(0.53, 1.0),
                columnspacing=1.2, handlelength=2.4, handletextpad=0.5,
                handler_map={tuple: HandlerTuple(ndivide=None, pad=0.0), data: HandlerTuple(ndivide=1)})
 
 
 def layout(fig):
-    """(a) and (b) span the full height; (c) is an intensity panel over an error panel of half its height."""
-    grid = fig.add_gridspec(2, 3, height_ratios=(2, 1), hspace=0.08, wspace=0.27, left=0.075, right=0.995,
-                            bottom=0.155, top=0.80)
-    a, b = fig.add_subplot(grid[:, 0]), fig.add_subplot(grid[:, 1])
-    c = fig.add_subplot(grid[0, 2])
-    return a, b, c, fig.add_subplot(grid[1, 2], sharex=c)
+    """One row of three panels, placed in inches (LAY), each a spectrum over two error subpanels on a shared
+    frequency axis."""
+    W, H, L = fig.get_figwidth(), fig.get_figheight(), LAY
+    width = (W - L["left"] - L["right"] - sum(L["gap"])) / 3
+    heights = (L["sed"], L["err"], L["err"])
+    axes, x = [], L["left"]
+    for j in range(3):
+        y, cell = H - L["legend"] - L["title"], []
+        for k, h in enumerate(heights):
+            y -= h + (L["sub_gap"] if k else 0)
+            cell.append(fig.add_axes([x / W, y / H, width / W, h / H], sharex=cell[0] if cell else None))
+        axes += cell
+        x += width + (L["gap"][j] if j < 2 else 0)
+    a, ae1, ae2, b, be1, be2, c, ce1, ce2 = axes
+    c.sharey(a)  # (a) and (c): the same E2 truth and normalisation
+    for ax in (be1, ce1):
+        ax.sharey(ae1)
+    for ax in (be2, ce2):
+        ax.sharey(ae2)
+    return axes
 
 
-def report(z, summ, sed, cmb, err, sed_c, bands) -> dict:
-    """Values of the drawn families (500 realisations) and of the free-moment fit drawn in (c)."""
+def left_ylabels(fig, axes):
+    """y labels of the left column at one distance from the axes; the two error subpanels of (a) share one."""
+    a, ae1, ae2 = axes[:3]
+    W = fig.get_figwidth()
+    for ax, text in ((a, r"$I/I_{\rm PL}$"), (ae1, r"Error [\%]")):
+        ax.set_ylabel(text)
+        x = -YLABEL_X_IN / (ax.get_position().width * W)
+        y = 0.5
+        if ax is ae1:  # centre on the pair (a) error subpanels
+            p1, p2 = ae1.get_position(), ae2.get_position()
+            y = ((p1.y1 + p2.y0) / 2 - p1.y0) / p1.height
+        ax.yaxis.set_label_coords(x, y)
+
+
+def report(z, summ, sed, bands) -> dict:
+    """Values of the drawn families of (a, b) over 500 realisations."""
     out = {}
     for ens, right, wrong, _ in PANELS:
         for role, fam in (("right", right), ("wrong", wrong)):
@@ -330,12 +479,6 @@ def report(z, summ, sed, cmb, err, sed_c, bands) -> dict:
             print(ens, fam, out[f"{ens}_{fam}"])
     out["nu_fit_last_nu_pred_first_last_GHz"] = [float(z["nu_fit"][-1] / 1e9), float(z["nu_pred"][0] / 1e9),
                                                  float(z["nu_pred"][-1] / 1e9)]
-    out["c_E2_free_moments"] = {t: {"R_star": cmb["summary"][t]["R_star"], "chi2_fit": cmb["summary"][t]["chi2_fit"],
-                                    "dof_fit": cmb["summary"][t]["dof_fit"],
-                                    "max_dI_over_I": float(np.max(err[t])),
-                                    "median_dI_over_I": float(np.median(err[t]))} for t in CMB_TAGS}
-    out["c_E2_free_moments"].update(sed_c)
-    print("(c)", out["c_E2_free_moments"])
     return out
 
 
@@ -344,33 +487,54 @@ def main():
     z = np.load(PRODUCTS)
     summ = json.loads(RESULTS.read_text())["summary"]
     cv = np.load(CURVES)
-    zc = np.load(CMB_PRODUCTS)
-    cmb = json.loads(CMB_RESULTS.read_text())
-    err = cmb_errors(zc)
+    zb, jb = np.load(BANDS_PRODUCTS), json.loads(BANDS_RESULTS.read_text())
+    zf, jf = np.load(FAMILY_PRODUCTS), json.loads(FAMILY_RESULTS.read_text())
+    for zz in (zb, zf):
+        if not np.allclose(zz["centres_dense"], cv["nu_dense"], rtol=1e-12):
+            raise SystemExit("the dense channels of the study products and extrap_curves.py differ")
     bands, band_checks = prediction_bands(z, cv)
-    checks = {**check_against_json(z, summ), **check_cmb(err, cmb), **band_checks}
-    fig = plt.figure(figsize=(fs.WIDTH, 2.75))
-    a, b, c, ce = layout(fig)
-    sed = {}
-    for ax, (ens, right, wrong, title) in zip((a, b), PANELS):
+    fig = plt.figure(figsize=(fs.WIDTH, FIG_H))
+    axes = layout(fig)
+    a, ae1, ae2, b, be1, be2, c, ce1, ce2 = axes
+    sed, values, checks = {}, {}, {**check_against_json(z, summ), **band_checks}
+    for ax, errs, (ens, right, wrong, title) in ((a, (ae1, ae2), PANELS[0]), (b, (be1, be2), PANELS[1])):
         sed[ens] = sed_panel(ax, cv, ens, right, wrong, title, bands)
-    sed_c = sed_panel_c(c, zc)
-    error_panel_c(ce, zc, err)
-    label_panels(a, b, c, ce)
+        for axe, tag in zip(errs, AB_NOISE):
+            v, k = family_error(axe, ens, right, wrong, tag, zf, jf, bands if tag == TAG else None)
+            values.update(v)
+            checks.update(k)
+    values["c_sed"] = free_sed(c, zb, C_SED_NOISE, TITLE_C)
+    c.text(np.sqrt(NU_LO * NU_FIT_HI), 0.04, f"${100 * float(C_SED_NOISE):g}\\%$ noise",
+           transform=c.get_xaxis_transform(), color=TEXT_GREY, ha="center", va="bottom", fontsize=FS)  # as in (a)
+    for axe, tag in zip((ce1, ce2), C_NOISE):
+        v, k = free_error(axe, zb, jb, tag)
+        values[f"c_{tag}_error_percent"] = v
+        checks.update(k)
+    band_legend(c)
+    label_panels(axes)
     legend(fig)
-    a.set_ylabel(r"Intensity / power law")
-    ce.set_ylabel(r"Error [\%]")
-    fs.tighten_y_labels((a, b, c, ce))
-    values = report(z, summ, sed, cmb, err, sed_c, bands)
+    left_ylabels(fig, axes)
+    # Error subpanels share one range across the row: tick labels only in (a). (c) shares the spectrum range
+    # of (a) but keeps its labels, since (b) between them has its own scale.
+    for ax in (be1, be2, ce1, ce2):
+        ax.tick_params(axis="y", labelleft=False)
+    for ax in (a, b, c, ae1, be1, ce1):  # tick labels only under the lowest subpanel of each panel
+        ax.tick_params(axis="x", labelbottom=False)
+        ax.set_xlabel("")
+    for ax in (ae2, ce2):  # one frequency label, under (b)
+        ax.set_xlabel("")
+    fs.tighten_y_labels(axes)
+    values.update(report(z, summ, sed, bands))
+    print("values", {k: v for k, v in values.items() if not k.startswith(("E2_", "E3_", "nu_"))})
     (HERE / "figures").mkdir(exist_ok=True)
     fs.save(fig, NAME)
     outputs = {relative(HERE / "figures" / f"{NAME}.{ext}"): sha256(HERE / "figures" / f"{NAME}.{ext}")
                for ext in ("pdf", "png")}
     write_json(OUT_JSON, {"description": __doc__, "noise": TAG, "panels": [list(p) for p in PANELS],
-                          "panel_c": {"ensemble": "E2", "title": TITLE_C, "noise": list(CMB_TAGS)},
+                          "panel_c": [TITLE_C, list(BANDS), list(C_NOISE)],
                           "checks": checks, "values": values, "figures": outputs,
-                          "provenance": provenance(__file__, T0, inputs=(PRODUCTS, RESULTS, CURVES, CMB_PRODUCTS,
-                                                                         CMB_RESULTS,
+                          "provenance": provenance(__file__, T0, inputs=(PRODUCTS, RESULTS, CURVES, BANDS_PRODUCTS,
+                                                                         BANDS_RESULTS, FAMILY_PRODUCTS, FAMILY_RESULTS,
                                                                          HERE / "fits_extrap.py",
                                                                          HERE / "lib" / "figure_style_paper.py"))})
 
