@@ -6,7 +6,7 @@
    "E2",
    "eSBPL",
    "eLP",
-   "(a) Smoothly broken power law (E2)"
+   "(a) Broken power law (E2)"
   ],
   [
    "E3",
@@ -151,12 +151,12 @@
   }
  },
  "figures": {
-  "figures/cmb_extrapolation.pdf": "4df5e2c7c44c56070683fa095a08a619562aeb9d9213998b5eb5c02ba14cdf7a",
-  "figures/cmb_extrapolation.png": "775d37058d81ecf63e49cce539fc2ee6cfaacf5a853544607533e8a7ab24473f"
+  "figures/cmb_extrapolation.pdf": "4520e2f5beddad1efb167d18b00293614c2dc884d42279e23960357e0ee98074",
+  "figures/cmb_extrapolation.png": "17ac6c636470e21cb9f72ecf4f4eaadf20f219eae67ddb50df2697e1f20c2148"
  },
  "provenance": {
   "script": "fig_cmb_extrapolation.py",
-  "script_sha256": "c87c50c3cbb7c44e31ffa3f837b96c963f42a9b83f1ea26493332e629ea7a8ed",
+  "script_sha256": "072a3dc4b2c9407612a3bae1780cac096621003f881c6e92b401369b6f508f67",
   "lib_sha256": {
    "kernels.py": "b0983233f8fee93b12b10c299c0ea0d0011d72a106884029ec46107ba4121570",
    "config.py": "78aaca6292cd15db1d820d25651c288ed47d14213b8da3d55440b7d4546e887c",
@@ -179,7 +179,7 @@
    "scipy": "1.16.3",
    "matplotlib": "3.10.8"
   },
-  "wall_clock_s": 17.975600004196167,
-  "finished": "2026-11-13T17:11:11+0000"
+  "wall_clock_s": 20.593227863311768,
+  "finished": "2026-11-14T09:47:32+0000"
  }
 }

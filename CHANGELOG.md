@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Classical-model study
+
+- Fig. 6 has narrower gaps between its panels and a shorter title for (a).
+
 ## 0.7.6 (2026-11-13)
 
 ### Classical-model study

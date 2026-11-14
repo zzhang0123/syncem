@@ -92,7 +92,7 @@ TRUTH_KW = dict(color="#ADADAD", lw=3.2, solid_capstyle="butt", zorder=1)
 DATA_KW = dict(fmt="o", ms=2.0, color=fs.INK, ecolor=fs.INK, elinewidth=0.5, capsize=0, zorder=5)
 # (ensemble, right family, wrong family accepted by the in-band chi2, title)
 PANELS = (
-    ("E2", "eSBPL", "eLP", "(a) Smoothly broken power law (E2)"),
+    ("E2", "eSBPL", "eLP", "(a) Broken power law (E2)"),
     ("E3", "eLP", "ePL", "(b) Index mixture (E3)"),
 )
 TITLE_C = "(c) Free moments (E2)"
@@ -277,7 +277,7 @@ def label_panels(a, b, c, ce):
     a.text(55, 0.95, "eSBPL", color=fs.BLUE, ha="left", **kw)
     a.text(200, 0.59, "eLP", color=WRONG_TEXT, ha="right", **kw)
     b.text(160, 1.077, "eLP", color=fs.BLUE, ha="right", **kw)
-    b.text(300, 0.980, "ePL", color=WRONG_TEXT, ha="right", **kw)
+    b.text(230, 0.980, "ePL", color=WRONG_TEXT, ha="right", **kw)
     b.set_yticks([0.98, 1.0, 1.02, 1.04, 1.06, 1.08, 1.1])
     for ax, y, va in ((a, 0.04, "bottom"), (b, 0.96, "top")):  # clear of the data in each panel
         ax.text(np.sqrt(NU_LO * NU_FIT_HI), y, "fit: 1--40 GHz\n" r"$1\%$ noise", linespacing=1.1, transform=ax.get_xaxis_transform(),
@@ -305,7 +305,7 @@ def legend(fig):
 
 def layout(fig):
     """(a) and (b) span the full height; (c) is an intensity panel over an error panel of half its height."""
-    grid = fig.add_gridspec(2, 3, height_ratios=(2, 1), hspace=0.08, wspace=0.42, left=0.085, right=0.99,
+    grid = fig.add_gridspec(2, 3, height_ratios=(2, 1), hspace=0.08, wspace=0.27, left=0.075, right=0.995,
                             bottom=0.155, top=0.80)
     a, b = fig.add_subplot(grid[:, 0]), fig.add_subplot(grid[:, 1])
     c = fig.add_subplot(grid[0, 2])
