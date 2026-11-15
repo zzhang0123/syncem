@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+### Classical-model study
+
+- Fig. 6 shows E2 in all three panels. (b) fits the electron families of (a)
+  over 1-100 GHz, instead of E3 over 1-40 GHz, to the same data set as the
+  free-moment fits of (c). The three spectra share one range, so only (a)
+  labels the y axes and the gaps between the columns are narrower.
+- `fits_family_noise.py` fits the E2 families over the first 21 and 26
+  channels of the nested grid of `fits_cmb_bands.py`, with its noise, at 1%
+  and 0.01% noise. E3 and the 0.001% level are dropped.
+- `fits_cmb_bands.py` runs at 1% and 0.01% noise only.
+- README group 16 describes the current Fig. 6.
+
 ## 0.7.8 (2026-11-14)
 
 ### Classical-model study
