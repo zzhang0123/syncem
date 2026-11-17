@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.7.10 (2026-11-17)
 
 ### Classical-model study
 
