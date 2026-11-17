@@ -1,0 +1,77 @@
+{
+ "description": "Basis spectra at gamma0 = 100 without the continuum approximation (figures/harmonic_basis_spectra).\n\nFinite-gamma harmonic kernels from syncem.model.build_high_order_basis (the exploratory high-order\nroute: its numerical error is reported unbounded), at the reference (gamma0, B0) = (100, 5 muG), with\nTruncation(L_mu = 1, L_eta = 1, N = 1, depth_degree = 0): Legendre pairs l, k <= 1, order 0 and the\nfirst derivatives in gamma and B, scaled by s_gamma = 0.2 gamma0 and s_B = 1 muG, and no Faraday depth.\nChannels: unit-area bump responses (normalisation \"unit_integral\", the response family of the\nexamples) with half-width 0.2 nu_j at centres log-spaced in y = nu/nu_0, nu_0 = e B0/(2 pi m_e c).\nChannels are built in chunks under the 65536-node angular guard of the route. Each channel's columns\nare independent of the others.\n\nThe figure has columns I, Q' (the polarisation in the frame of the projected field, U' = 0 without\nFaraday rotation) and V, rows (l, k) = (0,0), (1,1) for I and Q' and (1,0), (0,1) for V, and in each\npanel order 0, d_gamma and d_B, each divided by its largest absolute value.\n\nThe results JSON records: the change of every column between CHECK_NODES and NODES angular nodes,\nthe agreement of the I and Q' columns with the continuum (l, k) projections of the study kernels\n(one common constant), the departure of the field derivatives from the continuum identity\ns_B d_B = (s_B/B0)(K + 0.5 dK/dln gamma), the peaks of V relative to the order-0 intensity, and U'.\nStyle: lib/figure_style_paper.py.\n\nWrites figures/harmonic_basis_spectra.{pdf,png}, harmonic_basis_figure.npz and\nharmonic_basis_figure_results.json.  Run: python harmonic_basis_figure.py  (about 30 minutes)\n",
+ "gamma0": 100.0,
+ "B0_G": 5e-06,
+ "nu0_Hz": 13.99624491711436,
+ "y_range": [
+  300.0,
+  100000.0,
+  121
+ ],
+ "scales": [
+  20.0,
+  1e-06,
+  1.0
+ ],
+ "route_settings": {
+  "rtol": 1e-06,
+  "atol": 1e-35,
+  "atol_gamma": 1e-35,
+  "atol_B": 1e-30
+ },
+ "syncem_version": "0.7.9",
+ "checks": {
+  "nodes": 96,
+  "check_nodes": 48,
+  "max_change_check_to_nodes_by_component": {
+   "I": 5.666818847041723e-05,
+   "Q'": 6.826433152542607e-05,
+   "V": 0.0016731157127449828
+  },
+  "I_Q_vs_continuum_common_constant_max_rel": 0.0008520143832448592,
+  "dB_minus_continuum_identity_max_rel": {
+   "I (0,0)": 0.00013216856395910562,
+   "I (1,1)": 0.00043163627635110324,
+   "Q' (0,0)": 0.00031128767755320196,
+   "Q' (1,1)": 0.0006311565138898895
+  },
+  "V_order0_peak_over_I00_peak": {
+   "(0,1)": 0.0318979350728412,
+   "(1,0)": 0.004282843978797823
+  },
+  "V_10_vs_01_shape_max_diff": 0.6162219214149445,
+  "U_over_Q_max": 0.0,
+  "odd_I_even_V_max": 0.0
+ },
+ "npz": "harmonic_basis_figure.npz",
+ "npz_sha256": "cdfe640a0da41529a554bfa2cab14e520f5e517fe6760cad5d1163fe0edcb0ba",
+ "figures": {
+  "figures/harmonic_basis_spectra.pdf": "431eacaacffa6b20d4429ff015ff892133b72f99d993caf082beb56a13acf32d",
+  "figures/harmonic_basis_spectra.png": "fd3f09d10b1026abc8a4965aedf2ca6984b00320d355f81a8cdad80b59a28770"
+ },
+ "provenance": {
+  "script": "harmonic_basis_figure.py",
+  "script_sha256": "b789c8ab88dc3225abab3d3f6318ed1d680918927d6a3c44180d8d8b02cb01aa",
+  "lib_sha256": {
+   "kernels.py": "b0983233f8fee93b12b10c299c0ea0d0011d72a106884029ec46107ba4121570",
+   "config.py": "78aaca6292cd15db1d820d25651c288ed47d14213b8da3d55440b7d4546e887c",
+   "basis.py": "438afd89638545dbddfd9acf51cbef67d67d8484a24dcd28d2a1755b6697eace",
+   "ensembles.py": "608dc23a9f795bd7cf4af10b84bfb618c41d3d0d5d858e878aacb410fcbc7c60",
+   "provenance.py": "32dc912a4bc75a4460d6264b1ffcf8e278e7da1c6db8e0a43e810fa31f737590"
+  },
+  "inputs_sha256": {
+   "lib/figure_style_paper.py": "9bf0aa49a7b84b4c382588b915c6db6b49b6cd6d411dd8266987270c0f9262e3",
+   "cost.py": "cee5bde0846fc3bbf7edc5385b2613c6b37aa92bc8589f5b8aaf4e275b1916fb"
+  },
+  "versions": {
+   "python": "3.12.9",
+   "numpy": "2.3.5",
+   "scipy": "1.16.3",
+   "matplotlib": "3.10.8",
+   "jax": "0.10.0",
+   "syncem": "0.7.9"
+  },
+  "wall_clock_s": 1746.5635452270508,
+  "finished": "2026-11-16T17:52:59+0000"
+ }
+}

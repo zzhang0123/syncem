@@ -1,0 +1,212 @@
+{
+ "description": "Extrapolation figure of the paper (`fig: cmb extrapolation`, figures/extrapolation_positive): free moments,\nnon-negative cells and the second-order moment and cumulant forms of Sec. 4.3.\n\nWith its default arguments the script draws the paper's figure. Rows: E2, E3 and E4-JP. Columns: free moments,\nnon-negative cells (the Tikhonov fits with non-negative cells, \"posridge\" of fits_positive_ridge.py) and the\nelectron family (the moment and cumulant forms truncated at second order). Every panel is a spectrum over two\nerror subpanels on a shared 1-300 GHz axis.\n  * Spectrum: I/I_PL, the intensity divided by I_PL, the power law fitted to the truth over 1-40 GHz\n    (fits_mixture_forms.reference_law). Points: the data (noise --sed-noise, 0.01% by default) of realisation\n    fits_mixture_forms.DRAWN over the --sed-band band (shaded). Lines: the per-channel median of the predictions\n    of the fits to the 500 realisations, drawn at the width of that noise level; above the band, the shading\n    (a fan-shaped legend swatch) gives their 16-84% range.\n    The free-moment and non-negative columns draw one model each, the family column the moment form (solid)\n    and the cumulant form (dashed).\n  * Error subpanels: the median over the realisations of |I_fit - I|/I (E2, E3) or of |I_fit - I|/I_PL\n    (E4-JP, E6, whose true intensity falls by 1e-12 above the cut-off, so |I_fit - I|/I would measure the\n    truth rather than the fit), in per cent, for fits over 1-40 GHz (upper) and 1-100 GHz (lower), each\n    with its fitted band shaded, at 1% noise (thick, in an opaque tint of the curve colour) and 0.01% noise\n    (thin, full colour; the spectrum medians use the same thin width), with a dotted 1% reference line.\nColours: free moments and non-negative cells ink (both solid; the column titles name them), moment form blue,\ncumulant form vermilion; the cumulant form is also dashed, so the forms stay apart in greyscale, and the\nnoise levels differ in line width. The legend has three untitled groups, each above one column of panels:\nthe spectrum elements, the medians (three-colour swatches: width = noise level in every column) with the\n1% reference line, and the two forms. Every drawn median is checked against the results JSON of the source;\nthe script stops if an error median leaves the top of its axis, and records the frequencies where one passes\nbelow it (small in-band errors in units of I_PL above the cut-off). Style: lib/figure_style_paper.py.\n\n--source picks the study drawn: ridge (default, fits_positive_ridge_*), positive (fits_free_positive_*, non-negative\ncells without the penalty, column 'pos') or forms (fits_mixture_forms_*: free moments and the moment and cumulant\nforms at the two orders of --orders, rows up to E6). --columns overrides the three column groups, e.g.\n'free;pos;mom2,cum2'. --bound-note (where every cumulant fit ends on a bound of k, Appendix B) and --axis-note\n(where the free-moment range leaves a fixed spectrum axis) add in-panel notes; both are off for the paper's figure.\nReads <source>_products.npz and <source>_results.json. Writes figures/<name>.{pdf,png} and fig_<name>_results.json,\nwith the name extrapolation_positive (ridge), extrapolation_positive_nnls (positive) or extrapolation_forms (forms)\nunless --name is given.\nRun: python fig_extrapolation_positive.py [ENSEMBLE ...] [--source ridge|positive|forms] [--columns GROUPS]\n     [--orders 2,4] [--bands 1-40,1-100] [--noise 0.01,0.0001] [--sed-band 1-100] [--sed-noise 0.0001] [--name NAME]\n",
+ "drawn_realisation": 0,
+ "values": {
+  "rows": [
+   "E2",
+   "E3",
+   "E4-JP"
+  ],
+  "orders": [
+   2,
+   4
+  ],
+  "columns": [
+   [
+    "free"
+   ],
+   [
+    "posridge"
+   ],
+   [
+    "mom2",
+    "cum2"
+   ]
+  ],
+  "argv": [],
+  "source": "ridge",
+  "bands": [
+   "1-40",
+   "1-100"
+  ],
+  "noise": [
+   "0.01",
+   "0.0001"
+  ],
+  "sed_band": "1-100",
+  "sed_noise": "0.0001",
+  "E2": {
+   "free_1-40_0.01_dI_over_I_300GHz_pct": 44.94845841738057,
+   "free_1-40_0.01_dI_over_I_100GHz_pct": 10.582113486636825,
+   "free_1-40_0.0001_dI_over_I_300GHz_pct": 19.27181500709006,
+   "free_1-40_0.0001_dI_over_I_100GHz_pct": 1.267220202373981,
+   "free_1-100_0.01_dI_over_I_300GHz_pct": 15.738400411623383,
+   "free_1-100_0.01_dI_over_I_100GHz_pct": 0.6165532076231772,
+   "free_1-100_0.0001_dI_over_I_300GHz_pct": 1.5808144656328849,
+   "free_1-100_0.0001_dI_over_I_100GHz_pct": 0.006791921468490836,
+   "posridge_1-40_0.01_dI_over_I_300GHz_pct": 45.80564895385984,
+   "posridge_1-40_0.01_dI_over_I_100GHz_pct": 12.591537435713708,
+   "posridge_1-40_0.0001_dI_over_I_300GHz_pct": 8.894964841419378,
+   "posridge_1-40_0.0001_dI_over_I_100GHz_pct": 0.7452513132682248,
+   "posridge_1-100_0.01_dI_over_I_300GHz_pct": 14.914909011364097,
+   "posridge_1-100_0.01_dI_over_I_100GHz_pct": 0.5882502226315534,
+   "posridge_1-100_0.0001_dI_over_I_300GHz_pct": 1.258757881199557,
+   "posridge_1-100_0.0001_dI_over_I_100GHz_pct": 0.006622025323516079,
+   "mom2_1-40_0.01_dI_over_I_300GHz_pct": 78.16074720246074,
+   "mom2_1-40_0.01_dI_over_I_100GHz_pct": 20.042605587706515,
+   "mom2_1-40_0.0001_dI_over_I_300GHz_pct": 77.86567227281029,
+   "mom2_1-40_0.0001_dI_over_I_100GHz_pct": 19.950666350312503,
+   "cum2_1-40_0.01_dI_over_I_300GHz_pct": 19.83795795721865,
+   "cum2_1-40_0.01_dI_over_I_100GHz_pct": 7.0732372645681165,
+   "cum2_1-40_0.0001_dI_over_I_300GHz_pct": 19.768827452392053,
+   "cum2_1-40_0.0001_dI_over_I_100GHz_pct": 7.072168067570816,
+   "mom2_1-100_0.01_dI_over_I_300GHz_pct": 29.816906817077626,
+   "mom2_1-100_0.01_dI_over_I_100GHz_pct": 3.461873709442631,
+   "mom2_1-100_0.0001_dI_over_I_300GHz_pct": 30.027024303827808,
+   "mom2_1-100_0.0001_dI_over_I_100GHz_pct": 3.5483950181673887,
+   "cum2_1-100_0.01_dI_over_I_300GHz_pct": 10.76131412251401,
+   "cum2_1-100_0.01_dI_over_I_100GHz_pct": 2.005463736558044,
+   "cum2_1-100_0.0001_dI_over_I_300GHz_pct": 10.866454475823412,
+   "cum2_1-100_0.0001_dI_over_I_100GHz_pct": 2.0576133010870357,
+   "sed_ylim_free": [
+    0.7215836735317886,
+    1.0635361615729764
+   ],
+   "sed_ylim_forms": [
+    0.4859005405423841,
+    1.0768767162704898
+   ]
+  },
+  "E3": {
+   "free_1-40_0.01_dI_over_I_300GHz_pct": 64.72087045665222,
+   "free_1-40_0.01_dI_over_I_100GHz_pct": 20.454765076834498,
+   "free_1-40_0.0001_dI_over_I_300GHz_pct": 16.69014807912625,
+   "free_1-40_0.0001_dI_over_I_100GHz_pct": 1.9917963863544053,
+   "free_1-100_0.01_dI_over_I_300GHz_pct": 25.6351244119242,
+   "free_1-100_0.01_dI_over_I_100GHz_pct": 0.6639849218442628,
+   "free_1-100_0.0001_dI_over_I_300GHz_pct": 2.2972298703343386,
+   "free_1-100_0.0001_dI_over_I_100GHz_pct": 0.006720890884742703,
+   "posridge_1-40_0.01_dI_over_I_300GHz_pct": 58.912904517739264,
+   "posridge_1-40_0.01_dI_over_I_100GHz_pct": 17.317654390672477,
+   "posridge_1-40_0.0001_dI_over_I_300GHz_pct": 15.405950390933516,
+   "posridge_1-40_0.0001_dI_over_I_100GHz_pct": 1.659773897736505,
+   "posridge_1-100_0.01_dI_over_I_300GHz_pct": 24.29762900759495,
+   "posridge_1-100_0.01_dI_over_I_100GHz_pct": 0.6370571805374703,
+   "posridge_1-100_0.0001_dI_over_I_300GHz_pct": 1.830286278301796,
+   "posridge_1-100_0.0001_dI_over_I_100GHz_pct": 0.006572809050225947,
+   "mom2_1-40_0.01_dI_over_I_300GHz_pct": 1.7132523228624574,
+   "mom2_1-40_0.01_dI_over_I_100GHz_pct": 0.9268111847623384,
+   "mom2_1-40_0.0001_dI_over_I_300GHz_pct": 0.5773639011403486,
+   "mom2_1-40_0.0001_dI_over_I_100GHz_pct": 0.15345568229081508,
+   "cum2_1-40_0.01_dI_over_I_300GHz_pct": 1.8807641150371257,
+   "cum2_1-40_0.01_dI_over_I_100GHz_pct": 0.9178330519215572,
+   "cum2_1-40_0.0001_dI_over_I_300GHz_pct": 0.02140444461801172,
+   "cum2_1-40_0.0001_dI_over_I_100GHz_pct": 0.010289200453139635,
+   "mom2_1-100_0.01_dI_over_I_300GHz_pct": 0.7492546712639714,
+   "mom2_1-100_0.01_dI_over_I_100GHz_pct": 0.3555375264695737,
+   "mom2_1-100_0.0001_dI_over_I_300GHz_pct": 0.37888458878977405,
+   "mom2_1-100_0.0001_dI_over_I_100GHz_pct": 0.047019719070745536,
+   "cum2_1-100_0.01_dI_over_I_300GHz_pct": 0.820911397277091,
+   "cum2_1-100_0.01_dI_over_I_100GHz_pct": 0.3515693405334863,
+   "cum2_1-100_0.0001_dI_over_I_300GHz_pct": 0.015077069591395986,
+   "cum2_1-100_0.0001_dI_over_I_100GHz_pct": 0.006596216141108169,
+   "sed_ylim_free": [
+    0.987715560091834,
+    1.1083392873938132
+   ],
+   "sed_ylim_forms": [
+    0.9892362966330173,
+    1.0762224503868496
+   ]
+  },
+  "E4-JP": {
+   "free_1-40_0.01_dI_over_IPL_300GHz_pct": 2911.7133317822754,
+   "free_1-40_0.01_dI_over_IPL_100GHz_pct": 30.015300860134182,
+   "free_1-40_0.0001_dI_over_IPL_300GHz_pct": 2746.4839772551068,
+   "free_1-40_0.0001_dI_over_IPL_100GHz_pct": 59.648640483488236,
+   "free_1-100_0.01_dI_over_IPL_300GHz_pct": 44.97700130258359,
+   "free_1-100_0.01_dI_over_IPL_100GHz_pct": 0.0016528231474140377,
+   "free_1-100_0.0001_below_axis_GHz": [
+    83.13214231393624,
+    100.54018520316208
+   ],
+   "free_1-100_0.0001_dI_over_IPL_300GHz_pct": 225.956353937291,
+   "free_1-100_0.0001_dI_over_IPL_100GHz_pct": 4.4835081003749356e-05,
+   "posridge_1-40_0.01_below_axis_GHz": [
+    186.50671959500858,
+    300.0
+   ],
+   "posridge_1-40_0.01_dI_over_IPL_300GHz_pct": 2.4114248476614783e-09,
+   "posridge_1-40_0.01_dI_over_IPL_100GHz_pct": 0.044210070408859194,
+   "posridge_1-40_0.0001_below_axis_GHz": [
+    161.7210126607999,
+    300.0
+   ],
+   "posridge_1-40_0.0001_dI_over_IPL_300GHz_pct": 5.59981859989368e-10,
+   "posridge_1-40_0.0001_dI_over_IPL_100GHz_pct": 0.0044965661137242735,
+   "posridge_1-100_0.01_below_axis_GHz": [
+    161.7210126607999,
+    300.0
+   ],
+   "posridge_1-100_0.01_dI_over_IPL_300GHz_pct": 5.149428651154918e-10,
+   "posridge_1-100_0.01_dI_over_IPL_100GHz_pct": 0.0017150069884432513,
+   "posridge_1-100_0.0001_below_axis_GHz": [
+    161.7210126607999,
+    300.0
+   ],
+   "posridge_1-100_0.0001_dI_over_IPL_300GHz_pct": 5.125850135694423e-10,
+   "posridge_1-100_0.0001_dI_over_IPL_100GHz_pct": 0.001569423156209536,
+   "mom2_1-40_0.01_dI_over_IPL_300GHz_pct": 20498.370310475002,
+   "mom2_1-40_0.01_dI_over_IPL_100GHz_pct": 905.6735754573308,
+   "mom2_1-40_0.0001_dI_over_IPL_300GHz_pct": 20498.480806612486,
+   "mom2_1-40_0.0001_dI_over_IPL_100GHz_pct": 905.6347886426666,
+   "cum2_1-40_0.01_dI_over_IPL_300GHz_pct": 7.83067044671468,
+   "cum2_1-40_0.01_dI_over_IPL_100GHz_pct": 20.409425448039677,
+   "cum2_1-40_0.0001_dI_over_IPL_300GHz_pct": 7.832388155038222,
+   "cum2_1-40_0.0001_dI_over_IPL_100GHz_pct": 20.413325265219278,
+   "mom2_1-100_0.01_dI_over_IPL_300GHz_pct": 5.128972161769345,
+   "mom2_1-100_0.01_dI_over_IPL_100GHz_pct": 0.0007039557992903832,
+   "mom2_1-100_0.0001_dI_over_IPL_300GHz_pct": 5.130513389679255,
+   "mom2_1-100_0.0001_dI_over_IPL_100GHz_pct": 0.0007301487367398744,
+   "cum2_1-100_0.01_dI_over_IPL_300GHz_pct": 0.026141945759225915,
+   "cum2_1-100_0.01_dI_over_IPL_100GHz_pct": 0.025261297587044797,
+   "cum2_1-100_0.0001_dI_over_IPL_300GHz_pct": 0.02612105020930068,
+   "cum2_1-100_0.0001_dI_over_IPL_100GHz_pct": 0.025188944925939656,
+   "sed_ylim_free": [
+    -0.4,
+    2.4
+   ],
+   "sed_ylim_forms": [
+    -0.1154853218657893,
+    1.892253552509745
+   ]
+  }
+ },
+ "outputs": {
+  "figures/extrapolation_positive.pdf": "d5328ec5d7caf2fe3cc53f355585d67c0b7af194a362f06fda2a529e02f540aa",
+  "figures/extrapolation_positive.png": "ed285a2d473446b685cea43ab6be627631101ffc3d54a4e4ec8d8cf2bfc8c5ed"
+ },
+ "provenance": {
+  "script": "fig_extrapolation_positive.py",
+  "script_sha256": "b9a83dd2a239718520a336492f6a343bc8b2fc8fee96d38862a5213955dcbc10",
+  "lib_sha256": {
+   "kernels.py": "b0983233f8fee93b12b10c299c0ea0d0011d72a106884029ec46107ba4121570",
+   "config.py": "78aaca6292cd15db1d820d25651c288ed47d14213b8da3d55440b7d4546e887c",
+   "basis.py": "438afd89638545dbddfd9acf51cbef67d67d8484a24dcd28d2a1755b6697eace",
+   "ensembles.py": "608dc23a9f795bd7cf4af10b84bfb618c41d3d0d5d858e878aacb410fcbc7c60",
+   "provenance.py": "32dc912a4bc75a4460d6264b1ffcf8e278e7da1c6db8e0a43e810fa31f737590"
+  },
+  "inputs_sha256": {
+   "fits_positive_ridge_products.npz": "d22f12806b429b380bbc5975ada7fb38476fd9388a5dbfbec9d32a9985d1ea8d",
+   "fits_positive_ridge_results.json": "baf64d41e56a23922085a92d3a73d77cdd0ae3a5c153d592a90293936f4c3b3e"
+  },
+  "versions": {
+   "python": "3.12.9",
+   "numpy": "2.3.5",
+   "scipy": "1.16.3",
+   "matplotlib": "3.10.8"
+  },
+  "wall_clock_s": 1.1303911209106445,
+  "finished": "2026-11-17T11:04:02+0000"
+ }
+}

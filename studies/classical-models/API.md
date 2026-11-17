@@ -162,7 +162,7 @@ A byte copy of an earlier version of the style module used for the paper's figur
 
 ## `figure_style_paper.py`
 
-A byte copy of the later version of that module, the style of the paper figures (`inputs/README.md` gives its SHA-256). It adds the palette (`INK`, `SERIES`, `ENSEMBLE`, `GREY`, `LIGHT`, with marker and line-style maps), `HALF_WIDTH`, `panel_title(ax, text)` for left-aligned panel headings, `tighten_y_labels(axes)`, `pack_row(fig, axes, gap_pt=...)`, which gives a row of panels equal widths and the narrowest gaps their labels allow, and `save(fig, name, width=WIDTH)`, which writes the PDF and PNG at a fixed width. `make_figures.py` (through `figure_plots.py`), `render_classical_limit.py`, `fig_cmb_extrapolation.py`, `emission_windows.py` and `derivative_spectra_figure.py` use it. `configure()` needs a LaTeX installation with the newtx fonts.
+A byte copy of the later version of that module, the style of the paper figures (`inputs/README.md` gives its SHA-256). It adds the palette (`INK`, `SERIES`, `ENSEMBLE`, `GREY`, `LIGHT`, with marker and line-style maps), `HALF_WIDTH`, `panel_title(ax, text)` for left-aligned panel headings, `tighten_y_labels(axes)`, `pack_row(fig, axes, gap_pt=...)`, which gives a row of panels equal widths and the narrowest gaps their labels allow, and `save(fig, name, width=WIDTH)`, which writes the PDF and PNG at a fixed width. `make_figures.py` (through `figure_plots.py`), `render_classical_limit.py`, `fig_cmb_extrapolation.py`, `fig_extrapolation_positive.py`, `emission_windows.py`, `basis_spectra_figure.py` and `harmonic_basis_figure.py` use it. `configure()` needs a LaTeX installation with the newtx fonts.
 
 ## `syncem_compat.py`
 

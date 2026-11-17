@@ -1,5 +1,5 @@
 {
- "description": "Free-moment fit of E2 over the 10-300 GHz window, for Fig. 6(c).\n\nThe fit uses the fits.py machinery (UPRE rank, whitened TSVD, N = 2 separable basis) with the\nchannels of config.CMB: 41 logarithmically spaced centres over 10-300 GHz, of which the 21 even\nchannels are fitted and the 20 odd channels are withheld. No electron family is assumed.\nThe basis keeps the energy cells this window is sensitive to, cells 6-19 of the 19-cell grid\n(gamma >= edges[5]), 42 energy columns. Truth, moments and columns are computed on the full\ngrid and the retained cells are selected, so no electron is reassigned between cells. The script\nrecords the largest contribution of the omitted cells to I_j (omitted_cells_max_over_I).\n\nNoise: one seeded realisation (paper seed, the standard normals of fits.seeded_noise) scaled\nto a standard deviation of 1% and 0.01% of I_j, so both noise levels share one realisation.\nFor each level the JSON gives the rank R*, chi2_fit and its degrees of freedom, and the\nlargest |fit - true| over the 41 channels relative to I_j (Stokes I alone and I, Q, U).\n\nReads nothing. Writes fits_cmb_results.json and fits_cmb_products.npz (channel centres, fitted\nchannel indices, true I/Q/U, fitted data and noise sd at 1%, predictions at both levels).\nRun: python fits_cmb.py\n",
+ "description": "Free-moment fit of E2 over the 10-300 GHz window (panel (c) of figures/cmb_extrapolation in 0.7.5-0.7.7).\n\nThe fit uses the fits.py machinery (UPRE rank, whitened TSVD, N = 2 separable basis) with the\nchannels of config.CMB: 41 logarithmically spaced centres over 10-300 GHz, of which the 21 even\nchannels are fitted and the 20 odd channels are withheld. No electron family is assumed.\nThe basis keeps the energy cells this window is sensitive to, cells 6-19 of the 19-cell grid\n(gamma >= edges[5]), 42 energy columns. Truth, moments and columns are computed on the full\ngrid and the retained cells are selected, so no electron is reassigned between cells. The script\nrecords the largest contribution of the omitted cells to I_j (omitted_cells_max_over_I).\n\nNoise: one seeded realisation (paper seed, the standard normals of fits.seeded_noise) scaled\nto a standard deviation of 1% and 0.01% of I_j, so both noise levels share one realisation.\nFor each level the JSON gives the rank R*, chi2_fit and its degrees of freedom, and the\nlargest |fit - true| over the 41 channels relative to I_j (Stokes I alone and I, Q, U).\n\nReads nothing. Writes fits_cmb_results.json and fits_cmb_products.npz (channel centres, fitted\nchannel indices, true I/Q/U, fitted data and noise sd at 1%, predictions at both levels).\nRun: python fits_cmb.py\n",
  "ensemble": "E2",
  "noise_fracs": [
   0.01,
@@ -65,7 +65,7 @@
  },
  "provenance": {
   "script": "fits_cmb.py",
-  "script_sha256": "003ab6a835e73b3adc1369bc02ed72191f1020ab42b7d7e898af7b3b31b0c2e3",
+  "script_sha256": "15f08ebcbf0e56a1f96790383850251ca62aef7dcc034bbe71b0c171ab0686f1",
   "lib_sha256": {
    "kernels.py": "b0983233f8fee93b12b10c299c0ea0d0011d72a106884029ec46107ba4121570",
    "config.py": "78aaca6292cd15db1d820d25651c288ed47d14213b8da3d55440b7d4546e887c",
@@ -81,7 +81,7 @@
    "numpy": "2.3.5",
    "scipy": "1.16.3"
   },
-  "wall_clock_s": 2.039681911468506,
-  "finished": "2026-11-13T16:43:58+0000"
+  "wall_clock_s": 1.9513249397277832,
+  "finished": "2026-11-17T10:53:01+0000"
  }
 }

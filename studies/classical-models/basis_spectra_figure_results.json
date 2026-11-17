@@ -1,0 +1,121 @@
+{
+ "description": "Basis spectra of two energy cells by Legendre pair, in the continuum limit (figures/basis_spectra).\n\nThe continuum kernels emit only at mu = eta, so K^nat(mu, eta) = 2 K^iso(eta) delta(mu - eta) and the\nLegendre projection of Eq. legendre spectral response is\n    K_{lk} = (2l+1)(2k+1)/2 int_{-1}^{1} P_l(eta) P_k(eta) K^iso(eta) d eta.\nK^iso is even in eta, so the projection uses Gauss-Legendre nodes on [0, 1] doubled (N_ETA nodes).\nThe kernels are those of the paper configuration at fixed B0 = 5 muG (cost.fixed_b_table), with\nthe channel response (k = 1, h_j = 0.2 nu_j) and the independent Gaussian screen. The figure shows\ncells 7 and 10 (gamma_b = 11322 and 48377), pairs (l, k) = (0, 0) and (2, 0), and for each the\norder-0, first and second derivatives in u_b, (h_b^r/r!) d^r/d(ln gamma)^r. Columns: I, and\nQ' + i U' = <e^{2i phi}> K_Q exp(-2i <Psi> lambda_j^2) exp(-i arg <e^{2i phi}>), Stokes Q and U in the\nframe of the mean projected field after removal of the mean screen rotation at each channel centre.\nEach curve is divided by its largest absolute value. Curves evaluate log-spaced centres over\n0.1-300 GHz (the main band and the extrapolation band of Sec. 5.3) with the spacing of DENSE centres\nover 0.1-10 GHz, every tenth of which is one of the 41 paper channels.\n\nThe results JSON records the checks behind the caption and the citing text: eta quadrature\nconvergence, the (0,0) projection against basis.kbar over all field directions, l <-> k symmetry\nand the zero of (1,0) on a full [-1, 1] rule, the field derivatives against a finite-difference\nstencil in B (they equal combinations of the order-0 and energy spectra), the depolarisation below\nDEPOL_NU_GHZ on centres that end there, U' without a mean Faraday depth, and the order-0 peak\nfrequencies, and for panels (i, l) the low-frequency-tail relation of the u_b spectra to order 0.\nStyle: lib/figure_style_paper.py.\n\nWrites figures/basis_spectra.{pdf,png}, basis_spectra_figure.npz and basis_spectra_figure_results.json.\nRun: python basis_spectra_figure.py\n",
+ "cells": [
+  7,
+  10
+ ],
+ "gamma_b": [
+  11321.93013221995,
+  48377.136328235836
+ ],
+ "pairs": [
+  [
+   0,
+   0
+  ],
+  [
+   2,
+   0
+  ]
+ ],
+ "B0_muG": 5.0,
+ "n_eta": 256,
+ "centres": 697,
+ "checks": {
+  "dense_vs_paper_channels": "paper channels reproduced to 1e-9 (checked in main())",
+  "centres_GHz": [
+   0.1,
+   301.9951720402016,
+   697
+  ],
+  "eta_quadrature_128_vs_256_max_rel": 3.29020643676856e-06,
+  "projection_00_vs_kbar_eta_max_1_max_rel": 0.0,
+  "symmetry_02_vs_20_max_rel": 0.0,
+  "odd_pair_10_over_00_full_range_rule": 8.321908425093417e-17,
+  "field_derivatives": {
+   "stencil_dB_vs_identity_max_rel": {
+    "(0, 0)": 1.4146430503664773e-09,
+    "(2, 0)": 2.5233882725782974e-09
+   },
+   "step_xB": 0.04,
+   "note": "includes the stencil's own truncation error; the identity is exact for the continuum kernels"
+  },
+  "depolarisation": {
+   "up_to_GHz": 0.3,
+   "bound": 0.1,
+   "max_ratio_order0_by_pair_and_cell": {
+    "(0, 0)": [
+     0.0953035192786084,
+     0.09633959896093595
+    ],
+    "(2, 0)": [
+     0.09695191169472046,
+     0.09640852973640394
+    ]
+   },
+   "within_bound": true
+  },
+  "U_over_Q_max_without_mean_depth": 1.1134662359493203e-16,
+  "order0_intensity_peak_GHz": [
+   0.6165950018614834,
+   11.220184543019654
+  ],
+  "tail_panels_i_l": {
+   "prediction_order1_over_order0": -0.1613650830642784,
+   "prediction_order2_over_order0": 0.013019345016170733,
+   "U' (0, 0)": {
+    "order1_over_order0": [
+     -0.1715994300938211,
+     -0.14921750000047257
+    ],
+    "order2_over_order0": [
+     0.007342112748636661,
+     0.017758057244990102
+    ],
+    "drawn_order2_minus_order0_max": 0.05049839147689138,
+    "drawn_order1_plus_order0_max": 0.008255833966906982
+   },
+   "U' (2, 0)": {
+    "order1_over_order0": [
+     -0.1800370137567336,
+     -0.1483587732613317
+    ],
+    "order2_over_order0": [
+     0.007591466125868918,
+     0.02108063190052457
+    ],
+    "drawn_order2_minus_order0_max": 0.04903729457263506,
+    "drawn_order1_plus_order0_max": 0.009966250776316266
+   }
+  }
+ },
+ "npz": "basis_spectra_figure.npz",
+ "npz_sha256": "040db36b594b6bc13fdf876564f06000678d8520efc928d4dbebc62e8dd49abc",
+ "figures": {
+  "figures/basis_spectra.pdf": "2f59daba5ecf0b8818c3e81e425e39abf462e1004e5f9aa97f056b2fe4b2c2cf",
+  "figures/basis_spectra.png": "e6b0bbcc161de92e670e218e3a7435d546f0b5cab4928ad66c65986a815de513"
+ },
+ "provenance": {
+  "script": "basis_spectra_figure.py",
+  "script_sha256": "79c7fcd7c398ddfcf4ebe274f0874911b24ef246f61716250389ea7fc55e0341",
+  "lib_sha256": {
+   "kernels.py": "b0983233f8fee93b12b10c299c0ea0d0011d72a106884029ec46107ba4121570",
+   "config.py": "78aaca6292cd15db1d820d25651c288ed47d14213b8da3d55440b7d4546e887c",
+   "basis.py": "438afd89638545dbddfd9acf51cbef67d67d8484a24dcd28d2a1755b6697eace",
+   "ensembles.py": "608dc23a9f795bd7cf4af10b84bfb618c41d3d0d5d858e878aacb410fcbc7c60",
+   "provenance.py": "32dc912a4bc75a4460d6264b1ffcf8e278e7da1c6db8e0a43e810fa31f737590"
+  },
+  "inputs_sha256": {
+   "lib/figure_style_paper.py": "9bf0aa49a7b84b4c382588b915c6db6b49b6cd6d411dd8266987270c0f9262e3",
+   "cost.py": "cee5bde0846fc3bbf7edc5385b2613c6b37aa92bc8589f5b8aaf4e275b1916fb"
+  },
+  "versions": {
+   "python": "3.12.9",
+   "numpy": "2.3.5",
+   "scipy": "1.16.3",
+   "matplotlib": "3.10.8"
+  },
+  "wall_clock_s": 80.62981915473938,
+  "finished": "2026-11-16T18:25:54+0000"
+ }
+}

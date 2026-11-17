@@ -41,7 +41,7 @@ Output of the validation script `harmonic_continuum_check.py` (harmonic against 
 |---|---|---|
 | `harmonic_continuum_results.json` | `aad5d7140bfa7e66818a0659c3982b6496fb18e87e439e7375e2feceba55cd12` | `harmonic_correction.py` (harmonic-versus-continuum kernels at θ = π/3), `render_classical_limit.py` (Fig. 3(b, c)) |
 
-`lib/figure_style.py` is a byte copy of an earlier version of the style module of the paper's figures (SHA-256 `e2f37e065b7e0b4f927a16819faba9f406e2733eb61977af70529e22d20cd003`), used by `bridge.py`. `lib/figure_style_paper.py` is a byte copy of the later version of that module (SHA-256 `9bf0aa49a7b84b4c382588b915c6db6b49b6cd6d411dd8266987270c0f9262e3`), with the palette and the row packing, used by `make_figures.py` (through `figure_plots.py`), `render_classical_limit.py`, `fig_cmb_extrapolation.py`, `emission_windows.py` and `derivative_spectra_figure.py`.
+`lib/figure_style.py` is a byte copy of an earlier version of the style module of the paper's figures (SHA-256 `e2f37e065b7e0b4f927a16819faba9f406e2733eb61977af70529e22d20cd003`), used by `bridge.py`. `lib/figure_style_paper.py` is a byte copy of the later version of that module (SHA-256 `9bf0aa49a7b84b4c382588b915c6db6b49b6cd6d411dd8266987270c0f9262e3`), with the palette and the row packing, used by `make_figures.py` (through `figure_plots.py`), `render_classical_limit.py`, `fig_cmb_extrapolation.py`, `fig_extrapolation_positive.py`, `emission_windows.py`, `basis_spectra_figure.py` and `harmonic_basis_figure.py`.
 
 ## `manuscript-fig3/`
 

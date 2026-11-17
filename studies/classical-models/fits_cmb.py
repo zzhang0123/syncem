@@ -1,4 +1,4 @@
-"""Free-moment fit of E2 over the 10-300 GHz window, for Fig. 6(c).
+"""Free-moment fit of E2 over the 10-300 GHz window (panel (c) of figures/cmb_extrapolation in 0.7.5-0.7.7).
 
 The fit uses the fits.py machinery (UPRE rank, whitened TSVD, N = 2 separable basis) with the
 channels of config.CMB: 41 logarithmically spaced centres over 10-300 GHz, of which the 21 even

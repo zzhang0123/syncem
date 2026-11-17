@@ -5,9 +5,9 @@ Run: python run_all.py
 
 The producing scripts run first, then the verify scripts, then the figure scripts:
 make_figures.py, which comes after the verify scripts because it reads verify_fits_results.json,
-render_classical_limit.py, fig_cmb_extrapolation.py, emission_windows.py and
-derivative_spectra_figure.py. Each script runs in its own process with this interpreter, from
-this directory, with its default arguments. The run stops at the first script that exits with a
+render_classical_limit.py, fig_cmb_extrapolation.py, fig_extrapolation_positive.py, emission_windows.py,
+basis_spectra_figure.py and harmonic_basis_figure.py. Each script runs in its own process with this interpreter,
+from this directory, with its default arguments. The run stops at the first script that exits with a
 non-zero status. The wall time of each script is printed. kp_bridge_tables.py
 only prints the tables of kp_bridge_results.json and is not run.
 
@@ -55,6 +55,11 @@ PRODUCERS = (
     ("fits_cmb.py", ()),
     ("fits_cmb_bands.py", ("fits_extrap_products.npz",)),
     ("fits_family_noise.py", ("fits_extrap_products.npz",)),
+    ("fits_mixture_forms.py", ("fits_cmb_bands_products.npz", "fits_family_noise_products.npz",
+                               "fits_extrap_products.npz")),
+    ("fits_free_positive.py", ("fits_mixture_forms_products.npz", "fits_mixture_forms_results.json")),
+    ("fits_positive_ridge.py", ("fits_mixture_forms_products.npz", "fits_free_positive_products.npz",
+                                "fits_free_positive_results.json")),
     ("kp_bridge.py", ()),
     ("harmonic_correction.py", ("forward_spectra.npz", "kp_bridge_results.json")),
     ("bridge_mpmath_check.py", ()),
@@ -86,8 +91,10 @@ FIGURES = (("make_figures.py", FIGURE_INPUTS),
                                          "fits_extrap_results.json", "fits_cmb_bands_products.npz",
                                          "fits_cmb_bands_results.json", "fits_family_noise_products.npz",
                                          "fits_family_noise_results.json")),
+           ("fig_extrapolation_positive.py", ("fits_positive_ridge_products.npz", "fits_positive_ridge_results.json")),
            ("emission_windows.py", ()),
-           ("derivative_spectra_figure.py", ()))
+           ("basis_spectra_figure.py", ()),
+           ("harmonic_basis_figure.py", ()))
 STAGES = (("producing scripts", PRODUCERS), ("verify scripts", VERIFIERS), ("figures", FIGURES))
 
 CHECKSUM_FILE = HERE / "SHA256SUMS"

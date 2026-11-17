@@ -1,4 +1,5 @@
 """CMB-window figure: extrapolation of E2 with electron families and with free moments, one row of three panels.
+It was the extrapolation figure of the paper up to 0.7.9; fig_extrapolation_positive.py now draws that figure.
 
 Every panel is a spectrum over two error subpanels on a shared 1-300 GHz axis, laid out in inches (LAY).
 The spectra show I/I_PL, the intensity divided by a power law fitted to the truth over 1-40 GHz, for fits
@@ -106,7 +107,7 @@ WRONG_TEXT = "#A84200"  # darkened vermilion for text: darker than the grey labe
 FREE_TEXT = "#8A5A00"  # darkened orange for text
 INK_TEXT = "#333333"  # direct labels of the free-moment fits in (c): ink, the line carries the colour
 LS_WRONG = (0, (4, 1.6))
-LS_FREE = "-"  # solid like the full-basis fit of Fig. 5, where dash-dot marks a misspecified model
+LS_FREE = "-"  # solid like the full-basis fits of figures/moment_fit_gallery_compact, where dash-dot marks a misspecified model
 FIT_FILL = "#F2F2F2"
 NOISE_GREY = "#999999"
 NOISE_LS = (0, (1, 1.5))

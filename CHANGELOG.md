@@ -1,5 +1,46 @@
 # Changelog
 
+## Unreleased
+
+### Classical-model study
+
+- `basis_spectra_figure.py` and `harmonic_basis_figure.py` replace
+  `derivative_spectra_figure.py`. The first draws the continuum-limit basis
+  spectra of two cells (gamma_b = 11322 and 48377) for the Legendre pairs
+  (0,0) and (2,0), in I, Q' and U', at order 0 and the first and second
+  derivatives in u_b, over 0.1-300 GHz (Fig. 4, `figures/basis_spectra`).
+  The second draws basis spectra at gamma0 = 100 without the continuum
+  approximation, from `syncem.model.build_high_order_basis`, in I, Q' and V
+  for the pairs with l, k <= 1 (Fig. 8, `figures/harmonic_basis_spectra`).
+  Their results JSONs record the checks behind the captions and the text.
+- New extrapolation study for Sec. 5.3, Fig. 7 and Tables 6 and 7 of the
+  paper. E2, E3, E4-JP and E6 are fitted over 1-40 and 1-100 GHz at 1% and
+  0.01% noise (500 shared realisations) and evaluated up to 300 GHz.
+  - `mixture_forms.py`: the moment and cumulant forms of the power-law
+    mixture, truncated at second to fourth order and fitted through the
+    energy-cell basis. The second-order cumulant form is the eLP family.
+  - `ensemble_e6.py`: E6 on any channel configuration, with joint
+    energy-field columns of total degree up to N.
+  - `fits_mixture_forms.py`: free moments and the forms, with error
+    statistics in units of I and of I_PL, polarisation errors, rejection
+    fractions, noise-free fits and the basis error at the true moments.
+  - `fits_free_positive.py`: non-negative cells (17 Chebyshev-Lobatto point
+    masses per cell, NNLS) and the largest 300 GHz intensity of fits within
+    Delta chi2 <= 1 of the minimum.
+  - `fits_positive_ridge.py`: Tikhonov fits with the UPRE penalty, with and
+    without non-negative cells, which separate the effect of the penalty
+    from that of positivity.
+  - `fig_extrapolation_positive.py` draws `figures/extrapolation_positive`
+    (Fig. 7) with its default arguments.
+  `run_all.py` runs these scripts after `fits_family_noise.py`.
+- `fig_cmb_extrapolation.py` no longer draws a figure of the paper. The
+  docstrings of it and of `fits_cmb.py`, `fits_cmb_bands.py` and
+  `fits_family_noise.py` name figure files instead of figure numbers. These
+  four scripts were rerun, with unchanged values and figures.
+- README renumbers the paper figures and tables to the current manuscript,
+  describes the new figures in group 17 and the new study in group 18, and
+  updates the paper mapping of every group.
+
 ## 0.7.9 (2026-11-15)
 
 ### Classical-model study

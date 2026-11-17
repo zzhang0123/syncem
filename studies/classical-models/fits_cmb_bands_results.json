@@ -1,5 +1,5 @@
 {
- "description": "Free-moment fits of one data set over three nested bands from 1 GHz, evaluated over 1-300 GHz, for Fig. 6(c).\n\nThe fits use the fits.py machinery (whitened TSVD, UPRE rank, N = 2 separable basis, no electron\nfamily) for E2 and E3, and keep cells 4-19 of the 19-cell grid (gamma >= 1.28e3), as fits_extrap.py\ndoes. The channels form one logarithmic grid that extends the 21 fit channels of fits_extrap.py\n(1-40 GHz, ratio 40^(1/20)) to 32 channels, up to 40^(31/20) GHz = 304.2 GHz. The three bands fit the\nfirst 21 (1-40 GHz), 26 (1-100.6 GHz) and 32 (1-304.2 GHz) channels of the same data:\n  * \"1-40\", \"1-100\", \"1-300\" name the bands by their rounded upper edges.\nTruth, moments and columns are computed on the full cell grid and the retained cells are selected.\nThe fitted moments are evaluated on the 121 channels of extrap_curves.DENSE_CFG (1-300 GHz), whose\nlast channel is the 300 GHz prediction channel of fits_extrap.py.\n\nNoise: N_REAL realisations of independent Gaussian noise with standard deviation frac * I_j on I, Q\nand U of the 32 channels at 1% and 0.01%, shared by the three bands. The first 21 channels use the standard normals\nof fits_extrap.py (its seed and array shape), so the \"1-40\" fits reproduce the 300 GHz errors of its\nfree-moment (\"basis\") fits at 1% and 0.01% noise to EXTRAP_RTOL; the script stops otherwise. Channels 22-32 use a\nsecond stream (seed + 1).\nFor each ensemble, band and noise level the JSON gives the median and 16-84% range of R* and of\n|I_fit - I|/I in each dense channel and at 300 GHz.\n\nReads fits_extrap_products.npz (for the check). Writes fits_cmb_bands_results.json and\nfits_cmb_bands_products.npz: the signed ratio I_fit/I of every realisation on the dense channels, the\nchannel centres, the true spectra on them, and the data and noise of a typical realisation per ensemble\nand noise level (typical_realisation: closest to the median 300 GHz error in all three bands).\nRun: python fits_cmb_bands.py\n",
+ "description": "Free-moment fits of one data set over three nested bands from 1 GHz, evaluated over 1-300 GHz, for figures/cmb_extrapolation (c).\n\nThe fits use the fits.py machinery (whitened TSVD, UPRE rank, N = 2 separable basis, no electron\nfamily) for E2 and E3, and keep cells 4-19 of the 19-cell grid (gamma >= 1.28e3), as fits_extrap.py\ndoes. The channels form one logarithmic grid that extends the 21 fit channels of fits_extrap.py\n(1-40 GHz, ratio 40^(1/20)) to 32 channels, up to 40^(31/20) GHz = 304.2 GHz. The three bands fit the\nfirst 21 (1-40 GHz), 26 (1-100.6 GHz) and 32 (1-304.2 GHz) channels of the same data:\n  * \"1-40\", \"1-100\", \"1-300\" name the bands by their rounded upper edges.\nTruth, moments and columns are computed on the full cell grid and the retained cells are selected.\nThe fitted moments are evaluated on the 121 channels of extrap_curves.DENSE_CFG (1-300 GHz), whose\nlast channel is the 300 GHz prediction channel of fits_extrap.py.\n\nNoise: N_REAL realisations of independent Gaussian noise with standard deviation frac * I_j on I, Q\nand U of the 32 channels at 1% and 0.01%, shared by the three bands. The first 21 channels use the standard normals\nof fits_extrap.py (its seed and array shape), so the \"1-40\" fits reproduce the 300 GHz errors of its\nfree-moment (\"basis\") fits at 1% and 0.01% noise to EXTRAP_RTOL; the script stops otherwise. Channels 22-32 use a\nsecond stream (seed + 1).\nFor each ensemble, band and noise level the JSON gives the median and 16-84% range of R* and of\n|I_fit - I|/I in each dense channel and at 300 GHz.\n\nReads fits_extrap_products.npz (for the check). Writes fits_cmb_bands_results.json and\nfits_cmb_bands_products.npz: the signed ratio I_fit/I of every realisation on the dense channels, the\nchannel centres, the true spectra on them, and the data and noise of a typical realisation per ensemble\nand noise level (typical_realisation: closest to the median 300 GHz error in all three bands).\nRun: python fits_cmb_bands.py\n",
  "rows": [
   "E2",
   "E3"
@@ -4725,7 +4725,7 @@
  },
  "provenance": {
   "script": "fits_cmb_bands.py",
-  "script_sha256": "d66e970b6d7df168ea3f53ef320b535c5ad6f40c0ac552fa7702131faecc0253",
+  "script_sha256": "0362484a3e213ff86dda09682cdb0db8f472074c93e68f89b81f2bf4dfeee2a3",
   "lib_sha256": {
    "kernels.py": "b0983233f8fee93b12b10c299c0ea0d0011d72a106884029ec46107ba4121570",
    "config.py": "78aaca6292cd15db1d820d25651c288ed47d14213b8da3d55440b7d4546e887c",
@@ -4744,7 +4744,7 @@
    "numpy": "2.3.5",
    "scipy": "1.16.3"
   },
-  "wall_clock_s": 17.240274906158447,
-  "finished": "2026-11-15T03:00:36+0000"
+  "wall_clock_s": 16.123095989227295,
+  "finished": "2026-11-17T10:53:18+0000"
  }
 }

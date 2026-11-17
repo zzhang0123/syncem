@@ -1,6 +1,6 @@
 """E2 electron-family fits over 1-40 and 1-100 GHz at two noise levels, evaluated over 1-300 GHz.
 
-For Fig. 6(a, b). E2 is fitted with the eSBPL (correct) and eLP (incorrect) families through the full
+For figures/cmb_extrapolation (a, b). E2 is fitted with the eSBPL (correct) and eLP (incorrect) families through the full
 separable columns (fits_extrap.family_fit, I, Q and U, the paper's azimuth factor) of the first 21
 (1-40 GHz) and 26 (1-100.6 GHz) channels of the nested grid of fits_cmb_bands.py (fits_cmb_bands.FULL_CFG,
 whose first 21 channels are the fit channels of fits_extrap.py):
@@ -20,7 +20,7 @@ noise level the JSON gives the median and 16-84% range of |I_fit - I|/I in each 
 Reads fits_extrap_products.npz (for the check). Writes fits_family_noise_results.json and
 fits_family_noise_products.npz: the signed ratio I_fit/I of every realisation on the dense channels, the
 in-band chi2, the channel centres, the true spectra and the 1% data of the first realisation (the data
-drawn in Fig. 6a, b) on the fitted channels of each band.
+drawn in panels (a, b)) on the fitted channels of each band.
 Run: python fits_family_noise.py
 """
 from __future__ import annotations
@@ -43,7 +43,7 @@ NAME = "E2"
 FAMILIES = ("eSBPL", "eLP")  # (correct, incorrect)
 NOISE = (1e-2, 1e-4)
 BANDS = {"1-40": 21, "1-100": 26}  # number of leading channels of fits_cmb_bands.FULL_CFG fitted
-DRAWN = 0  # the realisation whose 1% data and fits Fig. 6(a, b) draw (the first, as extrap_curves.py)
+DRAWN = 0  # the realisation whose 1% data and fits panels (a, b) draw (the first, as extrap_curves.py)
 CHECK_RTOL = 1e-6
 EXTRAP_PRODUCTS = HERE / "fits_extrap_products.npz"
 OUT_NPZ = HERE / "fits_family_noise_products.npz"

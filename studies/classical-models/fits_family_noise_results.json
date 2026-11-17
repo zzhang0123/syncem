@@ -1,5 +1,5 @@
 {
- "description": "E2 electron-family fits over 1-40 and 1-100 GHz at two noise levels, evaluated over 1-300 GHz.\n\nFor Fig. 6(a, b). E2 is fitted with the eSBPL (correct) and eLP (incorrect) families through the full\nseparable columns (fits_extrap.family_fit, I, Q and U, the paper's azimuth factor) of the first 21\n(1-40 GHz) and 26 (1-100.6 GHz) channels of the nested grid of fits_cmb_bands.py (fits_cmb_bands.FULL_CFG,\nwhose first 21 channels are the fit channels of fits_extrap.py):\n  * \"1-40\" and \"1-100\" name the bands by their rounded upper edges, as in fits_cmb_bands.py.\n  * The \"1-40\" fits use the columns and truth of fits_extrap.FIT_CFG itself, so that they can be checked\n    against fits_extrap.py to CHECK_RTOL (see main).\nThe fitted moments are evaluated on the 121 channels of extrap_curves.DENSE_CFG (1-300 GHz), whose last\nchannel is the 300 GHz prediction channel of fits_extrap.py.\n\nNoise: N_REAL realisations with standard deviation frac * I_j on I, Q and U, at 1% and 0.01%, from the\nstandard normals of fits_cmb_bands.shared_noise, so that both bands fit the same data as the free-moment\nfits of fits_cmb_bands.py. The first 21 channels use the normals of fits_extrap.py, so the \"1-40\" fits\nreproduce its 300 GHz errors and in-band chi2; the script stops otherwise. For each band, family and\nnoise level the JSON gives the median and 16-84% range of |I_fit - I|/I in each dense channel and at\n300 GHz, and the in-band chi2 (median, fraction rejected at p < 0.001).\n\nReads fits_extrap_products.npz (for the check). Writes fits_family_noise_results.json and\nfits_family_noise_products.npz: the signed ratio I_fit/I of every realisation on the dense channels, the\nin-band chi2, the channel centres, the true spectra and the 1% data of the first realisation (the data\ndrawn in Fig. 6a, b) on the fitted channels of each band.\nRun: python fits_family_noise.py\n",
+ "description": "E2 electron-family fits over 1-40 and 1-100 GHz at two noise levels, evaluated over 1-300 GHz.\n\nFor figures/cmb_extrapolation (a, b). E2 is fitted with the eSBPL (correct) and eLP (incorrect) families through the full\nseparable columns (fits_extrap.family_fit, I, Q and U, the paper's azimuth factor) of the first 21\n(1-40 GHz) and 26 (1-100.6 GHz) channels of the nested grid of fits_cmb_bands.py (fits_cmb_bands.FULL_CFG,\nwhose first 21 channels are the fit channels of fits_extrap.py):\n  * \"1-40\" and \"1-100\" name the bands by their rounded upper edges, as in fits_cmb_bands.py.\n  * The \"1-40\" fits use the columns and truth of fits_extrap.FIT_CFG itself, so that they can be checked\n    against fits_extrap.py to CHECK_RTOL (see main).\nThe fitted moments are evaluated on the 121 channels of extrap_curves.DENSE_CFG (1-300 GHz), whose last\nchannel is the 300 GHz prediction channel of fits_extrap.py.\n\nNoise: N_REAL realisations with standard deviation frac * I_j on I, Q and U, at 1% and 0.01%, from the\nstandard normals of fits_cmb_bands.shared_noise, so that both bands fit the same data as the free-moment\nfits of fits_cmb_bands.py. The first 21 channels use the normals of fits_extrap.py, so the \"1-40\" fits\nreproduce its 300 GHz errors and in-band chi2; the script stops otherwise. For each band, family and\nnoise level the JSON gives the median and 16-84% range of |I_fit - I|/I in each dense channel and at\n300 GHz, and the in-band chi2 (median, fraction rejected at p < 0.001).\n\nReads fits_extrap_products.npz (for the check). Writes fits_family_noise_results.json and\nfits_family_noise_products.npz: the signed ratio I_fit/I of every realisation on the dense channels, the\nin-band chi2, the channel centres, the true spectra and the 1% data of the first realisation (the data\ndrawn in panels (a, b)) on the fitted channels of each band.\nRun: python fits_family_noise.py\n",
  "ensemble": "E2",
  "families": [
   "eSBPL",
@@ -3176,7 +3176,7 @@
  },
  "provenance": {
   "script": "fits_family_noise.py",
-  "script_sha256": "b94982e848b589af165918e9258429cd3f36c09c3bc8b09b833b0165e0ce4473",
+  "script_sha256": "55eda230110ae168f503b322e79b4a32f1b4cf38b18f9befc58ab74bdf740b55",
   "lib_sha256": {
    "kernels.py": "b0983233f8fee93b12b10c299c0ea0d0011d72a106884029ec46107ba4121570",
    "config.py": "78aaca6292cd15db1d820d25651c288ed47d14213b8da3d55440b7d4546e887c",
@@ -3186,7 +3186,7 @@
   },
   "inputs_sha256": {
    "fits_extrap.py": "062a00f300bfb2925e5965ab9a820a394898546ba8c5c52fc968d9806d0774de",
-   "fits_cmb_bands.py": "d66e970b6d7df168ea3f53ef320b535c5ad6f40c0ac552fa7702131faecc0253",
+   "fits_cmb_bands.py": "0362484a3e213ff86dda09682cdb0db8f472074c93e68f89b81f2bf4dfeee2a3",
    "baseline_models.py": "66ec3e3c109838713139c49956417e6f8a6a2c1c901e0475bc697181246daff7",
    "fits_extrap_products.npz": "bffdae2ab108c383ff6513065450707687a920df37c7eb485a36b0798e649d51"
   },
@@ -3195,7 +3195,7 @@
    "numpy": "2.3.5",
    "scipy": "1.16.3"
   },
-  "wall_clock_s": 67.2942590713501,
-  "finished": "2026-11-15T03:01:43+0000"
+  "wall_clock_s": 63.98864483833313,
+  "finished": "2026-11-17T10:54:22+0000"
  }
 }

@@ -1,4 +1,4 @@
-"""Free-moment fits of one data set over three nested bands from 1 GHz, evaluated over 1-300 GHz, for Fig. 6(c).
+"""Free-moment fits of one data set over three nested bands from 1 GHz, evaluated over 1-300 GHz, for figures/cmb_extrapolation (c).
 
 The fits use the fits.py machinery (whitened TSVD, UPRE rank, N = 2 separable basis, no electron
 family) for E2 and E3, and keep cells 4-19 of the 19-cell grid (gamma >= 1.28e3), as fits_extrap.py
@@ -41,7 +41,7 @@ HERE = Path(__file__).resolve().parent
 ROWS = ("E2", "E3")
 N_REAL = X.N_REAL
 SEED = X.SEED
-NOISE = (1e-2, 1e-4)  # 1% and 0.01%, the noise levels of Fig. 6
+NOISE = (1e-2, 1e-4)  # 1% and 0.01%, the noise levels of figures/cmb_extrapolation
 RATIO = 40.0 ** (1 / 20)  # channel spacing of the 21 fit channels of fits_extrap.py
 N_FULL = 32
 FULL_CFG = replace(PAPER, nu_lo=1e9, nu_hi=1e9 * RATIO ** (N_FULL - 1), n_channels=N_FULL)

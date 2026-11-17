@@ -1,5 +1,5 @@
 {
- "description": "CMB-window figure: extrapolation of E2 with electron families and with free moments, one row of three panels.\n\nEvery panel is a spectrum over two error subpanels on a shared 1-300 GHz axis, laid out in inches (LAY).\nThe spectra show I/I_PL, the intensity divided by a power law fitted to the truth over 1-40 GHz, for fits\nto data with 1% noise in (a, b) and 0.01% noise in (c), on one shared range. The error subpanels give the\nmedian |I_fit - I|/I over 500 noise realisations on the 121 dense channels of extrap_curves.py, in per\ncent, for fits to data with 1% and with 0.01% noise (named in each subpanel), on one error axis with a\ndotted 1% reference line. All panels fit the same E2 data set (fits_cmb_bands.shared_noise).\n(a, b) The correct electron family (eSBPL) and an incorrect one (eLP), fitted over 1-40 GHz in (a) and\n1-100 GHz in (b) (shaded grey). The spectra show the 1% data and fits of the first realisation and, above\nthe fitted band, a light band of each family's colour for the 16-84% range of its predicted intensity.\n(a) uses extrap_curves.npz and repeats the 500 family fits of fits_extrap.py here (fits_extrap.family_fit,\nsame seed and noise) for the bands; the script stops unless the prediction-channel errors reproduce the\nsaved |dI|/I arrays of fits_extrap_products.npz, the first realisation reproduces the dense curves of\nextrap_curves.npz, the two grids agree at 300 GHz, and the 1% medians equal those of fits_family_noise.py,\nwhich gives the error subpanels of (a, b) and the spectrum of (b). The script also stops unless the data of\n(b) repeat those of (a) in the first 21 channels.\n(c) Free moments, as (a, b): the E2 data of a typical realisation (closest to the median 300 GHz error in\nall three bands, fits_cmb_bands.typical_realisation) on the 32 channels of fits_cmb_bands.py\n(1-304 GHz) and its fits over the first 21, 26 and 32 channels (1-40, 1-100 and 1-300 GHz), with the\n16-84% range over the realisations above the 40 and 100 GHz band edges. The fitted bands are nested grey\nshadings (1-100 GHz light, 1-40 GHz darker), the curve colour follows them (one orange hue, darker for a\nnarrower band), and an in-panel legend pairs each shading with its curve.\nEvery drawn median is checked against the JSON of its study. A figure legend names the curve roles.\nStyle: lib/figure_style_paper.py.\n\nReads fits_extrap_products.npz, fits_extrap_results.json (python fits_extrap.py),\nextrap_curves.npz (python extrap_curves.py), fits_cmb_bands_products.npz and\nfits_cmb_bands_results.json (python fits_cmb_bands.py), fits_family_noise_products.npz and\nfits_family_noise_results.json (python fits_family_noise.py).\nWrites figures/cmb_extrapolation.{pdf,png} and fig_cmb_extrapolation_results.json.\nRun: python fig_cmb_extrapolation.py\n",
+ "description": "CMB-window figure: extrapolation of E2 with electron families and with free moments, one row of three panels.\nIt was the extrapolation figure of the paper up to 0.7.9; fig_extrapolation_positive.py now draws that figure.\n\nEvery panel is a spectrum over two error subpanels on a shared 1-300 GHz axis, laid out in inches (LAY).\nThe spectra show I/I_PL, the intensity divided by a power law fitted to the truth over 1-40 GHz, for fits\nto data with 1% noise in (a, b) and 0.01% noise in (c), on one shared range. The error subpanels give the\nmedian |I_fit - I|/I over 500 noise realisations on the 121 dense channels of extrap_curves.py, in per\ncent, for fits to data with 1% and with 0.01% noise (named in each subpanel), on one error axis with a\ndotted 1% reference line. All panels fit the same E2 data set (fits_cmb_bands.shared_noise).\n(a, b) The correct electron family (eSBPL) and an incorrect one (eLP), fitted over 1-40 GHz in (a) and\n1-100 GHz in (b) (shaded grey). The spectra show the 1% data and fits of the first realisation and, above\nthe fitted band, a light band of each family's colour for the 16-84% range of its predicted intensity.\n(a) uses extrap_curves.npz and repeats the 500 family fits of fits_extrap.py here (fits_extrap.family_fit,\nsame seed and noise) for the bands; the script stops unless the prediction-channel errors reproduce the\nsaved |dI|/I arrays of fits_extrap_products.npz, the first realisation reproduces the dense curves of\nextrap_curves.npz, the two grids agree at 300 GHz, and the 1% medians equal those of fits_family_noise.py,\nwhich gives the error subpanels of (a, b) and the spectrum of (b). The script also stops unless the data of\n(b) repeat those of (a) in the first 21 channels.\n(c) Free moments, as (a, b): the E2 data of a typical realisation (closest to the median 300 GHz error in\nall three bands, fits_cmb_bands.typical_realisation) on the 32 channels of fits_cmb_bands.py\n(1-304 GHz) and its fits over the first 21, 26 and 32 channels (1-40, 1-100 and 1-300 GHz), with the\n16-84% range over the realisations above the 40 and 100 GHz band edges. The fitted bands are nested grey\nshadings (1-100 GHz light, 1-40 GHz darker), the curve colour follows them (one orange hue, darker for a\nnarrower band), and an in-panel legend pairs each shading with its curve.\nEvery drawn median is checked against the JSON of its study. A figure legend names the curve roles.\nStyle: lib/figure_style_paper.py.\n\nReads fits_extrap_products.npz, fits_extrap_results.json (python fits_extrap.py),\nextrap_curves.npz (python extrap_curves.py), fits_cmb_bands_products.npz and\nfits_cmb_bands_results.json (python fits_cmb_bands.py), fits_family_noise_products.npz and\nfits_family_noise_results.json (python fits_family_noise.py).\nWrites figures/cmb_extrapolation.{pdf,png} and fig_cmb_extrapolation_results.json.\nRun: python fig_cmb_extrapolation.py\n",
  "noise": "0.01",
  "panels": [
   [
@@ -149,7 +149,7 @@
  },
  "provenance": {
   "script": "fig_cmb_extrapolation.py",
-  "script_sha256": "9f11074b75422cad607b34aca364bbe7ccbdab872f3c750604ef2346b69e7f54",
+  "script_sha256": "426f3f6fa142885622ce2c59398152f1f4833ccba30ce1a234ce23be3531c69e",
   "lib_sha256": {
    "kernels.py": "b0983233f8fee93b12b10c299c0ea0d0011d72a106884029ec46107ba4121570",
    "config.py": "78aaca6292cd15db1d820d25651c288ed47d14213b8da3d55440b7d4546e887c",
@@ -162,9 +162,9 @@
    "fits_extrap_results.json": "e9fe576f26da7078acdcfc1b1524a8cea559f709e9f2b738db17273bd21fb9c7",
    "extrap_curves.npz": "02327edff2c2a09f03d3c9b8f6f12d6ef776cbde4d80f938d1b6e6a224942103",
    "fits_cmb_bands_products.npz": "4336e08b5abfce6cb3750973566282339c9aa09c3eddaa76acd7ca83e6d5c868",
-   "fits_cmb_bands_results.json": "55cde469fc25c889b9053426cd379ee4d687396857bd682389b2a9f81ee411be",
+   "fits_cmb_bands_results.json": "cde510f87a2b5988e1a8ac4d4bda199a3a6d83acc3d1669341e4d425d92914cb",
    "fits_family_noise_products.npz": "b63e11111c0bf549b59715c8572bacffbe771e545c39bb73f72586a385cfc565",
-   "fits_family_noise_results.json": "97e0013c63a832b29a30cdba0e7693b1ffe851051ee553a658c2505a2cb134c6",
+   "fits_family_noise_results.json": "a3b31485fc7a186f60357142141436c2b4ae88f7fb209042c366c8d146825989",
    "fits_extrap.py": "062a00f300bfb2925e5965ab9a820a394898546ba8c5c52fc968d9806d0774de",
    "lib/figure_style_paper.py": "9bf0aa49a7b84b4c382588b915c6db6b49b6cd6d411dd8266987270c0f9262e3"
   },
@@ -174,7 +174,7 @@
    "scipy": "1.16.3",
    "matplotlib": "3.10.8"
   },
-  "wall_clock_s": 22.277591943740845,
-  "finished": "2026-11-15T03:07:36+0000"
+  "wall_clock_s": 15.961332082748413,
+  "finished": "2026-11-17T11:04:00+0000"
  }
 }
