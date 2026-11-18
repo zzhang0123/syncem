@@ -34,7 +34,8 @@ markers = ["slow: long-running tests, excluded with -m 'not slow'"]
 [tool.ruff]
 # Verbatim copy of the manuscript reference; its hashes are checked by a test.
 # studies/ holds the scripts of the paper's study as they were run.
-extend-exclude = ["tests/model/reference", "studies"]
+# design/ holds the 0.8 design and its prototypes, outside the package.
+extend-exclude = ["tests/model/reference", "studies", "design"]
 
 [tool.ruff.lint]
 # I is the physical Stokes-I symbol throughout this package.
@@ -42,4 +43,4 @@ ignore = ["E741"]
 
 [tool.black]
 target-version = ["py312"]
-extend-exclude = "(tests/model/reference/|^/studies/)"
+extend-exclude = "(tests/model/reference/|^/studies/|^/design/)"
