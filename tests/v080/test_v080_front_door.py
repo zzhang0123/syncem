@@ -19,6 +19,8 @@ NAMES = {
     "MomentIndex": "syncem.lattice.index",
     "Moments": "syncem.lattice.moments",
     "ContinuumKernel": "syncem.base.continuum",
+    "kernel": "syncem.base.user",
+    "UserKernel": "syncem.base.user",
     "Kernel": "syncem.base.kernel",
     "Modes": "syncem.base.kernel",
     "PhaseLaw": "syncem.base.phase",

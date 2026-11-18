@@ -26,7 +26,15 @@ from typing import Any, Literal, Protocol, runtime_checkable
 import equinox as eqx
 import numpy as np
 
-from ..units import Quantity, UnitError, dimension_of, parse, to_canonical
+from ..units import (
+    BARE,
+    CANONICAL,
+    Quantity,
+    UnitError,
+    dimension_of,
+    parse,
+    to_canonical,
+)
 
 __all__ = ["KINDS", "Placeable", "SYNCHROTRON_VARIABLES", "Variable"]
 
@@ -72,6 +80,36 @@ class Variable(eqx.Module):
     usual: tuple[float, float] | None = eqx.field(static=True)
     default: str | None = eqx.field(static=True)
     display_unit: str = eqx.field(static=True)
+
+    def __init__(
+        self,
+        name: str,
+        meaning: str = "",
+        kind: str = "real",
+        unit: str = "",
+        bare: bool | None = None,
+        usual: tuple[float, float] | None = None,
+        default: str | None = None,
+        display_unit: str | None = None,
+    ):
+        """Positional as in the field order, or by keyword: ``Variable("a", kind="positive", unit="cm", meaning=...)``.
+
+        ``bare=None`` reads bare numbers when the unit's dimension takes them (``syncem.units.BARE``).
+        ``display_unit=None`` takes ``unit``.
+        """
+        dimension = dimension_of(unit)
+        if dimension is None:
+            raise ValueError(f"Variable {name!r}: unit {unit!r} has no named dimension")
+        self.name = name
+        self.meaning = meaning or name
+        self.kind = kind
+        self.unit = (
+            CANONICAL[dimension] if unit and dimension != "dimensionless" else unit
+        )
+        self.bare = dimension in BARE if bare is None else bool(bare)
+        self.usual = usual
+        self.default = default
+        self.display_unit = unit if display_unit is None else display_unit
 
     def __check_init__(self) -> None:
         if self.kind not in KINDS:

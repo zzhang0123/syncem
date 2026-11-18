@@ -120,10 +120,10 @@ class AveragedKernel(eqx.Module):
         if unknown:
             raise ValueError(f"{sorted(unknown)} are not variables of the kernel")
         full = {**dict(self.fixed), **point}
-        i, p = self._legendre(channels, full, 0)
-        return Modes(I=i, V=jnp.zeros_like(i), P=p)
+        i, v, p = self._legendre(channels, full, 0)
+        return Modes(I=i, V=v, P=p)
 
-    def _legendre(self, channels: Any, point: dict, level: int) -> tuple[Any, Any]:
+    def _legendre(self, channels: Any, point: dict, level: int) -> tuple[Any, Any, Any]:
         if level == len(self.legendre):
             return self._average(channels, point, 0)
         name, degree, n = self.legendre[level]
@@ -135,29 +135,39 @@ class AveragedKernel(eqx.Module):
         weights = jnp.asarray(
             w[:, None] * table * (2 * np.arange(degree + 1) + 1) / 2.0
         )
-        i, p = jax.vmap(
-            lambda v: self._legendre(channels, {**point, name: v}, level + 1)
+        i, v, p = jax.vmap(
+            lambda x_: self._legendre(channels, {**point, name: x_}, level + 1)
         )(jnp.asarray(x))
         # Degree axis right after the channel axes, so the Legendre axes follow their declared order.
-        return jnp.einsum("nc...,nl->cl...", i, weights), jnp.einsum(
-            "nwc...,nl->wcl...", p, weights
+        spin0 = "nc...,nl->cl..."
+        return (
+            jnp.einsum(spin0, i, weights),
+            jnp.einsum(spin0, v, weights),
+            jnp.einsum("nwc...,nl->wcl...", p, weights),
         )
 
-    def _average(self, channels: Any, point: dict, level: int) -> tuple[Any, Any]:
+    def _average(self, channels: Any, point: dict, level: int) -> tuple[Any, Any, Any]:
         if level == len(self.averaged):
             modes = self.kernel.channel(channels, point, phase=self.phase)
-            return modes.I, modes.P
+            i = jnp.asarray(modes.I)
+            v = jnp.zeros_like(i) if modes.V is None else jnp.asarray(modes.V)
+            if v.shape != i.shape:
+                raise ValueError(
+                    f"kernel {getattr(self.kernel, 'name', self.kernel)} returned V of shape {v.shape}, and "
+                    f"the protocol needs the shape of I, {i.shape}"
+                )
+            return i, v, modes.P
         name, rule = self.averaged[level]
         nodes, probs = rule(point)
 
-        def one(value: Any) -> tuple[Any, Any]:
+        def one(value: Any) -> tuple[Any, Any, Any]:
             return self._average(channels, {**point, name: value}, level + 1)
 
         if level == 0 and self.outer_batch is not None:
-            i, p = jax.lax.map(one, nodes, batch_size=self.outer_batch)
+            values = jax.lax.map(one, nodes, batch_size=self.outer_batch)
         else:
-            i, p = jax.vmap(one)(nodes)
-        return jnp.tensordot(probs, i, axes=1), jnp.tensordot(probs, p, axes=1)
+            values = jax.vmap(one)(nodes)
+        return tuple(jnp.tensordot(probs, a, axes=1) for a in values)
 
 
 class _CoreAdapter(eqx.Module):
