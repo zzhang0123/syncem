@@ -119,7 +119,7 @@ se.plan(pop, ([0.408, 1.4, 2.3, 4.8, 23.0], "GHz"), strict=True)   # raises and 
 
 ```python
 import numpy as np, jax
-obs     = se.Channels.log(0.1, 10, 41, unit="GHz", fractional_width=0.08)
+obs     = se.Channels.log(0.1, 10, 41, unit="GHz", half_width=0.2)
 known   = dict(B=se.Uniform(4, 6, unit="uG"), eta=se.Uniform(-0.5, 0.5), mu=se.Isotropic(),
                phi=se.AzimuthFactor(0.4 * np.exp(0.5j)), depth=se.GaussianScreen(mean=8.0, sigma=0.5))
 GR      = dict(lo=300, hi=2.9626e6)
@@ -135,12 +135,12 @@ The acceptance values are 2.56e-2, 8.58e-4 and 8.76e-5 at `N = 0, 2, 4` (Spec Se
 (c) Free-moment fit with UPRE and prediction at 300 GHz (Spec G3, G6):
 
 ```python
-band = se.Channels.log(1, 40 ** (31 / 20), 32, unit="GHz", fractional_width=0.08)
+band = se.Channels.log(1, 40 ** (31 / 20), 32, unit="GHz", half_width=0.2)
 e2   = e1.replace(gamma=se.BrokenPowerLaw(2.0, 3.2, 7800, smoothness=2.0, column=1.0, **GR))
 truth = se.spectral_basis(e2, band, lattice=lattice).direct(e2)
 d26  = se.StokesData.simulate(truth, noise=0.01, key=jax.random.key(1))[:26]      # 1 to 100.6 GHz
 fit  = se.fit(e2.replace(gamma=se.FreeMoments(cells=slice(3, None))), d26, lattice=lattice)  # rank=se.UPRE()
-p300 = fit.predict(se.Channels.at([300], unit="GHz", fractional_width=0.08))
+p300 = fit.predict(se.Channels.at([300], unit="GHz", half_width=0.2))
 p300.I, p300.sigma, p300.unconstrained   # noise-only sigma, row fraction outside the retained directions
 ```
 

@@ -174,7 +174,7 @@ Every applied default is a `[default]` tag in `print(plan)`, `print(spectrum)` a
 | Default | Value | Taken from | Also reported in |
 |---|---|---|---|
 | precision | float64 at import | present behaviour (`PKG/syncem/__init__.py:41-44`) | import docstring |
-| channel response | a pair `(frequencies, unit)` is monochromatic (kernels without lines only). `fractional_width=f` gives the unit-area bump of PAPER eq: forward response families | PAPER:396-403, 1119 | header line |
+| channel response | a pair `(frequencies, unit)` is monochromatic (kernels without lines only). `fractional_width=f` gives the unit-area bump of PAPER eq: forward response families with spread `f nu_j`, `half_width=x` the same bump with support half-width `x nu_j` (decision 124) | PAPER:396-403, 1119 | header line |
 | channel normalisation | unit area, values per Hz | paper. Reverses `unit_peak` of `Channels.bump` | unit line |
 | channel quadrature | 64 nodes per channel, doubled while the `quadrature` term exceeds 1e-8 of I, at most three times | `channels.py:138`. J3 C12: 64 against 800 nodes changes the paper columns by 2.0e-12 | `basis.record`, ledger |
 | kernel | per cell, or on the averaged support of the primary variable when it is not celled: continuum where the cell lies at `gamma >= 300` and V is not requested. Otherwise harmonic when `required_m_max <= 16368` (harmonic cells: 0.9). Otherwise `RegimeError`. The energy range is derived first, with the kernel passed or with the continuum window (Sec. 4.6) | PAPER:420, `kernels.py:110`, `_basis_core.py:36`, r2-18 | `basis` line, cells below 300 listed |
@@ -301,7 +301,9 @@ class Variable(eqx.Module):                      # all fields S
     unit: str                                    # canonical unit
     bare: bool                                   # a bare number is read in the canonical unit
     usual: tuple[float, float] | None            # usual range, checked at the boundary
-    default: Distribution | None                 # neutral declaration when undeclared. None: required
+    default: str | None                          # name of the neutral declaration when undeclared ("Isotropic"), resolved by
+                                                 #   planning, because distributions are a later layer. None: required
+    display_unit: str                            # unit used in messages and remedies ("uG" for B)
 
 class Kernel(Protocol):
     name: str
@@ -343,8 +345,8 @@ se.Modes                                         # NamedTuple I, V, P of PKG/syn
 class Channels(eqx.Module):                      # subclass of PKG/syncem/model/channels.py:106, unit-area normalisation
     centres_hz, widths_hz, support, nodes, weights            # A
     family, normalisation, n_nu, unit                         # S
-    Channels.log(lo, hi, n, *, unit, fractional_width=None, n_nu=64)
-    Channels.at(frequencies, *, unit, fractional_width=None, n_nu=64)
+    Channels.log(lo, hi, n, *, unit, fractional_width=None, half_width=None, n_nu=64)   # f: h_j = f nu_j / sigma_rho.
+    Channels.at(frequencies, *, unit, fractional_width=None, half_width=None, n_nu=64)  #   half_width=x: h_j = x nu_j
     Channels.from_bandpass(tables, *, unit, n_nu=256)         # one (frequencies, response) table per channel
     channels[rows] -> Channels
 ```
@@ -1484,7 +1486,7 @@ Day counts for steps that P5 also lists are P5's. The others are estimates. `pro
 | # | Step | Acceptance test | Days |
 |---|---|---|---|
 | 0 | guards of Sec. 9.7 | passes before any other change | 0.5 |
-| 1 | `units`, `Quantity`, `Variable`, `Channels` constructors, error classes | `B=5.0`, `B=se.Uniform(4, 6)`, `B=se.Cells.linear(2, 8, 3)` and `eta=se.Uniform(10, 50, unit="deg")` raise. Hz against GHz pins. `Channels.log(0.1, 10, 41, unit="GHz", fractional_width=0.08, n_nu=400)` equals `Config.chan_nu` and `chan_w` to 1e-14 | 2 |
+| 1 | `units`, `Quantity`, `Variable`, `Channels` constructors, error classes | `B=5.0`, `B=se.Uniform(4, 6)`, `B=se.Cells.linear(2, 8, 3)` and `eta=se.Uniform(10, 50, unit="deg")` raise. Hz against GHz pins. `Channels.log(0.1, 10, 41, unit="GHz", half_width=0.2, n_nu=400)` equals `Config.chan_nu` and `chan_w` to 1e-14. `fractional_width=f` gives the spread `f nu_j` of PAPER eq: forward response families. The `Uniform` and `Cells` cases use stand-ins with the placement protocol until those classes exist | 2 |
 | 2 | `Cells`, `CellTable`, `Legendre`, `AzimuthHarmonic`, `Lattice`, `from_cells`, `refine(where=)`, `MomentIndex`, `Moments`, `recentre`, `coarsen` | lattice rows 57, 171, 114, 513 (E4-KP), 513 (energy and depth, Sec. 4.4), 2430. Depth powers `s = 0..N_d` on every row of the other variables, outside the total degree (Sec. 4.3). Position `b (N + 1) + r`. Interval selectors on a refined table. `recentre` and `coarsen` exact to 1e-12 on a density with a cut-off inside a cell. A `(gamma, B)` table with one corner product cell split 2 x 2: row count, index positions, `coarsen` back to the parent table to 1e-12, and a prediction equal to the uniformly refined tensor table on the shared cells. Overlapping boxes raise. The G15 lattice `lat8` (2 737 152 rows) builds its arithmetic index and key without per-row objects, and the size cap refuses it at the default with the numbers of Sec. 2.5 | 6 |
 | 3 | kernel protocol, capabilities, continuum adapter, `AveragedKernel`, core provider, re-expansion | columns equal the oracle in cells 1, 10, 19 at `N = 0..4` to 1e-6 of the order-0 peak (measured 2.4e-12 in cells 10 and 19, 7.5e-9 in cell 1, with `x_min = 1e-12`). The adapter's `x_min` admits the last cell at the lowest channel node (T3). Joint energy-field columns equal the scaling-relation columns to 1e-10. `EnergyWindow` reproduces the edges of `synth/window.py` | 4 |
 | 4 | jet provider in `d` directions | T16: a polynomial kernel in three variables against closed-form derivatives to 1e-12. The jet equals the core provider at `d = 2`. G16 columns, and cells on `eta` with the continuum kernel routed to the jet for the whole product cell (Sec. 12 row (n)), against finite differences of the averaged kernel. The table comparisons of T16 run in step 6 | 4 |
@@ -1496,7 +1498,7 @@ Day counts for steps that P5 also lists are P5's. The others are estimates. `pro
 | 10 | separable fits, moment and cumulant forms, compressed likelihood on `fit.retained`, basis-parametric and parametrised-factor bilinear fits, `se.problem` with `PlanRecord` and sums of problems, `response` and `discrepancy` terms | family and parameter rows of Sec. 9.6. `log_prob` gradients against finite differences, including `jax.grad` through the nested quadrature of a conditional with `params=`. `ImproperPosterior` without a prior. T18. `eqx.filter_jit` of `log_prob` without recompilation. G14 with `B` averaged, its free-moment variant, and `fit_r` with `gamma=se.FreeMoments()` on `lat_b` | 9 |
 | 11 | bilinear shared factor, and larger factors | E5 one-factor row. `gamma` and `B` both `FreeMoments` on `lat_b` from the singular-pair start | 3 |
 | 12 | prints, defaults table, `to(unit)`, `save` and `load`, `se.paper`, `se.compare`, docs, changelog, `DESIGN.md` Sec. 7.5, version 0.8.0 | gallery G1 to G10, G12, G13, G14 (without `lat_s`), G15 (without the `FieldScaling` lattice) and G16 run as tests. The fit print of Sec. 7.1 against `PlanRecord.defaults` and `caveats`. Docs build without warnings. Docstring and label tests | 6 |
-| 13 | 0.8.1 bridge: `from_single_reference`, the harmonic single-reference basis of `Samples` on `Lattice.single` | Sec. 4.2 benchmark row | 3 |
+| 13 | 0.8.1 bridge: `from_single_reference`, the harmonic single-reference basis of `Samples` on `Lattice.single` | Sec. 4.2 benchmark row | 3 Amended by decision 124 |
 
 About 76 working days. P5 estimated 38 for its steps 0 to 9 on the fixed layout. The general container, the jet provider, the per-node stack mode, the plan with its preconditions, the column map, the table provider, `from_cells`, `Ray`, R3a, R4a, `BasisSum`, the parametrised-factor kind, cells on `mu` under `Beaming` and `AzimuthFourier(m_max)` (about 4 days in step 7) account for the difference.
 
@@ -1508,7 +1510,7 @@ Shared setup for G1 and G3 to G10 (PAPER tab: classical ensembles). `se.paper` r
 import numpy as np, jax, jax.numpy as jnp
 import syncem as se
 
-obs     = se.Channels.log(0.1, 10, 41, unit="GHz", fractional_width=0.08)        # h_j = 0.2 nu_j
+obs     = se.Channels.log(0.1, 10, 41, unit="GHz", half_width=0.2)        # h_j = 0.2 nu_j
 known   = dict(B=se.Uniform(4, 6, unit="uG"), eta=se.Uniform(-0.5, 0.5), mu=se.Isotropic(),
                phi=se.AzimuthFactor(0.4 * np.exp(0.5j)), depth=se.GaussianScreen(mean=8.0, sigma=0.5))
 GR      = dict(lo=300, hi=2.9626e6)
@@ -1598,8 +1600,8 @@ fit_f.derived("paper_coefficient")                      # A of PAPER tab: classi
 
 **G6. Extrapolation from 26 channels to 300 GHz**
 ```python
-band  = se.Channels.log(1, 40 ** (31 / 20), 32, unit="GHz", fractional_width=0.08)      # ratio 40^(1/20)
-dense = se.Channels.log(1, 300, 121, unit="GHz", fractional_width=0.08)
+band  = se.Channels.log(1, 40 ** (31 / 20), 32, unit="GHz", half_width=0.2)      # ratio 40^(1/20)
+dense = se.Channels.log(1, 300, 121, unit="GHz", half_width=0.2)
 e2    = e1.replace(gamma=se.BrokenPowerLaw(2.0, 3.2, 7800, smoothness=2.0, column=1.0, **GR))
 b32   = se.spectral_basis(e2, band, lattice=lattice)
 d26   = se.StokesData.simulate(b32.direct(e2), noise=0.01, key=jax.random.key(1))[:26]  # 1 to 100.6 GHz
@@ -1709,10 +1711,10 @@ s2   = se.predict(sim, ch, lattice=many, kernel=se.HarmonicKernel(), stokes="IQU
 
 **G12. Per-pixel fits and 300 GHz maps**
 ```python
-bands = se.Channels.at(band_ghz, unit="GHz", fractional_width=0.08)
+bands = se.Channels.at(band_ghz, unit="GHz", half_width=0.2)
 maps  = se.StokesData(bands, stokes=stokes, sigma=sigma, unit="K_CMB")           # stokes (n_pix, n_ch, 3), sigma (n_ch, 3) or per pixel
 sky   = se.Population(se.FreeMoments("gamma", "phi"), B="5 uG", eta=se.Uniform(-0.5, 0.5))
-ch300 = se.Channels.at([300], unit="GHz", fractional_width=0.08)
+ch300 = se.Channels.at([300], unit="GHz", half_width=0.2)
 fit   = se.fit(sky, maps, predict=ch300)                # default lattice covering 300 GHz. UPRE per pixel, no cap (I, Q, U data)
 m300  = fit.predict(ch300).to("K_CMB")
 m300.I, m300.sigma, m300.unconstrained                  # (n_pix, 1), (n_pix, 1, 3), (n_pix, 1, 3)
@@ -1766,7 +1768,7 @@ fit_s.column, fit_s.source_column                       # effective column at 5 
 ray  = se.Ray(step=(ds, "pc"), B_vector=(Bxyz, "uG"), thermal_density=(ne, "cm-3"), electron_density=(ncr, "cm-3"),
               electrons=se.PowerLaw(p_s, lo=300, hi=1e7))                        # arrays (n_ray, n_s, ...), third field axis along the ray
 spec = se.predict(ray[0], obs)                          # one sightline: direct integration over the steps, depth exact (rule R8)
-hi   = se.Channels.log(1, 40, 21, unit="GHz", fractional_width=0.08)
+hi   = se.Channels.log(1, 40, 21, unit="GHz", half_width=0.2)
 lat8 = se.Lattice(gamma=se.Cells.log(300, 1e7, 22), B=se.Cells.log("1 uG", "30 uG", 4), eta=se.Legendre(8),
                   phi=se.AzimuthHarmonic(), depth=se.Cells.linear(-60, 60, 48, order=3), order=2)
 print(se.plan(ray, hi, lattice=lat8, max_columns=1_200_000))   # tau_max h = 0.35 at 0.8 GHz, the lowest support frequency,
@@ -1958,6 +1960,8 @@ both   = (se.problem(free, data_I, lattice=lattice)
 | 121 | SciPy is a base dependency. The non-negative and bounded solvers import it lazily, following `high_order_harmonic.py:138-146`, and the publish smoke test installs it | an extra `syncem[fit]` (v5 recommendation) | owner, open question 4 (OWNER_DECISIONS.md). Import time matters, so the lazy import stays |
 | 122 | `AzimuthFourier(m_max)` ships in 0.8.0, and R4a (b) routes through it instead of raising. An averaged child of a `phi` resolved by `AzimuthHarmonic`, and a child of a `phi` in a `FreeMoments` or `NonNegativeCells` block outside that block, take the rows `<exp(i k phi) ...>`, `0 <= k <= m_max + 2`. Its truncation term and acceptance tests are in step 7 of Sec. 10.2, and 0.8.0 grows to about 76 days | `RoleError` in 0.8.0 naming route (a) and `average=`, with `AzimuthFourier` in 0.9 (v5 recommendation) | owner, open question 19 (OWNER_DECISIONS.md), about 4 more days. The truncation term is zero when `Kbar(phi)` of every averaged child is a trigonometric polynomial of degree at most `m_max`, and measured otherwise (Sec. 4.2) |
 | 123 | `fit/_linear_core.py` is not edited. The new fitting layer reuses `solve` and `linearised_bias` and computes the split `response` and `discrepancy` terms in `fitting/linear.py` | editing `bias_bound` in place (v6 Sec. 9.2) | the Sec. 9.7 guard pins the v0.7.10 hash of every existing file, `syncem.model` stays unchanged in 0.8, and the manuscript cites v0.7.10 |
+| 124 | `Channels.log` and `Channels.at` take `half_width=x` (`h_j = x nu_j`) beside `fractional_width=f` (`h_j = f nu_j / sigma_rho`). The paper's configurations are written with `half_width=0.2` | `fractional_width=` only (decision 13) | `sigma_rho = 0.39764`, so `f = 0.08` gives `h_j = 0.2012 nu_j`. PAPER:1069 states `h_j = 0.2 nu_j` and labels it `f = 8.0%` after rounding. With `half_width=0.2` the channels equal the study's to 3e-15, with `f = 0.08` they differ by 0.6 per cent |
+| 125 | `SyncEMError` and `UnitError` are defined in `syncem.units` and re-exported by `values.errors`. Declaration objects meet `Variable.place` through a placement protocol (`given_unit`, `is_point`, optional `carries_values` for declarations that hold no values of the variable, `as_cosine` for a point given as an angle on a cosine, `unit_remedy`, `angle_remedy`, `noun`), so `base` imports no distribution or lattice class. `Variable.default` is the name of the neutral declaration | `UnitError` in `values`, `Variable.default` as a `Distribution` | `units` precedes `values` in the layer order of Sec. 3.1 and raises `UnitError` itself, and `base` precedes `distributions` |
 
 ## 14. Owner decisions on the open questions
 

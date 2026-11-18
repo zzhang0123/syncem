@@ -97,3 +97,41 @@ __all__ = [
     "F",
     "G",
 ]
+
+
+# Lazy front door of the 0.8 layer (design/0.8/SPEC.md Sec. 9.1). Names load their module on first
+# use, so ``import syncem`` loads neither ``syncem.model`` nor SciPy.
+_FRONT_DOOR = {
+    "Channels": "syncem.base.channels",
+    "Variable": "syncem.base.variables",
+    "Quantity": "syncem.units",
+    **{
+        name: "syncem.values.errors"
+        for name in (
+            "UnitError",
+            "RoleError",
+            "RegimeError",
+            "SpecifiedMismatch",
+            "NothingToPredict",
+            "DataError",
+            "DepthExpansionError",
+            "SizeError",
+            "ImproperPosterior",
+        )
+    },
+}
+
+
+def __getattr__(name):
+    module = _FRONT_DOOR.get(name)
+    if module is None:
+        raise AttributeError(f"module 'syncem' has no attribute {name!r}")
+    import importlib
+
+    value = getattr(importlib.import_module(module), name)
+    globals()[name] = value
+    return value
+
+
+def __dir__():
+    return sorted(set(globals()) | set(_FRONT_DOOR))

@@ -57,7 +57,36 @@ def _public_modules():
     return tuple(sorted(names))
 
 
-MODULES = _public_modules()
+def _new_layer_modules():
+    """Public modules of the 0.8 layers (design/0.8/SPEC.md Sec. 9.7): ``syncem.units`` and the subpackages."""
+    names = ["syncem.units"]
+    for layer in NEW_LAYERS:
+        try:
+            package = importlib.import_module(f"syncem.{layer}")
+        except ModuleNotFoundError:
+            continue
+        names += [f"syncem.{layer}"] + [
+            f"syncem.{layer}.{i.name}"
+            for i in pkgutil.iter_modules(package.__path__)
+            if not i.name.startswith("_")
+        ]
+    return tuple(sorted(names))
+
+
+NEW_LAYERS = (
+    "values",
+    "base",
+    "distributions",
+    "lattice",
+    "records",
+    "engine",
+    "population",
+    "planning",
+    "results",
+    "fitting",
+)
+MODEL_MODULES = _public_modules()
+MODULES = MODEL_MODULES + _new_layer_modules()
 
 
 def _public_objects(module):
@@ -179,7 +208,7 @@ def test_package_docstring_lists_every_public_model_module():
 
     doc = " ".join((syncem.__doc__ or "").split())
     missing = []
-    for module_name in MODULES:
+    for module_name in MODEL_MODULES:
         short = module_name.removeprefix("syncem.model.")
         if not re.search(rf"(?<![\w.]){re.escape(short)}\b", doc):
             missing.append(short)

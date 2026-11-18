@@ -280,3 +280,9 @@ def test_type_checking_alias_is_exempt():
 def test_local_name_type_checking_is_not_exempt():
     source = "TYPE_CHECKING = True\nif TYPE_CHECKING:\n    from syncem.planning.plan import plan\n"
     assert len(_violations("syncem.lattice.lattice", source)) == 1
+
+
+def test_front_door_may_use_computed_dynamic_imports():
+    source = "import importlib\ndef __getattr__(name):\n    return importlib.import_module(TABLE[name])\n"
+    assert _violations("syncem", source) == []
+    assert len(_violations("syncem.engine.cache", source)) == 1

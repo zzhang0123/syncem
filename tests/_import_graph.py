@@ -285,6 +285,8 @@ def _walk(tree: ast.AST, ctx: _Context, guards: _Guards):
 
 def _violation(layer: str, ctx: _Context, where: str, target: str) -> str | None:
     if target == COMPUTED:
+        if layer == "front":  # the front layer may import every layer
+            return None
         return f"{where}: dynamic import with a computed name, which the layer check cannot follow"
     if not _in_package(target):
         return None
