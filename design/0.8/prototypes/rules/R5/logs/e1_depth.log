@@ -1,0 +1,46 @@
+....F                                                                    [100%]
+=================================== FAILURES ===================================
+______________ test_depth_factor_inside_depth_average[near_zero] _______________
+
+setup = {'K': <core.kernels.ContinuumChannelKernel object at 0x11e9e0140>, 'S1_charfn': {'I': array([[ 2.36870433e-41,  7.3040...5.63133408e-32-8.22034683e-34j]], shape=(57, 41))}, 'avg_d': <core.averaged.AveragedKernel object at 0x11f20ce90>, ...}
+name = 'near_zero'
+
+    @pytest.mark.parametrize("name", list(FACTORS))
+    def test_depth_factor_inside_depth_average(setup, name):
+        s, c = setup, FACTORS[name]
+        tab, w = s["tab"], s["w"]
+        a = C.pair(tab, s["gm"], w)
+        m = C.product(s["gm"], s["dm"])
+        joint = J.with_phi(m, J.factor_law(lambda nd: np.asarray(c(jnp.asarray(nd["depth"])), complex)))
+        ref = J.direct_joint(s["avg_d"], joint, tab, cache=s["cache"])
+        ok = C.build_columns(C.AveragedKernel(R.FactorKernel(s["K"], lambda p: c(p["depth"])),
+                                              [("depth", s["rule_d"]), ("eta", s["eta"])], fixed={"B": 5.0}), tab)
+        cbar = J.mean_factor(joint)
+        out = {"cbar": [cbar.real, cbar.imag],
+               "correct": X.per_channel(C.predict(ok, tab, a, w), ref),
+               "wrong_mean_c_times_depth_average": X.per_channel(R.assemble_constant(s["S1_nodes"], tab, a, w, cbar), ref),
+               "wrong_mean_c_times_characteristic_function": X.per_channel(
+                   R.assemble_constant(s["S1_charfn"], tab, a, w, cbar), ref)}
+        if name == "phase_slow":  # depth nodes vs characteristic function, constant factor, relative to I
+            out["nodes_vs_charfn_constant_c"] = X.per_channel(C.predict(s["S1_nodes"], tab, a, w, azimuth=0.4),
+                                                              C.predict(s["S1_charfn"], tab, a, w, azimuth=0.4))
+        out["timings_s"] = s["timer"].t
+        _record(f"depth_{name}", out)
+        assert out["correct"]["max_rel_I"] < 2e-3
+        if name not in ("near_one",):
+>           assert out["wrong_mean_c_times_depth_average"]["max_rel_I"] > 5 * out["correct"]["max_rel_I"]
+E           assert 0.0009524059980090043 > (5 * 0.0009524059980090043)
+
+tests/test_R5_e1_depth.py:86: AssertionError
+============================== slowest durations ===============================
+459.85s call     tests/test_R5_e1_depth.py::test_depth_factor_inside_depth_average[phase_slow]
+7.47s setup    tests/test_R5_e1_depth.py::test_depth_factor_inside_depth_average[phase_slow]
+5.80s call     tests/test_R5_e1_depth.py::test_depth_factor_inside_depth_average[amplitude]
+5.22s call     tests/test_R5_e1_depth.py::test_depth_factor_inside_depth_average[near_one]
+4.89s call     tests/test_R5_e1_depth.py::test_depth_factor_inside_depth_average[phase_fast]
+4.70s call     tests/test_R5_e1_depth.py::test_depth_factor_inside_depth_average[near_zero]
+
+(9 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ============================
+FAILED tests/test_R5_e1_depth.py::test_depth_factor_inside_depth_average[near_zero]
+1 failed, 4 passed in 492.40s (0:08:12)

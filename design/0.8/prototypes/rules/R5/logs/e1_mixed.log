@@ -1,0 +1,6 @@
+.                                                                        [100%]
+============================== slowest durations ===============================
+640.91s call     tests/test_R5_e1_mixed.py::test_mixed_gamma_cells_B_averaged
+
+(2 durations < 0.005s hidden.  Use -vv to show these durations.)
+1 passed in 647.89s (0:10:47)

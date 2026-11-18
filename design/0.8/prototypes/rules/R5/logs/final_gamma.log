@@ -1,0 +1,12 @@
+.....                                                                    [100%]
+============================== slowest durations ===============================
+513.66s setup    tests/test_R5_e1_gamma.py::test_gamma_factor_cauchy_product[moderate]
+337.19s call     tests/test_R5_e1_gamma.py::test_gamma_factor_cauchy_product[moderate]
+13.12s call     tests/test_R5_e1_gamma.py::test_gamma_factor_cauchy_product[steep]
+8.57s call     tests/test_R5_e1_gamma.py::test_gamma_factor_cauchy_product[phase]
+8.14s call     tests/test_R5_e1_gamma.py::test_gamma_factor_cauchy_product[near_zero]
+5.88s call     tests/test_R5_e1_gamma.py::test_gamma_factor_cauchy_product[near_one]
+0.02s teardown tests/test_R5_e1_gamma.py::test_gamma_factor_cauchy_product[moderate]
+
+(8 durations < 0.005s hidden.  Use -vv to show these durations.)
+5 passed in 893.36s (0:14:53)

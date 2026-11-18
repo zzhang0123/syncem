@@ -1,0 +1,28 @@
+400 2 0.2513574999757111 0.9968232498501605
+400 4 0.39633070898707956 0.9477186387094854
+64 2 0.0465533749666065 1.0000134261671454
+64 4 0.0946121250744909 0.8616231792258885
+         871 function calls (867 primitive calls) in 0.626 seconds
+
+   Ordered by: internal time
+   List reduced from 110 to 10 due to restriction <10>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+       20    0.469    0.023    0.469    0.023 <syncem>/studies/classical-models/lib/basis.py:87(horner)
+        4    0.064    0.016    0.552    0.138 <syncem>/studies/classical-models/lib/basis.py:74(evaluate)
+       32    0.042    0.001    0.042    0.001 {built-in method numpy._core._multiarray_umath.c_einsum}
+        3    0.013    0.004    0.013    0.004 <conda>/lib/python3.12/site-packages/numpy/linalg/_linalg.py:1286(eigvalsh)
+        4    0.009    0.002    0.009    0.002 <conda>/lib/python3.12/site-packages/numpy/_core/_methods.py:98(_clip)
+       22    0.009    0.000    0.009    0.000 {method 'astype' of 'numpy.ndarray' objects}
+        1    0.009    0.009    0.623    0.623 <syncem>/studies/classical-models/lib/basis.py:154(channel_kernels)
+        9    0.005    0.001    0.005    0.001 <conda>/lib/python3.12/site-packages/numpy/polynomial/legendre.py:830(legval)
+        1    0.002    0.002    0.625    0.625 <syncem>/studies/classical-models/lib/basis.py:194(kbar)
+        7    0.000    0.000    0.000    0.000 {built-in method numpy.zeros}
+
+
+
+primal 1 1.434986958047375 0.5957249159691855 6.894410305666057
+primal None 0.6743749158922583 0.4216094579314813 10.221969452830423
+jet 2 {'trace_lower_s': 0.1966054589720443, 'compile_s': 0.48579641606193036, 'run_s': 1.2782317500095814, 'cpu_over_wall': 4.553150866387396, 'primal_equivalents': 2.1456744811991366}
+jet 4 {'trace_lower_s': 1.3006318339612335, 'compile_s': 6.035712125012651, 'run_s': 5.331164916977286, 'cpu_over_wall': 8.336823507084421, 'primal_equivalents': 8.949038010780543}
+<syncem>/design/0.8/prototypes/profile/results/p2_columns.json

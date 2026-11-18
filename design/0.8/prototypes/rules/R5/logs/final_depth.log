@@ -1,0 +1,17 @@
+.......                                                                  [100%]
+============================== slowest durations ===============================
+682.24s call     tests/test_R5_e1_depth.py::test_depth_factor_inside_depth_average[phase_slow]
+24.73s call     tests/test_R5_e1_depth.py::test_depth_exponential_factor_exact_reference[phase_fast]
+18.02s call     tests/test_R5_e1_depth.py::test_depth_exponential_factor_exact_reference[phase_slow]
+12.30s setup    tests/test_R5_e1_depth.py::test_depth_factor_inside_depth_average[phase_slow]
+12.18s call     tests/test_R5_e1_depth.py::test_depth_factor_inside_depth_average[phase_fast]
+8.77s call     tests/test_R5_e1_depth.py::test_depth_factor_inside_depth_average[amplitude]
+8.05s call     tests/test_R5_e1_depth.py::test_depth_factor_inside_depth_average[near_one]
+6.53s call     tests/test_R5_e1_depth.py::test_depth_factor_inside_depth_average[near_zero]
+0.01s teardown tests/test_R5_e1_depth.py::test_depth_factor_inside_depth_average[amplitude]
+0.01s setup    tests/test_R5_e1_depth.py::test_depth_factor_inside_depth_average[near_one]
+0.01s setup    tests/test_R5_e1_depth.py::test_depth_factor_inside_depth_average[phase_fast]
+0.01s setup    tests/test_R5_e1_depth.py::test_depth_factor_inside_depth_average[amplitude]
+
+(9 durations < 0.005s hidden.  Use -vv to show these durations.)
+7 passed in 779.58s (0:12:59)

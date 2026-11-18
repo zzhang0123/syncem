@@ -1,0 +1,36 @@
+...F
+=================================== FAILURES ===================================
+_________________ test_gamma_factor_cauchy_product[near_zero] __________________
+
+e1 = {'avg': <core.averaged.AveragedKernel object at 0x12bcf63c0>, 'big': ProductTable(variables=('gamma',), index=array([[...-34-2.60856675e-36j, -1.17113727e-34-2.15240111e-36j,
+        -1.21649799e-34-1.77587340e-36j]], shape=(95, 41))}, ...}
+name = 'near_zero'
+
+    @pytest.mark.parametrize("name", list(FACTORS))
+    def test_gamma_factor_cauchy_product(e1, name):
+        jet = (2, e1["jet2_steep"]) if name == "steep" else None
+        out = X.gamma_case(FACTORS[name], e1["cols"], e1["big"], (0, 2, 4), e1["cache"], e1["avg"], jet_check=jet)
+        out["timings_s"] = e1["timer"].t
+        _record(f"gamma_{name}", out)
+        if jet is not None:
+            assert out["N2"]["cauchy_vs_jet_of_factor_kernel"] < 1e-12
+        for N in (2, 4):
+            r = out[f"N{N}"]
+            assert r["cauchy"]["max_rel_I"] < 1e-2  # converges with N, measured below
+>           assert r["wrong_global_mean"]["max_rel_I"] > 3 * r["cauchy"]["max_rel_I"]
+E           assert 0.0008582508975959865 > (3 * 0.0008582508975959865)
+
+tests/test_R5_e1_gamma.py:69: AssertionError
+============================== slowest durations ===============================
+306.48s setup    tests/test_R5_e1_gamma.py::test_gamma_factor_cauchy_product[moderate]
+188.60s call     tests/test_R5_e1_gamma.py::test_gamma_factor_cauchy_product[moderate]
+5.16s call     tests/test_R5_e1_gamma.py::test_gamma_factor_cauchy_product[steep]
+4.02s call     tests/test_R5_e1_gamma.py::test_gamma_factor_cauchy_product[phase]
+3.27s call     tests/test_R5_e1_gamma.py::test_gamma_factor_cauchy_product[near_zero]
+0.01s setup    tests/test_R5_e1_gamma.py::test_gamma_factor_cauchy_product[phase]
+
+(6 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ============================
+FAILED tests/test_R5_e1_gamma.py::test_gamma_factor_cauchy_product[near_zero]
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 3 passed in 511.82s (0:08:31)

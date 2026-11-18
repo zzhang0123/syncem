@@ -1,0 +1,28 @@
+{
+ "meta": {
+  "python": "3.12.9",
+  "cpu_count": 28,
+  "xla_flags": ""
+ },
+ "rows_cols": [
+  63,
+  57
+ ],
+ "a_numpy_fd_ms": 2.3908853996545076,
+ "a_nfev_median": 12.0,
+ "b_jax_jit_ms": 5.057737499009818,
+ "b_nfev_median": 12.0,
+ "jit_residual_call_us": 30.885624582879245,
+ "numpy_residual_call_us": 18.979170126840472,
+ "ab_theta_max_diff": 1.1788263343248673e-07,
+ "c_jax_lm_vmap_us_per_spectrum": 59.97781250625849,
+ "c_cpu_over_wall": 5.8939061834426365,
+ "c_vs_b_theta_max_diff": 4.3456347320613986e-07,
+ "c_minus_b_chi2_max": 2.2737367544323206e-13,
+ "projected_1e6_s": {
+  "a": 2390.8853996545076,
+  "b": 5057.737499009818,
+  "a_pool28_ideal": 85.38876427337527,
+  "c": 59.97781250625849
+ }
+}

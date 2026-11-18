@@ -1,0 +1,92 @@
+{
+ "i_constant_0.0": 1.26775524137359e-15,
+ "i_constant_np.complex128(9.55336489125606e-10+2.9552020666133954e-10j)": 4.671014097500633e-15,
+ "i_constant_np.complex128(0.3510330247561491+0.1917702154416812j)": 4.2268758702961886e-15,
+ "i_constant_np.complex128(-0.41614642040030586-0.9092965175282549j)": 1.1835252436829328e-14,
+ "i_constant_(1+0j)": 1.3526002784947802e-14,
+ "ii_leibniz_gamma_caps(4, 0, 0)_t4_smooth_mod": 1.2023815043222864e-16,
+ "ii_leibniz_gamma_caps(4, 0, 0)_t4_smooth_ext": 7.949239959686315e-17,
+ "ii_leibniz_gamma_caps(4, 0, 0)_t4_steep_mod": 3.0845915802339e-16,
+ "ii_leibniz_gamma_caps(4, 0, 0)_t4_steep_ext": 0.0,
+ "ii_leibniz_gamma_caps(4, 0, 0)_t4_tiny_mod": 1.4226890396638368e-16,
+ "ii_leibniz_gamma_caps(4, 0, 0)_t4_tiny_ext": 1.2144814807231991e-16,
+ "ii_leibniz_gamma-depth_caps(2, 0, 2)_t2_smooth_mod": 1.5100028131106564e-16,
+ "ii_leibniz_gamma-depth_caps(2, 0, 2)_t2_smooth_ext": 1.8137484662099462e-16,
+ "ii_leibniz_gamma-depth_caps(2, 0, 2)_t2_steep_mod": 1.50607485456857e-16,
+ "ii_leibniz_gamma-depth_caps(2, 0, 2)_t2_steep_ext": 2.564683222500605e-16,
+ "ii_leibniz_gamma-depth_caps(2, 0, 2)_t2_tiny_mod": 1.0935065377097895e-16,
+ "ii_leibniz_gamma-depth_caps(2, 0, 2)_t2_tiny_ext": 1.5479693041054462e-16,
+ "ii_leibniz_gamma-B-depth_caps(3, 3, 3)_t3_smooth_mod": 2.168313116102476e-16,
+ "ii_leibniz_gamma-B-depth_caps(3, 3, 3)_t3_smooth_ext": 5.082936728313932e-16,
+ "ii_leibniz_gamma-B-depth_caps(3, 3, 3)_t3_steep_mod": 3.412895897888893e-16,
+ "ii_leibniz_gamma-B-depth_caps(3, 3, 3)_t3_steep_ext": 3.7978985231088034e-16,
+ "ii_leibniz_gamma-B-depth_caps(3, 3, 3)_t3_tiny_mod": 1.8224164500738342e-16,
+ "ii_leibniz_gamma-B-depth_caps(3, 3, 3)_t3_tiny_ext": 1.857125792311158e-16,
+ "ii_leibniz_gamma-B-depth_caps(2, 1, 2)_t2_smooth_mod": 1.867023678702377e-16,
+ "ii_leibniz_gamma-B-depth_caps(2, 1, 2)_t2_smooth_ext": 5.082936728313932e-16,
+ "ii_leibniz_gamma-B-depth_caps(2, 1, 2)_t2_steep_mod": 1.5240523679737536e-16,
+ "ii_leibniz_gamma-B-depth_caps(2, 1, 2)_t2_steep_ext": 1.90298570677478e-16,
+ "ii_leibniz_gamma-B-depth_caps(2, 1, 2)_t2_tiny_mod": 1.8224164500738342e-16,
+ "ii_leibniz_gamma-B-depth_caps(2, 1, 2)_t2_tiny_ext": 1.750697136325332e-16,
+ "ii_predict_vs_direct_gamma_depth": {
+  "cauchy": 1.2457103049947466e-15,
+  "harmonic_M2": 1.2457103049947466e-15,
+  "wrong_global_mean": 0.05085854063631661,
+  "wrong_zeroth_order": 0.11832567681791746
+ },
+ "iii_B_paper": {
+  "correct": 3.7086614329790886e-15,
+  "wrong_mean_c_times_S1": 0.2510738229139506
+ },
+ "iii_B_zero_mean": {
+  "correct": 3.7086614329790886e-15,
+  "wrong_mean_c_times_S1": 0.5021476458279057
+ },
+ "iii_B_near_one": {
+  "correct": 1.550328005286593e-14,
+  "wrong_mean_c_times_S1": 0.006276845572849952
+ },
+ "iii_B_strong": {
+  "correct": 8.720595029737085e-15,
+  "wrong_mean_c_times_S1": 0.6276845572848738
+ },
+ "iii_B_phase": {
+  "correct": 7.87275940184598e-15,
+  "wrong_mean_c_times_S1": 0.6078101541727002
+ },
+ "iii_joint_block_B_phi": {
+  "correct": 1.097406329002522e-14,
+  "wrong_mean_c_times_S1": 5.336617002429399,
+  "factor_from_rule_vs_analytic": 1.1102230246251565e-16
+ },
+ "iii_eta_even": {
+  "full_range": 3.963833832359681e-14,
+  "half_range": 4.341341816393937e-14
+ },
+ "iii_eta_odd_part": {
+  "full_range": 1.132523952102766e-14,
+  "half_range": 1.739776812657688
+ },
+ "iv_legendre_L3": {
+  "correct": 0.02595108120367313,
+  "wrong_mean_c_after_projection": 0.017596795662933228
+ },
+ "iv_legendre_L4": {
+  "correct": 0.010182441288748173,
+  "wrong_mean_c_after_projection": 0.01759679566293337
+ },
+ "iv_legendre_L5": {
+  "correct": 3.689811579292802e-15,
+  "wrong_mean_c_after_projection": 0.01759679566293369
+ },
+ "iv_legendre_L8": {
+  "correct": 3.5293849888887676e-15,
+  "wrong_mean_c_after_projection": 0.01759679566293345
+ },
+ "mixed_gamma_cells_B_averaged": {
+  "correct_jet_inside_average": 1.606295157555268e-14,
+  "wrong_a_frozen_gamma": 0.5340934893158028,
+  "wrong_b_cauchy_of_field_mean": 1.328280971523359,
+  "wrong_c_global_mean": 1.4058041367693264
+ }
+}

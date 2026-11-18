@@ -1,0 +1,41 @@
+....F
+=================================== FAILURES ===================================
+________________ test_field_factor_inside_S2_average[near_zero] ________________
+
+name = 'near_zero'
+
+    @pytest.mark.parametrize("name", list(VARIANTS))
+    def test_field_factor_inside_S2_average(name):
+        c, (lo, hi), N_list = VARIANTS[name]
+        K, avg_d = _kernels(lo, hi)
+        key = (lo, hi, max(N_list))
+        timer = X.Timer()
+        out, S1[key] = X.field_case(c, lambda b: np.asarray(c(jnp.asarray(b)), complex), N_list, B_lo=lo, B_hi=hi,
+                                    n_basis=16, n_direct=24 if hi < 10 else 32, cache=CACHE, cols_s1=S1.get(key),
+                                    kernel=K, avg_direct=avg_d, timer=timer)
+        out["timings_s"] = timer.t
+        _record(f"field_{name}", out)
+        for N in N_list:
+            r = out[f"N{N}"]
+            assert r["I_block_equal_S1"] < 1e-15
+            if N >= 2:
+                assert r["correct"]["max_rel_I"] < CORRECT_TOL
+>               assert r["wrong_mean_c_times_S1"]["max_rel_P"] > 5 * r["correct"]["max_rel_P"] or name == "near_one"
+E               AssertionError: assert (0.0008582508975974556 > (5 * 0.0008582508975974556) or 'near_zero' == 'near_one'
+E                 
+E                 - near_one
+E                 + near_zero)
+
+tests/test_R5_e1_field.py:83: AssertionError
+============================== slowest durations ===============================
+848.13s call     tests/test_R5_e1_field.py::test_field_factor_inside_S2_average[paper]
+77.93s call     tests/test_R5_e1_field.py::test_field_factor_inside_S2_average[zero_mean]
+31.54s call     tests/test_R5_e1_field.py::test_field_factor_inside_S2_average[near_zero]
+3.78s call     tests/test_R5_e1_field.py::test_single_electron_r3_02[eta_avg]
+2.67s call     tests/test_R5_e1_field.py::test_single_electron_r3_02[eta0]
+
+(10 durations < 0.005s hidden.  Use -vv to show these durations.)
+=========================== short test summary info ============================
+FAILED tests/test_R5_e1_field.py::test_field_factor_inside_S2_average[near_zero]
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+1 failed, 4 passed in 969.25s (0:16:09)

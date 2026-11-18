@@ -1,0 +1,117 @@
+{
+"records": [
+{
+"chart": "affine",
+"N": 2,
+"sigma": 0.2,
+"beta": 0.1,
+"m0": 5.0,
+"gamma_p": 30000.0,
+"cells": [
+0,
+9,
+18
+],
+"wall": 161.56606197357178,
+"cond_trunc": 8.779594551612424e-05,
+"representation": 0.0004179056586156523,
+"node_vs_direct": 0.0004188136755742813,
+"n_direct_nodes": 2388,
+"seconds": {
+"moments": 3.467797040939331,
+"columns": 6.957696914672852,
+"direct": 126.10827708244324
+},
+"bound_rel_I": 0.0010523517057818596,
+"bound_holds": true,
+"bound_over_actual": 11.986336038588354,
+"avg_vs_node": 7.406617804372192e-05,
+"avg_vs_direct": 0.0003870866563557731
+},
+{
+"chart": "affine",
+"N": 4,
+"sigma": 0.2,
+"beta": 0.1,
+"m0": 5.0,
+"gamma_p": 30000.0,
+"cells": [
+0,
+9,
+18
+],
+"wall": 279.825936794281,
+"cond_trunc": 2.388876246417038e-06,
+"representation": 0.00011995090054211586,
+"node_vs_direct": 0.0001177890762608229,
+"n_direct_nodes": 2388,
+"seconds": {
+"moments": 0.01353001594543457,
+"columns": 88.09641528129578,
+"direct": 95.63117909431458
+},
+"bound_rel_I": 4.5459469003085696e-05,
+"bound_holds": true,
+"bound_over_actual": 19.02964587272706,
+"avg_vs_node": 0.00013976003261244674,
+"avg_vs_direct": 2.197095635162385e-05
+},
+{
+"chart": "log",
+"N": 2,
+"sigma": 0.2,
+"beta": 0.1,
+"m0": 5.0,
+"gamma_p": 30000.0,
+"cells": [
+0,
+9,
+18
+],
+"wall": 105.38188600540161,
+"cond_trunc": 8.294997291153621e-05,
+"representation": 0.0003201018948269375,
+"node_vs_direct": 0.00039433893089553567,
+"n_direct_nodes": 2388,
+"seconds": {
+"moments": 1.2281670570373535,
+"columns": 2.4906089305877686,
+"direct": 86.27133274078369
+},
+"bound_rel_I": 0.001018697741269659,
+"bound_holds": true,
+"bound_over_actual": 12.280868884141423,
+"avg_vs_node": 8.991456223111936e-05,
+"avg_vs_direct": 0.00038708665667869685
+},
+{
+"chart": "log",
+"N": 4,
+"sigma": 0.2,
+"beta": 0.1,
+"m0": 5.0,
+"gamma_p": 30000.0,
+"cells": [
+0,
+9,
+18
+],
+"wall": 172.96731185913086,
+"cond_trunc": 2.6983601303671446e-06,
+"representation": 1.5057691104708875e-05,
+"node_vs_direct": 1.4791671591727568e-05,
+"n_direct_nodes": 2388,
+"seconds": {
+"moments": 0.015517950057983398,
+"columns": 37.7422559261322,
+"direct": 61.30514407157898
+},
+"bound_rel_I": 5.131879880658287e-05,
+"bound_holds": true,
+"bound_over_actual": 19.018513588695935,
+"avg_vs_node": 1.933241021888312e-05,
+"avg_vs_direct": 2.1970955976133867e-05
+}
+],
+"seconds": 720.7777991294861
+}

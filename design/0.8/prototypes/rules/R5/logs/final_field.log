@@ -1,0 +1,14 @@
+.........                                                                [100%]
+============================== slowest durations ===============================
+1190.72s call     tests/test_R5_e1_field.py::test_field_factor_inside_S2_average[paper]
+398.46s call     tests/test_R5_e1_field.py::test_field_factor_inside_S2_average[range100]
+55.69s call     tests/test_R5_e1_field.py::test_field_factor_inside_S2_average[zero_mean]
+36.39s call     tests/test_R5_e1_field.py::test_field_factor_inside_S2_average[near_zero]
+35.69s call     tests/test_R5_e1_field.py::test_field_factor_inside_S2_average[strong]
+26.76s call     tests/test_R5_e1_field.py::test_field_factor_inside_S2_average[near_one]
+26.46s call     tests/test_R5_e1_field.py::test_field_factor_inside_S2_average[phase]
+6.53s call     tests/test_R5_e1_field.py::test_single_electron_r3_02[eta_avg]
+5.03s call     tests/test_R5_e1_field.py::test_single_electron_r3_02[eta0]
+
+(18 durations < 0.005s hidden.  Use -vv to show these durations.)
+9 passed in 1788.53s (0:29:48)

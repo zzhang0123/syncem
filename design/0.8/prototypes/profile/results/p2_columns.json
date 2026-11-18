@@ -1,0 +1,46 @@
+{
+ "meta": {
+  "python": "3.12.9",
+  "cpu_count": 28,
+  "xla_flags": "",
+  "loadavg_at_save": [
+   4.34130859375,
+   3.3955078125,
+   5.97998046875
+  ]
+ },
+ "stack_table_load_s": 0.0019312499789521098,
+ "stack_nodes400_N2_s": 0.15104437503032386,
+ "stack_nodes400_N2_cpu_over_wall": 0.9998783468082133,
+ "stack_nodes400_N4_s": 0.2132606660015881,
+ "stack_nodes400_N4_cpu_over_wall": 1.0000015661510304,
+ "stack_nodes64_N2_s": 0.025807166006416082,
+ "stack_nodes64_N2_cpu_over_wall": 1.0000323163567733,
+ "stack_nodes64_N4_s": 0.03679462498985231,
+ "stack_nodes64_N4_cpu_over_wall": 1.0000101919817888,
+ "stack_profile_N4": "         871 function calls (867 primitive calls) in 0.249 seconds\n\n   Ordered by: internal time\n   List reduced from 110 to 10 due to restriction <10>\n\n   ncalls  tottime  percall  cumtime  percall filename:lineno(function)\n       20    0.142    0.007    0.142    0.007 <syncem>/studies/classical-models/lib/basis.py:87(horner)\n        4    0.038    0.009    0.189    0.047 <syncem>/studies/classical-models/lib/basis.py:74(evaluate)\n       32    0.036    0.001    0.036    0.001 {built-in method numpy._core._multiarray_umath.c_einsum}\n        3    0.012    0.004    0.012    0.004 <conda>/lib/python3.12/site-packages/numpy/linalg/_linalg.py:1286(eigvalsh)\n        4    0.005    0.001    0.005    0.001 <conda>/lib/python3.12/site-packages/numpy/_core/_methods.py:98(_clip)\n        1    0.005    0.005    0.248    0.248 <syncem>/studies/classical-models/lib/basis.py:154(channel_kernels)\n        9    0.005    0.001    0.005    0.001 <conda>/lib/python3.12/site-packages/numpy/polynomial/legendre.py:830(legval)\n       22    0.004    0.000    0.004    0.000 {method 'astype' of 'numpy.ndarray' objects}\n        1    0.001    0.001    0.249    0.249 <syncem>/studies/classical-models/lib/basis.py:194(kbar)\n        1    0.000    0.000    0.000    0.000 <syncem>/studies/classical-models/lib/config.py:111(screen)\n\n\n",
+ "primal_outer1": {
+  "first_s": 0.31474866694770753,
+  "run_s": 0.19180400006007403,
+  "cpu_over_wall": 19.288023184299025
+ },
+ "primal_outerNone": {
+  "first_s": 0.27863012498710304,
+  "run_s": 0.17561654199380428,
+  "cpu_over_wall": 21.516520921664142
+ },
+ "jet_N2_one_cell": {
+  "trace_lower_s": 0.13348124991171062,
+  "compile_s": 0.2645780839957297,
+  "run_s": 0.3516319580376148,
+  "cpu_over_wall": 12.5243678776458,
+  "primal_equivalents": 1.8332879289664545
+ },
+ "jet_N4_one_cell": {
+  "trace_lower_s": 0.6547570000402629,
+  "compile_s": 2.4129423330305144,
+  "run_s": 3.0369815409649163,
+  "cpu_over_wall": 15.410628404784454,
+  "primal_equivalents": 15.83377583373505
+ }
+}

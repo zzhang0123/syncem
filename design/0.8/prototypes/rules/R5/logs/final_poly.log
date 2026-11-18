@@ -1,0 +1,8 @@
+...........................................                              [100%]
+============================= slowest 5 durations ==============================
+44.41s call     tests/test_R5_poly.py::test_route_ii_cauchy_equals_jet_of_factor_kernel[gBd3-steep-extreme]
+38.95s call     tests/test_R5_poly.py::test_route_ii_cauchy_equals_jet_of_factor_kernel[gBd3-tiny-extreme]
+35.53s call     tests/test_R5_poly.py::test_route_ii_cauchy_equals_jet_of_factor_kernel[gBd_caps212-tiny-moderate]
+32.17s call     tests/test_R5_poly.py::test_route_ii_cauchy_equals_jet_of_factor_kernel[gBd3-tiny-moderate]
+31.16s call     tests/test_R5_poly.py::test_route_ii_cauchy_equals_jet_of_factor_kernel[gBd3-smooth-moderate]
+43 passed in 465.91s (0:07:45)

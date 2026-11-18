@@ -1,0 +1,28 @@
+400 2 0.15104437503032386 0.9998783468082133
+400 4 0.2132606660015881 1.0000015661510304
+64 2 0.025807166006416082 1.0000323163567733
+64 4 0.03679462498985231 1.0000101919817888
+         871 function calls (867 primitive calls) in 0.249 seconds
+
+   Ordered by: internal time
+   List reduced from 110 to 10 due to restriction <10>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+       20    0.142    0.007    0.142    0.007 <syncem>/studies/classical-models/lib/basis.py:87(horner)
+        4    0.038    0.009    0.189    0.047 <syncem>/studies/classical-models/lib/basis.py:74(evaluate)
+       32    0.036    0.001    0.036    0.001 {built-in method numpy._core._multiarray_umath.c_einsum}
+        3    0.012    0.004    0.012    0.004 <conda>/lib/python3.12/site-packages/numpy/linalg/_linalg.py:1286(eigvalsh)
+        4    0.005    0.001    0.005    0.001 <conda>/lib/python3.12/site-packages/numpy/_core/_methods.py:98(_clip)
+        1    0.005    0.005    0.248    0.248 <syncem>/studies/classical-models/lib/basis.py:154(channel_kernels)
+        9    0.005    0.001    0.005    0.001 <conda>/lib/python3.12/site-packages/numpy/polynomial/legendre.py:830(legval)
+       22    0.004    0.000    0.004    0.000 {method 'astype' of 'numpy.ndarray' objects}
+        1    0.001    0.001    0.249    0.249 <syncem>/studies/classical-models/lib/basis.py:194(kbar)
+        1    0.000    0.000    0.000    0.000 <syncem>/studies/classical-models/lib/config.py:111(screen)
+
+
+
+primal 1 0.31474866694770753 0.19180400006007403 19.288023184299025
+primal None 0.27863012498710304 0.17561654199380428 21.516520921664142
+jet 2 {'trace_lower_s': 0.13348124991171062, 'compile_s': 0.2645780839957297, 'run_s': 0.3516319580376148, 'cpu_over_wall': 12.5243678776458, 'primal_equivalents': 1.8332879289664545}
+jet 4 {'trace_lower_s': 0.6547570000402629, 'compile_s': 2.4129423330305144, 'run_s': 3.0369815409649163, 'cpu_over_wall': 15.410628404784454, 'primal_equivalents': 15.83377583373505}
+<syncem>/design/0.8/prototypes/profile/results/p2_columns.json

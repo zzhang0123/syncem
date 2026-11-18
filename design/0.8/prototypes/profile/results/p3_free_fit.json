@@ -1,0 +1,119 @@
+{
+ "meta": {
+  "python": "3.12.9",
+  "cpu_count": 28,
+  "xla_flags": ""
+ },
+ "shared": [
+  {
+   "design": "63x57",
+   "n_pix": 1000,
+   "numpy_us_per_pix": 0.9751670295372605,
+   "numpy_cpu_over_wall": 1.0008541823478412,
+   "jax_us_per_pix": 1.1088330065831542,
+   "jax_cpu_over_wall": 2.098602752790134,
+   "rank_agree": 1.0,
+   "median_rank": 9.0
+  },
+  {
+   "design": "63x57",
+   "n_pix": 10000,
+   "numpy_us_per_pix": 0.9512874996289611,
+   "numpy_cpu_over_wall": 0.8960487763504372,
+   "jax_us_per_pix": 0.36713749868795276,
+   "jax_cpu_over_wall": 5.2154846803798485,
+   "rank_agree": 1.0,
+   "median_rank": 9.0
+  },
+  {
+   "design": "63x57",
+   "n_pix": 100000,
+   "numpy_us_per_pix": 0.8296487503685057,
+   "numpy_cpu_over_wall": 1.1402054177503744,
+   "jax_us_per_pix": 0.2095991699025035,
+   "jax_cpu_over_wall": 6.324500238319723,
+   "rank_agree": 1.0,
+   "median_rank": 9.0
+  },
+  {
+   "design": "63x171",
+   "n_pix": 1000,
+   "numpy_us_per_pix": 1.2103329645469785,
+   "numpy_cpu_over_wall": 1.0005511173126842,
+   "jax_us_per_pix": 1.3600409729406238,
+   "jax_cpu_over_wall": 1.9837637642381127,
+   "rank_agree": 1.0,
+   "median_rank": 15.0
+  },
+  {
+   "design": "63x171",
+   "n_pix": 10000,
+   "numpy_us_per_pix": 0.7972167106345296,
+   "numpy_cpu_over_wall": 1.3281206802064107,
+   "jax_us_per_pix": 0.26985000586137176,
+   "jax_cpu_over_wall": 6.322771772984282,
+   "rank_agree": 1.0,
+   "median_rank": 15.0
+  },
+  {
+   "design": "63x171",
+   "n_pix": 100000,
+   "numpy_us_per_pix": 0.7644287496805191,
+   "numpy_cpu_over_wall": 1.4510966528451803,
+   "jax_us_per_pix": 0.15331999980844557,
+   "jax_cpu_over_wall": 11.402230642995967,
+   "rank_agree": 1.0,
+   "median_rank": 15.0
+  }
+ ],
+ "perpix": [
+  {
+   "design": "63x57",
+   "n_pix": 1000,
+   "numpy_us_per_pix": 196.21904101222754,
+   "numpy_cpu_over_wall": 0.9653956059656599,
+   "numpy_28threads_us_per_pix": 23.23858393356204,
+   "threads_cpu_over_wall": 10.052290650232965,
+   "jax_vmap_us_per_pix": 17.78550003655255,
+   "jax_cpu_over_wall": 13.182142729648255,
+   "rank_agree_jax_numpy": 1.0,
+   "transient_bytes_per_pix_model": 125172.0
+  },
+  {
+   "design": "63x57",
+   "n_pix": 10000,
+   "numpy_us_per_pix": 177.1558374981396,
+   "numpy_cpu_over_wall": 1.00001164230256,
+   "numpy_28threads_us_per_pix": 13.580120797269046,
+   "threads_cpu_over_wall": 16.730425553040003,
+   "jax_vmap_us_per_pix": 16.703733301255852,
+   "jax_cpu_over_wall": 13.529065384623301,
+   "rank_agree_jax_numpy": 1.0,
+   "transient_bytes_per_pix_model": 125172.0
+  },
+  {
+   "design": "63x171",
+   "n_pix": 1000,
+   "numpy_us_per_pix": 610.8425830025226,
+   "numpy_cpu_over_wall": 1.0000039568254504,
+   "numpy_28threads_us_per_pix": 57.02166608534753,
+   "threads_cpu_over_wall": 13.059983180522345,
+   "jax_vmap_us_per_pix": 47.501749941147864,
+   "jax_cpu_over_wall": 15.246954078477472,
+   "rank_agree_jax_numpy": 1.0,
+   "transient_bytes_per_pix_model": 306180.0
+  },
+  {
+   "design": "63x171",
+   "n_pix": 10000,
+   "numpy_us_per_pix": 610.8069750014693,
+   "numpy_cpu_over_wall": 0.9996156314333695,
+   "numpy_28threads_us_per_pix": 39.04147910652682,
+   "threads_cpu_over_wall": 18.94535803784,
+   "jax_vmap_us_per_pix": 50.96462919609621,
+   "jax_cpu_over_wall": 14.409744789357807,
+   "rank_agree_jax_numpy": 1.0,
+   "transient_bytes_per_pix_model": 306180.0
+  }
+ ]
+}

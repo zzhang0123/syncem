@@ -32,3 +32,7 @@ docs/_build/
 # Example records attached to the GitHub Release instead of committed
 figures/sed_moment_reconstruction.json
 figures/sed_moment_reconstruction_arrays.npz
+
+# Local agent handoffs and installation backups
+/.agent-state/
+/.agents/

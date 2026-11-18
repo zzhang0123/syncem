@@ -1,0 +1,100 @@
+{
+ "meta": {
+  "python": "3.12.9",
+  "cpu_count": 28,
+  "xla_flags": "",
+  "loadavg_at_save": [
+   108.533203125,
+   82.74169921875,
+   51.24658203125
+  ]
+ },
+ "points": [
+  {
+   "gamma": 20.0,
+   "wall_s": 0.0022468750830739737,
+   "routes": [
+    "corrected_integral",
+    "corrected_integral",
+    "corrected_integral"
+   ],
+   "order_samples": 294,
+   "active_ranges": [
+    [
+     109749438.0,
+     164624163.0
+    ],
+    [
+     1097494403.0,
+     1646241611.0
+    ],
+    [
+     10974944057.0,
+     16462416092.0
+    ]
+   ],
+   "us_per_order_sample": 7.6424322553536514
+  },
+  {
+   "gamma": 100.0,
+   "wall_s": 0.0025423329789191484,
+   "routes": [
+    "corrected_integral",
+    "corrected_integral",
+    "corrected_integral"
+   ],
+   "order_samples": 678,
+   "active_ranges": [
+    [
+     548719747.0,
+     823079626.0
+    ],
+    [
+     5487197489.0,
+     8230796240.0
+    ],
+    [
+     54871974916.0,
+     82307962380.0
+    ]
+   ],
+   "us_per_order_sample": 3.749753656222933
+  },
+  {
+   "gamma": 300.0,
+   "wall_s": 0.0028887500520795584,
+   "routes": [
+    "corrected_integral",
+    "corrected_integral",
+    "corrected_integral"
+   ],
+   "order_samples": 806,
+   "active_ranges": [
+    [
+     1646156197.0,
+     2469234301.0
+    ],
+    [
+     16461561988.0,
+     24692342988.0
+    ],
+    [
+     164615619900.0,
+     246923429856.0
+    ]
+   ],
+   "us_per_order_sample": 3.5840571365751344
+  }
+ ],
+ "line_powers_us_per_order": 0.2803749907798192,
+ "two_jv_us_per_order": 0.24729393999223248,
+ "jv_share_of_line_powers": 0.8820114065966549,
+ "orders_timed": [
+  164615619900.0,
+  246923429856.0
+ ],
+ "profile_gamma": 300.0,
+ "profile_total_tottime_s": 0.042898507,
+ "profile_scipy_tottime_s": 9.332e-06,
+ "profile_text": "         5393 function calls (5383 primitive calls) in 0.043 seconds\n\n   Ordered by: internal time\n   List reduced from 322 to 15 due to restriction <15>\n\n   ncalls  tottime  percall  cumtime  percall filename:lineno(function)\n        9    0.038    0.004    0.038    0.004 <conda>/lib/python3.12/site-packages/jax/_src/lax/slicing.py:1483(_slice_impl)\n       15    0.001    0.000    0.002    0.000 <syncem>/syncem/model/high_order_harmonic.py:195(high_order_line_powers)\n       18    0.000    0.000    0.000    0.000 <conda>/lib/python3.12/site-packages/jax/_src/dispatch.py:83(apply_primitive)\n      168    0.000    0.000    0.000    0.000 {method 'reduce' of 'numpy.ufunc' objects}\n       15    0.000    0.000    0.002    0.000 <syncem>/syncem/model/high_order_harmonic.py:609(terms)\n       15    0.000    0.000    0.000    0.000 <syncem>/syncem/model/high_order_harmonic.py:389(response)\n        2    0.000    0.000    0.000    0.000 <conda>/lib/python3.12/site-packages/equinox/_jit.py:229(_call)\n        1    0.000    0.000    0.043    0.043 <syncem>/syncem/model/high_order_harmonic.py:538(high_order_channel_modes)\n        4    0.000    0.000    0.001    0.000 <syncem>/syncem/model/errors.py:89(__init__)\n      159    0.000    0.000    0.000    0.000 <conda>/lib/python3.12/site-packages/numpy/_core/fromnumeric.py:89(_wrapreduction_any_all)\n        6    0.000    0.000    0.000    0.000 <conda>/lib/python3.12/site-packages/jax/_src/array.py:606(_value)\n      213    0.000    0.000    0.000    0.000 {built-in method numpy.asarray}\n      491    0.000    0.000    0.000    0.000 {built-in method builtins.isinstance}\n    82/72    0.000    0.000    0.000    0.000 <conda>/lib/python3.12/site-packages/equinox/_module/_module.py:585(__getattribute__)\n        9    0.000    0.000    0.002    0.000 <syncem>/syncem/model/high_order_harmonic.py:630(integral)\n\n\n"
+}

@@ -1,0 +1,7 @@
+{'serial_ms': 7.424460693340127, 'serial_cpu_over_wall': 0.39933405569235675, 'pool': []}
+{'workers': 4, 'ms_per_spectrum': 0.5108198808946847, 'speedup': 14.534400423758806, 'projected_1e6_min': 8.513664681578076}
+{'workers': 8, 'ms_per_spectrum': 0.510652790191151, 'speedup': 14.539156225036887, 'projected_1e6_min': 8.510879836519184}
+{'workers': 16, 'ms_per_spectrum': 0.5293816444671913, 'speedup': 14.024779232405484, 'projected_1e6_min': 8.823027407786523}
+{'workers': 20, 'ms_per_spectrum': 0.5584147619707177, 'speedup': 13.295602478591805, 'projected_1e6_min': 9.306912699511962}
+{'workers': 28, 'ms_per_spectrum': 0.7121438094639286, 'speedup': 10.425507593654354, 'projected_1e6_min': 11.869063491065479}
+<syncem>/design/0.8/prototypes/profile/results/p4b_nnls_pool.json

@@ -1,0 +1,38 @@
+numpy {'n_b': 1, 'n_knots': 13817, 'direct_s': 0.34390637499745935, 'spline_s': 0.00581658398732543, 'total_s': 0.3497229589847848}
+numpy {'n_b': 2, 'n_knots': 13817, 'direct_s': 0.6808419580338523, 'spline_s': 0.005110708996653557, 'total_s': 0.6859526670305058}
+numpy {'n_b': 4, 'n_knots': 13817, 'direct_s': 1.4718386669410393, 'spline_s': 0.00531224999576807, 'total_s': 1.4771509169368073}
+numpy {'n_b': 8, 'n_knots': 13817, 'direct_s': 2.5341304159956053, 'spline_s': 0.005025874939747155, 'total_s': 2.5391562909353524}
+         5762 function calls in 0.631 seconds
+
+   Ordered by: internal time
+   List reduced from 151 to 12 due to restriction <12>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+      168    0.366    0.002    0.367    0.002 <conda>/lib/python3.12/site-packages/numpy/polynomial/polynomial.py:663(polyval)
+        2    0.180    0.090    0.621    0.311 <syncem>/studies/classical-models/lib/kernels.py:72(scaled_log_derivatives)
+       28    0.061    0.002    0.061    0.002 <syncem>/studies/classical-models/lib/kernels.py:64(_weight)
+      323    0.015    0.000    0.015    0.000 {method 'reduce' of 'numpy.ufunc' objects}
+       14    0.002    0.000    0.002    0.000 <conda>/lib/python3.12/site-packages/scipy/linalg/_basic.py:607(_solve_banded)
+        2    0.001    0.001    0.625    0.312 <syncem>/studies/classical-models/lib/basis.py:63(direct)
+       14    0.001    0.000    0.002    0.000 <conda>/lib/python3.12/site-packages/scipy/interpolate/_cubic.py:140(__init__)
+       14    0.001    0.000    0.006    0.000 <conda>/lib/python3.12/site-packages/scipy/interpolate/_cubic.py:736(__init__)
+        1    0.001    0.001    0.631    0.631 <syncem>/design/0.8/prototypes/profile/p1_s1_table.py:44(numpy_build)
+        2    0.001    0.000    0.002    0.001 <conda>/lib/python3.12/site-packages/scipy/special/_logsumexp.py:205(_logsumexp)
+       28    0.000    0.000    0.001    0.000 <conda>/lib/python3.12/site-packages/scipy/interpolate/_cubic.py:16(prepare_input)
+       70    0.000    0.000    0.000    0.000 <conda>/lib/python3.12/site-packages/numpy/lib/_function_base_impl.py:1391(diff)
+
+
+
+jax {'which': 'F', 'n_b': 1, 'first_call_s': 0.1291641250718385, 'run_s': 0.0175448328955099, 'cpu_over_wall': 7.5740248306387725, 'max_err_vs_numpy': 1.148057443615183e-12}
+jax {'which': 'F', 'n_b': 2, 'first_call_s': 0.13870995899196714, 'run_s': 0.034303167019970715, 'cpu_over_wall': 4.958084479517115, 'max_err_vs_numpy': 4.2455799266434984e-13}
+jax {'which': 'F', 'n_b': 4, 'first_call_s': 0.18610670790076256, 'run_s': 0.07207350002136081, 'cpu_over_wall': 4.630953122868728, 'max_err_vs_numpy': 2.582663367217522e-13}
+jax {'which': 'F', 'n_b': 8, 'first_call_s': 0.2580300000263378, 'run_s': 0.14673370798118412, 'cpu_over_wall': 4.577509893542187, 'max_err_vs_numpy': 2.239774187481407e-13}
+jax {'which': 'G', 'n_b': 1, 'first_call_s': 0.11997041699942201, 'run_s': 0.01873870799317956, 'cpu_over_wall': 7.104972234396198, 'max_err_vs_numpy': 3.6760851762871683e-13}
+jax {'which': 'G', 'n_b': 2, 'first_call_s': 0.13007820793427527, 'run_s': 0.0309074999531731, 'cpu_over_wall': 7.589614182816425, 'max_err_vs_numpy': 5.099183617380661e-13}
+jax {'which': 'G', 'n_b': 4, 'first_call_s': 0.15483125008177012, 'run_s': 0.05020262498874217, 'cpu_over_wall': 7.9823316029762115, 'max_err_vs_numpy': 3.3436147203509276e-13}
+jax {'which': 'G', 'n_b': 8, 'first_call_s': 0.20736966596450657, 'run_s': 0.10060695803258568, 'cpu_over_wall': 7.670463505616122, 'max_err_vs_numpy': 2.2737367544323206e-13}
+s0/s1 {'n_b': 1, 'F_s1_s': 0.002236249973066151, 'F_err': {'lnT_max_abs': 2.2737367544323206e-13, 'r1': 5.500127713793786e-14, 'r2': 2.3218075717294074e-12, 'r3': 9.042477877585497e-11, 'r4': 4.377473716843383e-09, 'r5': 5.502697772357195e-08, 'r6': 8.753140014643721e-08}, 'G_s1_s': 0.002253624959848821, 'G_err': {'lnT_max_abs': 1.1368683772161603e-13, 'r1': 5.5075726422610246e-14, 'r2': 2.766623996579752e-12, 'r3': 1.1068412852921483e-10, 'r4': 5.190779639452359e-09, 'r5': 2.4828896814989317e-08, 'r6': 4.421053730530914e-08}}
+s0/s1 {'n_b': 2, 'F_s1_s': 0.006625249981880188, 'F_err': {'lnT_max_abs': 3.410605131648481e-13, 'r1': 1.1177896727175303e-13, 'r2': 5.371485731235667e-12, 'r3': 1.9472778944873426e-10, 'r4': 8.687753849656588e-09, 'r5': 1.1900800451960241e-07, 'r6': 1.164066250364238e-07}, 'G_s1_s': 0.006289249984547496, 'G_err': {'lnT_max_abs': 3.410605131648481e-13, 'r1': 1.1922370517519715e-13, 'r2': 6.373568339768099e-12, 'r3': 2.3905599721985027e-10, 'r4': 1.0361498159472404e-08, 'r5': 7.741266663517598e-08, 'r6': 1.841866008732303e-07}}
+s0/s1 {'n_b': 4, 'F_s1_s': 0.012078625033609569, 'F_err': {'lnT_max_abs': 2.2737367544323206e-13, 'r1': 8.7773484066568e-14, 'r2': 3.79965693158836e-12, 'r3': 1.3443501867271834e-10, 'r4': 5.789836721170616e-09, 'r5': 3.020108263044798e-08, 'r6': 1.0165054143535487e-07}, 'G_s1_s': 0.012132000061683357, 'G_err': {'lnT_max_abs': 2.2737367544323206e-13, 'r1': 8.508635839924313e-14, 'r2': 4.483635684948695e-12, 'r3': 1.6389545276496165e-10, 'r4': 6.862293622234006e-09, 'r5': 4.434363750441953e-08, 'r6': 6.074683276595257e-08}}
+s0/s1 {'n_b': 8, 'F_s1_s': 0.023823874886147678, 'F_err': {'lnT_max_abs': 2.2737367544323206e-13, 'r1': 6.47631621045565e-14, 'r2': 3.1760506115360364e-12, 'r3': 1.1311562797544639e-10, 'r4': 4.773009321112909e-09, 'r5': 2.4136948345856916e-08, 'r6': 7.848182932150473e-08}, 'G_s1_s': 0.024103624979034066, 'G_err': {'lnT_max_abs': 2.2737367544323206e-13, 'r1': 6.925796629110226e-14, 'r2': 3.7373437677956645e-12, 'r3': 1.3685796940166028e-10, 'r4': 5.609071873635685e-09, 'r5': 3.51330659510742e-08, 'r6': 4.651180189649866e-08}}
+<syncem>/design/0.8/prototypes/profile/results/p1_s1_table.json
