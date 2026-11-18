@@ -1,0 +1,14 @@
+/Users/zzhang/Documents/MyDrafts/Overleaf_Synchrotron_Emission_Modelling/.worktrees/syncem/design/0.8/prototypes/synth/window.py:9: IntegrationWarning: The integral is probably divergent, or slowly convergent.
+  out[i] = xv * integrate.quad(lambda t: special.kv(5.0 / 3.0, t), xv, np.inf, epsabs=0, epsrel=1e-10)[0]
+eta isotropic          eps=0.001: y_lo=1.729e-03 y_hi=6.729
+eta isotropic          eps=0.0005: y_lo=9.359e-04 y_hi=7.410
+eta U[-0.5,0.5]        eps=0.001: y_lo=1.982e-03 y_hi=7.043
+eta U[-0.5,0.5]        eps=0.0005: y_lo=1.073e-03 y_hi=7.734
+eta = 0 (B_perp = B)   eps=0.001: y_lo=2.069e-03 y_hi=7.312
+eta = 0 (B_perp = B)   eps=0.0005: y_lo=1.120e-03 y_hi=8.024
+first screen (0.408-23 GHz, 5 uG, isotropic): 1699.3904825240988 795987.9501760564 cells 13 moments 39
+paper stats 0.1-10 GHz, U[4,6]: (np.float64(750.7127286683435), np.float64(548140.0366382597))
+paper stats 0.1-300 GHz, U[4,6]: (np.float64(750.7127286683435), np.float64(3002286.6273848303))
+y at gamma=2.96e6, 300 GHz, 5 uG: 0.0016309574832087052  y at gamma=300, 0.1 GHz, 5 uG: 52.925174388449605
+ln(2.96e6/300)/38 = 0.2420472459072076
+python -I design/0.8/prototypes/synth/window.py  0.89s user 0.08s system 97% cpu 0.999 total

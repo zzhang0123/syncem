@@ -112,6 +112,26 @@ _FRONT_DOOR = {
     "Lattice": "syncem.lattice.lattice",
     "MomentIndex": "syncem.lattice.index",
     "Moments": "syncem.lattice.moments",
+    "ContinuumKernel": "syncem.base.continuum",
+    "Kernel": "syncem.base.kernel",
+    "Modes": "syncem.base.kernel",
+    "Regime": "syncem.base.kernel",
+    "PhaseLaw": "syncem.base.phase",
+    "FaradayRotation": "syncem.base.phase",
+    **{
+        name: "syncem.base.capabilities"
+        for name in (
+            "Similarity",
+            "FieldScalingRelation",
+            "Beaming",
+            "Parity",
+            "EnergyWindow",
+            "ReferenceDensity",
+            "Lines",
+            "AnalyticTaylor",
+            "HostOnly",
+        )
+    },
     **{
         name: "syncem.values.errors"
         for name in (
