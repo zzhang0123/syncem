@@ -11,6 +11,13 @@ NAMES = {
     "Channels": "syncem.base.channels",
     "Variable": "syncem.base.variables",
     "Quantity": "syncem.units",
+    "Cells": "syncem.lattice.cells",
+    "CellTable": "syncem.lattice.table",
+    "Legendre": "syncem.lattice.representations",
+    "AzimuthHarmonic": "syncem.lattice.representations",
+    "Lattice": "syncem.lattice.lattice",
+    "MomentIndex": "syncem.lattice.index",
+    "Moments": "syncem.lattice.moments",
     "UnitError": "syncem.values.errors",
     "RoleError": "syncem.values.errors",
     "RegimeError": "syncem.values.errors",
@@ -31,8 +38,8 @@ def test_front_door_names(name):
 
 
 def test_unknown_name_raises_attribute_error():
-    with pytest.raises(AttributeError, match="no attribute 'Cells'"):
-        syncem.Cells  # noqa: B018  (arrives with the lattice step)
+    with pytest.raises(AttributeError, match="no attribute 'Population'"):
+        syncem.Population  # noqa: B018  (arrives with the population step)
 
 
 def test_import_syncem_loads_neither_the_model_nor_scipy():

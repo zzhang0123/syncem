@@ -105,6 +105,13 @@ _FRONT_DOOR = {
     "Channels": "syncem.base.channels",
     "Variable": "syncem.base.variables",
     "Quantity": "syncem.units",
+    "Cells": "syncem.lattice.cells",
+    "CellTable": "syncem.lattice.table",
+    "Legendre": "syncem.lattice.representations",
+    "AzimuthHarmonic": "syncem.lattice.representations",
+    "Lattice": "syncem.lattice.lattice",
+    "MomentIndex": "syncem.lattice.index",
+    "Moments": "syncem.lattice.moments",
     **{
         name: "syncem.values.errors"
         for name in (
