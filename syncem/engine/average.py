@@ -20,6 +20,7 @@ direct integration.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any, Callable, ClassVar
 
 import equinox as eqx
@@ -29,27 +30,57 @@ import numpy as np
 
 from ..model._kernel_helpers import Modes, ProjectedModes
 
-__all__ = ["AveragedKernel", "core_adapter", "fixed_rule", "uniform_rule"]
+__all__ = ["AveragedKernel", "NodeRule", "core_adapter", "fixed_rule", "uniform_rule"]
 
 Rule = Callable[[dict], tuple[Any, Any]]
 
 
-def fixed_rule(nodes: Any, probs: Any) -> Rule:
+@dataclass(frozen=True)
+class NodeRule:
+    """A quadrature rule ``point -> (nodes, probabilities)`` with what the stack provider needs to know.
+
+    ``parents`` names the variables the law depends on (``None``: unknown, so only the jet may use it).
+    ``density(x, point)`` is the law's density, needed for frozen-node reweighting when a parent is celled. A rule
+    whose support moves with a celled parent has no valid reweighting and goes to the jet.
+    """
+
+    fn: Callable[[dict], tuple[Any, Any]]
+    parents: tuple[str, ...] | None = ()
+    density: Callable[[Any, dict], Any] | None = None
+
+    def __call__(self, point: dict) -> tuple[Any, Any]:
+        return self.fn(point)
+
+
+def fixed_rule(nodes: Any, probs: Any) -> NodeRule:
     """A rule that ignores the point: fixed nodes and probabilities."""
     nodes, probs = jnp.asarray(nodes, dtype=float), jnp.asarray(probs, dtype=float)
-    return lambda point: (nodes, probs)
+    return NodeRule(lambda point: (nodes, probs), parents=())
 
 
-def uniform_rule(lo: Any, hi: Any, n: int) -> Rule:
-    """Gauss-Legendre nodes of a uniform law on ``[lo, hi]``. ``lo`` and ``hi`` may be functions of the point."""
+def uniform_rule(
+    lo: Any, hi: Any, n: int, *, parents: tuple[str, ...] | None = None
+) -> NodeRule:
+    """Gauss-Legendre nodes of a uniform law on ``[lo, hi]``. ``lo`` and ``hi`` may be functions of the point.
+
+    With constant ends the law has no parents. With moving ends ``parents`` names them (default unknown).
+    """
     t, w = (jnp.asarray(a) for a in np.polynomial.legendre.leggauss(int(n)))
+    moving = callable(lo) or callable(hi)
 
     def rule(point: dict) -> tuple[Any, Any]:
         a = lo(point) if callable(lo) else lo
         b = hi(point) if callable(hi) else hi
         return 0.5 * (b - a) * t + 0.5 * (a + b), 0.5 * w
 
-    return rule
+    def density(x: Any, point: dict) -> Any:
+        a = lo(point) if callable(lo) else lo
+        b = hi(point) if callable(hi) else hi
+        return jnp.where((x >= a) & (x <= b), 1.0 / (b - a), 0.0)
+
+    return NodeRule(
+        rule, parents=parents if moving else (), density=None if moving else density
+    )
 
 
 class AveragedKernel(eqx.Module):

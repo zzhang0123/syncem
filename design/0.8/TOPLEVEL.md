@@ -215,7 +215,7 @@ Native code (NATIVE.md): 0.8 and 0.9 add no Rust or other new native code, becau
 | Cost item | Value |
 |---|---|
 | `import syncem` | 0.33 s, almost all JAX and Equinox |
-| S1 table | per-node quadrature 0.32 to 0.34 s per field node (NumPy). S0 table once (0.38 s), then S1 by lookups at about 6 ms per node, 3.7e-8 from the study quadrature at order 6 |
+| S1 table | per-node quadrature 0.32 to 0.34 s per field node (NumPy). S0 table once (0.38 s), then S1 by lookups at about 6 ms per node, 3.3e-10 of the peak from the quadrature table at order 6 (SPEC decision 140) |
 | E1 basis after S1 | 0.15 s (`N = 2`) and 0.21 s (`N = 4`) at 400 channel nodes |
 | accuracy check | 1.5 to 1.8 s once for the table, then about 1 ms per population |
 | core and jet providers | core 0.39 to 0.5 s per cell. Jet on E1 0.35 s per cell at `N = 2` and 3.0 s at `N = 4`, 260 and 1570 times the stack at equal channel quadrature. Jet at `d = 3`: 0.245 s per cell plus 1.04 s compile |
