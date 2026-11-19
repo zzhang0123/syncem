@@ -63,9 +63,16 @@ def channel_kernels(
     order: int,
     chunk_points: int = 3_000_000,
     depth: float = 0.0,
+    arrays: tuple[np.ndarray, np.ndarray, np.ndarray] | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """``KI`` real and ``KQ`` complex, ``(order + 1, n_g, n_e, J)``: ``d^r / d(ln gamma)^r`` of the channel kernels."""
-    nodes, weights, screen = _channel_arrays(channels, phase, depth)
+    """``KI`` real and ``KQ`` complex, ``(order + 1, n_g, n_e, J)``: ``d^r / d(ln gamma)^r`` of the channel kernels.
+
+    ``arrays`` holds ``_channel_arrays(channels, phase, depth)`` computed by the caller, which then skips that
+    computation (decision 145). The caller keeps it consistent with ``channels``, ``phase`` and ``depth``.
+    """
+    nodes, weights, screen = (
+        _channel_arrays(channels, phase, depth) if arrays is None else arrays
+    )
     gammas = np.atleast_1d(np.asarray(gammas, float))
     eta_s = np.atleast_1d(np.asarray(eta_s, float))
     if np.any(eta_s <= 0) or np.any(eta_s > 1):
@@ -126,12 +133,16 @@ def point_series(
     eta_probs: Any,
     order: int,
     depth: float = 0.0,
+    arrays: tuple[np.ndarray, np.ndarray, np.ndarray] | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
     """``(I, P)`` Taylor coefficients ``(order + 1, J)`` in the cell's energy chart, ``eta`` averaged by ``eta_probs``.
 
     ``eta_probs`` has shape ``(n_e,)`` or ``(n_e, *L)`` (signed Legendre weights), giving ``(order + 1, J, *L)``.
+    ``arrays`` passes precomputed channel arrays to ``channel_kernels``.
     """
-    ki, kq = channel_kernels(table, channels, phase, [gamma], eta_s, order, depth=depth)
+    ki, kq = channel_kernels(
+        table, channels, phase, [gamma], eta_s, order, depth=depth, arrays=arrays
+    )
     probs = np.asarray(eta_probs, float)
     i = np.einsum("rej,e...->rj...", ki[:, 0], probs)
     p = np.einsum("rej,e...->rj...", kq[:, 0], probs)

@@ -9,16 +9,18 @@ enter by a Cauchy product (frozen-node reweighting). A field law with no parents
 averaged once by its S1 table (cached-S1 mode). A ``(gamma, B)`` cell takes the field-scaling relation from the
 energy series at ``B_b`` (``expand.field_scaling_columns``) when no law depends on ``gamma`` or ``B``.
 
-Cases the stack cannot take raise ``StackRefused`` with the reason, and the caller takes the jet: a kernel other
-than ``ContinuumKernel`` itself (S0 holds its ``F`` and ``G``), unknown parents, a law that reads a celled variable
-it does not declare (an order-1 probe per rule and cell), a celled parent without a density or with one that JAX
-cannot trace, reweighted weights that do not reproduce the jet of the rule itself (decision 139: node by node for
-fixed nodes, on ``t^m``, ``m = 0..3``, for moving ones), weights amplified beyond ``_MAX_AMPLIFICATION`` (a law that
-moves by many widths across the cell), orders above the S1 table order, energies above the S1 grid for the lowest
-channel, and celled variables other than ``gamma`` and ``B``. Nodes at ``|eta| = 1`` or ``B = 0`` add zero. All S1
-tables of one memo read one S0 table. Units: those of the kernel. Shapes: series ``(order + 1, J, *L)``, cell rows
-``(n_rows, J)`` in the lattice order. Not certified: the reweighted quadrature, validated against the jet. The
-check bounds moments, so a law whose nodes do not resolve the kernel gives a quadrature error that the jet shares.
+Cases the stack cannot take raise ``StackRefused`` with the reason, and the caller takes the jet: a kernel other than
+``ContinuumKernel`` itself (S0 holds its ``F`` and ``G``), unknown parents, a law that reads a celled variable it does
+not declare (an order-1 probe per rule and cell), a celled parent without a density or with one that JAX cannot trace,
+reweighted weights that do not reproduce the jet of the rule itself (decision 139: node by node for fixed nodes, on
+``t^m``, ``m = 0..3``, for moving ones), weights amplified beyond ``_MAX_AMPLIFICATION`` (a law that moves by many
+widths across the cell), orders above the S1 table order, energies above the S1 grid for the lowest channel, and celled
+variables other than ``gamma`` and ``B``. Nodes at ``|eta| = 1`` or ``B = 0`` add zero. All S1 tables of one memo read
+one S0 table. The refusal checks and the frozen-node weights are in ``_stack_checks``, and the field cells and the row
+layout in ``_stack_fields`` (decision 145). A walk computes the channel nodes and weights once per depth value, and
+``stack_cell`` reports the mode it took. Units: those of the kernel. Shapes: series ``(order + 1, J, *L)``, cell rows
+``(n_rows, J)`` in the lattice order. Not certified: the reweighted quadrature, validated against the jet. The check
+bounds moments, so a law whose nodes do not resolve the kernel gives a quadrature error that the jet shares.
 """
 
 from __future__ import annotations
@@ -28,14 +30,20 @@ from typing import Any
 import jax.numpy as jnp
 import numpy as np
 
-from ..base.capabilities import FieldScalingRelation, Similarity
+from ..base.capabilities import Similarity
 from ..base.continuum import ContinuumKernel
+from ._stack_checks import (
+    StackRefused,
+    _call,
+    _check_lattice,
+    _check_undeclared,
+    _weights,
+)
+from ._stack_fields import _field_cell, _to_rows
 from .average import AveragedKernel, NodeRule
-from .expand import field_scaling_columns
 from .field_average import TABLE_ORDER, FieldAverage, OutsideTable
 from .primitive import PrimitiveTable
-from .provider_jet import taylor_coefficients
-from .provider_stack import point_series
+from .provider_stack import _channel_arrays, point_series
 
 __all__ = ["StackRefused", "stack_cell", "stack_lattice"]
 
@@ -43,10 +51,6 @@ _KERNEL_FREE = {
     "mu",
     "phi",
 }  # the continuum kernel is the isotropic pitch average and carries no azimuth factor
-
-
-class StackRefused(ValueError):
-    """The stack provider does not apply to this product cell. The reason names the condition."""
 
 
 def _mul(a: np.ndarray, b: np.ndarray, order: int) -> np.ndarray:
@@ -127,6 +131,14 @@ class _Context:
         self.probe = probe  # celled variables a law must declare when it reads them
         self.probed: set[int] = set()
         self.cached: FieldAverage | None = None
+        self._arrays: dict[float, tuple[np.ndarray, np.ndarray, np.ndarray]] = {}
+
+    def channel_arrays(self, depth: float) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """Channel nodes, response weights and phase weights, computed once per depth value (decision 145)."""
+        key = float(depth)
+        if key not in self._arrays:
+            self._arrays[key] = _channel_arrays(self.channels, self.averaged.phase, key)
+        return self._arrays[key]
 
     def table(self, b_gauss: float) -> FieldAverage:
         key = (self.s1, float(b_gauss))
@@ -141,171 +153,6 @@ class _Context:
             self.ref * jnp.exp(self.h * z)
             if self.chart == "log"
             else self.ref + self.h * z
-        )
-
-
-def _call(rule: NodeRule, name: str, point: dict) -> tuple[np.ndarray, np.ndarray]:
-    """``(nodes, probs)`` of a rule at a concrete point. A read of a variable the point lacks refuses."""
-    try:
-        nodes, probs = rule(point)
-    except KeyError as err:
-        raise StackRefused(
-            f"the law of {name} reads {err} outside its declared parents {rule.parents}: the jet takes the cell"
-        ) from err
-    return np.asarray(nodes, float), np.asarray(probs, float)
-
-
-def _check_undeclared(rule: NodeRule, name: str, point: dict, ctx: _Context) -> None:
-    """A law must declare every celled variable it reads. Probed once per rule and cell by an order-1 jet."""
-    if id(rule) in ctx.probed:
-        return
-    ctx.probed.add(id(rule))
-    for var in ctx.probe:
-        if var in rule.parents or var not in point:
-            continue
-
-        def moved(z: Any, var: str = var) -> Any:
-            x, p = rule({**point, var: point[var] * jnp.exp(z[0])})
-            return {"x": jnp.ravel(jnp.asarray(x)), "p": jnp.ravel(jnp.asarray(p))}
-
-        try:
-            jet = taylor_coefficients(moved, 1, [(0,), (1,)])
-        except TypeError as err:  # a read through Python control flow or float()
-            raise StackRefused(
-                f"the law of {name} cannot be traced in {var}, which it does not declare: the jet takes the cell"
-            ) from err
-        for key in ("x", "p"):
-            a = np.asarray(jet[key])
-            scale = max(float(np.max(np.abs(a[0]), initial=0.0)), 1e-300)
-            if not np.all(np.isfinite(a)) or np.any(np.abs(a[1]) > 1e-10 * scale):
-                raise StackRefused(
-                    f"the law of {name} depends on {var} but declares parents {rule.parents}: the jet takes the cell"
-                )
-
-
-_MAX_AMPLIFICATION = 1e4  # decision 139: the cancellation error is 1.5e-14 to 5.4e-14 of the amplification
-
-
-def _weights(
-    rule: NodeRule, name: str, point: dict, ctx: _Context
-) -> tuple[Any, np.ndarray]:
-    """Nodes and weight series ``(n_q, order + 1)`` of one averaged level."""
-    if rule.parents is None:
-        raise StackRefused(
-            "a law with undeclared parents: only the jet differentiates it"
-        )
-    _check_undeclared(rule, name, point, ctx)
-    nodes, probs = _call(rule, name, point)
-    series = np.zeros((nodes.size, ctx.order + 1))
-    series[:, 0] = probs
-    if "gamma" not in rule.parents:
-        return nodes, series
-    if not ctx.reweight:
-        return nodes, series  # the naive frozen weights, kept for the regression test
-    if rule.density is None:
-        raise StackRefused(
-            "a law conditional on the celled gamma without a density: frozen-node reweighting needs it"
-        )
-
-    def ratio(z: Any) -> Any:
-        moved = {**point, "gamma": ctx.gamma_at(z[0])}
-        return rule.density(jnp.asarray(nodes), moved) / rule.density(
-            jnp.asarray(nodes), point
-        )
-
-    try:
-        dens = np.asarray(rule.density(jnp.asarray(nodes), point), float)
-        if np.any((probs > 0) & ~(np.isfinite(dens) & (dens > 0))):
-            raise StackRefused(
-                f"the density of a law conditional on gamma is not positive and finite at its own nodes {nodes}: "
-                "the jet takes the cell"
-            )
-        coefs = np.asarray(
-            taylor_coefficients(ratio, 1, [(n,) for n in range(ctx.order + 1)])
-        )  # (order+1, n_q)
-    except TypeError as err:  # a density that JAX cannot trace in gamma
-        raise StackRefused(
-            f"the density of the law of {name} cannot be differentiated in gamma: {err}"
-        ) from err
-    series = probs[:, None] * coefs.T
-    _check_frozen(rule, point, ctx, nodes, series)
-    amplification = float(
-        np.max(np.sum(np.abs(series), axis=0)) / np.sum(np.abs(probs))
-    )
-    if amplification > _MAX_AMPLIFICATION:
-        raise StackRefused(
-            f"frozen-node reweighting amplifies the weights by {amplification:.3g} at {point}: the law moves by "
-            "many widths across the cell and the columns lose digits by cancellation. The jet takes the cell"
-        )
-    return nodes, series
-
-
-_TEST_POWERS = 3
-
-
-def _check_frozen(
-    rule: NodeRule,
-    point: dict,
-    ctx: _Context,
-    nodes: np.ndarray,
-    series: np.ndarray,
-    tol: float = 1e-8,
-) -> None:
-    """Decision 139: the reweighted weights reproduce the jet of the rule itself.
-
-    With nodes that do not move with ``gamma`` the reference is the rule's own weight jet, node by node (an exact
-    identity for a density that matches the rule). With moving nodes it is the jet of ``sum_q p_q(gamma)
-    t(x_q(gamma))^m``, ``m = 0..3``, ``t = (x - centre) / spread`` from the reference nodes, against
-    ``sum_q w_q^(k) t_q^m``. They agree to ``tol`` of ``max(1, sum_q |w_q^(k)| |t_q|^m)``. A support that moves with
-    ``gamma``, a density whose ``gamma`` dependence differs from the rule's in these moments, or non-finite weights
-    fail. The check bounds moments, not the integrand: a law whose nodes do not resolve the kernel is a quadrature
-    error that the jet shares (decision 139). The columns are Taylor coefficients at the reference point, so node
-    shifts across the cell do not enter.
-    """
-    order = series.shape[1] - 1
-    probs = series[:, 0]
-    centre = float(np.sum(probs * nodes))
-    spread = float(np.sqrt(np.sum(probs * (nodes - centre) ** 2))) or 1.0
-    powers = np.arange(_TEST_POWERS + 1)
-
-    def moments(z: Any) -> Any:
-        x, p = rule({**point, "gamma": ctx.gamma_at(z[0])})
-        x, p = jnp.asarray(x), jnp.asarray(p)
-        t = (x - centre) / spread
-        return {"x": x, "p": p, "m": jnp.stack([jnp.sum(p * t**m) for m in powers])}
-
-    try:
-        jet = taylor_coefficients(moments, 1, [(n,) for n in range(order + 1)])
-    except TypeError as err:  # a rule that JAX cannot trace in gamma
-        raise StackRefused(
-            f"the rule of a law conditional on gamma cannot be differentiated: {err}"
-        ) from err
-    jx, jp, jm = (np.asarray(jet[k]) for k in ("x", "p", "m"))
-    if np.all(np.abs(jx[1:]) <= 1e-12 * (float(np.max(np.abs(nodes))) or 1.0)):
-        scale = np.maximum(1.0, np.sum(np.abs(series), axis=0))[None, :]
-        bad = (
-            ~np.isfinite(series)
-            | ~np.isfinite(jp.T)
-            | (np.abs(series - jp.T) > tol * scale)
-        )
-        if np.any(bad):
-            q, k = (int(i) for i in np.argwhere(bad)[0])
-            raise StackRefused(
-                f"frozen-node reweighting does not reproduce the rule's weights at its fixed nodes at {point}: node "
-                f"{q}, order {k}, {series[q, k]:.6g} against {jp[k, q]:.6g}. The density does not match the rule. "
-                "The jet takes the cell"
-            )
-        return
-    t = (nodes - centre) / spread
-    frozen = series.T @ (t[:, None] ** powers)  # (order + 1, m)
-    scale = np.maximum(1.0, np.abs(series).T @ (np.abs(t)[:, None] ** powers))
-    bad = ~np.isfinite(frozen) | ~np.isfinite(jm) | (np.abs(frozen - jm) > tol * scale)
-    if np.any(bad):
-        k, m = (int(i) for i in np.argwhere(bad)[0])
-        raise StackRefused(
-            f"frozen-node reweighting does not reproduce the moving nodes at {point}: order {k}, test power {m}, "
-            f"{frozen[k, m]:.6g} against {jm[k, m]:.6g}. The support moves with gamma, the density does not "
-            "match the rule, or the nodes do not resolve these moments. The jet takes the cell"
         )
 
 
@@ -334,6 +181,7 @@ def _leaf(
         return _zeros(ctx, probs)
     nodes, probs = nodes[keep], probs[keep]
     table = ctx.cached if ctx.cached is not None else ctx.table(float(point["B"]))
+    depth = float(point.get("depth", 0.0))
     return point_series(
         table,
         ctx.channels,
@@ -344,7 +192,8 @@ def _leaf(
         np.sqrt(1 - nodes**2),
         probs,
         ctx.order,
-        depth=float(point.get("depth", 0.0)),
+        depth=depth,
+        arrays=ctx.channel_arrays(depth),
     )
 
 
@@ -428,7 +277,8 @@ def _gamma_series(
     fixed: dict,
     reweight: bool,
     probe: tuple[str, ...] = ("gamma",),
-) -> tuple[Any, Any]:
+) -> tuple[Any, Any, str]:
+    """Energy series ``(I, P)`` of the walk and its mode, "cached-S1" or "per-node"."""
     if type(
         averaged.kernel
     ) is not ContinuumKernel or not any(  # a subclass may change the kernel values
@@ -455,7 +305,8 @@ def _gamma_series(
         and not any(lv[0] == "avg" and lv[1] == "B" for lv in levels)
     ):
         raise StackRefused("B is neither celled nor averaged nor fixed")
-    return _walk(levels, point, ctx)
+    si, sp = _walk(levels, point, ctx)
+    return si, sp, "per-node" if ctx.cached is None else "cached-S1"
 
 
 def _feeds(name: str, averaged: AveragedKernel) -> bool:
@@ -463,16 +314,6 @@ def _feeds(name: str, averaged: AveragedKernel) -> bool:
         isinstance(r, NodeRule) and (r.parents is None or name in r.parents)
         for _, r in averaged.averaged
     )
-
-
-def _to_rows(series: Any, pattern: list[tuple[int, ...]], picker: Any) -> Any:
-    """Rows in lattice order (Legendre pair, then monomial) from per-exponent arrays ``(J, *L)``."""
-    cols = np.stack([picker(e) for e in pattern])  # (n_m, J, *L)
-    n_l = cols.ndim - 2
-    if n_l == 0:
-        return cols
-    moved = np.moveaxis(cols, tuple(range(2, cols.ndim)), tuple(range(n_l)))
-    return moved.reshape((-1, cols.shape[1]))
 
 
 def stack_cell(
@@ -484,12 +325,20 @@ def stack_cell(
     s1: str = "lookup",
     memo: dict | None = None,
     reweight: bool = True,
+    record: list | None = None,
 ) -> tuple[Any, Any]:
-    """``(I, P)`` rows of one product cell in lattice order, or ``StackRefused``."""
+    """``(I, P)`` rows of one product cell in lattice order, or ``StackRefused``.
+
+    ``record``, when given, receives the mode of the cell: "cached-S1", "per-node" or "field-scaling" (decision
+    145). A refused cell appends nothing.
+    """
     try:
-        return _stack_cell(averaged, channels, lattice, cell, s1, memo, reweight)
+        rows, mode = _stack_cell(averaged, channels, lattice, cell, s1, memo, reweight)
     except OutsideTable as err:
         raise StackRefused(f"{err}. The jet takes the cell") from err
+    if record is not None:
+        record.append(mode)
+    return rows
 
 
 def _stack_cell(
@@ -500,25 +349,13 @@ def _stack_cell(
     s1: str,
     memo: dict | None,
     reweight: bool,
-) -> tuple[Any, Any]:
+) -> tuple[tuple[Any, Any], str]:
     if s1 not in ("lookup", "quadrature"):
         raise ValueError("s1 must be 'lookup' or 'quadrature'")
     memo = {} if memo is None else memo
     table, index = lattice.cells, lattice.index
     names = table.variables
-    if "gamma" not in names or not set(names) <= {"gamma", "B"}:
-        raise StackRefused(
-            f"celled variables {names}: the stack takes gamma and optionally B. The jet takes the cell"
-        )
-    taken = {n for n, _ in averaged.averaged} | {n for n, _ in averaged.fixed}
-    if set(names) & taken:
-        raise ValueError(
-            f"{sorted(set(names) & taken)} are celled and also averaged or fixed in the averaged kernel"
-        )
-    if index.legendre != tuple((n, L) for n, L, _ in averaged.legendre):
-        raise ValueError(
-            "the lattice's Legendre axes differ from the averaged kernel's"
-        )
+    _check_lattice(averaged, lattice)
     g = names.index("gamma")
     chart, ref, h = (
         table.chart[cell][g],
@@ -532,84 +369,22 @@ def _stack_cell(
         )
     if names == ("gamma",):
         order = max(e[0] for e in pattern)
-        si, sp = _gamma_series(
+        si, sp, mode = _gamma_series(
             averaged, channels, chart, ref, h, order, s1, memo, {}, reweight
         )
-        return _to_rows(si, pattern, lambda e: si[e[0]]), _to_rows(
+        rows = _to_rows(si, pattern, lambda e: si[e[0]]), _to_rows(
             sp, pattern, lambda e: sp[e[0]]
         )
-    return _field_cell(
-        averaged, channels, table, cell, pattern, names, (chart, ref, h), s1, memo
-    )
+        return rows, mode
 
-
-def _field_cell(
-    averaged: AveragedKernel,
-    channels: Any,
-    table: Any,
-    cell: int,
-    pattern: list,
-    names: tuple,
-    energy: tuple,
-    s1: str,
-    memo: dict,
-) -> tuple[Any, Any]:
-    chart, ref, h = energy
-    if chart != "log":
-        raise StackRefused(
-            "field cells with an affine energy chart: the scaling relation needs the log chart"
+    def series(need: int, fixed: dict, probe: tuple[str, ...]) -> tuple[Any, Any]:
+        si, sp, _ = _gamma_series(
+            averaged, channels, "log", ref, h, need, s1, memo, fixed, True, probe
         )
-    if not any(
-        isinstance(c, FieldScalingRelation) for c in averaged.kernel.capabilities
-    ):
-        raise StackRefused("the kernel declares no FieldScalingRelation")
-    for name, rule in averaged.averaged:
-        if not isinstance(rule, NodeRule):
-            raise StackRefused(
-                f"the law of {name} is a bare function: the field-scaling precondition needs its parents"
-            )
-        if rule.parents is None:
-            raise StackRefused(
-                f"the law of {name} has undeclared parents: the field-scaling precondition needs them"
-            )
-        if {"gamma", "B"} & set(rule.parents):
-            raise StackRefused(
-                f"the law of {name} depends on gamma or B: the field-scaling precondition fails"
-            )
-    b = names.index("B")
-    b_chart, b_ref, b_h = (
-        table.chart[cell][b],
-        float(table.reference[cell, b]),
-        float(table.half_width[cell, b]),
-    )
-    need = max(sum(e) for e in pattern)
-    si, sp = _gamma_series(
-        averaged,
-        channels,
-        "log",
-        ref,
-        h,
-        need,
-        s1,
-        memo,
-        {"B": b_ref},
-        True,
-        ("gamma", "B"),
-    )
-    exps = [(e[names.index("gamma")], e[b]) for e in pattern]
-    kw = dict(
-        h_gamma=h,
-        field_chart=b_chart,
-        field_ref=b_ref,
-        field_half_width=b_h,
-        field_basis=b_ref,
-    )
-    ci = field_scaling_columns({n: si[n] for n in range(need + 1)}, exps, **kw)
-    cp = field_scaling_columns({n: sp[n] for n in range(need + 1)}, exps, **kw)
-    return (
-        _to_rows(ci, exps, lambda e: np.asarray(ci[e])),
-        _to_rows(cp, exps, lambda e: np.asarray(cp[e])),
-    )
+        return si, sp
+
+    rows = _field_cell(averaged, table, cell, pattern, names, (chart, ref, h), series)
+    return rows, "field-scaling"
 
 
 def stack_lattice(
