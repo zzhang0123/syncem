@@ -17,10 +17,12 @@ from __future__ import annotations
 import hashlib
 import itertools
 from dataclasses import dataclass, field
+from functools import cached_property
 from typing import Any, Callable
 
 import numpy as np
 
+from ._row_arrays import RowArrays, row_arrays
 from .table import CellTable
 
 __all__ = ["MomentIndex", "Row", "lower_set"]
@@ -134,6 +136,11 @@ class MomentIndex:
     @property
     def rows(self) -> _Rows:
         return _Rows(self)
+
+    @cached_property
+    def arrays(self) -> RowArrays:
+        """Block, cell, pair, monomial, powers and degrees of every row as read-only int64 arrays."""
+        return row_arrays(self)
 
     def _count(self, c: int) -> int:
         return int(self.offsets[c + 1] - self.offsets[c])

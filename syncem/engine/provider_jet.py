@@ -7,7 +7,8 @@ lower set, by nested forward mode. Each nesting level differentiates only the di
 needs at that depth (cap-aware nesting, the ``level_plan`` of ``syncem.model._harmonic_taylor`` generalised to
 ``d`` directions): an exponent's derivatives are taken innermost for the variables with the smallest caps, so a
 variable of cap ``c`` appears only in the levels it can reach. Cells with equal charts and lower sets share one
-compiled routine, mapped over the cells with ``lax.map``.
+compiled routine, mapped over the cells with ``lax.map``. ``jet_lattice`` pads each group to the next power of
+two by repeating its first reference and drops the padded outputs, so the cell count is not compiled in.
 
 The cost per cell is about ``prod_i (1 + |D_i|)`` primal evaluations over the levels ``i``, with ``D_i`` the
 directions of level ``i``. The plan prints it (SPEC Sec. 8.3, decision (b)). The columns carry the units of the kernel.
@@ -236,34 +237,70 @@ def jet_cell(
     return tuple(_rows(a, 1) for a in out)
 
 
+def _padded(cells: list[int]) -> list[int]:
+    """``cells`` padded to the next power of two by repeating the first, so the count is not compiled in."""
+    size = 1 << (len(cells) - 1).bit_length()
+    return cells + [cells[0]] * (size - len(cells))
+
+
+def _selection(table: Any, cells: Any) -> list[int]:
+    if cells is None:
+        return list(range(table.n_cells))
+    chosen = [int(c) for c in cells]
+    if not chosen or any(c < 0 or c >= table.n_cells for c in chosen):
+        raise ValueError(
+            f"cells must name product cells of 0..{table.n_cells - 1}, got {cells!r}"
+        )
+    return chosen
+
+
 def jet_lattice(
-    averaged: AveragedKernel, channels: Any, lattice: Any, *, with_v: bool = False
+    averaged: AveragedKernel,
+    channels: Any,
+    lattice: Any,
+    *,
+    with_v: bool = False,
+    cells: Any = None,
+    exponents: Any = None,
 ) -> tuple[Any, ...]:
-    """Columns of every product cell in the rows of one block, ``(block_size, n_ch)`` each."""
+    """Columns of product cells in the rows of one block, ``(block_size, n_ch)`` each.
+
+    ``cells`` selects product cells, and the rows of each follow in the order given (repeats allowed).
+    ``exponents`` replaces every selected cell's lower set, so a cell gives ``n_pairs * len(exponents)`` rows.
+    Cells run in groups of equal (charts, exponents), each padded to the next power of two by repeating its first
+    reference. The padded outputs are dropped (decision 150).
+    """
     _legendre_order(averaged, lattice)
     table, index = lattice.cells, lattice.index
     names = table.variables
     _check(averaged, names)
+    chosen = _selection(table, cells)
+    fixed = (
+        None
+        if exponents is None
+        else tuple(tuple(int(x) for x in e) for e in exponents)
+    )
+    if fixed is not None and (
+        not fixed or any(len(e) != len(names) or min(e) < 0 for e in fixed)
+    ):
+        raise ValueError(
+            f"exponents must be a non-empty tuple of {len(names)} non-negative ints each, one per axis {names}"
+        )
     groups: dict[tuple, list[int]] = {}
-    for c in range(table.n_cells):
-        key = (table.chart[c], index.patterns[int(index.cell_pattern[c])])
-        groups.setdefault(key, []).append(c)
-    pieces_i: list[Any] = [None] * table.n_cells
-    pieces_p: list[Any] = [None] * table.n_cells
-    pieces_v: list[Any] = [None] * table.n_cells
-    for (charts, pattern), cells in groups.items():
-        run = _routine(names, tuple(charts), tuple(pattern))
-        refs = jnp.asarray(table.reference[cells], dtype=float)
-        hws = jnp.asarray(table.half_width[cells], dtype=float)
+    for c in dict.fromkeys(chosen):
+        pattern = index.patterns[int(index.cell_pattern[c])] if fixed is None else fixed
+        groups.setdefault((table.chart[c], tuple(pattern)), []).append(c)
+    pieces: dict[int, tuple[Any, Any, Any]] = {}
+    for (charts, pattern), members in groups.items():
+        run = _routine(names, tuple(charts), pattern)
+        padded = _padded(members)
+        refs = jnp.asarray(table.reference[padded], dtype=float)
+        hws = jnp.asarray(table.half_width[padded], dtype=float)
         i, p, v = run(averaged, channels, refs, hws)
-        for k, c in enumerate(cells):
-            pieces_i[c], pieces_p[c], pieces_v[c] = (
-                _rows(i[k], 1),
-                _rows(p[k], 1),
-                _rows(v[k], 1),
-            )
-    out = (jnp.concatenate(pieces_i), jnp.concatenate(pieces_p))
-    return out + (jnp.concatenate(pieces_v),) if with_v else out
+        for k, c in enumerate(members):
+            pieces[c] = (_rows(i[k], 1), _rows(p[k], 1), _rows(v[k], 1))
+    out = tuple(jnp.concatenate([pieces[c][k] for c in chosen]) for k in range(3))
+    return out if with_v else out[:2]
 
 
 def cost(exponents: Any) -> int:

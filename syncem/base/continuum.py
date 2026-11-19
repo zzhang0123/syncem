@@ -67,6 +67,8 @@ class ContinuumKernel(eqx.Module):
     depth: ClassVar[str] = "depth"
     traceable: ClassVar[bool] = True
     lines: ClassVar[bool] = False
+    # describe() entries that only guard, left out of key records
+    guards: ClassVar[tuple[str, ...]] = ("x_min",)
     capabilities: ClassVar[tuple] = (
         Similarity(("gamma",)),
         FieldScalingRelation("B", "gamma"),

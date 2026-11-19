@@ -12,6 +12,7 @@ coverage of the population's support, which the ``outside_lattice`` term measure
 
 from __future__ import annotations
 
+import hashlib
 import itertools
 from typing import Any
 
@@ -184,3 +185,27 @@ class CellTable(eqx.Module):
             for k in ("lo", "hi", "reference", "half_width")
         ]
         return b"|".join(parts)
+
+    def geometry_digests(self) -> tuple[str, ...]:
+        """One sha256 hex digest per product cell, for the keys of the basis stages (SPEC decision 146).
+
+        A digest hashes the variable names, the excluded set, the cell's chart and its ``lo``, ``hi``,
+        ``reference`` and ``half_width``, with the floats written as in ``definition()``. It holds no
+        order, no weight, no cell number and no tensor shape, so ``select`` and ``refine`` keep the digest
+        of an unchanged cell. Traced cell arrays raise ``ValueError``.
+        """
+        arrays = [getattr(self, k) for k in ("lo", "hi", "reference", "half_width")]
+        if any(hasattr(a, "aval") for a in arrays):
+            raise ValueError(
+                "geometry digests need concrete cell arrays. Build the lattice outside a transformation"
+            )
+        stacked = np.stack([np.asarray(a, dtype=float) for a in arrays], axis=1) + 0.0
+        stacked = np.ascontiguousarray(stacked)
+        head = repr(("cell geometry", self.variables, self.excluded)).encode()
+        charts: dict[tuple[str, ...], bytes] = {}
+        out = []
+        for c in range(self.n_cells):
+            chart = charts.setdefault(self.chart[c], repr(self.chart[c]).encode())
+            body = b"|".join([head, chart, stacked[c].tobytes()])
+            out.append(hashlib.sha256(body).hexdigest())
+        return tuple(out)

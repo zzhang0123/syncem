@@ -30,11 +30,13 @@ import sys
 from typing import Any
 
 import equinox as eqx
+import jax
 import jax.numpy as jnp
 import numpy as np
 
 from ..model.channels import Channels as _ModelChannels
 from ..units import Quantity, UnitError, dimension_of, parse, to_canonical
+from ._fingerprint import NotCacheable, digest
 
 __all__ = ["SIGMA_RHO", "Channels"]
 
@@ -109,6 +111,13 @@ def _frequencies(values: Any, unit: str | None, call: str) -> tuple[np.ndarray, 
     raise UnitError(
         f'{call} has no unit. Pass unit="GHz", or give the frequencies as strings such as "1.4 GHz".'
     )
+
+
+def _concrete(values: Any) -> Any:
+    """``values`` unchanged, or ``NotCacheable`` when they are traced."""
+    if isinstance(values, jax.core.Tracer):
+        raise NotCacheable(f"traced channel array of shape {values.shape} has no value")
+    return values
 
 
 def _positive_int(value: Any, name: str) -> int:
@@ -300,6 +309,21 @@ class Channels(_ModelChannels):
     def response_weights(self) -> Any:
         """``(n_ch, n_nu)`` weights of the band average: ``weights * R_j(nodes)``."""
         return self.weights * self.node_values()
+
+    def row_keys(self) -> tuple[str, ...]:
+        """One sha256 digest per channel (decision 153), for keying stored rows channel by channel.
+
+        Channel ``j`` hashes ``nodes[j]``, ``response_weights()[j]`` and the ``family``, ``normalisation``
+        and ``smoothness`` labels. The ``unit`` label is not hashed, so channels given in GHz and in MHz
+        at the same frequencies share keys. ``channels[rows].row_keys()`` equals the selected keys when
+        the selection leaves the arrays of each row unchanged. Raises ``NotCacheable`` under a trace.
+        """
+        nodes = np.asarray(_concrete(self.nodes))
+        weights = np.asarray(_concrete(self.response_weights()))
+        labels = ("channel row", self.family, self.normalisation, self.smoothness)
+        return tuple(
+            digest((*labels, nodes[j], weights[j])) for j in range(nodes.shape[0])
+        )
 
     def __getitem__(self, rows: Any) -> "Channels":
         index = np.arange(self.n_ch)[rows]
