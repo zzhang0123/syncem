@@ -1,19 +1,27 @@
 """Step 5b-0 of design/0.8/SPEC.md (decision 145): the stack split, the hoisted channel arrays and the mode report.
 
 The reference ``data/stack_5a_reference.npz`` (sha256
-a62c6b22783d5fd5934bef3b9f139eb3e4ed9ca46317ceb919f68f5045cf322e) holds the ``(I, P)`` rows that ``stack_cell``
-gave at commit 2cc657f (step 5a), before the refactor, on ``small_channels()`` (5 channels of 32 nodes). The cases
-are cells 0, 9 and 18 at order 4 of ``Cells.log(300, 3e6, 19)`` in per-node mode (``B`` on 16 nodes given ``eta``
-on 12 nodes) and in cached-S1 mode (``B`` on 16 Gauss-Legendre nodes on [4, 6] uG, ``eta`` on 12 nodes on [0, 0.5],
-``FaradayRotation(GaussianScreen(8, 0.5))``), and the first, middle and last ``(gamma, B)`` cells of a 3 by 3
-field-scaling lattice at order 4. Each case uses one memo across its cells, in that order. The refactor moves code
-and computes the channel arrays once per walk and depth value, so the rows are equal bit for bit.
+547abefd03ec1024e66d6e20c6499087179381a5ff80f4e97c542229e52be738) holds the ``(I, P)`` rows that ``stack_cell``
+gives with the S0 span (-30, 20) of decision 158 on ``small_channels()`` (5 channels of 32 nodes). It was written
+in step 5b-2. The cases are cells 0, 9 and 18 at order 4 of ``Cells.log(300, 3e6, 19)`` in per-node mode (``B`` on
+16 nodes given ``eta`` on 12 nodes) and in cached-S1 mode (``B`` on 16 Gauss-Legendre nodes on [4, 6] uG, ``eta``
+on 12 nodes on [0, 0.5], ``FaradayRotation(GaussianScreen(8, 0.5))``), and the first, middle and last ``(gamma,
+B)`` cells of a 3 by 3 field-scaling lattice at order 4. Each case uses one memo across its cells, in that order.
+The rows of the current code equal it bit for bit.
 
 The reference ``data/stack_5a_depth_reference.npz`` (sha256
-ada832335ccdaa9052fdd46478a078aa2d679782845a81b906916b2ae04ce8ac) holds the rows of the same commit for depth on 4
-nodes given ``B`` on 3 nodes, ``eta`` on 3 nodes and ``FaradayRotation()``, cells 0, 1 and 2 of
-``Cells.log(300, 3e6, 3)`` at order 2 in per-node mode (``test_v080_stack.test_depth_given_averaged_b``). Its depth
-varies across the field nodes, so it checks the values of the per-depth channel arrays.
+f679748eb1477002d83c8405043e6bd34aaab4592517aeeb0e55ab5014c4b296) holds the rows for depth on 4 nodes given ``B``
+on 3 nodes, ``eta`` on 3 nodes and ``FaradayRotation()``, cells 0, 1 and 2 of ``Cells.log(300, 3e6, 3)`` at order 2
+in per-node mode (``test_v080_stack.test_depth_given_averaged_b``). Its depth varies across the field nodes, so it
+checks the values of the per-depth channel arrays.
+
+The files ``data/stack_5a_reference_step5a.npz`` (sha256
+a62c6b22783d5fd5934bef3b9f139eb3e4ed9ca46317ceb919f68f5045cf322e) and ``data/stack_5a_depth_reference_step5a.npz``
+(sha256 ada832335ccdaa9052fdd46478a078aa2d679782845a81b906916b2ae04ce8ac) are the rows of commit 2cc657f (step 5a),
+with the S0 span from ``ln 1e-12`` to ``ln 1e7``. The step-5b-0 refactor reproduced them bit for bit. The rows of
+the S0 span of decision 158 moved by at most 6.2e-15 of the largest value of their row (measured 6.216e-15 and
+9.08e-16, 2026-11-19). ``STEP_5A_TOL = 1e-14`` is a margin of 1.6 on that measurement. Their distance to the rows
+with S1 by quadrature changed by at most 5.3e-16 of the row maximum (2026-11-19, 1-minute load 20.6 to 24.9).
 """
 
 import hashlib
@@ -33,11 +41,22 @@ from syncem.lattice.lattice import Lattice
 from tests.v080.test_v080_stack import screen, small_channels
 
 REFERENCE = Path(__file__).resolve().parent / "data" / "stack_5a_reference.npz"
-REFERENCE_SHA256 = "a62c6b22783d5fd5934bef3b9f139eb3e4ed9ca46317ceb919f68f5045cf322e"
+REFERENCE_SHA256 = "547abefd03ec1024e66d6e20c6499087179381a5ff80f4e97c542229e52be738"
 DEPTH_REFERENCE = REFERENCE.with_name("stack_5a_depth_reference.npz")
 DEPTH_REFERENCE_SHA256 = (
-    "ada832335ccdaa9052fdd46478a078aa2d679782845a81b906916b2ae04ce8ac"
+    "f679748eb1477002d83c8405043e6bd34aaab4592517aeeb0e55ab5014c4b296"
 )
+STEP_5A = {
+    REFERENCE: (
+        REFERENCE.with_name("stack_5a_reference_step5a.npz"),
+        "a62c6b22783d5fd5934bef3b9f139eb3e4ed9ca46317ceb919f68f5045cf322e",
+    ),
+    DEPTH_REFERENCE: (
+        REFERENCE.with_name("stack_5a_depth_reference_step5a.npz"),
+        "ada832335ccdaa9052fdd46478a078aa2d679782845a81b906916b2ae04ce8ac",
+    ),
+}
+STEP_5A_TOL = 1e-14
 K = ContinuumKernel(x_min=1e-12)
 CELLS = (0, 9, 18)
 
@@ -98,12 +117,24 @@ CASES = {
     "path, digest",
     [(REFERENCE, REFERENCE_SHA256), (DEPTH_REFERENCE, DEPTH_REFERENCE_SHA256)],
 )
-def test_reference_file_is_the_step_5a_output(path, digest):
+def test_reference_file_has_its_digest(path, digest):
     assert hashlib.sha256(path.read_bytes()).hexdigest() == digest
 
 
+@pytest.mark.parametrize("path", [REFERENCE, DEPTH_REFERENCE])
+def test_references_are_within_the_measured_move_of_the_step_5a_rows(path):
+    old_path, digest = STEP_5A[path]
+    assert hashlib.sha256(old_path.read_bytes()).hexdigest() == digest
+    with np.load(path) as new, np.load(old_path) as old:
+        assert sorted(new.files) == sorted(old.files)
+        for key in new.files:
+            a, b = new[key], old[key]
+            scale = np.abs(a).max(axis=tuple(range(1, a.ndim)), keepdims=True)
+            assert a.shape == b.shape and np.max(np.abs(a - b) / scale) < STEP_5A_TOL
+
+
 @pytest.mark.parametrize("name", list(CASES))
-def test_rows_equal_the_step_5a_output_bit_for_bit(name):
+def test_rows_equal_the_reference_bit_for_bit(name):
     build, mode, path = CASES[name]
     avg, lattice, cells = build()
     ch, memo, record = small_channels(), {}, []

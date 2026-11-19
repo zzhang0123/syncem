@@ -14,15 +14,16 @@ Units: those of ``fn`` per Hz, integrated over unit-area channels. Shapes: ``I``
 
 from __future__ import annotations
 
-import hashlib
+import dataclasses
 import inspect
 from typing import Any, Callable
 
 import equinox as eqx
 import jax.numpy as jnp
-import numpy as np
 
 from ..model.errors import ErrorTerm
+from ._fingerprint import NotCacheable, digest
+from ._function_fingerprint import function_fingerprint
 from .kernel import Modes, Regime
 from .phase import PhaseLaw
 from .variables import Variable
@@ -32,59 +33,38 @@ __all__ = ["UserKernel", "kernel"]
 _STOKES = ("I", "P", "V")
 
 
-def _digest_value(value: Any, depth: int = 0) -> str:
-    """Stable digest of a closure value: arrays by bytes, functions by their code, others by repr."""
-    if hasattr(value, "__code__") and depth < 3:
-        return (
-            _digest_code(value.__code__)
-            + "|"
-            + "|".join(
-                _digest_value(c.cell_contents, depth + 1)
-                for c in (value.__closure__ or ())
-            )
-        )
+def _fingerprint(fn: Callable) -> tuple[str | None, tuple[str, ...]]:
+    """``function_fingerprint(fn)``, or ``None`` and the reason (design/0.8/SPEC.md decision 156)."""
     try:
-        array = np.asarray(value)
-        if array.dtype != object:
-            return (
-                f"{array.dtype}{array.shape}"
-                + hashlib.sha256(np.ascontiguousarray(array).tobytes()).hexdigest()
-            )
-    except (TypeError, ValueError):
-        pass
-    return repr(value)
+        return function_fingerprint(fn), ()
+    except NotCacheable as error:
+        return None, (f"not cached: function: {error.reason}",)
 
 
-def _digest_code(code: Any) -> str:
-    """Digest of a code object: bytecode, names and constants, nested code objects by their own digest."""
-    consts = tuple(
-        _digest_code(c) if hasattr(c, "co_code") else repr(c) for c in code.co_consts
+def _capability_value(capability: Any) -> Any:
+    """A capability as plain data: a dataclass by name and fields, a function field by its fingerprint."""
+    if not dataclasses.is_dataclass(capability) or isinstance(capability, type):
+        return capability
+    cls = type(capability)
+    fields = tuple(
+        (f.name, _field_value(getattr(capability, f.name)))
+        for f in dataclasses.fields(capability)
     )
-    return hashlib.sha256(
-        repr((code.co_code, code.co_names, consts)).encode()
-    ).hexdigest()
+    return (f"{cls.__module__}.{cls.__qualname__}", fields)
 
 
-def _identity(fn: Callable) -> tuple:
-    """Module, qualified name and a hash of the code, names, constants and closure values.
+def _field_value(value: Any) -> Any:
+    if callable(value) and not isinstance(value, type):
+        return ("function", function_fingerprint(value))
+    return value
 
-    Globals that the function reads and functions it calls by name are not hashed. A changed global keeps the
-    record, so a cache keyed on it must be cleared by hand.
-    """
-    code = getattr(fn, "__code__", None)
-    if code is None:
-        return (
-            getattr(fn, "__module__", ""),
-            getattr(fn, "__qualname__", ""),
-            repr(fn),
-        )
-    cells = tuple(_digest_value(c.cell_contents) for c in (fn.__closure__ or ()))
-    payload = (_digest_code(code) + "|" + "|".join(cells)).encode()
-    return (
-        getattr(fn, "__module__", ""),
-        getattr(fn, "__qualname__", ""),
-        hashlib.sha256(payload).hexdigest(),
-    )
+
+def _capabilities(capabilities: tuple) -> tuple[str | None, tuple[str, ...]]:
+    """One digest of the capabilities through ``encode``, or ``None`` and the reason."""
+    try:
+        return digest(tuple(_capability_value(c) for c in capabilities)), ()
+    except NotCacheable as error:
+        return None, (f"not cached: capabilities: {error.reason}",)
 
 
 def _measure(channels: Any) -> Any:
@@ -184,15 +164,22 @@ class UserKernel(eqx.Module):
         )
 
     def describe(self) -> tuple:
-        """Kernel record: the function's identity and a content hash, the variables and the roles."""
+        """Kernel record: the function fingerprint, the variables, the roles and the capability digest.
+
+        ``function`` and ``capabilities`` are ``None`` when they have no fingerprint, and ``not_cached``
+        then holds the reasons. A key built from a record with a ``None`` entry is ``None``.
+        """
+        function, why_function = _fingerprint(self.fn)
+        capabilities, why_capabilities = _capabilities(self.capabilities)
         return (
             ("name", self.name),
-            ("function", _identity(self.fn)),
+            ("function", function),
             ("variables", tuple((v.name, v.kind, v.unit) for v in self.variables)),
             ("stokes", self.stokes),
             ("azimuth", self.azimuth),
             ("depth", self.depth),
-            ("capabilities", tuple(map(repr, self.capabilities))),
+            ("capabilities", capabilities),
+            ("not_cached", why_function + why_capabilities),
         )
 
 

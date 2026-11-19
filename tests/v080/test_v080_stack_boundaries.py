@@ -685,32 +685,32 @@ def test_one_s0_serves_every_s1_table_of_a_lattice(monkeypatch):
     assert len(calls) == 1
 
 
-def test_s0_is_rebuilt_over_the_union_when_a_law_needs_more(monkeypatch):
-    """Decision 144: a 1 G field reads ``ln x`` down to about -34.6, below the first S0 (from ln 1e-12)."""
+def test_each_law_reads_the_s0_of_its_quantised_span(monkeypatch):
+    """Decision 158: a 1 G field needs ``ln x`` down to about -34.6, so it reads the S0 of span (-40, 20).
+
+    The 4 to 6 uG laws read the S0 of the default span (-30, 20), built once, before and after the 1 G law.
+    """
     calls = _count_builds(monkeypatch)
     ch, lattice, memo = small_channels(), gamma_lattice(3, 2), {}
     weak = AveragedKernel(
         K, [("B", uniform_rule(4e-6, 6e-6, 4)), eta4()], phase=screen()
     )
     strong = AveragedKernel(K, [eta4()], fixed={"B": 1.0}, phase=screen())
-    stack_cell(weak, ch, lattice, 1, memo=memo)
-    first = memo["S0"]
-    stack_cell(strong, ch, lattice, 1, memo=memo)
-    union = memo["S0"]
-    assert len(calls) == 2
-    assert union.lnx0 <= min(first.lnx0, FieldAverage.needed_lnx([1e6])[0])
-    assert union.lnx_hi >= first.lnx_hi
     other = AveragedKernel(
         K, [("B", uniform_rule(3e-6, 7e-6, 4)), eta4()], phase=screen()
     )
+    stack_cell(weak, ch, lattice, 1, memo=memo)
+    stack_cell(strong, ch, lattice, 1, memo=memo)
     stack_cell(other, ch, lattice, 2, memo=memo)
-    assert len(calls) == 2 and memo["S0"] is union
+    assert calls == [(-30.0, 20.0), (-40.0, 20.0)]
+    assert FieldAverage.needed_lnx([1e6])[0] > -40.0
 
 
-def test_s0_grows_with_headroom_over_a_strong_field_lattice(monkeypatch):
-    """Six ``B`` cells from 2 mG to 2 G in ascending order: one S0 build, not one per cell (decision 144).
+def test_s0_builds_over_a_strong_field_lattice(monkeypatch):
+    """Six ``B`` cells from 2 mG to 2 G: at most two S0 builds (decision 158), not one per cell.
 
-    Probe before the headroom: 6 builds (lnx0 from -28.91 to -34.67), 3.4 s at load 17.
+    Their lower ``ln x`` ends run from -28.9 to -34.7, which round outward to -30 and -40. Probe of the rule before
+    decision 144: 6 builds (lnx0 from -28.91 to -34.67), 3.4 s at load 17.
     """
     calls = _count_builds(monkeypatch)
     avg = AveragedKernel(K, [("eta", uniform_rule(0.0, 0.5, 6))], phase=screen())
@@ -719,20 +719,25 @@ def test_s0_grows_with_headroom_over_a_strong_field_lattice(monkeypatch):
     )
     ch = Channels.log(0.1, 10, 5, unit="GHz", half_width=0.2, n_nu=32)
     stack_lattice(avg, ch, lattice)
-    assert len(calls) == 1
+    assert len(calls) <= 2 and len(set(calls)) == len(calls)
+    assert set(calls) <= {(-30.0, 20.0), (-40.0, 20.0)}
 
 
 @pytest.mark.parametrize(
-    "nodes", [np.geomspace(2e3, 1e7, 8), np.geomspace(0.1, 1e-3, 8)]
+    "nodes, spans",
+    [
+        (np.geomspace(2e3, 1e7, 8), [(-30.0, 20.0), (-40.0, 20.0)]),
+        (np.geomspace(0.1, 1e-3, 8), [(-30.0, 20.0), (-30.0, 30.0)]),
+    ],
 )
-def test_s0_grows_with_headroom_over_monotone_field_nodes(monkeypatch, nodes):
-    """One-node tables in ascending strong or descending weak fields (8 builds each before the headroom)."""
+def test_s0_builds_over_monotone_field_nodes(monkeypatch, nodes, spans):
+    """One-node tables in ascending strong or descending weak fields: one S0 per span (8 builds each before 144)."""
     from syncem.engine._stack_series import _s1_table
 
     calls, memo = _count_builds(monkeypatch), {}
     for b in nodes:
         _s1_table(memo, "lookup", np.array([b]), np.ones(1))
-    assert len(calls) == 1
+    assert calls == spans
 
 
 # ------------------------------------------------------------------ 10. findings of the step-5a re-review

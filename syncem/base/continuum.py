@@ -20,6 +20,9 @@ continuum limit itself (``physical_error`` is unbounded unless declared), the ch
 
 from __future__ import annotations
 
+import hashlib
+import importlib.util
+from pathlib import Path
 from typing import Any, ClassVar
 
 import equinox as eqx
@@ -43,6 +46,23 @@ from .window import A1_HZ_PER_G, continuum_window
 __all__ = ["ContinuumKernel"]
 
 _DEFAULT_X_MIN = 1e-6
+# modules whose source computes the kernel values, hashed into the kernel record (decision 159)
+_KERNEL_SOURCES = (
+    "syncem.base.continuum",
+    "syncem.model._continuum",
+    "syncem.ultrarel",
+    "syncem.bessel",
+    "syncem.constants",
+)
+
+
+def _source_digest(names: tuple[str, ...]) -> str:
+    """sha256 of each module name and the bytes of its source file, in the given order."""
+    h = hashlib.sha256()
+    for name in names:
+        origin = importlib.util.find_spec(name).origin
+        h.update(name.encode() + b"\x00" + Path(origin).read_bytes())
+    return h.hexdigest()
 
 
 def _response_weights(channels: Any) -> Any:
@@ -166,10 +186,12 @@ class ContinuumKernel(eqx.Module):
         return self.model.physical_error(channels)
 
     def describe(self) -> tuple:
+        """Kernel record: the settings and the source digest of the modules that compute the kernel."""
         return (
             ("name", self.name),
             ("gamma_min", self.gamma_min),
             ("x_min", self.x_min),
             ("n_nodes_F", self.n_nodes_F),
             ("tail_cutoff", self.tail_cutoff),
+            ("source", _source_digest(_KERNEL_SOURCES)),
         )

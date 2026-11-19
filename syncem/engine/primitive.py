@@ -11,6 +11,9 @@ LABEL ``eq: directional continuum``. For ``W(x) = x int_0^inf exp(-x cosh u) w(u
 ``PrimitiveTable`` (S0) holds cubic splines of ``ln E_0`` and ``f_r`` for ``r <= order`` on knots
 ``k * step`` of ``ln x``. The factor ``x e^-x`` is applied exactly at lookup. S1 tables are built from it by
 lookups at ``ln y - ln B_q`` (``field_average.FieldAverage.lookups``). SciPy is imported on first use.
+``quantised_span`` gives the span of the S0 table that a need in ``ln x`` reads (decision 158): its union with
+``_S0_SPAN``, rounded outward to multiples of ``SPAN_QUANTUM`` e-folds on a grid anchored at ``ln x = 0``. The S0
+bits, and with them the S1 bits, then depend on the need alone and not on the laws read before.
 
 Units: ``x`` dimensionless. Shapes: ``lookup(lnx)`` returns ``ln E_0`` of the shape of ``lnx`` and ``f`` with a
 trailing axis ``order + 1``. Not certified: the quadrature in ``u`` (its truncated tail is below ``e^-70``
@@ -31,14 +34,41 @@ __all__ = [
     "DEFAULT_NODES",
     "MAX_ORDER",
     "PrimitiveTable",
+    "SPAN_QUANTUM",
     "derivative_polynomials",
+    "quantised_span",
     "scaled_log_derivatives",
 ]
 
 MAX_ORDER = 8
 DEFAULT_NODES = 200
 DEFAULT_CUTOFF = 70.0
+# The ends of every S0 span are multiples of SPAN_QUANTUM e-folds from ln x = 0 (decision 158).
+SPAN_QUANTUM = 10.0
+# Every S0 span covers this ln x range.
+_S0_SPAN = (float(np.log(1e-12)), float(np.log(1e7)))
 _WHICH = ("F", "G")
+
+
+def quantised_span(lo: float, hi: float) -> tuple[float, float]:
+    """The S0 span of the need ``[lo, hi]`` in ``ln x`` (decision 158).
+
+    The span is the union of the need and ``_S0_SPAN``, rounded outward to multiples of ``SPAN_QUANTUM``. An end at a
+    multiple stays. Raises ``ValueError`` for an empty or non-finite need.
+    """
+    lo, hi = float(lo), float(hi)
+    if not (np.isfinite(lo) and np.isfinite(hi) and lo < hi):
+        raise ValueError(f"an S0 need takes finite ends with lo < hi, not ({lo}, {hi})")
+    lo, hi = min(lo, _S0_SPAN[0]), max(hi, _S0_SPAN[1])
+    out = (
+        float(SPAN_QUANTUM * np.floor(lo / SPAN_QUANTUM)),
+        float(SPAN_QUANTUM * np.ceil(hi / SPAN_QUANTUM)),
+    )
+    if not (out[0] <= lo and out[1] >= hi):
+        raise ValueError(
+            f"the need ({lo}, {hi}) is too large to round to multiples of {SPAN_QUANTUM}"
+        )
+    return out
 
 
 @lru_cache(maxsize=4)

@@ -10,6 +10,11 @@ variable of cap ``c`` appears only in the levels it can reach. Cells with equal 
 compiled routine, mapped over the cells with ``lax.map``. ``jet_lattice`` pads each group to the next power of
 two by repeating its first reference and drops the padded outputs, so the cell count is not compiled in.
 
+``make_routine(names, charts, exponents)`` makes a routine. The routines live in the process ``Cache``
+(``engine/cache.py``, decision 160) and not in module state. A call without ``routine=`` takes the routine of the
+signature from ``default_cache()`` with the token "direct", so a trace is reused for an equal averaged kernel. The
+basis build passes its own ``routine`` and wraps the rules as ``TabulatedRule``, so an edited rule retraces.
+
 The cost per cell is about ``prod_i (1 + |D_i|)`` primal evaluations over the levels ``i``, with ``D_i`` the
 directions of level ``i``. The plan prints it (SPEC Sec. 8.3, decision (b)). The columns carry the units of the kernel.
 Shapes: ``I`` and ``P`` ``(n_rows, n_ch, *L)``, one row per exponent (``P`` complex, one phase-weight row). Not certified:
@@ -18,8 +23,8 @@ nothing beyond the kernel and its averages, since forward mode gives the derivat
 
 from __future__ import annotations
 
-import functools
 import math
+from collections.abc import Callable
 from typing import Any
 
 import equinox as eqx
@@ -28,15 +33,20 @@ import jax.numpy as jnp
 import numpy as np
 
 from .average import AveragedKernel
+from .cache import default_cache
 
 __all__ = [
+    "DIRECT",
     "cost",
     "jet_cell",
     "jet_columns",
     "jet_lattice",
     "level_plan",
+    "make_routine",
     "taylor_coefficients",
 ]
+
+DIRECT = "direct"  # the routine token of a provider call outside a basis build
 
 
 def _order(exponents: tuple[tuple[int, ...], ...]) -> list[int]:
@@ -116,12 +126,13 @@ def _point(
     }
 
 
-@functools.lru_cache(maxsize=64)
-def _routine(
+def make_routine(
     names: tuple[str, ...],
     charts: tuple[str, ...],
     exponents: tuple[tuple[int, ...], ...],
 ) -> Any:
+    """A jitted ``run(averaged, channels, refs, hws)`` of the Taylor columns of a group of cells."""
+
     @eqx.filter_jit
     def run(averaged: AveragedKernel, channels: Any, refs: Any, hws: Any) -> Any:
         def one(args: Any) -> Any:
@@ -140,6 +151,11 @@ def _routine(
         return jax.lax.map(one, (refs, hws))
 
     return run
+
+
+def _direct(names: tuple, charts: tuple, exponents: tuple) -> Any:
+    """The routine of a provider call outside a basis build, from the process cache."""
+    return default_cache().routine(names, charts, exponents, DIRECT, make=make_routine)
 
 
 def _check(averaged: AveragedKernel, names: tuple[str, ...]) -> None:
@@ -162,6 +178,7 @@ def jet_columns(
     exponents: list[tuple[int, ...]],
     *,
     with_v: bool = False,
+    routine: Callable | None = None,
 ) -> tuple[Any, ...]:
     """``(I, P)`` columns, or ``(I, P, V)`` with ``with_v``, one row per exponent over ``axes``.
 
@@ -189,7 +206,7 @@ def jet_columns(
     refs = jnp.asarray([[axes[v][1] for v in names]], dtype=float)
     hws = jnp.asarray([[axes[v][2] for v in names]], dtype=float)
     exps = tuple(tuple(int(x) for x in e) for e in exponents)
-    i, p, v = _routine(names, charts, exps)(averaged, channels, refs, hws)
+    i, p, v = (routine or _direct)(names, charts, exps)(averaged, channels, refs, hws)
     return (i[0], p[0], v[0]) if with_v else (i[0], p[0])
 
 
@@ -262,13 +279,15 @@ def jet_lattice(
     with_v: bool = False,
     cells: Any = None,
     exponents: Any = None,
+    routine: Callable | None = None,
 ) -> tuple[Any, ...]:
     """Columns of product cells in the rows of one block, ``(block_size, n_ch)`` each.
 
     ``cells`` selects product cells, and the rows of each follow in the order given (repeats allowed).
     ``exponents`` replaces every selected cell's lower set, so a cell gives ``n_pairs * len(exponents)`` rows.
     Cells run in groups of equal (charts, exponents), each padded to the next power of two by repeating its first
-    reference. The padded outputs are dropped (decision 150).
+    reference. The padded outputs are dropped (decision 150). ``routine(names, charts, exponents)`` gives the
+    routine of a group, by default the one of ``default_cache()`` with the token "direct".
     """
     _legendre_order(averaged, lattice)
     table, index = lattice.cells, lattice.index
@@ -292,7 +311,7 @@ def jet_lattice(
         groups.setdefault((table.chart[c], tuple(pattern)), []).append(c)
     pieces: dict[int, tuple[Any, Any, Any]] = {}
     for (charts, pattern), members in groups.items():
-        run = _routine(names, tuple(charts), pattern)
+        run = (routine or _direct)(names, tuple(charts), pattern)
         padded = _padded(members)
         refs = jnp.asarray(table.reference[padded], dtype=float)
         hws = jnp.asarray(table.half_width[padded], dtype=float)

@@ -17,9 +17,12 @@ Encoding rules:
   bytes, with ``-0.0`` and NaN normalised as for floats,
 * dataclass instances, ``eqx.Module`` included, are written as module, qualname and every field by name.
 
-Anything else raises ``NotCacheable`` with a reason: functions and other callables (their fingerprint is
-step 5b-2), classes, traced JAX arrays, object and structured arrays. The module imports NumPy only and
-reads JAX from ``sys.modules`` when a JAX value is passed.
+Anything else raises ``NotCacheable`` with a reason: functions and other callables, classes, traced JAX
+arrays, object and structured arrays. Functions enter keys through ``function_fingerprint`` of
+``syncem.base._function_fingerprint`` (decision 156). A caller that records a function field, such as
+``UserKernel.describe``, writes ``("function", function_fingerprint(f))`` in its place before encoding. The
+module imports NumPy and the standard library only and reads JAX from ``sys.modules`` when a JAX value is
+passed.
 """
 
 from __future__ import annotations
@@ -150,7 +153,9 @@ def encode(value: Any) -> bytes:
         return _dataclass(value)
     if callable(value):
         name = getattr(value, "__qualname__", type(value).__qualname__)
-        raise NotCacheable(f"function {name} has no fingerprint before step 5b-2")
+        raise NotCacheable(
+            f"function {name} has no encoding, its keys use function_fingerprint"
+        )
     raise NotCacheable(f"no encoding for type {type(value).__qualname__}")
 
 

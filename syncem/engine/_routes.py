@@ -3,8 +3,13 @@
 LABEL ``eq: channel basis expansion``. ``routes="auto"`` asks ``stack_precondition`` first. A reason sends the cell to
 the jet with that reason. Otherwise the stack runs with one memo shared across cells, and a ``StackRefused`` sends the
 cell to the jet with ``str(err)``. A plain ``ValueError`` is a user error and propagates. A provider name, or a tuple
-or mapping of names per cell, routes explicitly and raises on refusal. The core provider is explicit only. Jet cells
-run in one ``jet_lattice`` call, batched by (charts, pattern) and padded to powers of two.
+or mapping of names per cell, routes explicitly and raises on refusal, and "auto" in a tuple or mapping
+routes that cell as ``routes="auto"`` does. The core provider is explicit only. Jet cells
+run in one ``jet_lattice`` call, batched by (charts, pattern) and padded to powers of two. A basis build passes a
+``JetSetup``: the jet then reads the rules wrapped as ``TabulatedRule`` and the build's routines (decision 160),
+while the stack and the core read the rules themselves. A build with keys routes through
+``_s2_columns.reuse_cells``, which shares ``prepare`` with ``route_cells`` and calls the providers by their names
+in this module.
 
 ``stack_precondition`` is a necessary static check: the kernel type, the celled set, declared ``NodeRule`` parents,
 the Legendre axes and an order of at most the S1 table order. ``None`` does not promise that the stack accepts the
@@ -18,7 +23,8 @@ with each other by the tests of decision 150 and by check (a) of Sec. 8.3.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+import dataclasses
+from collections.abc import Callable, Mapping
 from typing import Any
 
 import numpy as np
@@ -27,13 +33,21 @@ from ..base.capabilities import Similarity
 from ..base.continuum import ContinuumKernel
 from ..records.records import RouteRecord
 from ._stack_checks import StackRefused
-from ._stack_series import stack_cell
+from ._stack_series import stack_cell, stack_stage
 from .average import AveragedKernel, NodeRule
 from .field_average import TABLE_ORDER
 from .provider_core import core_cell
 from .provider_jet import _padded, jet_lattice
 
-__all__ = ["PROVIDERS", "check_stokes", "route_cells", "stack_precondition"]
+__all__ = [
+    "PROVIDERS",
+    "JetSetup",
+    "check_stokes",
+    "prepare",
+    "route_cells",
+    "stack_precondition",
+    "stack_stage",
+]
 
 PROVIDERS = ("stack", "jet", "core")
 _STACK_SET = (
@@ -143,7 +157,7 @@ def _chosen(n_cells: int, cells: Any) -> tuple[int, ...]:
 
 def _plan(routes: Any, n_cells: int, chosen: tuple[int, ...]) -> dict[int, str | None]:
     """Provider per chosen cell, ``None`` for auto."""
-    usage = f"routes must be 'auto', one of {PROVIDERS}, or a tuple or mapping of them per cell"
+    usage = f"routes must be 'auto', one of {PROVIDERS}, or a tuple or mapping of them or 'auto' per cell"
     if isinstance(routes, str):
         if routes != "auto" and routes not in PROVIDERS:
             raise ValueError(f"{usage}, got {routes!r}")
@@ -167,9 +181,10 @@ def _plan(routes: Any, n_cells: int, chosen: tuple[int, ...]) -> dict[int, str |
         table = dict(enumerate(routes))
     else:
         raise ValueError(f"{usage}, got {routes!r}")
-    if not all(isinstance(table[c], str) and table[c] in PROVIDERS for c in chosen):
+    allowed = (*PROVIDERS, "auto")
+    if not all(isinstance(table[c], str) and table[c] in allowed for c in chosen):
         raise ValueError(f"{usage}, got {routes!r}")
-    return {c: table[c] for c in chosen}
+    return {c: None if table[c] == "auto" else table[c] for c in chosen}
 
 
 def _jet_groups(lattice: Any, cells: list[int]) -> tuple[int, int]:
@@ -198,19 +213,38 @@ def _assemble(index: Any, pieces: dict, with_v: bool) -> tuple[Any, Any, Any]:
     return out_i, out_p, out_v
 
 
-def _run_jet(
-    averaged, channels, lattice, jet: dict, with_v: bool, pieces: dict
-) -> None:
-    cells = list(jet)
-    out = [
-        np.asarray(a)
-        for a in jet_lattice(averaged, channels, lattice, with_v=with_v, cells=cells)
-    ]
+@dataclasses.dataclass(frozen=True)
+class JetSetup:
+    """What a basis build gives the jet: the averaged kernel with ``TabulatedRule`` rules and the routine maker."""
+
+    averaged: AveragedKernel
+    routine: Callable
+
+
+@dataclasses.dataclass
+class _Out:
+    """The pieces, records and jet cells (with their reasons) of one ``route_cells`` call."""
+
+    pieces: dict = dataclasses.field(default_factory=dict)
+    records: dict = dataclasses.field(default_factory=dict)
+    jet: dict = dataclasses.field(default_factory=dict)
+
+
+def _run_jet(averaged, channels, lattice, with_v: bool, out: _Out, setup) -> None:
+    cells, extra = list(out.jet), {}
+    if setup is not None:
+        averaged, extra = setup.averaged, {"routine": setup.routine}
+    rows = jet_lattice(averaged, channels, lattice, with_v=with_v, cells=cells, **extra)
+    arrays = [np.asarray(a) for a in rows]
     start = 0
     for c in cells:
         n = len(lattice.index.cell_rows(c))
-        rows = slice(start, start + n)
-        pieces[c] = (out[0][rows], out[1][rows], out[2][rows] if with_v else None)
+        span = slice(start, start + n)
+        out.pieces[c] = (
+            arrays[0][span],
+            arrays[1][span],
+            arrays[2][span] if with_v else None,
+        )
         start += n
 
 
@@ -225,23 +259,15 @@ def _count(events: dict | None, lattice: Any, records: dict, jet: dict) -> None:
         events[key] = events.get(key, 0) + n
 
 
-def route_cells(
+def prepare(
     averaged: AveragedKernel,
-    channels: Any,
     lattice: Any,
-    routes: Any = "auto",
-    *,
-    s1: str = "lookup",
-    with_v: bool = False,
-    cells: Any = None,
-    memo: dict | None = None,
-    events: dict | None = None,
-) -> tuple[Any, Any, Any, tuple[RouteRecord, ...]]:
-    """``(I, P, V or None, records)`` of the chosen cells, one ``RouteRecord`` per cell in the order of ``cells``.
-
-    ``memo`` is shared by the stack cells (S1 tables). ``events``, when given, gains the counts "stack cells",
-    "jet cells", "core cells", "jet groups" and "jet padded cells".
-    """
+    routes: Any,
+    s1: str,
+    with_v: bool,
+    cells: Any,
+) -> tuple[tuple[int, ...], dict]:
+    """The chosen cells and the provider of each (``None`` for auto), after the argument checks."""
     if s1 not in ("lookup", "quadrature"):
         raise ValueError(f"s1 must be 'lookup' or 'quadrature', got {s1!r}")
     _check_clash(averaged, lattice.cells.variables)
@@ -251,36 +277,54 @@ def route_cells(
     plan = _plan(routes, lattice.n_cells, chosen)
     if with_v and {"stack", "core"} & set(plan.values()):
         raise ValueError("the stack and the core give no V. Route the cells to the jet")
+    return chosen, plan
+
+
+def route_cells(
+    averaged: AveragedKernel,
+    channels: Any,
+    lattice: Any,
+    routes: Any = "auto",
+    *,
+    s1: str = "lookup",
+    with_v: bool = False,
+    cells: Any = None,
+    memo: Any = None,
+    events: dict | None = None,
+    jet: JetSetup | None = None,
+) -> tuple[Any, Any, Any, tuple[RouteRecord, ...]]:
+    """``(I, P, V or None, records)`` of the chosen cells, one ``RouteRecord`` per cell in the order of ``cells``.
+
+    ``memo`` is shared by the stack cells (S1 tables), a dict or a ``StageMemo``. ``events``, when given, gains
+    the counts "stack cells", "jet cells", "core cells", "jet groups" and "jet padded cells". ``jet`` gives the
+    jet its wrapped kernel and routines.
+    """
+    chosen, plan = prepare(averaged, lattice, routes, s1, with_v, cells)
     memo = {} if memo is None else memo
-    pieces: dict[int, tuple] = {}
-    records: dict[int, RouteRecord] = {}
-    jet: dict[int, str | None] = {}
+    out = _Out()
     for c in chosen:
-        _route_one(
-            averaged, channels, lattice, c, plan[c], s1, memo, pieces, records, jet
+        _route_one(averaged, channels, lattice, c, plan[c], s1, memo, out)
+    if out.jet:
+        _run_jet(averaged, channels, lattice, with_v, out, jet)
+        out.records.update(
+            {c: RouteRecord(c, "jet", reason=r) for c, r in out.jet.items()}
         )
-    if jet:
-        _run_jet(averaged, channels, lattice, jet, with_v, pieces)
-        records.update({c: RouteRecord(c, "jet", reason=r) for c, r in jet.items()})
-    _count(events, lattice, records, jet)
+    _count(events, lattice, out.records, out.jet)
     return (
-        *_assemble(lattice.index, pieces, with_v),
-        tuple(records[c] for c in chosen),
+        *_assemble(lattice.index, out.pieces, with_v),
+        tuple(out.records[c] for c in chosen),
     )
 
 
-def _route_one(
-    averaged, channels, lattice, c, provider, s1, memo, pieces, records, jet
-) -> None:
-    """Route one cell. Jet cells are collected in ``jet`` with their reason and run together."""
+def _route_one(averaged, channels, lattice, c, provider, s1, memo, out: _Out) -> None:
+    """Route one cell. Jet cells are collected in ``out.jet`` with their reason and run together."""
     if provider == "core":
         i, p = core_cell(averaged, channels, lattice, c)
-        pieces[c], records[c] = (np.asarray(i), np.asarray(p), None), RouteRecord(
-            c, "core"
-        )
+        out.pieces[c] = (np.asarray(i), np.asarray(p), None)
+        out.records[c] = RouteRecord(c, "core")
         return
     if provider == "jet":
-        jet[c] = None
+        out.jet[c] = None
         return
     reason = None if provider == "stack" else stack_precondition(averaged, lattice, c)
     if reason is None:
@@ -294,7 +338,7 @@ def _route_one(
                 raise
             reason = str(err)
         else:
-            pieces[c] = (np.asarray(i), np.asarray(p), None)
-            records[c] = RouteRecord(c, "stack", mode[0], s1)
+            out.pieces[c] = (np.asarray(i), np.asarray(p), None)
+            out.records[c] = RouteRecord(c, "stack", mode[0], s1)
             return
-    jet[c] = reason
+    out.jet[c] = reason

@@ -15,10 +15,13 @@ not declare (an order-1 probe per rule and cell), a celled parent without a dens
 reweighted weights that do not reproduce the jet of the rule itself (decision 139: node by node for fixed nodes, on
 ``t^m``, ``m = 0..3``, for moving ones), weights amplified beyond ``_MAX_AMPLIFICATION`` (a law that moves by many
 widths across the cell), orders above the S1 table order, energies above the S1 grid for the lowest channel, and celled
-variables other than ``gamma`` and ``B``. Nodes at ``|eta| = 1`` or ``B = 0`` add zero. All S1 tables of one memo read
-one S0 table. The refusal checks and the frozen-node weights are in ``_stack_checks``, and the field cells and the row
-layout in ``_stack_fields`` (decision 145). A walk computes the channel nodes and weights once per depth value, and
-``stack_cell`` reports the mode it took. Units: those of the kernel. Shapes: series ``(order + 1, J, *L)``, cell rows
+variables other than ``gamma`` and ``B``. Nodes at ``|eta| = 1`` or ``B = 0`` add zero. Each S1 table reads the S0
+table of its quantised ``ln x`` span, held in the memo once per span (decision 158). The memo is a dict, or a
+``StageMemo`` that reads and stores the tables through the process cache (decisions 159 to 162). The refusal
+checks and the frozen-node weights are in ``_stack_checks``, and the field cells and the row layout in
+``_stack_fields`` (decision 145). A walk computes the channel nodes and weights once per depth value, and
+``stack_cell`` reports the mode it took. ``stack_stage`` walks dry: it reads the same S1 tables and runs the
+refusal checks that do not read the channels, and gives the mode without a channel series (decision 159). Units: those of the kernel. Shapes: series ``(order + 1, J, *L)``, cell rows
 ``(n_rows, J)`` in the lattice order. Not certified: the reweighted quadrature, validated against the jet. The check
 bounds moments, so a law whose nodes do not resolve the kernel gives a quadrature error that the jet shares.
 """
@@ -40,17 +43,16 @@ from ._stack_checks import (
     _weights,
 )
 from ._stack_fields import _field_cell, _to_rows
+from ._stage_memo import StageMemo
+from ._stage_memo import s1_table as _s1_table
 from .average import AveragedKernel, NodeRule
 from .field_average import TABLE_ORDER, FieldAverage, OutsideTable
-from .primitive import PrimitiveTable
 from .provider_stack import _channel_arrays, point_series
 
-__all__ = ["StackRefused", "stack_cell", "stack_lattice"]
+__all__ = ["StackRefused", "stack_cell", "stack_lattice", "stack_stage"]
 
-_KERNEL_FREE = {
-    "mu",
-    "phi",
-}  # the continuum kernel is the isotropic pitch average and carries no azimuth factor
+# the continuum kernel is the isotropic pitch average and carries no azimuth factor
+_KERNEL_FREE = {"mu", "phi"}
 
 
 def _mul(a: np.ndarray, b: np.ndarray, order: int) -> np.ndarray:
@@ -60,50 +62,6 @@ def _mul(a: np.ndarray, b: np.ndarray, order: int) -> np.ndarray:
         for k in range(n + 1):
             out[n] = out[n] + a[k] * b[n - k]
     return out
-
-
-_S0_SPAN = (
-    float(np.log(1e-12)),
-    float(np.log(1e7)),
-)  # the first shared S0 covers at least this ln x range
-_S0_HEADROOM = 10.0  # e-folds added beyond a short end on a rebuild, so a monotone field sequence rebuilds rarely
-
-
-def _primitive(memo: dict, nodes_ug: np.ndarray) -> PrimitiveTable:
-    """The memo's S0 table, rebuilt when a law needs more, with ``_S0_HEADROOM`` beyond each short end (decision 144)."""
-    lo, hi = FieldAverage.needed_lnx(nodes_ug)
-    s0 = memo.get("S0")
-    cur_lo, cur_hi = _S0_SPAN if s0 is None else (s0.lnx0, s0.lnx_hi)
-    if s0 is not None and cur_lo <= lo and cur_hi >= hi:
-        return s0
-    new_lo = cur_lo if lo >= cur_lo else lo - _S0_HEADROOM
-    new_hi = cur_hi if hi <= cur_hi else hi + _S0_HEADROOM
-    memo["S0"] = PrimitiveTable.build(new_lo, new_hi, order=TABLE_ORDER)
-    return memo["S0"]
-
-
-def _s1_table(
-    memo: dict, method: str, nodes_ug: np.ndarray, probs: np.ndarray
-) -> FieldAverage:
-    """An S1 table of the field law. Nodes at ``B = 0`` and zero weights are dropped: ``B W(y / B) -> 0``."""
-    nodes_ug, probs = np.asarray(nodes_ug, float), np.asarray(probs, float)
-    if (
-        nodes_ug.shape != probs.shape
-        or not np.all(np.isfinite(nodes_ug) & (nodes_ug >= 0))
-        or not np.all(np.isfinite(probs) & (probs >= 0))
-    ):
-        raise StackRefused(
-            "the field law needs finite non-negative nodes and weights of equal length: the jet takes the cell"
-        )
-    keep = (nodes_ug > 0) & (probs > 0)
-    if not np.any(keep):
-        raise StackRefused(
-            "the field law puts all its weight at B = 0: the jet takes the cell"
-        )
-    nodes_ug, probs = nodes_ug[keep], probs[keep]
-    if method == "quadrature":
-        return FieldAverage.quadrature(nodes_ug, probs)
-    return FieldAverage.lookups(nodes_ug, probs, primitive=_primitive(memo, nodes_ug))
 
 
 class _Context:
@@ -119,14 +77,11 @@ class _Context:
         memo: dict,
         reweight: bool,
         probe: tuple[str, ...] = ("gamma",),
+        dry: bool = False,
     ):
-        self.averaged, self.channels, self.chart, self.ref, self.h = (
-            averaged,
-            channels,
-            chart,
-            ref,
-            h,
-        )
+        self.dry = dry  # read the tables and evaluate the laws, no channel series
+        self.averaged, self.channels = averaged, channels
+        self.chart, self.ref, self.h = chart, ref, h
         self.order, self.s1, self.memo, self.reweight = order, s1, memo, reweight
         self.probe = probe  # celled variables a law must declare when it reads them
         self.probed: set[int] = set()
@@ -141,6 +96,9 @@ class _Context:
         return self._arrays[key]
 
     def table(self, b_gauss: float) -> FieldAverage:
+        node = np.array([b_gauss * 1e6])
+        if isinstance(self.memo, StageMemo):
+            return _s1_table(self.memo, self.s1, node, np.ones(1), kind="node")
         key = (self.s1, float(b_gauss))
         if key not in self.memo:
             self.memo[key] = _s1_table(
@@ -181,6 +139,8 @@ def _leaf(
         return _zeros(ctx, probs)
     nodes, probs = nodes[keep], probs[keep]
     table = ctx.cached if ctx.cached is not None else ctx.table(float(point["B"]))
+    if ctx.dry:
+        return _zeros(ctx, probs)
     depth = float(point.get("depth", 0.0))
     return point_series(
         table,
@@ -258,10 +218,13 @@ def _cached(levels: list, point: dict, ctx: _Context) -> list:
         return levels
     _check_undeclared(field[0][2], "B", point, ctx)
     nodes, probs = _call(field[0][2], "B", point)
-    key = (ctx.s1, "law", tuple(nodes), tuple(probs))
-    if key not in ctx.memo:
-        ctx.memo[key] = _s1_table(ctx.memo, ctx.s1, nodes * 1e6, probs)
-    ctx.cached = ctx.memo[key]
+    if isinstance(ctx.memo, StageMemo):
+        ctx.cached = _s1_table(ctx.memo, ctx.s1, nodes * 1e6, probs)
+    else:
+        key = (ctx.s1, "law", tuple(nodes), tuple(probs))
+        if key not in ctx.memo:
+            ctx.memo[key] = _s1_table(ctx.memo, ctx.s1, nodes * 1e6, probs)
+        ctx.cached = ctx.memo[key]
     return [lv for lv in levels if lv is not field[0]]
 
 
@@ -277,6 +240,7 @@ def _gamma_series(
     fixed: dict,
     reweight: bool,
     probe: tuple[str, ...] = ("gamma",),
+    dry: bool = False,
 ) -> tuple[Any, Any, str]:
     """Energy series ``(I, P)`` of the walk and its mode, "cached-S1" or "per-node"."""
     if type(
@@ -288,7 +252,9 @@ def _gamma_series(
         raise StackRefused(
             f"the stack holds the continuum F and G only, not {type(averaged.kernel).__name__}: the jet takes it"
         )
-    ctx = _Context(averaged, channels, chart, ref, h, order, s1, memo, reweight, probe)
+    ctx = _Context(
+        averaged, channels, chart, ref, h, order, s1, memo, reweight, probe, dry
+    )
     levels = [
         lv
         for lv in _levels(averaged)
@@ -333,12 +299,40 @@ def stack_cell(
     145). A refused cell appends nothing.
     """
     try:
-        rows, mode = _stack_cell(averaged, channels, lattice, cell, s1, memo, reweight)
+        rows, mode = _stack_cell(
+            averaged, channels, lattice, cell, s1, memo, reweight, False
+        )
     except OutsideTable as err:
         raise StackRefused(f"{err}. The jet takes the cell") from err
     if record is not None:
         record.append(mode)
     return rows
+
+
+def stack_stage(
+    averaged: AveragedKernel,
+    channels: Any,
+    lattice: Any,
+    cell: int,
+    *,
+    s1: str = "lookup",
+    memo: Any = None,
+    reweight: bool = True,
+) -> str:
+    """The mode of ``stack_cell`` on ``cell`` from a dry walk, or ``StackRefused``.
+
+    The dry walk evaluates the laws, runs the refusal checks that do not read the channels and reads the S1
+    tables of the walk through ``memo``, so a ``StageMemo`` then holds the S1 keys that ``stack_cell`` reads
+    (the S2 stage of decision 159). It computes no channel series. The grid reach of the channels refuses in
+    ``stack_cell`` only.
+    """
+    try:
+        _, mode = _stack_cell(
+            averaged, channels, lattice, cell, s1, memo, reweight, True
+        )
+    except OutsideTable as err:
+        raise StackRefused(f"{err}. The jet takes the cell") from err
+    return mode
 
 
 def _stack_cell(
@@ -349,6 +343,7 @@ def _stack_cell(
     s1: str,
     memo: dict | None,
     reweight: bool,
+    dry: bool,
 ) -> tuple[tuple[Any, Any], str]:
     if s1 not in ("lookup", "quadrature"):
         raise ValueError("s1 must be 'lookup' or 'quadrature'")
@@ -370,7 +365,7 @@ def _stack_cell(
     if names == ("gamma",):
         order = max(e[0] for e in pattern)
         si, sp, mode = _gamma_series(
-            averaged, channels, chart, ref, h, order, s1, memo, {}, reweight
+            averaged, channels, chart, ref, h, order, s1, memo, {}, reweight, dry=dry
         )
         rows = _to_rows(si, pattern, lambda e: si[e[0]]), _to_rows(
             sp, pattern, lambda e: sp[e[0]]
@@ -379,7 +374,7 @@ def _stack_cell(
 
     def series(need: int, fixed: dict, probe: tuple[str, ...]) -> tuple[Any, Any]:
         si, sp, _ = _gamma_series(
-            averaged, channels, "log", ref, h, need, s1, memo, fixed, True, probe
+            averaged, channels, "log", ref, h, need, s1, memo, fixed, True, probe, dry
         )
         return si, sp
 

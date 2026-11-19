@@ -33,3 +33,20 @@ Consequences, applied in SPEC version 6 and TOPLEVEL on 2026-11-18:
 * Q19: `AzimuthFourier(m_max)` becomes a 0.8.0 representation for the azimuth
   with its truncation term and acceptance tests in step 7. R4a (b) routes
   instead of raising. The effort total becomes about 76 days.
+
+# Owner decisions on the step-5b plan (2026-11-19)
+
+Decided by Zheng in conversation. Numbers are the question numbers of Sec. 6
+of the step-5b plan (revision 2, task T-001). "Rec." means the proposed option
+was chosen.
+
+| # | Question | Decision |
+|---|---|---|
+| 1 | Memory of one-node S1 tables | the proposal of SPEC decision 162 (Rec.): a byte-bounded in-memory store with default 1e9 bytes, one-node tables rebuilt on eviction, batching of per-node leaves from S0 deferred |
+| 2 | `SYNCEM_CACHE` inside a synced folder | a warning, not an error, for a directory inside `~/Documents`, `~/Desktop`, `~/Library/Mobile Documents` or `~/Library/CloudStorage` (Rec.). The default is the platform cache directory (SPEC decision 161) |
+| 163 (8) | Builds with S2 column reuse | "只要不失科学性和正确性,按你推荐的来" (follow the recommendation as long as scientific soundness and correctness are kept). T14 states a bound of 1e-13 of the channel maximum for builds with S2 column reuse to order 5 on the jet and order 6 on the stack and names its source, the batch dependence of an uncached build (SPEC decision 164) (Rec.) |
+
+Question 3 (study oracles read in place or copied) is open. SPEC decision 154
+stands as committed until it is answered. Row 163 (8) is item 8 of SPEC
+decision 163, an open point of the step-5b-2 review and not a plan question.
+The owner delegated it on 2026-11-19, and SPEC decision 164 settles it.

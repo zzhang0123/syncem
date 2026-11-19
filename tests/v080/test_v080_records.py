@@ -186,7 +186,7 @@ def test_build_record_to_dict_is_strict_json():
         timings=(("build s", np.float64(0.25)), ("routes s", math.nan)),
         keys=(("column map", None), ("index", "abc")),
         defaults=(("mem_bytes", 1e9), ("cache directory", None)),
-        notes=("not cached: no fingerprints before 5b-2",),
+        notes=("not cached: cache=False",),
     )
     d = rec.to_dict()
     _assert_strict_json(d)
@@ -195,7 +195,7 @@ def test_build_record_to_dict_is_strict_json():
     assert d["events"] == {"provider calls": 2, "jet compiles": 1}
     assert d["routes"][1]["provider"] == "jet"
     assert d["agreement"] == {}
-    assert d["notes"] == ["not cached: no fingerprints before 5b-2"]
+    assert d["notes"] == ["not cached: cache=False"]
     assert d["load"] == [None if not math.isfinite(v) else v for v in rec.load]
 
 

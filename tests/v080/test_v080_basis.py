@@ -10,6 +10,7 @@ and margin, a SPEC number or an exact identity.
 
 import dataclasses
 import inspect
+import re
 
 import numpy as np
 import pytest
@@ -37,7 +38,7 @@ from tests.v080.test_v080_stack_boundaries import _lognormal_avg, gamma_lattice
 
 K = ContinuumKernel(x_min=1e-12)
 TOL = {"quadrature": 1e-10, "lookup": 1e-7}  # SPEC Sec. 9.3 against the study oracle
-NOT_CACHED = "not cached: no fingerprints before 5b-2"
+HEX64 = r"[0-9a-f]{64}"
 
 
 def rel(a, b):
@@ -98,7 +99,7 @@ def test_e1_and_e5_designs_equal_the_study_oracles(paper, N, s1):
     assert rel(e5.design(), _study.joint_columns(cfg, di, dq)) < TOL[s1]
     routes = {(r.provider, r.mode, r.s1) for r in e5.record.routes}
     assert routes == {("stack", "cached-S1", s1)}
-    assert e1.key is None and NOT_CACHED in e1.record.notes
+    assert re.fullmatch(HEX64, e1.key) and e1.record.notes == ()  # cached in step 5b-2
     assert e5.spectra2.shape == (41, 19 * (N + 1)) and e5.columns.n2 == 19 * (N + 1)
 
 
@@ -279,9 +280,11 @@ def test_corner_split_predicts_like_the_uniform_refinement_on_shared_cells():
 # ------------------------------------------------------------------ 9. at
 
 
-def mixed_basis(ch, order=2):
+def mixed_basis(ch, order=2, cache=True):
     lat, routes = gamma_lattice(2, order), ("stack", "jet")
-    return build_from_averaged(cached_avg(), ch, lat, routes=routes, azimuth_factor=0.4)
+    return build_from_averaged(
+        cached_avg(), ch, lat, routes=routes, azimuth_factor=0.4, cache=cache
+    )
 
 
 def test_at_on_a_channel_subset_gathers_rows_without_provider_calls(request):
@@ -297,12 +300,12 @@ def test_at_on_a_channel_subset_gathers_rows_without_provider_calls(request):
 
 
 def test_at_on_new_channels_computes_only_the_new_rows(monkeypatch):
-    """5 of the 9 channels share row keys with the parent. Probe: 0.0 against a fresh build (bound 1e-15, as the
-    fresh build and ``at`` need not agree bitwise, decision 153)."""
+    """5 of the 9 channels share row keys with the parent. Review probe: 0.0 against the ``cache=False`` build
+    (bound 1e-15, as the two need not agree bitwise, decisions 153 and 164)."""
     narrow, wide = (
         Channels.log(0.1, 10, n, unit="GHz", half_width=0.2, n_nu=32) for n in (5, 9)
     )
-    parent, fresh = mixed_basis(narrow), mixed_basis(wide)
+    parent = mixed_basis(narrow)
     seen = []
     for name in ("stack_cell", "jet_lattice"):
         real = getattr(_routes, name)
@@ -315,6 +318,9 @@ def test_at_on_new_channels_computes_only_the_new_rows(monkeypatch):
     child = parent.at(wide)
     assert sorted(seen) == [("jet_lattice", 4), ("stack_cell", 4)]
     assert counts(child) == (4, 5)
+    fresh = mixed_basis(
+        wide, cache=False
+    )  # independent of the S2 store that at() wrote
     assert rel(child.design(), fresh.design()) < 1e-15
 
 
@@ -365,8 +371,6 @@ def test_with_order_below_the_built_order_gathers_without_provider_calls(request
     np.testing.assert_array_equal(
         np.asarray(same.design()), np.asarray(parent.design())
     )
-    with pytest.raises(ValueError, match="5b-2"):
-        parent.with_order(5)
 
 
 def test_with_order_keeps_the_jet_route_at_the_amplification_boundary():

@@ -364,7 +364,6 @@ def test_jet_groups_are_padded_to_powers_of_two(monkeypatch):
         return original(*args, **kwargs)
 
     monkeypatch.setattr(provider_jet, "taylor_coefficients", counting)
-    provider_jet._routine.cache_clear()
     ch, avg, lat = small_channels(3, 8), fixed_b_avg(), gamma_lattice(12, 1)
     padded = []
     for cells in ((0, 1, 2), (3, 4, 5, 6), (7, 8, 9, 10, 11)):
@@ -372,7 +371,6 @@ def test_jet_groups_are_padded_to_powers_of_two(monkeypatch):
         route_cells(avg, ch, lat, "jet", cells=cells, events=events)
         padded.append(events["jet padded cells"])
     assert padded == [4, 4, 8] and len(traces) == 2
-    provider_jet._routine.cache_clear()
 
 
 def test_jet_lattice_on_a_subset_equals_the_rows_of_the_whole():
