@@ -168,7 +168,8 @@ def test_auto_switches_from_the_stack_to_the_jet_at_the_grid_reach():
     assert all(stack_precondition(avg, lat, c) is None for c in range(8))
     check_contract(avg, lat, records)
     counts = {"stack cells": 7, "jet cells": 1, "core cells": 0, "jet groups": 1}
-    assert events == {**counts, "jet padded cells": 1}
+    jet = {"jet calls": 5, "jet compiles": 1, "jet memory unchecked": 0}
+    assert events == {**counts, **jet}
 
 
 @pytest.mark.parametrize("order", [0, 2])
@@ -354,8 +355,8 @@ def test_v_rows_of_a_polynomial_user_kernel_equal_the_closed_form():
     np.testing.assert_allclose(v, expect, rtol=1e-12, atol=1e-12 * np.abs(expect).max())
 
 
-def test_jet_groups_are_padded_to_powers_of_two(monkeypatch):
-    """Groups of 3, 4 and 5 cells of one pattern compile two routines, of 4 and 8 cells (Sec. 8.5)."""
+def test_cells_of_one_pattern_share_one_program(monkeypatch):
+    """Groups of 3, 4 and 5 cells of one pattern trace once: one call per cell and channel (decision 165)."""
     traces = []
     original = provider_jet.taylor_coefficients
 
@@ -365,16 +366,17 @@ def test_jet_groups_are_padded_to_powers_of_two(monkeypatch):
 
     monkeypatch.setattr(provider_jet, "taylor_coefficients", counting)
     ch, avg, lat = small_channels(3, 8), fixed_b_avg(), gamma_lattice(12, 1)
-    padded = []
+    seen = []
     for cells in ((0, 1, 2), (3, 4, 5, 6), (7, 8, 9, 10, 11)):
         events: dict = {}
         route_cells(avg, ch, lat, "jet", cells=cells, events=events)
-        padded.append(events["jet padded cells"])
-    assert padded == [4, 4, 8] and len(traces) == 2
+        seen.append((events["jet calls"], events["jet compiles"]))
+        assert "jet padded cells" not in events
+    assert seen == [(9, 1), (12, 0), (15, 0)] and len(traces) == 1
 
 
 def test_jet_lattice_on_a_subset_equals_the_rows_of_the_whole():
-    """Padded outputs are dropped. Measured difference 0.0 (load 7.6) against the whole lattice and ``jet_cell``."""
+    """One call per cell and channel, so a subset equals the rows of the whole bit for bit (decision 165)."""
     ch, avg, lat = small_channels(3, 8), fixed_b_avg(), gamma_lattice(5, 2)
     whole = [np.asarray(a) for a in jet_lattice(avg, ch, lat)]
     part = jet_lattice(avg, ch, lat, cells=(4, 1, 2))

@@ -39,6 +39,7 @@ from ._basis_cache import derived_reuse, fresh_jet
 from ._routes import check_stokes, route_cells
 from ._s2_columns import reuse_cells
 from ._stack_checks import StackRefused
+from ._stage_memo import close_memos, local_memo
 from .assemble import gather_spectra, stokes_axes
 from .columns import ColumnRules
 
@@ -107,7 +108,7 @@ def _summed(parts: list, shape: tuple, with_v: bool) -> tuple:
     return i, p, v
 
 
-def _plain(*args: Any, memo: dict, jet: Any, events: dict, **kwargs: Any) -> tuple:
+def _plain(*args: Any, memo: Any, jet: Any, events: dict, **kwargs: Any) -> tuple:
     """``route_cells`` with every value of its cells counted as computed."""
     out = route_cells(*args, memo=memo, jet=jet, events=events, **kwargs)
     lattice, n_ch = args[2], args[1].n_ch
@@ -121,11 +122,11 @@ def _providers(basis: Any) -> tuple[Callable, list]:
     """``make(channels)``: the provider call for new rows on ``channels``, and the stage memos to close.
 
     A cached parent reads the S2 store (``reuse_cells``). Any other parent computes every value with fresh
-    jet routines.
+    jet routines and one ``local_memo()`` for its stack tables.
     """
     prints = {r.variable: r.fingerprint for r in basis.specified}
-    memos: list = []
-    shared: dict = {}
+    shared = local_memo()  # the stack tables of an uncached parent (decision 167)
+    memos: list = [shared]
 
     def make(channels: Any) -> Callable:
         found = derived_reuse(basis, channels)
@@ -143,15 +144,15 @@ def _providers(basis: Any) -> tuple[Callable, list]:
 def fill_new(
     basis: Any, channels: Any, compute: dict, s0: Any, s2: Any, counts: dict
 ) -> tuple:
-    """Write the new channel rows into ``s0`` and ``s2`` and return the realised routes."""
+    """Write the new rows into ``s0`` and ``s2``. The routes and memo notes, with the memo counts in ``counts``."""
     rows = np.array(sorted(compute.values()), dtype=np.int64)
     common = dict(s1=basis.record.s1, with_v="V" in basis.columns.stokes, events=counts)
     make, memos = _providers(basis)
     try:
-        return _fill(basis, channels, rows, make, common, s0, s2, counts)
+        routes = _fill(basis, channels, rows, make, common, s0, s2, counts)
     finally:
-        for memo in memos:
-            memo.close()
+        notes = close_memos(memos, counts)
+    return routes, notes
 
 
 def _fill(basis, channels, rows, make, common, s0, s2, counts) -> tuple:

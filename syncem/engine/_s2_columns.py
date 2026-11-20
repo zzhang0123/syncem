@@ -36,7 +36,7 @@ from ..records.records import RouteRecord
 from . import _routes
 from ._keys import column_record, s2_context_keys
 from ._stack_checks import StackRefused
-from .provider_jet import _padded
+from ._jet_routine import JetMemoryError
 
 __all__ = ["Reuse", "cell_chain", "column_ids", "reuse_cells"]
 
@@ -266,15 +266,20 @@ def _jet(reuse, channels, lattice, cells: list, with_v: bool, counts: dict) -> N
             groups.setdefault(key, []).append(cell)
     for (reps, exponents), members in groups.items():
         rows = np.array(reps, dtype=np.int64)
-        out = _routes.jet_lattice(
-            reuse.jet.averaged,
-            _subset(channels, rows),
-            lattice,
-            with_v=with_v,
-            cells=[m.cell for m in members],
-            exponents=exponents,
-            routine=reuse.jet.routine,
-        )
+        try:
+            out = _routes.jet_lattice(
+                reuse.jet.averaged,
+                _subset(channels, rows),
+                lattice,
+                with_v=with_v,
+                cells=[m.cell for m in members],
+                exponents=exponents,
+                routine=reuse.jet.routine,
+                events=counts,
+            )
+        except JetMemoryError as err:
+            reasons = {m.cell: m.reason for m in members}
+            raise _routes.with_reason(err, lattice, reasons) from None
         arrays, start = [np.asarray(a) for a in out], 0
         for m in members:
             positions = _positions(lattice, m.cell, exponents)
@@ -282,22 +287,6 @@ def _jet(reuse, channels, lattice, cells: list, with_v: bool, counts: dict) -> N
             part = dict(zip(("I", "P", "V"), (a[span] for a in arrays)))
             _fill(m, rows, part, positions)
             start += positions.size
-        _jet_counts(lattice, [m.cell for m in members], exponents, counts)
-
-
-def _jet_counts(lattice, cells, exponents, counts) -> None:
-    index, sizes = lattice.index, {}
-    for c in cells:
-        pattern = (
-            index.patterns[int(index.cell_pattern[c])]
-            if exponents is None
-            else exponents
-        )
-        key = (lattice.cells.chart[c], tuple(pattern))
-        sizes[key] = sizes.get(key, 0) + 1
-    counts["jet groups"] = counts.get("jet groups", 0) + len(sizes)
-    padded = sum(len(_padded([0] * n)) for n in sizes.values())
-    counts["jet padded cells"] = counts.get("jet padded cells", 0) + padded
 
 
 # ------------------------------------------------------------------ storing and the entry
@@ -381,5 +370,5 @@ def _tally(reuse, lattice, found: dict, ids: list, counts: dict) -> None:
     providers = [cell.provider for cell in found.values()]
     for p in _routes.PROVIDERS:
         counts[f"{p} cells"] = counts.get(f"{p} cells", 0) + providers.count(p)
-    counts.setdefault("jet groups", 0)
-    counts.setdefault("jet padded cells", 0)
+    for name in _routes.JET_EVENTS:
+        counts.setdefault(name, 0)

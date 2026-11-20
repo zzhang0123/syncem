@@ -1,4 +1,4 @@
-"""The process cache of the engine (design/0.8/SPEC.md Sec. 8.5, decisions 160, 161 and 162).
+"""The process cache of the engine (design/0.8/SPEC.md Sec. 8.5, decisions 160 to 162 and 167 to 169).
 
 LABEL ``[extension]``. One ``Cache`` holds the basis memo (stage ``memo``), the S0 and S1 tables
 (stages ``s0`` and ``s1``), the S2 columns, the jet routines, the trial LRU and the one-node tables
@@ -26,8 +26,11 @@ chain drops the stored columns above the last agreeing degree.
 the former ``lru_cache`` of ``provider_jet._routine``), keyed by the maker, the signature and the
 token. A fresh token per build gives a fresh routine. ``trial`` keeps 8 entries by count and never
 writes to disk. ``node_store()`` opens the one-node store of one build. Its entries share the byte
-bound, an evicted table is rebuilt on the next ``get``, the rebuilds are counted, and closing the
-store removes its entries.
+bound. A new table is kept only when it fits without evicting a one-node table of the same build, and
+otherwise it is returned and not kept (decision 168). A table read again after it was evicted or not
+kept is rebuilt, the rebuilds are counted, and closing the store removes its entries. ``Cache.local()``
+is a cache of one uncached build: its own byte bound, no disk and no directory (decision 167). Compiled
+jet programs lie outside the byte bound (decision 169).
 
 Units: none of its own. The cache stores what the providers give, in their units. Array shapes: an
 S0 or S1 table is a mapping of names to arrays of any shape. ``columns`` returns a found mask of
@@ -44,11 +47,13 @@ from collections.abc import Callable, Hashable, Sequence
 from pathlib import Path
 from typing import Any
 
+import jax as _jax
 import numpy as np
 
 from . import _disk
 from ._cache_store import (
     MISSING,
+    NodeStore,
     Store,
     agreement,
     bound,
@@ -112,10 +117,20 @@ class Cache:
         max_bytes: int | None = None,
         mem_bytes: int | None = None,
     ) -> None:
-        self._directory = (
-            Path(directory) if directory is not None else _disk.cache_dir()
-        )
-        self._max_bytes = bound(max_bytes, _disk.disk_limit)
+        root = Path(directory) if directory is not None else _disk.cache_dir()
+        self._setup(root, bound(max_bytes, _disk.disk_limit), mem_bytes)
+
+    @classmethod
+    def local(cls, mem_bytes: int | None = None) -> Cache:
+        """The cache of one uncached build: ``mem_bytes`` or ``SYNCEM_CACHE_MEM``, no disk, no directory."""
+        local = cls.__new__(cls)
+        local._setup(None, 0, mem_bytes)
+        return local
+
+    def _setup(
+        self, directory: Path | None, max_bytes: int, mem_bytes: int | None
+    ) -> None:
+        self._directory, self._max_bytes = directory, max_bytes
         self._mem_bytes = bound(
             mem_bytes, lambda: _disk.env_bytes(MEM_ENV, DEFAULT_MEM_BYTES)
         )
@@ -139,7 +154,10 @@ class Cache:
     def settings(self) -> tuple[tuple[str, Any], ...]:
         """The bounds and the directory, for ``BuildRecord.defaults``."""
         return (
-            ("cache_directory", str(self._directory)),
+            (
+                "cache_directory",
+                None if self._directory is None else str(self._directory),
+            ),
             ("cache_max_bytes", self._max_bytes),
             ("cache_mem_bytes", self._mem_bytes),
         )
@@ -154,7 +172,8 @@ class Cache:
         if not isinstance(key, str):
             raise TypeError(f"key {key!r}: a cache key is a string")
         if stage in _disk.STAGES:
-            return _disk.entry_path(self._directory, stage, key)
+            path = _disk.entry_path(self._directory or Path(), stage, key)
+            return path if self._directory is not None else None
         return None
 
     def _keep(self, key: Hashable, value: Any) -> None:
@@ -190,8 +209,8 @@ class Cache:
         self._keep((stage, key), arrays)
         return dict(arrays)
 
-    def put(self, stage: str, key: str, value: Any, *, description: Any = None) -> None:
-        """Store ``value``. An S0 or S1 table, a mapping of arrays, is written to disk as well.
+    def put(self, stage: str, key: str, value: Any, *, description: Any = None) -> Any:
+        """Store ``value`` and return the read-only copy kept. An S0 or S1 table is written to disk as well.
 
         ``description`` is the strict-JSON description of a disk entry. A description that is not strict
         JSON raises ``TypeError`` or ``ValueError`` before anything is kept.
@@ -199,17 +218,18 @@ class Cache:
         path = self._path(stage, key)
         if path is not None:
             description = _disk.plain_description(description)
-        value = table(value) if path is not None else freeze(value)
+        value = table(value) if stage in _disk.STAGES else freeze(value)
         self._keep((stage, key), value)
         if path is None or not self.disk_enabled:
-            return
+            return value
         try:
             _disk.write_entry(path, value, description)
             _disk.evict(self._directory, self._max_bytes)
         except OSError:
             self._count("disk_write_errors")
-            return
+            return value
         self._count("disk_writes")
+        return value
 
     def columns(
         self, context_keys: Sequence[str], wanted: Sequence, chains: Sequence
@@ -300,54 +320,22 @@ class Cache:
         """A one-node store for one build, to be closed (or used as a context manager) at its end."""
         return NodeStore(self, next(self._builds))
 
-    def clear(self, *, disk: bool = False) -> None:
-        """Empty the memory stages, the routines and the trial LRU. ``disk=True`` also removes the disk entries."""
+    def clear(self, *, disk: bool = False, jax: bool = False) -> None:
+        """Empty the memory stages, the routines and the trial LRU. ``disk=True`` also removes the disk entries.
+
+        Compiled jet programs lie outside the byte bound, at about 16 MB of resident memory per retrace
+        (decision 169). Dropping a routine releases its programs but does not return that memory, and
+        ``jax=True`` also calls ``jax.clear_caches()``, which clears every JAX cache of the process and
+        returned about 20% of it in the memory audit.
+        """
         with self._lock:
             self._store.clear()
             self._routines.clear()
             self._trials.clear()
-        if disk:
+        if disk and self._directory is not None:
             _disk.evict(self._directory, 0)
-
-
-class NodeStore:
-    """The one-node tables of one build in the byte bound of its ``Cache`` (decision 162).
-
-    ``get(key, build)`` returns the stored table or ``build()``. A key built before and evicted since
-    counts one rebuild. ``close()`` removes the entries. Not certified: the tables, which ``build``
-    computes.
-    """
-
-    def __init__(self, cache: Cache, number: int) -> None:
-        self._cache = cache
-        self._number = number
-        self._seen: set[Hashable] = set()
-        self.rebuilds = 0
-
-    def get(self, key: Hashable, build: Callable[[], Any]) -> Any:
-        cache = self._cache
-        with cache._lock:
-            found = cache._store.get(("node", self._number, key))
-        if found is not MISSING:
-            return shallow(found)
-        if key in self._seen:
-            self.rebuilds += 1
-            cache._count("rebuilds")
-        value = freeze(build())
-        self._seen.add(key)
-        cache._keep(("node", self._number, key), value)
-        return shallow(value)
-
-    def close(self) -> None:
-        with self._cache._lock:
-            for key in self._seen:
-                self._cache._store.pop(("node", self._number, key))
-
-    def __enter__(self) -> NodeStore:
-        return self
-
-    def __exit__(self, *exc: object) -> None:
-        self.close()
+        if jax:
+            _jax.clear_caches()
 
 
 _DEFAULT: Cache | None = None

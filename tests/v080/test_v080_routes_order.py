@@ -33,7 +33,7 @@ def test_order_branch_of_the_precondition(order):
 def test_auto_sends_an_order_7_cell_to_the_jet_with_the_order_reason(monkeypatch):
     seen = []
 
-    def stub(averaged, channels, lattice, *, with_v=False, cells=None):
+    def stub(averaged, channels, lattice, *, with_v=False, cells=None, **kwargs):
         n = sum(len(lattice.index.cell_rows(c)) for c in cells)
         seen.append(tuple(cells))
         return np.zeros((n, channels.n_ch)), np.zeros((n, channels.n_ch), complex)

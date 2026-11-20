@@ -309,7 +309,7 @@ def test_trial_lru_keeps_eight_entries_and_never_writes_disk(tmp_path):
 # One-node store ---------------------------------------------------------------------------------
 
 
-def test_node_store_rebuilds_an_evicted_table_and_counts_it(tmp_path):
+def test_node_store_rebuilds_a_table_it_did_not_keep_and_counts_it(tmp_path):
     size = _nbytes(_table(0))
     cache = _memory(tmp_path, mem_bytes=2 * size)
     built = []
@@ -322,10 +322,11 @@ def test_node_store_rebuilds_an_evicted_table_and_counts_it(tmp_path):
         first = nodes.get(("node", 0), lambda: build(0))
         assert _same(nodes.get(("node", 0), lambda: build(0)), first)
         nodes.get(("node", 1), lambda: build(1))
-        nodes.get(("node", 2), lambda: build(2))  # evicts node 0
-        again = nodes.get(("node", 0), lambda: build(0))
-        assert nodes.rebuilds == 1 and built == [0, 1, 2, 0]
-        assert _same(again, first)
+        third = nodes.get(("node", 2), lambda: build(2))  # not kept (decision 168)
+        assert _same(nodes.get(("node", 0), lambda: build(0)), first)
+        again = nodes.get(("node", 2), lambda: build(2))
+        assert nodes.rebuilds == 1 and built == [0, 1, 2, 2]
+        assert _same(again, third) and nodes.not_kept == 2
     assert cache.nbytes == 0 and cache.events["rebuilds"] == 1
     assert _disk_files(tmp_path) == []
 

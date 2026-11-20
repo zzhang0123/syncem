@@ -1,12 +1,14 @@
 """Keys, memo entries and S2 entries of one basis build (design/0.8/SPEC.md decisions 157 to 162).
 
 LABEL ``eq: channel basis expansion``. ``BuildRun.open`` prepares one build of ``build_from_averaged``. With
-``cache=False`` it computes no key, gives the stack a plain dict as its memo and the jet fresh routines, and
-stores nothing. Otherwise it computes the kernel record, the averaged-kernel record, the phase fingerprints,
+``cache=False`` it computes no key, gives the stack a ``local_memo()`` (decision 167) and the jet fresh
+routines, and stores nothing in the process cache. Otherwise it computes the kernel record, the averaged-kernel record, the phase fingerprints,
 the channel row keys and the rule chains ``d_0 .. d_N`` of every averaged rule on every cell, with ``N`` the
 largest total degree of the cell's exponents. The basis memo key (``_keys.memo_key``) hashes them with the
 column-map key, the provider settings and the engine source digest. Each reason without a fingerprint gives
-the note "not cached: <reason>" and the key ``None``, and such a build reads and stores nothing in the cache.
+the note "not cached: <reason>" and the key ``None``, and such a build reads and stores nothing in the cache. Its
+stack also reads through a ``local_memo()``. ``finish`` adds the note of decision 168 when one-node tables were
+not kept.
 
 A cacheable build reads the memo first. On a miss the stack reads its S0 and S1 tables through a ``StageMemo``
 and the jet reads the rules wrapped as ``TabulatedRule`` with the fingerprint of each rule, the digest of its
@@ -35,7 +37,7 @@ from ._keys import design_key as _design_key
 from ._routes import JetSetup
 from ._rule_fingerprint import chain_with_reason, with_tabulated_rules
 from ._s2_columns import Reuse
-from ._stage_memo import StageMemo
+from ._stage_memo import StageMemo, local_memo
 from .cache import Cache, default_cache
 from .provider_jet import make_routine
 
@@ -204,13 +206,12 @@ class BuildRun:
         cls, averaged, channels, lattice, columns, rules, routes, s1, cache
     ) -> "BuildRun":
         if not cache:
-            return cls(None, None, {}, fresh_jet(averaged, {}), (_OFF,))
+            return cls(None, None, local_memo(), fresh_jet(averaged, {}), (_OFF,))
         provider = (("routes", routes), ("s1", s1))
         keys = build_keys(averaged, channels, lattice, columns, rules, provider)
         if keys.memo is None:
-            return cls(
-                None, keys, {}, fresh_jet(averaged, keys.fingerprints), keys.reasons
-            )
+            jet = fresh_jet(averaged, keys.fingerprints)
+            return cls(None, keys, local_memo(), jet, keys.reasons)
         store = default_cache()
         jet = _jet_setup(averaged, keys, store)
         return cls(store, keys, StageMemo(store), jet, ())
@@ -238,8 +239,13 @@ class BuildRun:
         return _design_key(self.memo_key, lattice.key, factor)
 
     def finish(self) -> dict:
-        """Close the stack memo. The memo and cache events of the build."""
-        return {"memo misses": int(self.cache is not None), **self.close()}
+        """Close the stack memo. The memo and cache events of the build, and its note on one-node tables."""
+        memo = self.memo
+        counts = {"memo misses": int(self.cache is not None), **self.close()}
+        note = memo.note() if isinstance(memo, StageMemo) else None
+        if note is not None:
+            self.notes = (*self.notes, note)
+        return counts
 
     def close(self) -> dict:
         """Close the stack memo once. Its event counts, or none for a dict memo."""

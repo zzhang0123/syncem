@@ -16,12 +16,14 @@ reweighted weights that do not reproduce the jet of the rule itself (decision 13
 ``t^m``, ``m = 0..3``, for moving ones), weights amplified beyond ``_MAX_AMPLIFICATION`` (a law that moves by many
 widths across the cell), orders above the S1 table order, energies above the S1 grid for the lowest channel, and celled
 variables other than ``gamma`` and ``B``. Nodes at ``|eta| = 1`` or ``B = 0`` add zero. Each S1 table reads the S0
-table of its quantised ``ln x`` span, held in the memo once per span (decision 158). The memo is a dict, or a
-``StageMemo`` that reads and stores the tables through the process cache (decisions 159 to 162). The refusal
+table of its quantised ``ln x`` span, held in the memo once per span (decision 158). The memo is a
+``StageMemo`` that reads and stores the tables through its cache (decisions 159 to 162), a local one without
+``memo=`` (decision 167), or a plain dict, unbounded as in step 5a. The refusal
 checks and the frozen-node weights are in ``_stack_checks``, and the field cells and the row layout in
 ``_stack_fields`` (decision 145). A walk computes the channel nodes and weights once per depth value, and
 ``stack_cell`` reports the mode it took. ``stack_stage`` walks dry: it reads the same S1 tables and runs the
-refusal checks that do not read the channels, and gives the mode without a channel series (decision 159). Units: those of the kernel. Shapes: series ``(order + 1, J, *L)``, cell rows
+refusal checks that do not read the channels, and gives the mode without a channel series (decision 159). It
+keys the one-node tables and builds none (decision 168). Units: those of the kernel. Shapes: series ``(order + 1, J, *L)``, cell rows
 ``(n_rows, J)`` in the lattice order. Not certified: the reweighted quadrature, validated against the jet. The check
 bounds moments, so a law whose nodes do not resolve the kernel gives a quadrature error that the jet shares.
 """
@@ -43,7 +45,7 @@ from ._stack_checks import (
     _weights,
 )
 from ._stack_fields import _field_cell, _to_rows
-from ._stage_memo import StageMemo
+from ._stage_memo import StageMemo, own_memo
 from ._stage_memo import s1_table as _s1_table
 from .average import AveragedKernel, NodeRule
 from .field_average import TABLE_ORDER, FieldAverage, OutsideTable
@@ -95,10 +97,10 @@ class _Context:
             self._arrays[key] = _channel_arrays(self.channels, self.averaged.phase, key)
         return self._arrays[key]
 
-    def table(self, b_gauss: float) -> FieldAverage:
+    def table(self, b_gauss: float) -> FieldAverage | None:
         node = np.array([b_gauss * 1e6])
-        if isinstance(self.memo, StageMemo):
-            return _s1_table(self.memo, self.s1, node, np.ones(1), kind="node")
+        if isinstance(self.memo, StageMemo) or self.dry:  # a dry read builds nothing
+            return _s1_table(self.memo, self.s1, node, np.ones(1), "node", self.dry)
         key = (self.s1, float(b_gauss))
         if key not in self.memo:
             self.memo[key] = _s1_table(
@@ -289,7 +291,7 @@ def stack_cell(
     cell: int,
     *,
     s1: str = "lookup",
-    memo: dict | None = None,
+    memo: Any = None,
     reweight: bool = True,
     record: list | None = None,
 ) -> tuple[Any, Any]:
@@ -299,9 +301,10 @@ def stack_cell(
     145). A refused cell appends nothing.
     """
     try:
-        rows, mode = _stack_cell(
-            averaged, channels, lattice, cell, s1, memo, reweight, False
-        )
+        with own_memo(memo) as memo:
+            rows, mode = _stack_cell(
+                averaged, channels, lattice, cell, s1, memo, reweight, False
+            )
     except OutsideTable as err:
         raise StackRefused(f"{err}. The jet takes the cell") from err
     if record is not None:
@@ -327,9 +330,10 @@ def stack_stage(
     ``stack_cell`` only.
     """
     try:
-        _, mode = _stack_cell(
-            averaged, channels, lattice, cell, s1, memo, reweight, True
-        )
+        with own_memo(memo) as memo:
+            _, mode = _stack_cell(
+                averaged, channels, lattice, cell, s1, memo, reweight, True
+            )
     except OutsideTable as err:
         raise StackRefused(f"{err}. The jet takes the cell") from err
     return mode
@@ -341,13 +345,12 @@ def _stack_cell(
     lattice: Any,
     cell: int,
     s1: str,
-    memo: dict | None,
+    memo: Any,
     reweight: bool,
     dry: bool,
 ) -> tuple[tuple[Any, Any], str]:
     if s1 not in ("lookup", "quadrature"):
         raise ValueError("s1 must be 'lookup' or 'quadrature'")
-    memo = {} if memo is None else memo
     table, index = lattice.cells, lattice.index
     names = table.variables
     _check_lattice(averaged, lattice)
@@ -385,10 +388,10 @@ def _stack_cell(
 def stack_lattice(
     averaged: AveragedKernel, channels: Any, lattice: Any, *, s1: str = "lookup"
 ) -> tuple[Any, Any]:
-    """Rows of every product cell in the rows of one block. One memo of S1 tables serves all cells."""
-    memo: dict = {}
-    parts = [
-        stack_cell(averaged, channels, lattice, c, s1=s1, memo=memo)
-        for c in range(lattice.n_cells)
-    ]
+    """Rows of every product cell in the rows of one block. One local memo of S1 tables serves all cells."""
+    with own_memo(None) as memo:
+        parts = [
+            stack_cell(averaged, channels, lattice, c, s1=s1, memo=memo)
+            for c in range(lattice.n_cells)
+        ]
     return np.concatenate([p[0] for p in parts]), np.concatenate([p[1] for p in parts])

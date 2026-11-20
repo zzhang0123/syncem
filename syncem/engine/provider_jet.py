@@ -6,19 +6,29 @@ averaged kernel there. The columns are ``(1/alpha!) d^alpha f(0)`` for every exp
 lower set, by nested forward mode. Each nesting level differentiates only the directions that some exponent
 needs at that depth (cap-aware nesting, the ``level_plan`` of ``syncem.model._harmonic_taylor`` generalised to
 ``d`` directions): an exponent's derivatives are taken innermost for the variables with the smallest caps, so a
-variable of cap ``c`` appears only in the levels it can reach. Cells with equal charts and lower sets share one
-compiled routine, mapped over the cells with ``lax.map``. ``jet_lattice`` pads each group to the next power of
-two by repeating its first reference and drops the padded outputs, so the cell count is not compiled in.
+variable of cap ``c`` appears only in the levels it can reach.
 
-``make_routine(names, charts, exponents)`` makes a routine. The routines live in the process ``Cache``
-(``engine/cache.py``, decision 160) and not in module state. A call without ``routine=`` takes the routine of the
-signature from ``default_cache()`` with the token "direct", so a trace is reused for an equal averaged kernel. The
-basis build passes its own ``routine`` and wraps the rules as ``TabulatedRule``, so an edited rule retraces.
+The functions loop in Python over cells, channels and node chunks, with one call of a compiled program per (cell,
+channel, chunk) (decision 165). A channel of ``n_nu`` nodes runs in ``ceil(n_nu / 64)`` chunks of equal size,
+the last padded with copies of its last node at weight 0, and the host adds the chunk columns in chunk order in
+float64 (complex128 for P). This needs ``channel()`` to be the sum over the node axis of its per-node values
+(Sec. 8.1). Each chunk is a ``ResponseView`` with the channel's response weights evaluated on the host, so every
+channel family shares the program of a chunk size (decision 171). A channel's columns therefore depend on its
+nodes and response weights, the cell, the exponent set and the averaged kernel, and not on the other channels or
+cells of the call. Channels without nodes (``None``) run whole.
+
+``make_routine(names, charts, exponents)`` makes a ``JetRoutine`` (``engine/_jet_routine.py``): programs compiled
+ahead of time, at most 4 per routine, a memory budget checked before the first execution and an order limit
+checked before tracing (decisions 166 and 169). The routines live in the process ``Cache`` (``engine/cache.py``,
+decision 160) and not in module state. A call without ``routine=`` takes the routine of the signature from
+``default_cache()`` with the token "direct". The basis build passes its own ``routine`` and wraps the rules as
+``TabulatedRule``, so an edited rule retraces.
 
 The cost per cell is about ``prod_i (1 + |D_i|)`` primal evaluations over the levels ``i``, with ``D_i`` the
 directions of level ``i``. The plan prints it (SPEC Sec. 8.3, decision (b)). The columns carry the units of the kernel.
-Shapes: ``I`` and ``P`` ``(n_rows, n_ch, *L)``, one row per exponent (``P`` complex, one phase-weight row). Not certified:
-nothing beyond the kernel and its averages, since forward mode gives the derivatives to rounding.
+Shapes: host arrays, ``I`` and ``P`` ``(n_rows, n_ch, *L)``, one row per exponent (``P`` complex, one phase-weight
+row). Not certified: nothing beyond the kernel and its averages, since forward mode gives the derivatives to
+rounding, and the chunk sums differ from one sum over the channel nodes by rounding.
 """
 
 from __future__ import annotations
@@ -27,16 +37,17 @@ import math
 from collections.abc import Callable
 from typing import Any
 
-import equinox as eqx
 import jax
 import jax.numpy as jnp
 import numpy as np
 
+from ._jet_routine import JetRoutine, check_order, chunk_views
 from .average import AveragedKernel
 from .cache import default_cache
 
 __all__ = [
     "DIRECT",
+    "JET_EVENTS",
     "cost",
     "jet_cell",
     "jet_columns",
@@ -47,6 +58,7 @@ __all__ = [
 ]
 
 DIRECT = "direct"  # the routine token of a provider call outside a basis build
+JET_EVENTS = ("jet groups", "jet calls", "jet compiles", "jet memory unchecked")
 
 
 def _order(exponents: tuple[tuple[int, ...], ...]) -> list[int]:
@@ -130,27 +142,20 @@ def make_routine(
     names: tuple[str, ...],
     charts: tuple[str, ...],
     exponents: tuple[tuple[int, ...], ...],
-) -> Any:
-    """A jitted ``run(averaged, channels, refs, hws)`` of the Taylor columns of a group of cells."""
+) -> JetRoutine:
+    """The ``JetRoutine`` of the Taylor columns of one cell on one channel view (decisions 165 and 166).
 
-    @eqx.filter_jit
-    def run(averaged: AveragedKernel, channels: Any, refs: Any, hws: Any) -> Any:
-        def one(args: Any) -> Any:
-            ref, hw = args
+    Raises ``JetMemoryError`` before tracing when the nesting depth exceeds the order limit.
+    """
 
-            def f(z: Any) -> Any:
-                modes = averaged(channels, _point(names, charts, ref, hw, z))
-                return (
-                    modes.I,
-                    modes.P[0],
-                    modes.V,
-                )  # one phase-weight row (decision 132)
+    def one(averaged: AveragedKernel, channels: Any, ref: Any, hw: Any) -> Any:
+        def f(z: Any) -> Any:
+            modes = averaged(channels, _point(names, charts, ref, hw, z))
+            return modes.I, modes.P[0], modes.V  # one phase-weight row (decision 132)
 
-            return taylor_coefficients(f, len(names), exponents)
+        return taylor_coefficients(f, len(names), exponents)
 
-        return jax.lax.map(one, (refs, hws))
-
-    return run
+    return JetRoutine(names, charts, exponents, one)
 
 
 def _direct(names: tuple, charts: tuple, exponents: tuple) -> Any:
@@ -169,6 +174,55 @@ def _check(averaged: AveragedKernel, names: tuple[str, ...]) -> None:
         raise ValueError(
             f"{sorted(clash)} are celled and also averaged, projected or fixed in the averaged kernel"
         )
+
+
+def _views(channels: Any) -> list[tuple[Any, ...]]:
+    """The node-chunk views of each channel, or the channels whole when they have no nodes."""
+    if getattr(channels, "nodes", None) is None:
+        return [(channels,)]
+    return [chunk_views(channels, j) for j in range(int(channels.n_ch))]
+
+
+def _host(a: Any) -> np.ndarray:
+    a = np.asarray(a)
+    return a.astype(np.result_type(a.dtype, np.float64), copy=False)
+
+
+def _cell(
+    run: Any, averaged: Any, views: list, ref: Any, hw: Any, calls: dict
+) -> tuple:
+    """``(I, P, V)`` of one cell, ``(n_rows, n_ch, *L)``: one call per channel chunk, chunks added in order."""
+    per_channel = []
+    for chunks in views:
+        total = None
+        for view in chunks:
+            out = run(
+                averaged,
+                view,
+                ref,
+                hw,
+                events=calls["events"],
+                request=calls["request"],
+            )
+            out = tuple(_host(a) for a in out)
+            total = out if total is None else tuple(t + o for t, o in zip(total, out))
+            calls["n"] += 1
+        per_channel.append(total)
+    return tuple(np.concatenate([c[k] for c in per_channel], axis=1) for k in range(3))
+
+
+def _calls(channels: Any, n_cells: int, events: dict | None) -> dict:
+    n_ch = int(channels.n_ch) if hasattr(channels, "n_ch") else "?"
+    return {"n": 0, "events": events, "request": (n_ch, n_cells)}
+
+
+def _count(events: dict | None, groups: int, calls: dict) -> None:
+    if events is None:
+        return
+    for name, n in (("jet groups", groups), ("jet calls", calls["n"])):
+        events[name] = events.get(name, 0) + n
+    for name in JET_EVENTS:
+        events.setdefault(name, 0)
 
 
 def jet_columns(
@@ -203,11 +257,13 @@ def jet_columns(
             f"exponents must be a non-empty list of {len(names)} non-negative ints each, one per axis {names}"
         )
     charts = tuple(axes[v][0] for v in names)
-    refs = jnp.asarray([[axes[v][1] for v in names]], dtype=float)
-    hws = jnp.asarray([[axes[v][2] for v in names]], dtype=float)
+    ref = np.asarray([axes[v][1] for v in names], dtype=float)
+    hw = np.asarray([axes[v][2] for v in names], dtype=float)
     exps = tuple(tuple(int(x) for x in e) for e in exponents)
-    i, p, v = (routine or _direct)(names, charts, exps)(averaged, channels, refs, hws)
-    return (i[0], p[0], v[0]) if with_v else (i[0], p[0])
+    check_order(names, exps)
+    run = (routine or _direct)(names, charts, exps)
+    out = _cell(run, averaged, _views(channels), ref, hw, _calls(channels, 1, None))
+    return out if with_v else out[:2]
 
 
 def _legendre_order(averaged: AveragedKernel, lattice: Any) -> None:
@@ -219,12 +275,13 @@ def _legendre_order(averaged: AveragedKernel, lattice: Any) -> None:
         )
 
 
-def _rows(columns: Any, n_lead: int) -> Any:
+def _rows(columns: Any, n_lead: int) -> np.ndarray:
     """``(n_m, ..., n_ch, *L)`` to lattice order: Legendre pair, then monomial."""
+    columns = np.asarray(columns)
     n_l = columns.ndim - n_lead - 1
     if n_l == 0:
         return columns
-    moved = jnp.moveaxis(
+    moved = np.moveaxis(
         columns, tuple(range(columns.ndim - n_l, columns.ndim)), tuple(range(n_l))
     )
     return moved.reshape((-1,) + moved.shape[n_l + 1 : n_l + 1 + n_lead])
@@ -254,12 +311,6 @@ def jet_cell(
     return tuple(_rows(a, 1) for a in out)
 
 
-def _padded(cells: list[int]) -> list[int]:
-    """``cells`` padded to the next power of two by repeating the first, so the count is not compiled in."""
-    size = 1 << (len(cells) - 1).bit_length()
-    return cells + [cells[0]] * (size - len(cells))
-
-
 def _selection(table: Any, cells: Any) -> list[int]:
     if cells is None:
         return list(range(table.n_cells))
@@ -271,29 +322,7 @@ def _selection(table: Any, cells: Any) -> list[int]:
     return chosen
 
 
-def jet_lattice(
-    averaged: AveragedKernel,
-    channels: Any,
-    lattice: Any,
-    *,
-    with_v: bool = False,
-    cells: Any = None,
-    exponents: Any = None,
-    routine: Callable | None = None,
-) -> tuple[Any, ...]:
-    """Columns of product cells in the rows of one block, ``(block_size, n_ch)`` each.
-
-    ``cells`` selects product cells, and the rows of each follow in the order given (repeats allowed).
-    ``exponents`` replaces every selected cell's lower set, so a cell gives ``n_pairs * len(exponents)`` rows.
-    Cells run in groups of equal (charts, exponents), each padded to the next power of two by repeating its first
-    reference. The padded outputs are dropped (decision 150). ``routine(names, charts, exponents)`` gives the
-    routine of a group, by default the one of ``default_cache()`` with the token "direct".
-    """
-    _legendre_order(averaged, lattice)
-    table, index = lattice.cells, lattice.index
-    names = table.variables
-    _check(averaged, names)
-    chosen = _selection(table, cells)
+def _fixed(exponents: Any, names: tuple) -> tuple | None:
     fixed = (
         None
         if exponents is None
@@ -305,20 +334,58 @@ def jet_lattice(
         raise ValueError(
             f"exponents must be a non-empty tuple of {len(names)} non-negative ints each, one per axis {names}"
         )
-    groups: dict[tuple, list[int]] = {}
-    for c in dict.fromkeys(chosen):
-        pattern = index.patterns[int(index.cell_pattern[c])] if fixed is None else fixed
-        groups.setdefault((table.chart[c], tuple(pattern)), []).append(c)
-    pieces: dict[int, tuple[Any, Any, Any]] = {}
-    for (charts, pattern), members in groups.items():
-        run = (routine or _direct)(names, tuple(charts), pattern)
-        padded = _padded(members)
-        refs = jnp.asarray(table.reference[padded], dtype=float)
-        hws = jnp.asarray(table.half_width[padded], dtype=float)
-        i, p, v = run(averaged, channels, refs, hws)
-        for k, c in enumerate(members):
-            pieces[c] = (_rows(i[k], 1), _rows(p[k], 1), _rows(v[k], 1))
-    out = tuple(jnp.concatenate([pieces[c][k] for c in chosen]) for k in range(3))
+    return fixed
+
+
+def jet_lattice(
+    averaged: AveragedKernel,
+    channels: Any,
+    lattice: Any,
+    *,
+    with_v: bool = False,
+    cells: Any = None,
+    exponents: Any = None,
+    routine: Callable | None = None,
+    events: dict | None = None,
+) -> tuple[Any, ...]:
+    """Columns of product cells in the rows of one block, ``(block_size, n_ch)`` each.
+
+    ``cells`` selects product cells, and the rows of each follow in the order given (repeats allowed, each
+    distinct cell computed once). ``exponents`` replaces every selected cell's lower set, so a cell gives
+    ``n_pairs * len(exponents)`` rows. Cells of equal (charts, exponents) share one routine,
+    ``routine(names, charts, exponents)``, by default the one of ``default_cache()`` with the token "direct".
+    Every order is checked before a routine is made. ``events``, when given, gains "jet groups", "jet calls",
+    "jet compiles" and "jet memory unchecked".
+    """
+    _legendre_order(averaged, lattice)
+    table, index = lattice.cells, lattice.index
+    names = table.variables
+    _check(averaged, names)
+    chosen = _selection(table, cells)
+    fixed = _fixed(exponents, names)
+    distinct = list(dict.fromkeys(chosen))
+    patterns = {
+        c: fixed if fixed is not None else index.patterns[int(index.cell_pattern[c])]
+        for c in distinct
+    }
+    for c in distinct:
+        check_order(names, patterns[c], cell=c)
+    runs: dict[tuple, Any] = {}
+    for c in distinct:
+        key = (tuple(table.chart[c]), tuple(patterns[c]))
+        if key not in runs:
+            runs[key] = (routine or _direct)(names, *key)
+    views, calls = _views(channels), _calls(channels, len(distinct), events)
+    pieces: dict[int, tuple] = {}
+    for c in distinct:
+        run = runs[(tuple(table.chart[c]), tuple(patterns[c]))]
+        ref = np.asarray(table.reference[c], dtype=float)
+        hw = np.asarray(table.half_width[c], dtype=float)
+        pieces[c] = tuple(
+            _rows(a, 1) for a in _cell(run, averaged, views, ref, hw, calls)
+        )
+    _count(events, len(runs), calls)
+    out = tuple(np.concatenate([pieces[c][k] for c in chosen]) for k in range(3))
     return out if with_v else out[:2]
 
 

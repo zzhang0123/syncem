@@ -5,7 +5,9 @@ the jet with that reason. Otherwise the stack runs with one memo shared across c
 cell to the jet with ``str(err)``. A plain ``ValueError`` is a user error and propagates. A provider name, or a tuple
 or mapping of names per cell, routes explicitly and raises on refusal, and "auto" in a tuple or mapping
 routes that cell as ``routes="auto"`` does. The core provider is explicit only. Jet cells
-run in one ``jet_lattice`` call, batched by (charts, pattern) and padded to powers of two. A basis build passes a
+run in one ``jet_lattice`` call, one compiled call per (cell, channel, node chunk) (decision 165). A cell whose order
+exceeds the jet's order limit raises ``JetMemoryError`` with the stack's reason for the cell (decision 166). A basis
+build passes a
 ``JetSetup``: the jet then reads the rules wrapped as ``TabulatedRule`` and the build's routines (decision 160),
 while the stack and the core read the rules themselves. A build with keys routes through
 ``_s2_columns.reuse_cells``, which shares ``prepare`` with ``route_cells`` and calls the providers by their names
@@ -34,10 +36,12 @@ from ..base.continuum import ContinuumKernel
 from ..records.records import RouteRecord
 from ._stack_checks import StackRefused
 from ._stack_series import stack_cell, stack_stage
+from ._stage_memo import own_memo
 from .average import AveragedKernel, NodeRule
 from .field_average import TABLE_ORDER
 from .provider_core import core_cell
-from .provider_jet import _padded, jet_lattice
+from ._jet_routine import JetMemoryError, order_error
+from .provider_jet import JET_EVENTS, jet_lattice
 
 __all__ = [
     "PROVIDERS",
@@ -56,7 +60,7 @@ _STACK_SET = (
 )  # the celled variables the stack takes (_stack_checks._check_lattice)
 _BLOCKS = ("I", "P", "V")
 _BLOCK_OF = {"I": "I", "P": "P", "Q": "P", "U": "P", "V": "V"}
-_EVENTS = ("stack cells", "jet cells", "core cells", "jet groups", "jet padded cells")
+_EVENTS = ("stack cells", "jet cells", "core cells")
 
 
 def check_stokes(kernel: Any, stokes: Any) -> tuple[str, ...]:
@@ -187,16 +191,13 @@ def _plan(routes: Any, n_cells: int, chosen: tuple[int, ...]) -> dict[int, str |
     return {c: None if table[c] == "auto" else table[c] for c in chosen}
 
 
-def _jet_groups(lattice: Any, cells: list[int]) -> tuple[int, int]:
-    """Number of jet groups and padded cells of ``jet_lattice`` on ``cells``."""
-    groups: dict[tuple, int] = {}
-    for c in cells:
-        key = (
-            lattice.cells.chart[c],
-            lattice.index.patterns[int(lattice.index.cell_pattern[c])],
-        )
-        groups[key] = groups.get(key, 0) + 1
-    return len(groups), sum(len(_padded([0] * n)) for n in groups.values())
+def with_reason(err: JetMemoryError, lattice: Any, reasons: Mapping) -> JetMemoryError:
+    """``err`` with the stack's route reason of its cell, when the order limit refused the cell."""
+    if err.kind != "order" or err.cell is None:
+        return err
+    return order_error(
+        lattice.cells.variables, err.order, err.cell, reasons.get(err.cell)
+    )
 
 
 def _assemble(index: Any, pieces: dict, with_v: bool) -> tuple[Any, Any, Any]:
@@ -230,11 +231,18 @@ class _Out:
     jet: dict = dataclasses.field(default_factory=dict)
 
 
-def _run_jet(averaged, channels, lattice, with_v: bool, out: _Out, setup) -> None:
-    cells, extra = list(out.jet), {}
+def _run_jet(
+    averaged, channels, lattice, with_v: bool, out: _Out, setup, events
+) -> None:
+    cells, extra = list(out.jet), {"events": events}
     if setup is not None:
-        averaged, extra = setup.averaged, {"routine": setup.routine}
-    rows = jet_lattice(averaged, channels, lattice, with_v=with_v, cells=cells, **extra)
+        averaged, extra = setup.averaged, {**extra, "routine": setup.routine}
+    try:
+        rows = jet_lattice(
+            averaged, channels, lattice, with_v=with_v, cells=cells, **extra
+        )
+    except JetMemoryError as err:
+        raise with_reason(err, lattice, out.jet) from None
     arrays = [np.asarray(a) for a in rows]
     start = 0
     for c in cells:
@@ -248,15 +256,15 @@ def _run_jet(averaged, channels, lattice, with_v: bool, out: _Out, setup) -> Non
         start += n
 
 
-def _count(events: dict | None, lattice: Any, records: dict, jet: dict) -> None:
-    """Add the route counts of one call to ``events``."""
+def _count(events: dict | None, records: dict) -> None:
+    """Add the route counts of one call to ``events``. The jet counts come from ``jet_lattice``."""
     if events is None:
         return
     providers = [r.provider for r in records.values()]
-    groups, padded = _jet_groups(lattice, list(jet)) if jet else (0, 0)
-    counts = (*(providers.count(p) for p in PROVIDERS), groups, padded)
-    for key, n in zip(_EVENTS, counts):
+    for key, n in zip(_EVENTS, (providers.count(p) for p in PROVIDERS)):
         events[key] = events.get(key, 0) + n
+    for key in JET_EVENTS:
+        events.setdefault(key, 0)
 
 
 def prepare(
@@ -295,21 +303,22 @@ def route_cells(
 ) -> tuple[Any, Any, Any, tuple[RouteRecord, ...]]:
     """``(I, P, V or None, records)`` of the chosen cells, one ``RouteRecord`` per cell in the order of ``cells``.
 
-    ``memo`` is shared by the stack cells (S1 tables), a dict or a ``StageMemo``. ``events``, when given, gains
-    the counts "stack cells", "jet cells", "core cells", "jet groups" and "jet padded cells". ``jet`` gives the
-    jet its wrapped kernel and routines.
+    ``memo`` is shared by the stack cells (S1 tables), a dict or a ``StageMemo``, and without one the stack reads
+    a ``local_memo()`` closed at the end of the call (decision 167). ``events``, when given, gains
+    the counts "stack cells", "jet cells", "core cells", "jet groups", "jet calls", "jet compiles" and "jet memory
+    unchecked". ``jet`` gives the jet its wrapped kernel and routines.
     """
     chosen, plan = prepare(averaged, lattice, routes, s1, with_v, cells)
-    memo = {} if memo is None else memo
     out = _Out()
-    for c in chosen:
-        _route_one(averaged, channels, lattice, c, plan[c], s1, memo, out)
+    with own_memo(memo) as shared:
+        for c in chosen:
+            _route_one(averaged, channels, lattice, c, plan[c], s1, shared, out)
     if out.jet:
-        _run_jet(averaged, channels, lattice, with_v, out, jet)
+        _run_jet(averaged, channels, lattice, with_v, out, jet, events)
         out.records.update(
             {c: RouteRecord(c, "jet", reason=r) for c, r in out.jet.items()}
         )
-    _count(events, lattice, out.records, out.jet)
+    _count(events, out.records)
     return (
         *_assemble(lattice.index, out.pieces, with_v),
         tuple(out.records[c] for c in chosen),

@@ -5,7 +5,9 @@ LABEL ``[extension]``. ``@se.kernel(variables=..., stokes=..., azimuth=None, dep
 ``fn`` takes frequencies in Hz and the point values in the canonical units of its variables, without the azimuth
 and the depth, and returns spectra per Hz. The depth enters ``P`` only through the phase law, so ``I`` and ``V``
 do not depend on it (SPEC Sec. 4.3). ``channel`` integrates them over the channel responses, applies a phase law to ``P``, and returns the
-weighted node values with ``per_node=True``. Cells on any of its variables go to the jet provider.
+weighted node values with ``per_node=True``. Cells on any of its variables go to the jet provider. The channel value
+is the sum over the nodes of the per-node values, each set by its node, its response weight and the point, so the
+jet may evaluate a channel in node chunks (SPEC Sec. 8.1, decision 165).
 
 Units: those of ``fn`` per Hz, integrated over unit-area channels. Shapes: ``I``, ``V`` ``(n_ch,)``, ``P``
 ``(1, n_ch)``, with a trailing ``n_nu`` axis per node. Not certified: the physical model of ``fn``, for which

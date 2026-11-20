@@ -6,8 +6,14 @@ cached-law S1 table is keyed by ``_keys.s1_key`` and goes to memory and disk. A 
 key and lives in the build's ``NodeStore``, under the byte bound and never on disk, and a table evicted during
 the build is rebuilt and counted. The tables are stored as mappings of arrays (``s0_arrays``, ``s1_arrays``)
 and rebuilt from them as objects, bit for bit. ``take_reads`` returns the S1 keys read since its last call,
-which are the stage of the S2 context keys of a stack cell. A build without the cache passes a plain dict as
-the memo, as in step 5a. ``primitive_table`` and ``s1_table`` read either memo.
+which are the stage of the S2 context keys of a stack cell. A dry read (``dry=True``) keys a one-node table
+after its node checks and builds nothing (decision 168). A build without the cache reads through
+``local_memo()``, a ``StageMemo`` over ``Cache.local()`` with its own byte bound and no disk (decision 167). A
+plain dict passed as the memo keeps the unbounded behaviour of step 5a. ``primitive_table`` and ``s1_table``
+read either memo. A ``StageMemo`` holds the S0 tables it read for the length of the build, one per quantised
+span (8.96 MB over the default span), outside the byte bound, so that a one-node table admitted under the bound
+never forces a reread of its S0 table (decision 167). A table it builds is held as the copy the cache stored, so
+its arrays exist once while the store keeps them. "S0 tables read" counts the reads of held tables as well.
 
 The S1 key of the quadrature path has no S0 table. Its S0 part is ``QUADRATURE_S0``, a digest of the format, the
 source of ``primitive.py`` (the quadrature of ``scaled_log_derivatives``), the environment, the node count and
@@ -20,8 +26,11 @@ returns them unchanged.
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from typing import Any
+
+import contextlib
+import math
 
 import numpy as np
 
@@ -36,6 +45,9 @@ __all__ = [
     "PRIMITIVE_STEP",
     "QUADRATURE_S0",
     "StageMemo",
+    "close_memos",
+    "local_memo",
+    "own_memo",
     "primitive_from",
     "primitive_table",
     "s1_table",
@@ -54,6 +66,10 @@ _EVENTS = (
     "S1 tables built",
     "S1 tables read",
     "one-node tables built",
+)
+_NOTE = (
+    "one-node tables: {n} not kept, {r} rebuilt. The working set of about {x:.3g} GB exceeds mem_bytes "
+    "of {y:.3g} GB, and SYNCEM_CACHE_MEM={z} builds each table once"
 )
 
 
@@ -123,12 +139,18 @@ def primitive_table(memo: Any, nodes_ug: np.ndarray) -> PrimitiveTable:
 
 
 def s1_table(
-    memo: Any, method: str, nodes_ug: np.ndarray, probs: np.ndarray, kind: str = "law"
-) -> FieldAverage:
+    memo: Any,
+    method: str,
+    nodes_ug: np.ndarray,
+    probs: np.ndarray,
+    kind: str = "law",
+    dry: bool = False,
+) -> FieldAverage | None:
     """An S1 table of the field law. Nodes at ``B = 0`` and zero weights are dropped: ``B W(y / B) -> 0``.
 
-    With a ``StageMemo`` the table goes through the process cache, as a cached law (``kind="law"``) or as a
-    one-node table (``kind="node"``).
+    With a ``StageMemo`` the table goes through its cache, as a cached law (``kind="law"``) or as a
+    one-node table (``kind="node"``). ``dry=True`` runs the node checks, keys a one-node table in a
+    ``StageMemo`` and returns ``None`` without building.
     """
     nodes_ug, probs = np.asarray(nodes_ug, float), np.asarray(probs, float)
     if (
@@ -145,6 +167,12 @@ def s1_table(
             "the field law puts all its weight at B = 0: the jet takes the cell"
         )
     nodes_ug, probs = nodes_ug[keep], probs[keep]
+    if dry:
+        if kind != "node":
+            raise ValueError("a dry read keys one-node tables only")
+        if isinstance(memo, StageMemo):
+            memo.node(method, nodes_ug, probs, None, dry=True)
+        return None
 
     def build() -> FieldAverage:
         if method == "quadrature":
@@ -169,18 +197,27 @@ class StageMemo:
         self.nodes = cache.node_store()
         self.counts = dict.fromkeys(_EVENTS, 0)
         self._reads: list[str] = []
+        self._primitives: dict[str, PrimitiveTable] = {}
 
     def primitive(self, span: tuple[float, float], order: int) -> PrimitiveTable:
-        """The S0 table over the quantised ``span``, read or built and stored."""
+        """The S0 table over the quantised ``span``: held by this build, read, or built and stored."""
         key = s0_key(span, order, PRIMITIVE_STEP)
+        if key in self._primitives:
+            self.counts["S0 tables read"] += 1
+            return self._primitives[key]
         found = self.cache.get("s0", key)
         if found is not None:
             self.counts["S0 tables read"] += 1
-            return primitive_from(found)
-        table = PrimitiveTable.build(*span, order=order, step=PRIMITIVE_STEP)
-        self.counts["S0 tables built"] += 1
-        about = {"stage": "S0", "span": list(span), "order": order}
-        self.cache.put("s0", key, s0_arrays(table), description=about)
+            table = primitive_from(found)
+        else:
+            built = PrimitiveTable.build(*span, order=order, step=PRIMITIVE_STEP)
+            self.counts["S0 tables built"] += 1
+            about = {"stage": "S0", "span": list(span), "order": order}
+            kept = self.cache.put("s0", key, s0_arrays(built), description=about)
+            table = primitive_from(
+                kept
+            )  # hold the stored copy, so the table is held once
+        self._primitives[key] = table
         return table
 
     def s1_key(self, method: str, nodes_ug: np.ndarray, probs: np.ndarray) -> str:
@@ -208,11 +245,21 @@ class StageMemo:
         return table
 
     def node(
-        self, method: str, nodes_ug: Any, probs: Any, build: Callable[[], FieldAverage]
-    ) -> FieldAverage:
-        """A one-node S1 table from the build's ``NodeStore``, rebuilt when it was evicted."""
+        self,
+        method: str,
+        nodes_ug: Any,
+        probs: Any,
+        build: Callable[[], FieldAverage] | None,
+        dry: bool = False,
+    ) -> FieldAverage | None:
+        """A one-node S1 table from the build's ``NodeStore``, rebuilt when it is missing.
+
+        ``dry=True`` records the key and returns ``None`` without building.
+        """
         key = self.s1_key(method, nodes_ug, probs)
         self._reads.append(key)
+        if dry:
+            return None
 
         def fresh() -> dict:
             self.counts["one-node tables built"] += 1
@@ -227,6 +274,57 @@ class StageMemo:
         return out
 
     def close(self) -> dict[str, int]:
-        """Remove the one-node tables. The counts of the build, with "one-node rebuilds"."""
+        """Remove the one-node tables and drop the S0 tables held. The counts of the build."""
         self.nodes.close()
-        return {**self.counts, "one-node rebuilds": self.nodes.rebuilds}
+        self._primitives = {}
+        return {
+            **self.counts,
+            "one-node rebuilds": self.nodes.rebuilds,
+            "one-node tables not kept": self.nodes.not_kept,
+        }
+
+    def note(self) -> str | None:
+        """The note of decision 168 when one-node tables were not kept, else ``None``."""
+        nodes = self.nodes
+        if nodes.not_kept == 0:
+            return None
+        need = nodes.distinct_bytes
+        setting = (
+            f"{math.ceil(need / 1e8) / 10:.1f}GB"
+            if need >= 1e9
+            else f"{math.ceil(need / 1e6)}MB"
+        )
+        return _NOTE.format(
+            n=nodes.not_kept,
+            r=nodes.rebuilds,
+            x=need / 1e9,
+            y=self.cache.mem_bytes / 1e9,
+            z=setting,
+        )
+
+
+def close_memos(memos: list, counts: dict) -> tuple[str, ...]:
+    """Close ``memos``, add their counts to ``counts`` and return their notes of decision 168."""
+    notes = tuple(n for n in (m.note() for m in memos) if n is not None)
+    for memo in memos:
+        for name, n in memo.close().items():
+            counts[name] = counts.get(name, 0) + n
+    return notes
+
+
+def local_memo() -> StageMemo:
+    """The memo of an uncached build or call: a ``StageMemo`` over ``Cache.local()`` (decision 167)."""
+    return StageMemo(Cache.local())
+
+
+@contextlib.contextmanager
+def own_memo(memo: Any) -> Iterator[Any]:
+    """``memo``, or a ``local_memo()`` closed at the exit when ``memo`` is ``None``."""
+    if memo is not None:
+        yield memo
+        return
+    local = local_memo()
+    try:
+        yield local
+    finally:
+        local.close()

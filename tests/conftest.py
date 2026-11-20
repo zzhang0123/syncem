@@ -26,7 +26,12 @@ def slow_requested(markexpr: str, environ=os.environ) -> bool:
 
 
 CACHE_ENV = "SYNCEM_CACHE"
-CACHE_LIMIT_ENVS = ("SYNCEM_CACHE_MAX", "SYNCEM_CACHE_MEM")
+CACHE_LIMIT_ENVS = (
+    "SYNCEM_CACHE_MAX",
+    "SYNCEM_CACHE_MEM",
+    "SYNCEM_JET_MEM",
+    "SYNCEM_JET_MAX_ORDER",
+)
 
 
 @pytest.fixture(scope="session", autouse=True)

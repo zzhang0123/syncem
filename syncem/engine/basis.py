@@ -47,6 +47,7 @@ import numpy as np
 from ..records.ledger import Ledger
 from ..records.records import BuildRecord, SpecifiedRecord
 from ._basis_cache import HIT_EVENTS, BuildRun
+from ._jet_routine import jet_max_order, jet_mem_bytes
 from ._basis_update import (
     S2_EVENTS,
     build_record,
@@ -132,15 +133,16 @@ class SpectralBasis(eqx.Module):
             "channel rows reused": int(hit.sum()),
             "channel rows computed": len(compute),
         }
-        routes = self.record.routes
+        routes, notes = self.record.routes, ()
         if compute:
-            routes = fill_new(self, channels, compute, s0, s2, counts)
+            routes, notes = fill_new(self, channels, compute, s0, s2, counts)
             again = np.flatnonzero(~hit)
             first = np.array([compute[keys[j]] for j in again], dtype=np.int64)
             s0[again] = s0[first]
             if s2 is not None:
                 s2[again] = s2[first]
         record = uncached_record(derived_record(self.record, routes, counts, start))
+        record = record.with_notes(*notes)
         return dataclasses.replace(
             self, channels=channels, spectra0=s0, spectra2=s2, record=record, key=None
         )
@@ -236,7 +238,9 @@ def build_from_averaged(
     """The basis of ``averaged`` on ``channels`` and ``lattice`` (decisions 149 and 159 to 162).
 
     ``cache=True`` reads and stores the basis memo, the S0, S1 and S2 stages and the jet routines of the process
-    cache when every key has a fingerprint. ``cache=False`` bypasses them and stores nothing.
+    cache when every key has a fingerprint. ``cache=False`` bypasses them and stores nothing. A build whose rules
+    have no fingerprint and a ``cache=False`` build compile fresh jet routines, so a session of many such builds
+    grows by about 16 MB of resident memory per build and signature (decision 169).
     """
     start = time.perf_counter()
     check_arguments(rules, cache)
@@ -251,7 +255,12 @@ def build_from_averaged(
     if found is not None:
         return _rebound(found, run, request, start)
     rows, records, counts = _provide(run, request, routes, s1, blocks)
-    defaults = {"max_columns": int(max_columns), "cache": cache}
+    defaults = {
+        "max_columns": int(max_columns),
+        "cache": cache,
+        "jet_mem_bytes": jet_mem_bytes(),
+        "jet_max_order": jet_max_order(),
+    }
     route = (records, blocks, s1)
     basis = _fresh(run, request, columns, route, rows, counts, defaults, start)
     run.store(basis)

@@ -1,13 +1,15 @@
-"""Private parts of ``syncem.engine.cache`` (design/0.8/SPEC.md decisions 160 to 162).
+"""Private parts of ``syncem.engine.cache`` (design/0.8/SPEC.md decisions 160 to 162 and 168).
 
 ``Store`` is a least-recently-used store bounded by a total size, and a count bound gives each entry
-size 1. ``freeze`` copies the NumPy leaves of a value as read-only arrays, ``shallow`` gives new
-containers around the same leaves and ``nbytes_of`` sums the bytes of the array leaves, the charge of an
-S0, S1 or one-node table. ``memo_bytes`` and ``columns_bytes`` charge a memo entry and an S2 entry their
-arrays, the ``sys.getsizeof`` of their containers, strings and objects, and the store slot. ``Columns``
-is one S2 entry. ``merge`` adds columns to an entry and drops the stored columns that a new rule
-chain contradicts. A column id is ``(Legendre degrees, exponent)`` and its total degree is the sum
-of the exponent.
+size 1. ``Store.admit`` keeps a new entry only when evicting unprotected entries makes room (decision
+168). ``NodeStore`` holds the one-node tables of one build of a ``Cache``. ``freeze`` copies the NumPy
+leaves of a value as read-only arrays, ``shallow`` gives new containers around the same leaves and
+``nbytes_of`` sums the bytes of the array leaves, the charge of an S0, S1 or one-node table.
+``memo_bytes`` and ``columns_bytes`` charge a memo entry and an S2 entry their arrays, the
+``sys.getsizeof`` of their containers, strings and objects, and the store slot. ``Columns`` is one S2
+entry. ``merge`` adds columns to an entry and drops the stored columns that a new rule chain
+contradicts. A column id is ``(Legendre degrees, exponent)`` and its total degree is the sum of the
+exponent.
 """
 
 from __future__ import annotations
@@ -140,9 +142,94 @@ class Store:
         self.nbytes += size
         return evicted
 
+    def admit(
+        self,
+        key: Hashable,
+        value: Any,
+        size: int,
+        protected: Callable[[Hashable], bool],
+    ) -> tuple[bool, int]:
+        """Store ``value`` if it fits after evicting unprotected entries, least recently used first.
+
+        Returns ``(stored, evicted)``. When the unprotected entries cannot make room, nothing is stored
+        and nothing is evicted (decision 168).
+        """
+        self.pop(key)
+        free, victims = self.bound - self.nbytes, []
+        if size > self.bound:
+            return False, 0
+        for other, (_, other_size) in self._entries.items():
+            if free >= size:
+                break
+            if not protected(other):
+                victims.append(other)
+                free += other_size
+        if free < size:
+            return False, 0
+        for other in victims:
+            self.pop(other)
+        self._entries[key] = (value, size)
+        self.nbytes += size
+        return True, len(victims)
+
     def clear(self) -> None:
         self._entries.clear()
         self.nbytes = 0
+
+
+class NodeStore:
+    """The one-node tables of one build in the byte bound of its ``Cache`` (decisions 162 and 168).
+
+    ``get(key, build)`` returns the stored table or ``build()``. A new table is kept when it fits after
+    evicting entries other than the one-node tables of this build, and otherwise it is returned and not
+    kept (``not_kept`` counts it). A key built before and missing since counts one rebuild.
+    ``distinct_bytes`` is the charge of the distinct tables built. ``close()`` removes the entries. Not
+    certified: the tables, which ``build`` computes.
+    """
+
+    def __init__(self, cache: Any, number: int) -> None:
+        self._cache = cache
+        self._number = number
+        self._seen: set[Hashable] = set()
+        self.rebuilds = 0
+        self.not_kept = 0
+        self.distinct_bytes = 0
+
+    def _mine(self, key: Hashable) -> bool:
+        return key[:2] == ("node", self._number)
+
+    def get(self, key: Hashable, build: Callable[[], Any]) -> Any:
+        cache = self._cache
+        with cache._lock:
+            found = cache._store.get(("node", self._number, key))
+        if found is not MISSING:
+            return shallow(found)
+        if key in self._seen:
+            self.rebuilds += 1
+            cache._count("rebuilds")
+        value = freeze(build())
+        size = nbytes_of(value)
+        if key not in self._seen:
+            self.distinct_bytes += size
+        self._seen.add(key)
+        with cache._lock:
+            stored, evicted = cache._store.admit(
+                ("node", self._number, key), value, size, self._mine
+            )
+            cache._count("evictions", evicted)
+        self.not_kept += not stored
+        return shallow(value)
+
+    def close(self) -> None:
+        with self._cache._lock:
+            for key in self._seen:
+                self._cache._store.pop(("node", self._number, key))
+
+    def __enter__(self) -> NodeStore:
+        return self
+
+    def __exit__(self, *exc: object) -> None:
+        self.close()
 
 
 # S2 columns -------------------------------------------------------------------------------------

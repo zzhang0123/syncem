@@ -6,8 +6,11 @@ propagation phase (``depth``), whether JAX can trace it, whether it has Dirac li
 ``channel(channels, point, *, phase, per_node=False)`` returns the channel-integrated ``Modes`` at one point:
 ``I`` and ``V`` of shape ``(n_ch,)``, ``P`` of shape ``(n_w, n_ch)`` complex without the azimuth factor, with
 the phase inside the channel integral. ``phase=False`` gives the phase-free kernel. ``per_node=True`` returns
-the weighted values at the channel quadrature nodes, with a trailing axis ``n_nu``. ``regime(box, channels)``
-accepts or refuses one cell box with a reason.
+the weighted values at the channel quadrature nodes, with a trailing axis ``n_nu``. ``channel(per_node=False)`` must
+be the sum over the node axis of the ``per_node=True`` values, and the value at a node must depend on that node, its
+response weight and the point only, since the jet evaluates a channel in node chunks (decision 165). It reads only
+``channels.nodes`` and ``channels.response_weights()`` of the channels, which a jet chunk view holds (decision 171).
+``regime(box, channels)`` accepts or refuses one cell box with a reason.
 
 Units: per-electron channel Stokes, erg s^-1 sr^-1 Hz^-1 for unit-area channels. Not certified: the protocol
 states a contract, and each kernel states its own physical model and errors.
