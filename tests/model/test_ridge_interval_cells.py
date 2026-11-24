@@ -3,7 +3,6 @@
 import math
 from random import Random
 
-import mpmath as mp
 import numpy as np
 import pytest
 
@@ -16,6 +15,8 @@ from syncem.model._ridge_interval_cells import (
     prepare_ridge_slab,
     ridge_interval_cell,
 )
+
+mp = pytest.importorskip("mpmath")
 
 
 def _context():

@@ -169,7 +169,7 @@ class MomentIndex:
             for i, v in enumerate(self.table.variables)
         }
         block = self.blocks[b]
-        partner = {"Re M2": 1, "Im M2": -1}.get(block)
+        partner = {"Re": 1, "Im": -1}.get(block.split()[0])
         return Row(
             block,
             c,

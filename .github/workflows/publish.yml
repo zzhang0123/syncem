@@ -67,7 +67,29 @@ jobs:
           python -m venv "$RUNNER_TEMP/smoke"
           "$RUNNER_TEMP/smoke/bin/python" -m pip install dist/*.whl
           cd "$RUNNER_TEMP"
-          "$RUNNER_TEMP/smoke/bin/python" -c "import syncem, syncem.model, syncem.model.fit; print(syncem.__version__)"
+          "$RUNNER_TEMP/smoke/bin/python" - <<'PY'
+          import scipy.optimize
+          import syncem
+          import syncem.base, syncem.distributions, syncem.engine, syncem.fitting
+          import syncem.front, syncem.lattice, syncem.model.fit, syncem.planning
+          import syncem.population, syncem.records, syncem.results, syncem.values
+          print(syncem.__version__)
+          PY
+
+      - name: Test the unpacked source distribution
+        run: |
+          mkdir "$RUNNER_TEMP/sdist"
+          tar -xzf dist/*.tar.gz -C "$RUNNER_TEMP/sdist"
+          cd "$RUNNER_TEMP"/sdist/syncem-*
+          "$RUNNER_TEMP/smoke/bin/python" -m pip install '.[validation]'
+          "$RUNNER_TEMP/smoke/bin/python" -m pytest -q -m 'not slow' \
+            tests/test_version.py tests/test_guard_frozen_code.py \
+            tests/v080/test_v080_study_helper.py \
+            tests/acceptance/test_parameter_coverage.py \
+            tests/v090/test_v090_two_branch_reference.py \
+            "tests/v080/test_v080_jet_reference.py::test_the_stored_references_have_their_pinned_digests" \
+            "tests/v080/test_v080_stack_split.py::test_reference_file_has_its_digest" \
+            "tests/v080/test_v080_stack_split.py::test_references_are_within_the_measured_move_of_the_step_5a_rows"
 
       - uses: actions/upload-artifact@v4
         with:

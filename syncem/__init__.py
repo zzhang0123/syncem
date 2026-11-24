@@ -36,7 +36,7 @@ model            : finite joint response of channel Stokes spectra and spectral
 
 from __future__ import annotations
 
-__version__ = "0.7.10"
+__version__ = "0.9.0"
 
 import jax
 
@@ -103,16 +103,80 @@ __all__ = [
 # use, so ``import syncem`` loads neither ``syncem.model`` nor SciPy.
 _FRONT_DOOR = {
     "Channels": "syncem.base.channels",
+    "Population": "syncem.population",
+    "Samples": "syncem.population",
+    "FreeMoments": "syncem.population",
+    "NonNegativeCells": "syncem.population",
+    "Ray": "syncem.population",
+    "predict": "syncem.front",
+    "plan": "syncem.front",
+    "fit": "syncem.front._fitting",
+    "problem": "syncem.front._fitting",
+    "compare": "syncem.front._comparison",
+    "convergence": "syncem.front._comparison",
+    "Comparison": "syncem.results.comparison",
+    "Problem": "syncem.fitting.problem",
+    "GaussianPrior": "syncem.fitting.problem",
+    "Penalty": "syncem.fitting.penalties",
+    "Fit": "syncem.fitting.free_fit",
+    "spectral_basis": "syncem.front",
+    "AccuracyCheck": "syncem.front._accuracy",
+    "StokesData": "syncem.fitting.data",
+    "UPRE": "syncem.fitting.rank",
+    "Rank": "syncem.fitting.rank",
+    "FullRank": "syncem.fitting.rank",
+    "SpectralBasis": "syncem.engine.basis",
+    "BasisSum": "syncem.engine.basis_sum",
+    "Spectrum": "syncem.values.spectrum",
+    "Observable": "syncem.values.observable",
+    "ErrorTerm": "syncem.records.ledger",
+    "Ledger": "syncem.records.ledger",
+    **{
+        name: "syncem.distributions"
+        for name in (
+            "Distribution",
+            "Delta",
+            "Uniform",
+            "Normal",
+            "LogNormal",
+            "Tabulated",
+            "Maxwellian",
+            "Isotropic",
+            "UniformAngle",
+            "UniformAzimuth",
+            "AzimuthDensity",
+            "AzimuthFactor",
+            "NoRotation",
+            "GaussianScreen",
+            "LaplaceScreen",
+            "GammaScreen",
+            "EmpiricalScreen",
+            "CumulantScreen",
+            "PowerLaw",
+            "BrokenPowerLaw",
+            "PowerLawMixture",
+            "AgedPowerLaw",
+            "Conditional",
+            "Free",
+            "family",
+        )
+    },
     "Variable": "syncem.base.variables",
     "Quantity": "syncem.units",
     "Cells": "syncem.lattice.cells",
     "CellTable": "syncem.lattice.table",
     "Legendre": "syncem.lattice.representations",
+    "AzimuthFourier": "syncem.lattice.representations",
     "AzimuthHarmonic": "syncem.lattice.representations",
     "Lattice": "syncem.lattice.lattice",
     "MomentIndex": "syncem.lattice.index",
     "Moments": "syncem.lattice.moments",
     "ContinuumKernel": "syncem.base.continuum",
+    "HarmonicKernel": "syncem.base.harmonic",
+    "HarmonicShapeBasis": "syncem.front._harmonic_shape",
+    "HarmonicShapeStatistics": "syncem.engine._harmonic_shape_statistics",
+    "HybridKernel": "syncem.base.hybrid",
+    "RegimeBasis": "syncem.front._regimes",
     "kernel": "syncem.base.user",
     "UserKernel": "syncem.base.user",
     "Kernel": "syncem.base.kernel",
@@ -152,6 +216,10 @@ _FRONT_DOOR = {
 
 
 def __getattr__(name):
+    if name == "paper":
+        import importlib
+
+        return importlib.import_module("syncem.paper")
     module = _FRONT_DOOR.get(name)
     if module is None:
         raise AttributeError(f"module 'syncem' has no attribute {name!r}")
@@ -163,4 +231,4 @@ def __getattr__(name):
 
 
 def __dir__():
-    return sorted(set(globals()) | set(_FRONT_DOOR))
+    return sorted(set(globals()) | set(_FRONT_DOOR) | {"paper"})

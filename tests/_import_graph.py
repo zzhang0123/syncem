@@ -78,6 +78,9 @@ ALLOWED: dict[str, dict[str, tuple[str, ...] | None]] = {
             "syncem.base.kernel",
             "syncem.base.capabilities",
             "syncem.base.channels",
+            "syncem.base.continuum",
+            "syncem.base.depth",
+            "syncem.base.window",
         ),
         "engine": ("syncem.engine.columns",),
     },
@@ -116,11 +119,12 @@ ALLOWED: dict[str, dict[str, tuple[str, ...] | None]] = {
 
 # (layer of the module, class, method) -> layers it may import function-locally. SPEC Sec. 3.1.
 DELEGATIONS: dict[tuple[str, str, str], frozenset[str]] = {
-    ("engine", "SpectralBasis", "moments"): frozenset({"population"}),
+    ("engine", "SpectralBasis", "moments"): frozenset({"population", "front"}),
     ("engine", "SpectralBasis", "predict"): frozenset({"front"}),
-    ("engine", "SpectralBasis", "direct"): frozenset({"population"}),
-    ("engine", "SpectralBasis", "fit"): frozenset({"fitting"}),
-    ("engine", "SpectralBasis", "build"): frozenset({"population"}),
+    ("engine", "SpectralBasis", "direct"): frozenset({"population", "front"}),
+    ("engine", "SpectralBasis", "fit"): frozenset({"fitting", "front"}),
+    ("engine", "SpectralBasis", "build"): frozenset({"population", "front"}),
+    ("engine", "SpectralBasis", "reference_cases"): frozenset({"front"}),
     ("engine", "SpectralBasis", "at"): frozenset({"population"}),
     ("lattice", "Lattice", "default"): frozenset({"planning"}),
     ("lattice", "Lattice", "single"): frozenset({"population"}),

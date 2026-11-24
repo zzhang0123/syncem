@@ -28,7 +28,15 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 
+from ..base.capabilities import Beaming
 from ..model._kernel_helpers import Modes, ProjectedModes
+from ._beaming_diagonal import (
+    diagonal_weight,
+    pair_weights,
+    point_weights,
+    project_pair,
+    project_point,
+)
 
 __all__ = ["AveragedKernel", "NodeRule", "core_adapter", "fixed_rule", "uniform_rule"]
 
@@ -90,6 +98,10 @@ class AveragedKernel(eqx.Module):
     averaged: tuple[tuple[str, Any], ...] = eqx.field(static=True)
     legendre: tuple[tuple[str, int, int], ...] = eqx.field(static=True)
     fixed: tuple[tuple[str, float], ...] = eqx.field(static=True)
+    ties: tuple = eqx.field(static=True)
+    leaf_factors: tuple = eqx.field(static=True)
+    legendre_panels: tuple = eqx.field(static=True)
+    diagonal: tuple[str, ...] = eqx.field(static=True)
     phase: Any = None
     outer_batch: int | None = eqx.field(static=True, default=1)
 
@@ -102,6 +114,10 @@ class AveragedKernel(eqx.Module):
         fixed: dict | None = None,
         phase: Any = None,
         outer_batch: int | None = 1,
+        ties: tuple = (),
+        leaf_factors: tuple = (),
+        legendre_panels: tuple = (),
+        diagonal: tuple[str, ...] = (),
     ):
         names = [n for n, _ in averaged] + list(legendre or {}) + list(fixed or {})
         if len(names) != len(set(names)):
@@ -133,6 +149,33 @@ class AveragedKernel(eqx.Module):
         self.fixed = tuple((str(n), float(v)) for n, v in (fixed or {}).items())
         self.phase = phase
         self.outer_batch = None if outer_batch is None else int(outer_batch)
+        self.ties = tuple(ties)
+        self.leaf_factors = tuple(leaf_factors)
+        if diagonal and (
+            len(diagonal) != 2
+            or len(set(diagonal)) != 2
+            or not any(
+                isinstance(cap, Beaming)
+                and {cap.variable, cap.partner} == set(diagonal)
+                for cap in getattr(kernel, "capabilities", ())
+            )
+            or not set(diagonal).intersection(legendre or {})
+            or any(
+                name not in variables or variables[name].kind != "cosine"
+                for name in diagonal
+            )
+            or any(
+                name in dict(self.averaged) or name in dict(self.fixed)
+                for name in diagonal
+            )
+        ):
+            raise ValueError(
+                "a Beaming diagonal requires two resolved cosines, with one or two Legendre axes"
+            )
+        self.diagonal = tuple(diagonal)
+        if self.diagonal and ("all", diagonal_weight) not in self.leaf_factors:
+            self.leaf_factors = (*self.leaf_factors, ("all", diagonal_weight))
+        self.legendre_panels = tuple(legendre_panels)
 
     def __call__(self, channels: Any, point: dict) -> Modes:
         """Averaged and projected ``Modes`` at the values of the resolved variables in ``point``."""
@@ -158,7 +201,13 @@ class AveragedKernel(eqx.Module):
         if level == len(self.legendre):
             return self._average(channels, point, 0)
         name, degree, n = self.legendre[level]
+        if name in self.diagonal:
+            return self._diagonal_projection(channels, point, level)
         x, w = np.polynomial.legendre.leggauss(n)
+        panels = dict(self.legendre_panels).get(name)
+        if panels is not None:
+            x = np.concatenate([a + (b - a) * (x + 1) / 2 for a, b in panels])
+            w = np.concatenate([w * (b - a) / 2 for a, b in panels])
         table = np.stack(
             [np.polynomial.legendre.Legendre.basis(l)(x) for l in range(degree + 1)],
             axis=1,
@@ -177,9 +226,40 @@ class AveragedKernel(eqx.Module):
             jnp.einsum("nwc...,nl->wcl...", p, weights),
         )
 
+    def _diagonal_projection(self, channels, point, level):
+        name, degree, n = self.legendre[level]
+        other = next(axis for axis in self.diagonal if axis != name)
+        locations = {axis: i for i, (axis, _, _) in enumerate(self.legendre)}
+        other_level = locations.get(other)
+        if other_level is None:
+            coordinate = point[other]
+            modes = self._legendre(channels, {**point, name: coordinate}, level + 1)
+            return project_point(modes, point_weights(coordinate, degree))
+        if other_level < level:
+            # This degree is inserted by the earlier, joint quadrature.
+            return self._legendre(channels, point, level + 1)
+        _, other_degree, other_n = self.legendre[other_level]
+        x, w = pair_weights(degree, other_degree, max(n, other_n))
+
+        def one(coordinate):
+            tied = {**point, name: coordinate, other: coordinate}
+            return self._legendre(channels, tied, level + 1)
+
+        modes = jax.vmap(one)(x)
+        return project_pair(modes, w, other_level - level)
+
     def _average(self, channels: Any, point: dict, level: int) -> tuple[Any, Any, Any]:
+        if self.ties:
+            point = {
+                **point,
+                **{
+                    child: point[parent]
+                    for child, parent in self.ties
+                    if parent in point
+                },
+            }
         if level == len(self.averaged):
-            modes = self.kernel.channel(channels, point, phase=self.phase)
+            modes = self._leaf_modes(channels, point)
             i = jnp.asarray(modes.I)
             v = jnp.zeros_like(i) if modes.V is None else jnp.asarray(modes.V)
             if v.shape != i.shape:
@@ -187,7 +267,15 @@ class AveragedKernel(eqx.Module):
                     f"kernel {getattr(self.kernel, 'name', self.kernel)} returned V of shape {v.shape}, and "
                     f"the protocol needs the shape of I, {i.shape}"
                 )
-            return i, v, modes.P
+            p = modes.P
+            for block, factor in self.leaf_factors:
+                if block == "depth":
+                    continue
+                scale = factor(point)
+                p = scale * p
+                if block == "all":
+                    i, v = scale * i, scale * v
+            return i, v, p
         name, rule = self.averaged[level]
         nodes, probs = rule(point)
 
@@ -199,6 +287,27 @@ class AveragedKernel(eqx.Module):
         else:
             values = jax.vmap(one)(nodes)
         return tuple(jnp.tensordot(probs, a, axes=1) for a in values)
+
+    def _leaf_modes(self, channels, point):
+        for block, factor in self.leaf_factors:
+            if block == "depth":
+                rule = factor(point)
+                if callable(rule):
+                    phase = self.phase.with_screen(rule)
+                    return self.kernel.channel(channels, point, phase=phase)
+                depths, weights = rule
+                name = self.kernel.depth
+
+                def one(depth):
+                    return self.kernel.channel(
+                        channels, {**point, name: depth}, phase=self.phase
+                    )
+
+                values = jax.vmap(one)(depths)
+                return jax.tree.map(
+                    lambda value: jnp.tensordot(weights, value, axes=1), values
+                )
+        return self.kernel.channel(channels, point, phase=self.phase)
 
 
 class _CoreAdapter(eqx.Module):

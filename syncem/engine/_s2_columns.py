@@ -36,7 +36,7 @@ from ..records.records import RouteRecord
 from . import _routes
 from ._keys import column_record, s2_context_keys
 from ._stack_checks import StackRefused
-from ._jet_routine import JetMemoryError
+from ._jet_routine import NESTED_MAX_ORDER, JetMemoryError, check_order
 
 __all__ = ["Reuse", "cell_chain", "column_ids", "reuse_cells"]
 
@@ -141,12 +141,22 @@ def _keyed(reuse, lattice, c, route, blocks, shared) -> _Cell:
     ids, record, n_ch = shared
     keys, span = reuse.keys, lattice.index.cell_rows(c)
     cell, mine = _Cell(c, *route), ids[span.start : span.stop]
+    stage = cell.stage
+    if cell.provider == "jet":
+        index = lattice.index
+        pattern = tuple(index.patterns[int(index.cell_pattern[c])])
+        try:
+            order = check_order(lattice.cells.variables, pattern, c)
+        except JetMemoryError as err:
+            raise _routes.with_reason(err, lattice, {c: cell.reason}) from None
+        if order > NESTED_MAX_ORDER:
+            stage = ("Taylor mode", stage, pattern)
     chain = cell_chain(keys, c)
     for block in blocks:
         context = s2_context_keys(
             provider=cell.provider,
             mode=cell.mode or "none",
-            stage=cell.stage,
+            stage=stage,
             block=block,
             row_keys=keys.row_keys,
             phase=keys.phase,
@@ -230,6 +240,8 @@ def _exponents(lattice: Any, cell: _Cell, reps: np.ndarray) -> tuple | None:
     """The exponents of the lower set with a missing value, or ``None`` when that is all of them."""
     index = lattice.index
     pattern = tuple(index.patterns[int(index.cell_pattern[cell.cell])])
+    if max(map(sum, pattern)) > NESTED_MAX_ORDER:
+        return None  # keep the reconstruction independent of which rows are missing
     lack = cell.missing()[reps].any(axis=0)
     rows = index.cell_rows(cell.cell)
     powers = {

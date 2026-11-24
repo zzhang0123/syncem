@@ -2,7 +2,7 @@
 
 LABEL ``eq: channel basis expansion``. A ``BasisSum`` holds one ``SpectralBasis`` per distinct set of specified
 statistics of a sum of components. Every part is built on the same lattice and channels with the same Stokes
-request, and the build checks equal lattice keys, equal channel row keys, equal Stokes requests and distinct
+request, and the build checks equal lattice keys, matching channel responses, equal Stokes requests and distinct
 component keys. ``offsets`` gives the column offset of each part. ``design`` is the horizontal concatenation of
 the parts' designs at these offsets. ``predict`` takes a tuple of ``Moments``, one per part. It matches them by
 ``Moments.component`` when every moment is named and by position when none is, and a partly named tuple raises.
@@ -26,6 +26,7 @@ import numpy as np
 from ..lattice.moments import Moments
 from .assemble import predict_values
 from .basis import SpectralBasis
+from .single_reference import SingleReferenceBasis, same_line_response
 
 __all__ = ["BasisSum"]
 
@@ -42,8 +43,9 @@ class BasisSum(eqx.Module):
     parts: tuple
     components: tuple[str, ...] = eqx.field(static=True)
     offsets: tuple[int, ...] = eqx.field(static=True)
+    member_indices: tuple[tuple[int, ...], ...] | None = eqx.field(static=True)
 
-    def __init__(self, parts: Any, components: Any):
+    def __init__(self, parts: Any, components: Any, *, member_indices=None):
         parts, components = _checked_parts(parts), tuple(components)
         _check_components(components, len(parts))
         _check_shared(parts)
@@ -51,6 +53,11 @@ class BasisSum(eqx.Module):
         self.parts = parts
         self.components = components
         self.offsets = tuple(int(o) for o in np.cumsum([0] + sizes[:-1]))
+        self.member_indices = (
+            None
+            if member_indices is None
+            else tuple(tuple(group) for group in member_indices)
+        )
 
     @property
     def n(self) -> int:
@@ -74,7 +81,11 @@ class BasisSum(eqx.Module):
 
     def at(self, channels: Any) -> "BasisSum":
         """The same parts on ``channels``, each through ``SpectralBasis.at``."""
-        return BasisSum(tuple(p.at(channels) for p in self.parts), self.components)
+        return BasisSum(
+            tuple(p.at(channels) for p in self.parts),
+            self.components,
+            member_indices=self.member_indices,
+        )
 
 
 def _checked_parts(parts: Any) -> tuple:
@@ -100,8 +111,21 @@ def _check_components(components: tuple, n_parts: int) -> None:
         raise ValueError(f"component keys must be distinct, not {components!r}")
 
 
+def share_channels(parts, channels):
+    """Whether all parts use these ordered rows for their channel response."""
+    different = [part.channels for part in parts if part.channels is not channels]
+    if not different:
+        return True
+    if any(
+        isinstance(getattr(part, "joint", part), SingleReferenceBasis) for part in parts
+    ):
+        return all(same_line_response(stored, channels) for stored in different)
+    rows = channels.row_keys()
+    return all(stored.row_keys() == rows for stored in different)
+
+
 def _check_shared(parts: tuple) -> None:
-    """Equal lattice keys, channel row keys and Stokes requests across the parts (decision 152)."""
+    """Equal lattice keys, channel responses and Stokes requests (decision 152)."""
     keys = [p.lattice.key for p in parts]
     if any(k is None for k in keys):
         raise ValueError(
@@ -112,10 +136,9 @@ def _check_shared(parts: tuple) -> None:
         raise ValueError(
             f"BasisSum parts must share one lattice, and the lattice keys are {[k[:12] for k in keys]}"
         )
-    rows = parts[0].channels.row_keys()
-    if any(p.channels.row_keys() != rows for p in parts[1:]):
+    if not share_channels(parts, parts[0].channels):
         raise ValueError(
-            "BasisSum parts must share their channels, and the channel row keys differ"
+            "BasisSum parts must share their channels. The channel row keys or line transmissions differ."
         )
     stokes = [p.columns.stokes for p in parts]
     if any(s != stokes[0] for s in stokes[1:]):

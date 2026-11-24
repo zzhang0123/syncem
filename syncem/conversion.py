@@ -25,18 +25,30 @@ C_ROT = E_ESU**3 / (2.0 * np.pi * M_E**2 * C_CGS**2)
 C_CONV = E_ESU**4 / (4.0 * np.pi**2 * M_E**3 * C_CGS**3)
 
 
+def _real(value):
+    """Promote integer inputs to floating point before any power is taken.
+
+    An integer frequency of 1e9 Hz overflows in ``nu**3`` and 5e9 Hz in ``nu**2``.
+    Multiplying by 1.0 keeps NumPy inputs NumPy and JAX inputs JAX.
+    """
+    return value * 1.0
+
+
 def rotation_coefficient(nu, n_e, B_par):
     """Physical Faraday rotation rate rho_V [rad/cm] (position angle)."""
+    nu, n_e, B_par = _real(nu), _real(n_e), _real(B_par)
     return C_ROT * n_e * B_par / nu**2
 
 
 def conversion_coefficient(nu, n_e, B_perp):
     """Natural-basis Stokes conversion rate rQ [cm^-1], signed."""
+    nu, n_e, B_perp = _real(nu), _real(n_e), _real(B_perp)
     return -C_CONV * n_e * B_perp**2 / nu**3
 
 
 def conversion_rotation_ratio(nu, B_perp, B_par):
     """Signed rQ/rV, independent of n_e and undefined when B_par=0."""
+    nu, B_perp, B_par = _real(nu), _real(B_perp), _real(B_par)
     return -(E_ESU * B_perp**2) / (4.0 * np.pi * M_E * C_CGS * nu * B_par)
 
 

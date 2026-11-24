@@ -19,6 +19,7 @@ from syncem.engine.assemble import predict_values
 from syncem.engine.average import AveragedKernel, fixed_rule, uniform_rule
 from syncem.engine.basis import build_from_averaged
 from syncem.engine.basis_sum import BasisSum
+from syncem.fitting.data import StokesData
 from syncem.lattice.cells import Cells
 from syncem.lattice.lattice import Lattice
 from syncem.lattice.moments import Moments
@@ -81,7 +82,11 @@ def test_design_is_the_horizontal_concatenation(parts, total):
             axis=-1,
         ),
     )
-    with pytest.raises(NotImplementedError, match="step 8"):
+    data = StokesData(a.channels, I=np.ones(5), sigma=0.5, unit="cgs")
+    np.testing.assert_array_equal(
+        total.design(data), total.design(stokes="I")[:, 0] * 2
+    )
+    with pytest.raises(TypeError, match="needs StokesData"):
         total.design(np.ones((5, 3)))
 
 
@@ -176,4 +181,9 @@ def test_static_fields_and_pytree(total):
     assert len(leaves) == len(parts_leaves) > 0
     assert all(x is y for x, y in zip(leaves, parts_leaves))
     names = {f.name: f.metadata.get("static", False) for f in dataclasses.fields(total)}
-    assert names == {"parts": False, "components": True, "offsets": True}
+    assert names == {
+        "parts": False,
+        "components": True,
+        "offsets": True,
+        "member_indices": True,
+    }

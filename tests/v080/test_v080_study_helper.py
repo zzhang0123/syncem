@@ -203,15 +203,24 @@ def test_in_memory_paper_table_equals_the_study_cache_file():
 # ------------------------------------------------------------------ acceptance data
 
 
-def test_forward_spectra_copy_matches_its_hash():
+def test_acceptance_copies_match_study_hashes():
     copied = _study.verify_sums(_study.ACCEPTANCE_DATA / "SHA256SUMS")
-    assert set(copied) == {"forward_spectra.npz"}
     study_sums = _study.read_sums(_study.STUDY / "SHA256SUMS")
-    assert copied["forward_spectra.npz"] == study_sums["forward_spectra.npz"]
+    assert set(copied) - set(study_sums) == {
+        "e2_extrapolation.npz",
+        "family_extrapolation.npz",
+        "parameter_coverage.npz",
+    }
+    assert all(
+        copied[name] == study_sums[name] for name in copied.keys() & study_sums.keys()
+    )
 
 
 def test_verify_sums_refuses_an_edited_file(tmp_path):
-    shutil.copyfile(_study.ACCEPTANCE_DATA / "SHA256SUMS", tmp_path / "SHA256SUMS")
+    sums = _study.read_sums(_study.ACCEPTANCE_DATA / "SHA256SUMS")
+    (tmp_path / "SHA256SUMS").write_text(
+        f"{sums['forward_spectra.npz']}  forward_spectra.npz\n"
+    )
     data = (_study.ACCEPTANCE_DATA / "forward_spectra.npz").read_bytes()
     (tmp_path / "forward_spectra.npz").write_bytes(data + b"\0")
     with pytest.raises(_study.StudyHashError, match="forward_spectra.npz"):

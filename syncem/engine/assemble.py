@@ -121,17 +121,23 @@ def design_array(
     return stacked * w
 
 
-def select_stokes(design: Any, axes: tuple[str, ...], stokes: Any) -> Any:
-    """Rows of the built Stokes ``axes`` named by ``stokes`` ("I", "P" for Q and U, "QU", or a sequence)."""
+def selected_axes(axes, stokes):
     if stokes is None:
-        return design
+        return axes
     names = tuple(stokes)
-    wanted = [a for n in names for a in _AXES_OF.get(n, (n,))]
+    wanted = tuple(a for n in names for a in _AXES_OF.get(n, (n,)))
     if not wanted or len(set(wanted)) != len(wanted) or not set(wanted) <= set(axes):
         raise ValueError(
             f"stokes={stokes!r} must name distinct built Stokes axes among {axes} (P for Q and U)"
         )
-    return design[:, [axes.index(a) for a in wanted]]
+    return wanted
+
+
+def select_stokes(design: Any, axes: tuple[str, ...], stokes: Any) -> Any:
+    """Rows of the built Stokes axes named by the requested selection."""
+    if stokes is None:
+        return design
+    return design[:, [axes.index(a) for a in selected_axes(axes, stokes)]]
 
 
 def check_key(lattice_key: str | None, moments: Any) -> None:

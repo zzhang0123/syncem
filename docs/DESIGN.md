@@ -882,7 +882,16 @@ without an assumption, 115 pitch, 129 field reversal, 103 both; at
 gives exact zeros on the dropped rows, and its prediction equals the joint
 one to 1e-13 (`test_symmetry_assumptions.py`).
 
-### 7.5 No field-averaged kernel route
+### 7.5 Field averaging in the 0.8 interface
+
+The moment lattice in the 0.8 interface can average a declared field law or
+resolve field strength on cells. A specified law conditional on a resolved
+parent contributes through the quadrature at that parent's nodes. The role
+planner checks that the lattice retains parents of resolved laws. Explicit
+`average=` can replace a conditional dependence by a specified parent
+marginal and adds the assumption to the result ledger.
+
+The following describes the 0.7.10 model cited by the paper.
 
 A kernel averaged over a declared distribution of `B`
 (`FieldAveragedKernel`, with `max_orders=(None, 0, None)` forced) was

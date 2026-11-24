@@ -4,7 +4,6 @@ import math
 
 import equinox as eqx
 import jax.numpy as jnp
-import mpmath as mp
 import numpy as np
 import pytest
 
@@ -13,6 +12,8 @@ from syncem.model._certified_angular_i00 import (
     AngularI00Limit,
     certify_angular_i00,
 )
+
+mp = pytest.importorskip("mpmath")
 
 
 def _direct_gauss_i00(channels, gamma, B, order):

@@ -2,8 +2,9 @@
 
 LABEL ``eq: directional continuum``. ``ContinuumKernel`` adapts ``syncem.model.ContinuumKernel`` without changing
 it: ``K_I = A F(x)``, ``K_Q = -A G(x)``, ``K_V = 0`` with ``x = nu / (a_B gamma^2)`` and ``B_perp = B sqrt(1 -
-eta^2)``. The pitch cosine ``mu`` does not enter: the kernel is the isotropic pitch average, and ``Beaming``
-declares the limit ``K_nat -> 2 K_iso(eta) delta(mu - eta)``. ``P`` carries the phase law and no azimuth factor.
+eta^2)``. These classical forms are the leading ultra-relativistic terms in half the pitch integral of the
+harmonic kernel. The resulting kernel has no pitch argument. ``Beaming`` declares the limit
+``K_nat -> 2 K_cont(eta) delta(mu - eta)``. ``P`` carries the phase law and no azimuth factor.
 Its variables are the six synchrotron variables, ``gamma`` is primary, ``phi`` the azimuth and ``depth`` the
 depth. Capabilities: ``Similarity``, ``FieldScalingRelation``, ``Beaming``, ``Parity``, ``EnergyWindow``.
 
@@ -72,7 +73,7 @@ def _response_weights(channels: Any) -> Any:
 
 
 class ContinuumKernel(eqx.Module):
-    """Ultra-relativistic continuum kernel, the isotropic pitch average (PAPER eq: directional continuum)."""
+    """Leading ultra-relativistic term of the pitch-averaged harmonic kernel."""
 
     gamma_min: float = eqx.field(static=True, default=300.0, kw_only=True)
     x_min: float | None = eqx.field(static=True, default=None, kw_only=True)

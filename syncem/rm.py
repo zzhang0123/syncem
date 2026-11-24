@@ -99,7 +99,9 @@ def faraday_depth_practical(
 def rotation_angle(lam: ArrayLike, path_cgs: ArrayLike) -> jax.Array:
     """Position-angle Faraday rotation chi = RM * lam^2 [rad], ``lam`` in cm,
     ``path_cgs`` = int n_e B_par ds in [G/cm]."""
-    return C_RM_CGS * jnp.asarray(lam) ** 2 * jnp.asarray(path_cgs)
+    lam = jnp.asarray(lam)
+    lam = lam.astype(jnp.result_type(lam, 1.0))
+    return C_RM_CGS * lam**2 * jnp.asarray(path_cgs)
 
 
 def burn_depolarisation(
@@ -120,6 +122,11 @@ def burn_depolarisation(
     P0, mean_rm, var_rm, lam = jnp.broadcast_arrays(P0, mean_rm, var_rm, lam)
     if any(jnp.iscomplexobj(value) for value in (mean_rm, var_rm, lam)):
         raise ValueError("RM mean, variance and wavelength must be real")
+    # An integer wavelength of 216 m overflows int32 in lam**4 and amplifies P.
+    mean_rm, var_rm, lam = (
+        jnp.asarray(value, dtype=jnp.result_type(value, float))
+        for value in (mean_rm, var_rm, lam)
+    )
     invalid = (
         jnp.any(~jnp.isfinite(P0))
         | jnp.any(~jnp.isfinite(mean_rm))

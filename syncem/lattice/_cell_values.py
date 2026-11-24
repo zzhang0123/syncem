@@ -165,7 +165,15 @@ def _spelling(name: str, args: tuple, kwargs: dict, defaults: dict) -> tuple:
     scalars = all(
         isinstance(a, (int, float, str, np.integer, np.floating)) for a in args
     )
-    return (name, shown + extra, tuple(args) if scalars else (), "")
+    raw = []
+    if scalars:
+        for arg in args:
+            if isinstance(arg, np.integer):
+                arg = int(arg)
+            elif isinstance(arg, np.floating):
+                arg = float(arg)
+            raw.append(arg)
+    return (name, shown + extra, tuple(raw), "")
 
 
 def _reference(

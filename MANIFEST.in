@@ -4,4 +4,14 @@ recursive-include scripts *.py
 recursive-include docs *.md *.rst *.py
 prune docs/_build
 prune studies
+include tests/acceptance/data/SHA256SUMS tests/acceptance/data/*.npz
+include tests/v080/data/*.npz
+include studies/classical-models/SHA256SUMS
+include studies/classical-models/lib/*.py
+include studies/classical-models/cost.py studies/classical-models/ensemble_e6.py
+include studies/classical-models/spectral_laws.py studies/classical-models/baseline_models.py
+include studies/classical-models/forward_results.json studies/classical-models/fits_results.json
+include studies/classical-models/cost_results.json studies/classical-models/params_results.json
+include studies/classical-models/kp_pseudotruth_results.json
+include studies/classical-models/baselines_results.json studies/classical-models/baselines_noise_sweep_results.json
 global-exclude __pycache__ *.py[cod]

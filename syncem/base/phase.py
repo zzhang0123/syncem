@@ -16,6 +16,7 @@ and the fingerprints are a tuple of ``n_ch`` strings. Not certified: the screen 
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import Any, Callable
 
 import equinox as eqx
@@ -44,6 +45,21 @@ class PhaseLaw(eqx.Module):
             out = out * _screen(self.screen, tau)
         return out
 
+    @property
+    def screens(self) -> tuple:
+        """The individual independent factors used in this phase law."""
+        if self.screen is None:
+            return ()
+        if isinstance(self.screen, _ScreenProduct):
+            return self.screen.factors
+        return (self.screen,)
+
+    def with_screen(self, screen: Any) -> PhaseLaw:
+        """Multiply the current screen by an independent transmission."""
+        if self.screen is None:
+            return replace(self, screen=screen)
+        return replace(self, screen=_ScreenProduct((*self.screens, screen)))
+
     def channel_fingerprints(self, channels: Any) -> tuple[str, ...]:
         """One digest per channel of ``tau(nodes_j)`` and ``screen(tau(nodes_j))`` as canonical arrays.
 
@@ -59,9 +75,19 @@ class PhaseLaw(eqx.Module):
         return tuple(out)
 
 
+class _ScreenProduct(eqx.Module):
+    factors: tuple
+
+    def __call__(self, tau):
+        product = 1.0
+        for factor in self.factors:
+            product = product * _screen(factor, tau)
+        return product
+
+
 def _screen(screen: Any, tau: Any) -> Any:
     """``screen(tau)`` as one complex weight per node (a model screen returns ``(1, *tau.shape)``)."""
-    value = screen(tau)
+    value = getattr(screen, "characteristic", screen)(tau)
     return value[0] if getattr(value, "ndim", 0) == jnp.ndim(tau) + 1 else value
 
 

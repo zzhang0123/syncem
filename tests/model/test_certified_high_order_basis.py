@@ -6,7 +6,6 @@ import math
 import equinox as eqx
 import jax
 import jax.numpy as jnp
-import mpmath as mp
 import numpy as np
 import pytest
 
@@ -25,6 +24,8 @@ from syncem.model import (
 )
 from syncem.model._certified_angular_i00 import AngularI00Limit
 from syncem.model._certified_high_order_basis import CertifiedHighOrderBasis
+
+mp = pytest.importorskip("mpmath")
 
 
 @jax.jit

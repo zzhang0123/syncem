@@ -125,6 +125,8 @@ def stack_precondition(averaged: AveragedKernel, lattice: Any, cell: int) -> str
     """The reason the stack cannot take ``cell``, or ``None``. A necessary static check only (decision 150)."""
     names = lattice.cells.variables
     _check_clash(averaged, names)
+    if averaged.leaf_factors:
+        return "conditional leaf weights need the jet"
     kernel, similar = averaged.kernel, _similarity(averaged.kernel)
     if type(kernel) is not ContinuumKernel or _STACK_SET[0] not in similar:
         return f"the stack holds the continuum F and G only, not {type(kernel).__name__}: the jet takes it"

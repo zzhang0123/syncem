@@ -17,7 +17,7 @@ from typing import Any, Hashable, Protocol
 import equinox as eqx
 import numpy as np
 
-__all__ = ["AzimuthHarmonic", "Legendre", "Representation"]
+__all__ = ["AzimuthFourier", "AzimuthHarmonic", "Legendre", "Representation"]
 
 
 class Representation(Protocol):
@@ -68,8 +68,45 @@ class AzimuthHarmonic(eqx.Module):
     is_point: bool = eqx.field(static=True, default=False)
     carries_values: bool = eqx.field(static=True, default=False)
 
+    @property
+    def modes(self) -> tuple[int, ...]:
+        return (2,)
+
     def signature(self) -> Hashable:
         return ("AzimuthHarmonic",)
 
     def __repr__(self) -> str:
         return "se.AzimuthHarmonic()"
+
+
+class AzimuthFourier(eqx.Module):
+    """Shared real and imaginary moments with modes 1 through m_max + 2."""
+
+    m_max: int = eqx.field(static=True)
+    given_unit: None = eqx.field(static=True, default=None)
+    is_point: bool = eqx.field(static=True, default=False)
+    carries_values: bool = eqx.field(static=True, default=False)
+
+    def __check_init__(self):
+        if (
+            isinstance(self.m_max, (bool, np.bool_))
+            or not isinstance(self.m_max, (int, np.integer))
+            or self.m_max < 0
+        ):
+            raise ValueError("AzimuthFourier needs a non-negative integer m_max")
+
+    @property
+    def modes(self) -> range:
+        """Positive moment frequencies, including the spin-two offset."""
+        return range(1, self.m_max + 3)
+
+    @property
+    def moment_nodes(self) -> int:
+        """Minimum Gauss nodes on a panel pairing the highest retained mode."""
+        return max(32, 4 * (self.m_max + 2) + 16)
+
+    def signature(self) -> Hashable:
+        return ("AzimuthFourier", int(self.m_max))
+
+    def __repr__(self) -> str:
+        return f"se.AzimuthFourier({self.m_max})"

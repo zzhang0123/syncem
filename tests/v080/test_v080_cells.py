@@ -58,6 +58,13 @@ def test_log_field_cells():
     )
 
 
+@pytest.mark.filterwarnings("error::UserWarning")
+def test_numpy_scalar_cell_options_are_static_python_values():
+    cells = Cells.log(np.float32(300), np.longdouble(3e6), np.int64(3))
+    np.testing.assert_array_equal(cells.edges[[0, -1]], [300.0, 3e6])
+    assert tuple(type(arg) for arg in cells.spelling[2]) == (float, float, int)
+
+
 def test_from_edges_with_one_order_per_cell():
     cells = Cells.from_edges([300, 1e3, 1e4, 3e6], order=(2, 2, 4))
     assert cells.order == (2, 2, 4)

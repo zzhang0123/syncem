@@ -5,6 +5,7 @@ Choose the entry point by the error statement needed downstream:
 | Entry point | Calculation | Numerical error statement |
 | --- | --- | --- |
 | `high_order_channel_modes` | One fixed particle and viewing direction, with separate $I$, $V$ and line-dependent complex $P$ | Exploratory value; the accelerated harmonic-sum, Bessel and roundoff errors are `unbounded`. |
+| `HarmonicShapeBasis.build` | Forward absolute IQUV for specified physical populations using three intrinsic shape variables | With checking enabled, measures the coordinate and finite-cell differences on the population quadrature. |
 | `build_high_order_basis` | Reusable fixed-reference $N\leq1$ moment response matrix | Exploratory coefficients; `kernel_terms.numerical` is `unbounded`. |
 | `certify_high_order_basis_coarse` | Optional offline enclosure of every stored $N\leq1$ matrix coefficient | Conditional fixed-reference per-column `bound`, propagated through `predict`; an unmet tolerance or resource cap raises. |
 
@@ -15,7 +16,7 @@ It does not bound a nonzero $\gamma/B$ displacement, omitted physics,
 population tails or the final inference error. Those terms must be carried
 separately to the intended scientific quantity.
 
-Install the value route with `python -m pip install 'syncem[high_harmonic]'`.
+The base installation includes SciPy for the high-order value route.
 Install `mpmath` as well before requesting the optional certificate.
 
 `high_order_channel_modes` evaluates the finite-$\gamma$ discrete-harmonic
@@ -61,9 +62,61 @@ Range pruning reduces the number of Bessel calls in the validated low-order
 kernel. It does not reduce the contour resolution set by `m_max` or enable
 the GHz, microgauss high-order `build_basis` path.
 
+## Optional basis in spectral-shape variables
+
+`HarmonicShapeBasis` uses the fundamental frequency, the ratio of Bessel
+argument to harmonic order, and a signed polarisation ratio. It pairs the
+basis with physical population laws and joint samples. Each physical
+node supplies its absolute line-power scale, azimuth and Faraday depth.
+The passband and Faraday phase are evaluated at each harmonic frequency
+from the stored fundamental spacing. A line whose rounded frequency
+equals a passband edge lies outside the open support.
+
+```python
+import syncem as se
+
+channels = se.Channels.at([1.19, 2.6, 4.3], unit="GHz", half_width=0.28)
+source = se.Population(
+    gamma=3, B="1350 G", mu=0.25, eta=0.65, phi="16 deg", depth=12
+)
+basis = se.HarmonicShapeBasis.build(channels, spacing=(0.6e9, 2e9))
+spectrum = se.predict(source, channels, basis=basis)
+```
+
+Use `basis.moments(source)` to retain the weighted joint statistics for reuse.
+The complex spin weights carry their depth values or depth characteristics.
+The statistics can be applied with different passbands, ratio cells or a
+different foreground phase law.
+
+```python
+stats = basis.moments(source)
+stats.save("shape-statistics.npz")
+stats = se.HarmonicShapeStatistics.load("shape-statistics.npz")
+new_channels = se.Channels.at([1.6, 3.0], unit="GHz", half_width=0.22)
+spectrum = se.predict(stats, new_channels, basis=basis)
+```
+
+The archive supports point depths, finite depth rules and the built-in
+depth characteristics. A custom characteristic can be kept in memory.
+`max_atoms` controls the size of the materialised rule.
+
+Use finite-width passbands and an inclusive `spacing` interval in Hz.
+`z_edges` sets the Bessel argument-ratio cells and `order` sets the
+amplitude interpolation degree in each cell. The integer sum includes
+all active lines. `max_orders` caps the number of stored orders, including
+padding at the channel edges.
+
+The `representation` ledger entry measures the finite-cell error against
+the direct transformed integer sum. The `coordinate_transform` entry
+compares that sum with the physical harmonic calculation on the same
+population quadrature and uses the reference's own line frequencies.
+Replay from the weighted statistics has an unbounded coordinate term
+because the original geometry is absent. The quadrature and floating-point
+errors are unbounded.
+
 ## Fixed-point high-order value route
 
-Install the optional `high_harmonic` extra for SciPy. For example:
+The fixed-point route uses SciPy from the base installation.
 
 ```python
 from syncem.model import Channels, TaylorPhase, high_order_channel_modes

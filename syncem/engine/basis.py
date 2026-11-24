@@ -39,159 +39,34 @@ from __future__ import annotations
 
 import dataclasses
 import time
-from typing import Any, ClassVar
+from typing import Any
 
-import equinox as eqx
 import numpy as np
 
 from ..records.ledger import Ledger
-from ..records.records import BuildRecord, SpecifiedRecord
+from ..base.hybrid import HybridKernel
+from ..records.records import SpecifiedRecord
 from ._basis_cache import HIT_EVENTS, BuildRun
 from ._jet_routine import jet_max_order, jet_mem_bytes
 from ._basis_update import (
     S2_EVENTS,
     build_record,
-    capped_lattice,
     check_arguments,
     check_factor,
     derived_record,
-    fill_new,
-    match_channels,
-    order_indices,
     raised_routes,
-    record_keys,
-    record_sizes,
     stokes_blocks,
-    uncached_record,
 )
 from ._routes import route_cells
 from ._s2_columns import reuse_cells
 from ._rule_fingerprint import fixed_fingerprint
-from .assemble import design_array, gather_spectra, select_stokes, stokes_axes
+from .assemble import gather_spectra
 from .average import AveragedKernel, NodeRule
 from .cache import default_cache
 from .columns import ColumnMap, ColumnRules, column_map
+from ._spectral_basis import SpectralBasis
 
 __all__ = ["SpectralBasis", "build_from_averaged", "specified_records"]
-
-
-class SpectralBasis(eqx.Module):
-    """Stored spectra, the column map and the build record of one basis (SPEC Sec. 3.4, decision 149).
-
-    ``averaged`` and ``rules`` are the sources that ``at`` and ``with_order`` reuse. ``key`` is the design key, or
-    ``None`` when the basis is not cacheable. Not certified: the spectra are provider output, compared with
-    oracles by the tests.
-    """
-
-    LABEL: ClassVar[str] = "eq: channel basis expansion"
-    lattice: Any
-    channels: Any
-    columns: ColumnMap = eqx.field(static=True)
-    spectra0: Any
-    spectra2: Any
-    azimuth_factor: Any
-    specified: tuple
-    record: BuildRecord = eqx.field(static=True)
-    ledger: Ledger
-    key: str | None = eqx.field(static=True)
-    averaged: AveragedKernel
-    rules: ColumnRules = eqx.field(static=True)
-
-    def design(self, data: Any = None, *, stokes: Any = None) -> Any:
-        """``(n_ch, n_stokes, n)`` real with ``w`` applied. ``stokes`` selects rows of the built Stokes axes."""
-        if data is not None:
-            raise NotImplementedError(
-                "design(data=...) gives whitened rows of the data, which arrive in step 8"
-            )
-        full = design_array(
-            self.spectra0,
-            self.spectra2,
-            self.columns,
-            self.lattice.weights,
-            block_names=self.lattice.index.blocks,
-            azimuth_factor=self.azimuth_factor,
-        )
-        return select_stokes(full, stokes_axes(self.columns.stokes), stokes)
-
-    def at(self, channels: Any) -> "SpectralBasis":
-        """The same lattice and statistics on ``channels``. Stored rows are gathered, new rows computed."""
-        start = time.perf_counter()
-        keys = channels.row_keys()
-        found, compute = match_channels(self.channels.row_keys(), keys)
-        s0 = np.zeros((found.size,) + np.shape(self.spectra0)[1:])
-        s2 = (
-            None
-            if self.spectra2 is None
-            else np.zeros((found.size, self.columns.n2), complex)
-        )
-        hit = found >= 0
-        s0[hit] = np.asarray(self.spectra0)[found[hit]]
-        if s2 is not None:
-            s2[hit] = np.asarray(self.spectra2)[found[hit]]
-        counts = {
-            **dict.fromkeys(S2_EVENTS, 0),
-            "channel rows reused": int(hit.sum()),
-            "channel rows computed": len(compute),
-        }
-        routes, notes = self.record.routes, ()
-        if compute:
-            routes, notes = fill_new(self, channels, compute, s0, s2, counts)
-            again = np.flatnonzero(~hit)
-            first = np.array([compute[keys[j]] for j in again], dtype=np.int64)
-            s0[again] = s0[first]
-            if s2 is not None:
-                s2[again] = s2[first]
-        record = uncached_record(derived_record(self.record, routes, counts, start))
-        record = record.with_notes(*notes)
-        return dataclasses.replace(
-            self, channels=channels, spectra0=s0, spectra2=s2, record=record, key=None
-        )
-
-    def with_order(self, order: int) -> "SpectralBasis":
-        """The basis on ``capped_lattice(lattice, order)`` at or below the built order, from the stored spectra."""
-        start = time.perf_counter()
-        built = self.lattice.order
-        if (
-            isinstance(order, bool)
-            or not isinstance(order, (int, np.integer))
-            or order < 0
-        ):
-            raise ValueError(f"order must be a non-negative int, not {order!r}")
-        if built is None:
-            raise ValueError(
-                "the lattice has no total order: every celled variable lies outside the total (depth), so "
-                "with_order has no order to lower"
-            )
-        if order > built:
-            return _raised(self, int(order))
-        lattice = capped_lattice(self.lattice, int(order))
-        max_columns = dict(self.record.defaults).get("max_columns", 20_000)
-        columns = column_map(
-            lattice, self.averaged.kernel, self.rules, max_columns=max_columns
-        )
-        idx0, idx2 = order_indices(self, lattice, columns)
-        s0 = np.asarray(self.spectra0)[:, :, idx0]
-        s2 = None if self.spectra2 is None else np.asarray(self.spectra2)[:, idx2]
-        counts = {
-            **dict.fromkeys(S2_EVENTS, 0),
-            "channel rows reused": int(np.shape(s0)[0]),
-            "channel rows computed": 0,
-        }
-        record = derived_record(self.record, self.record.routes, counts, start)
-        record = dataclasses.replace(
-            uncached_record(record, record_keys(columns, lattice)),
-            sizes=record_sizes(columns),
-        )
-        record = record.with_notes(f"routes of the order-{built} build")
-        return dataclasses.replace(
-            self,
-            lattice=lattice,
-            columns=columns,
-            spectra0=s0,
-            spectra2=s2,
-            record=record,
-            key=None,
-        )
 
 
 def specified_records(
@@ -245,10 +120,37 @@ def build_from_averaged(
     start = time.perf_counter()
     check_arguments(rules, cache)
     kernel = averaged.kernel
+    if isinstance(kernel, HybridKernel):
+        from ._hybrid_basis import build_hybrid_from_averaged
+
+        return build_hybrid_from_averaged(
+            averaged,
+            channels,
+            lattice,
+            rules=rules,
+            routes=routes,
+            s1=s1,
+            stokes=stokes,
+            azimuth_factor=azimuth_factor,
+            max_columns=max_columns,
+            cache=cache,
+        )
     blocks = stokes_blocks(kernel, rules, stokes)
     rules = dataclasses.replace(rules, stokes=blocks)
+    from .provider_fourier import build_fourier, fourier_axis
+
+    if fourier_axis(lattice, kernel.azimuth) is not None:
+        if azimuth_factor is not None:
+            raise ValueError("an explicit azimuth factor conflicts with AzimuthFourier")
+        if not isinstance(routes, str) or routes not in ("auto", "jet"):
+            raise ValueError("AzimuthFourier builds through the jet provider")
+        return build_fourier(
+            averaged, channels, lattice, rules=rules, max_columns=max_columns
+        )
     factor = check_factor(kernel, lattice, blocks, azimuth_factor)
     columns = column_map(lattice, kernel, rules, max_columns=max_columns)
+    if averaged.leaf_factors:
+        cache = False
     run = BuildRun.open(averaged, channels, lattice, columns, rules, routes, s1, cache)
     request = (averaged, channels, lattice, factor, rules)
     found = run.lookup()
@@ -396,4 +298,15 @@ def _raised(basis: SpectralBasis, order: int) -> SpectralBasis:
         cache=bool(defaults.get("cache", True)),
     )
     note = f"routes of the order-{basis.lattice.order} build"
-    return dataclasses.replace(out, record=out.record.with_notes(note))
+    return dataclasses.replace(
+        out,
+        record=out.record.with_notes(note),
+        ledger=basis.ledger,
+        forward_population=basis.forward_population,
+        forward_phase=basis.forward_phase,
+        forward_defaults=basis.forward_defaults,
+        forward_depth_tol=basis.forward_depth_tol,
+        forward_average=basis.forward_average,
+        structural_plan=basis.structural_plan,
+        forward_accuracy=basis.forward_accuracy,
+    )

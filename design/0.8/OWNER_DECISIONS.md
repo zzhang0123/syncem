@@ -46,7 +46,15 @@ was chosen.
 | 2 | `SYNCEM_CACHE` inside a synced folder | a warning, not an error, for a directory inside `~/Documents`, `~/Desktop`, `~/Library/Mobile Documents` or `~/Library/CloudStorage` (Rec.). The default is the platform cache directory (SPEC decision 161) |
 | 163 (8) | Builds with S2 column reuse | "只要不失科学性和正确性,按你推荐的来" (follow the recommendation as long as scientific soundness and correctness are kept). T14 states a bound of 1e-13 of the channel maximum for builds with S2 column reuse to order 5 on the jet and order 6 on the stack and names its source, the batch dependence of an uncached build (SPEC decision 164) (Rec.) |
 
-Question 3 (study oracles read in place or copied) is open. SPEC decision 154
-stands as committed until it is answered. Row 163 (8) is item 8 of SPEC
-decision 163, an open point of the step-5b-2 review and not a plan question.
-The owner delegated it on 2026-11-19, and SPEC decision 164 settles it.
+Row 163 (8) is item 8 of SPEC decision 163, a point of the step-5b-2
+review. The owner delegated it on 2026-11-19 and SPEC decision 164 settles it.
+
+# Owner decisions after step 5b-3 (2026-11-20)
+
+The owner said “好，这些都按你推荐的”.
+
+| Item | Decision |
+|---|---|
+| Jet at order 6 and above | Implement Taylor mode in step 5c. Use nested forward mode through order 5. Compare both methods at the boundary and preserve the current nested results (SPEC decision 172). |
+| Step-5b plan question 3 | Read the study oracles in place and check hashes pinned from v0.7.10. Copy the acceptance data (SPEC decisions 154 and 173). |
+| Step-8 fitting margins | Scale the pair-rule tolerance by `eps * s_max / s_i` or skip the pair rule where rounding dominates. Record the rank-cut margin and warn near the cut. Pin the E5 and E6 cases in tests (SPEC decision 174). |

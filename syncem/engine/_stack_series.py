@@ -53,7 +53,7 @@ from .provider_stack import _channel_arrays, point_series
 
 __all__ = ["StackRefused", "stack_cell", "stack_lattice", "stack_stage"]
 
-# the continuum kernel is the isotropic pitch average and carries no azimuth factor
+# The leading continuum kernel has no pitch argument or azimuth factor.
 _KERNEL_FREE = {"mu", "phi"}
 
 

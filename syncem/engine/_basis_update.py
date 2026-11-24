@@ -235,7 +235,12 @@ def capped_lattice(lattice: Any, order: int) -> Any:
     """
     t = lattice.cells
     weights = lattice.weights if lattice.explicit_weights else None
-    common = dict(order=order, weights=weights, depth_in_total=lattice.depth_in_total)
+    common = dict(
+        order=order,
+        weights=weights,
+        depth_in_total=lattice.depth_in_total,
+        **lattice._config(),
+    )
     if lattice.cell_axes is not None:
         cells = {
             n: (
@@ -260,9 +265,11 @@ def _base_keys(index: Any) -> np.ndarray:
     return np.column_stack([a.cell[:n], a.pair[:n], a.powers[:n]])
 
 
-def _row_map(old: Any, new: Any) -> np.ndarray:
+def _row_map(old: Any, new: Any, cells=None) -> np.ndarray:
     """The row of one ``old`` block with the (cell, pair, powers) of each row of one ``new`` block."""
     ko, kn = _base_keys(old), _base_keys(new)
+    if cells is not None:
+        kn[:, 0] = cells[kn[:, 0]]
     _, inverse = np.unique(np.concatenate([ko, kn]), axis=0, return_inverse=True)
     inverse = inverse.reshape(-1)
     position = np.full(int(inverse.max()) + 1, -1, dtype=np.int64)
@@ -275,9 +282,9 @@ def _row_map(old: Any, new: Any) -> np.ndarray:
     return out
 
 
-def order_indices(basis: Any, lattice: Any, columns: Any) -> tuple:
+def order_indices(basis: Any, lattice: Any, columns: Any, *, cells=None) -> tuple:
     """Stored spin-0 and spin-2 spectrum of the parent for each stored spectrum of the lower-order map."""
-    rows, old = _row_map(basis.lattice.index, lattice.index), basis.columns
+    rows, old = _row_map(basis.lattice.index, lattice.index, cells), basis.columns
     col = old.col_of_row[rows[columns.spin0_base]]
     idx0 = np.where(col >= 0, old.spin0_from[np.maximum(col, 0)], -1)
     position = np.full(basis.lattice.index.block_size, -1, dtype=np.int64)

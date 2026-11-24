@@ -11,3 +11,4 @@ not certify.
    model
    fit
    core
+   lattice

@@ -10,7 +10,9 @@
 :caption: User guide
 
 installation
+guide/two_regime
 guide/model
+guide/moment_lattice
 guide/radiation
 guide/fixed_harmonic
 guide/high_order_harmonic

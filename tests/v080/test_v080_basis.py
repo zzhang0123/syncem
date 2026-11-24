@@ -26,6 +26,7 @@ from syncem.engine.assemble import predict_values
 from syncem.engine.average import AveragedKernel, fixed_rule, uniform_rule
 from syncem.engine.basis import build_from_averaged
 from syncem.engine.provider_jet import jet_lattice
+from syncem.fitting.data import StokesData
 from syncem.lattice.cells import Cells
 from syncem.lattice.lattice import Lattice
 from syncem.lattice.moments import Moments
@@ -163,7 +164,13 @@ def test_stokes_axes_and_the_re_im_map_are_exact():
     assert not d[:, 0, re].any() and not d[:, 1:, blocks == "M0"].any()
     with pytest.raises(ValueError, match="V"):
         basis.design(stokes="V")
-    with pytest.raises(NotImplementedError, match="step 8"):
+    sigma = np.arange(1.0, 16.0).reshape(5, 3)
+    data = StokesData(
+        basis.channels, stokes=np.zeros_like(sigma), sigma=sigma, unit="cgs"
+    )
+    expected = (d / sigma[..., None]).reshape(-1, d.shape[-1])
+    np.testing.assert_array_equal(basis.design(data=data), expected)
+    with pytest.raises(TypeError, match="StokesData"):
         basis.design(data=np.zeros((5, 3)))
 
 

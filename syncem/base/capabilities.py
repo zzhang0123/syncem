@@ -48,7 +48,7 @@ class FieldScalingRelation:
 
 @dataclass(frozen=True)
 class Beaming:
-    """Only ``variable = partner`` contributes, ``K_nat -> 2 K_iso(partner) delta(variable - partner)``."""
+    """Only ``variable = partner`` contributes, ``K_nat -> 2 K_cont(partner) delta(variable - partner)``."""
 
     variable: str = "mu"
     partner: str = "eta"

@@ -92,7 +92,7 @@ def build(cfg, lattice, s1, factor):
 @pytest.fixture(scope="module")
 def forward():
     sums = _study.verify_sums(DATA / "SHA256SUMS")
-    assert sums == {"forward_spectra.npz": FORWARD_SHA256}
+    assert sums["forward_spectra.npz"] == FORWARD_SHA256
     with np.load(DATA / "forward_spectra.npz") as data:
         return {name: np.asarray(data[name]) for name in ("E1", "E5")}
 

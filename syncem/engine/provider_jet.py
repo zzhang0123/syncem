@@ -3,7 +3,8 @@
 LABEL ``eq: channel basis expansion``. A product cell with celled variables ``v_1 .. v_d`` maps the chart
 coordinates ``z`` to the point ``x_v = x_b e^(h z_v)`` (log) or ``x_b + h z_v`` (affine) and evaluates the
 averaged kernel there. The columns are ``(1/alpha!) d^alpha f(0)`` for every exponent ``alpha`` of the cell's
-lower set, by nested forward mode. Each nesting level differentiates only the directions that some exponent
+lower set, by nested forward mode through total order 5 and Taylor mode above it. Each nesting level
+differentiates only the directions that some exponent
 needs at that depth (cap-aware nesting, the ``level_plan`` of ``syncem.model._harmonic_taylor`` generalised to
 ``d`` directions): an exponent's derivatives are taken innermost for the variables with the smallest caps, so a
 variable of cap ``c`` appears only in the levels it can reach.
@@ -41,7 +42,8 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 
-from ._jet_routine import JetRoutine, check_order, chunk_views
+from ._jet_routine import NESTED_MAX_ORDER, JetRoutine, check_order, chunk_views
+from ._taylor_jet import taylor_mode_coefficients
 from .average import AveragedKernel
 from .cache import default_cache
 
@@ -142,18 +144,30 @@ def make_routine(
     names: tuple[str, ...],
     charts: tuple[str, ...],
     exponents: tuple[tuple[int, ...], ...],
+    *,
+    method: str | None = None,
 ) -> JetRoutine:
     """The ``JetRoutine`` of the Taylor columns of one cell on one channel view (decisions 165 and 166).
 
-    Raises ``JetMemoryError`` before tracing when the nesting depth exceeds the order limit.
+    Raises ``JetMemoryError`` before tracing when the largest degree exceeds the order limit.
+    ``method`` allows direct comparisons at the dispatch boundary.
     """
+    order = check_order(names, exponents)
+    if method is None:
+        method = "nested" if order <= NESTED_MAX_ORDER else "taylor"
+    if method == "nested":
+        coefficients = taylor_coefficients
+    elif method == "taylor":
+        coefficients = taylor_mode_coefficients
+    else:
+        raise ValueError(f"unknown jet method {method!r}")
 
     def one(averaged: AveragedKernel, channels: Any, ref: Any, hw: Any) -> Any:
         def f(z: Any) -> Any:
             modes = averaged(channels, _point(names, charts, ref, hw, z))
             return modes.I, modes.P[0], modes.V  # one phase-weight row (decision 132)
 
-        return taylor_coefficients(f, len(names), exponents)
+        return coefficients(f, len(names), exponents)
 
     return JetRoutine(names, charts, exponents, one)
 

@@ -11,26 +11,26 @@ from typing import Any
 
 import numpy as np
 
-from ..base.variables import SYNCHROTRON_VARIABLES
+from ..base.variables import SYNCHROTRON_PRIMARY, SYNCHROTRON_VARIABLES
 from .cells import Cells
-from .representations import AzimuthHarmonic, Legendre
+from .representations import AzimuthFourier, AzimuthHarmonic, Legendre
 from .table import CellTable
 
 REFERENCE_SLOPE = 2.6
 
 
-def _kind(name: str, axis: Any) -> str:
-    variable = SYNCHROTRON_VARIABLES.get(name)
+def _kind(name: str, axis: Any, variables=SYNCHROTRON_VARIABLES) -> str:
+    variable = variables.get(name)
     if variable is not None:
         return variable.kind
     return "positive" if isinstance(axis, Cells) and axis.chart == "log" else "real"
 
 
-def _check_axis(name: str, axis: Any) -> None:
-    variable = SYNCHROTRON_VARIABLES.get(name)
+def _check_axis(name: str, axis: Any, variables=SYNCHROTRON_VARIABLES) -> None:
+    variable = variables.get(name)
     if variable is not None:
         variable.place(axis)
-    kind = _kind(name, axis)
+    kind = _kind(name, axis, variables)
     if isinstance(axis, Cells):
         lo, hi = axis.bounds(kind)
         if kind == "angle":
@@ -52,27 +52,61 @@ def _check_axis(name: str, axis: Any) -> None:
             raise ValueError(
                 f"Legendre degrees resolve a cosine, and {name} is the {variable.meaning}"
             )
-    elif isinstance(axis, AzimuthHarmonic):
+    elif isinstance(axis, (AzimuthHarmonic, AzimuthFourier)):
         if variable is not None and kind != "angle":
             raise ValueError(
-                f"AzimuthHarmonic resolves the azimuth, and {name} is the {variable.meaning}"
+                f"{type(axis).__name__} resolves the azimuth, and {name} is the {variable.meaning}"
             )
     else:
         raise TypeError(
-            f"{name}={axis!r} is not a lattice representation (Cells, Legendre, AzimuthHarmonic)"
+            f"{name}={axis!r} is not a lattice representation (Cells, Legendre, AzimuthHarmonic, AzimuthFourier)"
         )
 
 
-def _default_weights(table: CellTable) -> np.ndarray:
+def _density_masses(density, bounds, chart):
+    a, b = bounds
+    x, w = np.polynomial.legendre.leggauss(32)
+    if chart == "log" and a > 0:
+        lo, hi = np.log(a), np.log(b)
+        z = np.exp(lo + (hi - lo) * (x + 1) / 2)
+        return (hi - lo) / 2 * np.sum(w * z * density(z))
+    z = a + (b - a) * (x + 1) / 2
+    return (b - a) / 2 * np.sum(w * density(z))
+
+
+def _default_weights(table: CellTable, references=()) -> np.ndarray:
     weights = np.ones(table.n_cells)
-    if "gamma" not in table.variables:
-        return weights
-    i = table.variables.index("gamma")
-    lo, hi = table.lo[:, i], table.hi[:, i]
-    if np.any(~np.isfinite(hi)) or np.any(lo <= 0):
-        return weights
-    k = 1.0 - REFERENCE_SLOPE
-    return (hi**k - lo**k) / (hi.max() ** k - lo.min() ** k)
+    densities = dict(references)
+    for i, name in enumerate(table.variables):
+        lo, hi = table.lo[:, i], table.hi[:, i]
+        if name in densities:
+            if not np.all(np.isfinite(lo) & np.isfinite(hi)):
+                raise ValueError(
+                    f"ReferenceDensity for {name} needs finite cell bounds"
+                )
+            density = densities[name]
+            domain = (lo.min(), hi.max())
+            chart = "log" if all(row[i] == "log" for row in table.chart) else "affine"
+            masses = np.array(
+                [
+                    _density_masses(density, (a, b), row[i])
+                    for a, b, row in zip(lo, hi, table.chart)
+                ]
+            )
+            norm = _density_masses(density, domain, chart)
+            if (
+                not np.isfinite(norm)
+                or norm <= 0
+                or np.any(~np.isfinite(masses) | (masses <= 0))
+            ):
+                raise ValueError(
+                    f"ReferenceDensity for {name} needs finite positive cell masses"
+                )
+            weights *= masses / norm
+        elif name == SYNCHROTRON_PRIMARY and np.all(np.isfinite(hi) & (lo > 0)):
+            k = 1.0 - REFERENCE_SLOPE
+            weights *= (hi**k - lo**k) / (hi.max() ** k - lo.min() ** k)
+    return weights
 
 
 def _grouped(n: int) -> str:

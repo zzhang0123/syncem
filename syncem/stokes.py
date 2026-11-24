@@ -31,11 +31,30 @@ from .constants import C_CGS, E_ESU, M_E
 
 
 def beta_of_gamma(gamma):
-    return jnp.sqrt(1.0 - 1.0 / gamma**2)
+    return jnp.sqrt(1.0 - (1.0 / gamma) ** 2)
 
 
 def doppler(beta_par, theta):
     return 1.0 - beta_par * jnp.cos(theta)
+
+
+def _doppler_terms(gamma, beta, alpha, theta):
+    """``D = 1 - beta cos(alpha) cos(theta)`` and ``cos(theta) - beta cos(alpha)``.
+
+    Both are written without the difference of two numbers near 1, using
+    ``1 - beta = 1 / (gamma^2 (1 + beta))`` and
+    ``1 - cos a cos b = sin^2((a - b)/2) + sin^2((a + b)/2)`` and
+    ``cos b - cos a = -2 sin((b + a)/2) sin((b - a)/2)``. Form the sine
+    of the half sum by angle addition. When both angles approach pi, adding
+    the angles first can lose their distances from the rear viewing axis.
+    """
+    lag = (1.0 / gamma) ** 2 / (1.0 + beta)
+    a, t = 0.5 * alpha, 0.5 * theta
+    half_sum_sine = jnp.sin(a) * jnp.cos(t) + jnp.cos(a) * jnp.sin(t)
+    half_diff_sine = jnp.sin(0.5 * (theta - alpha))
+    D = lag + beta * (half_diff_sine**2 + half_sum_sine**2)
+    along = lag * jnp.cos(alpha) - 2.0 * half_sum_sine * half_diff_sine
+    return D, along
 
 
 def _harmonic(n, gamma, alpha, theta, *, n_nodes=None):
@@ -46,11 +65,9 @@ def _harmonic(n, gamma, alpha, theta, *, n_nodes=None):
     static ``n_nodes`` fixes the Bessel resolution (see ``bessel_jn_and_prime``).
     """
     beta = beta_of_gamma(gamma)
-    b_par = beta * jnp.cos(alpha)
     b_perp = beta * jnp.sin(alpha)
     st = jnp.sin(theta)
-    ct = jnp.cos(theta)
-    D = doppler(b_par, theta)
+    D, along = _doppler_terms(gamma, beta, alpha, theta)
     x = n * b_perp * st / D
 
     _, jnp_ = bessel_jn_and_prime(n, x, n_nodes=n_nodes)
@@ -60,7 +77,7 @@ def _harmonic(n, gamma, alpha, theta, *, n_nodes=None):
     neighbours = bessel_jn(n - 1, x, n_nodes=n_nodes) + bessel_jn(
         n + 1, x, n_nodes=n_nodes
     )
-    amplitude_par = (ct - b_par) * b_perp * neighbours / (2.0 * D)
+    amplitude_par = along * b_perp * neighbours / (2.0 * D)
     amplitude_perp = b_perp * jnp_
     factor = n**2 / D**3
     I = factor * (amplitude_par**2 + amplitude_perp**2)
@@ -77,6 +94,7 @@ def stokes_harmonic(n, gamma, alpha, theta, B=None, *, n_nodes=None):
     normalisation depends on gamma. Derivatives of this dimensionless output
     are not physical fixed-B derivatives. Harmonic n >= 1, gamma >= 1,
     alpha/theta in [0, pi]. Angular endpoints use their analytic limits.
+    The Doppler denominator and physical prefactor are evaluated in float64.
     Numerical quadrature errors remain separate from the vacuum helical-orbit
     reference physics. Differentiation is intended for interior parameters.
 
@@ -86,10 +104,13 @@ def stokes_harmonic(n, gamma, alpha, theta, B=None, *, n_nodes=None):
     under ``jax.jit``/``vmap`` (unresolved orders return NaN, see
     ``syncem.bessel``). The count is a resolution choice, not an error bound.
     """
+    gamma = jnp.asarray(gamma, dtype=jnp.float64)
+    alpha = jnp.asarray(alpha, dtype=jnp.float64)
+    theta = jnp.asarray(theta, dtype=jnp.float64)
     I, Q, V = _harmonic(n, gamma, alpha, theta, n_nodes=n_nodes)
     if B is None:
         return I, Q, V
-    wB = E_ESU * B / (gamma * M_E * C_CGS)
+    wB = E_ESU * jnp.asarray(B, dtype=jnp.float64) / (gamma * M_E * C_CGS)
     pref = E_ESU**2 * wB**2 / (2.0 * jnp.pi * C_CGS)
     return pref * I, pref * Q, pref * V
 
@@ -98,5 +119,5 @@ def larmor_power(gamma, alpha, B):
     """Total synchrotron power (all harmonics, all solid angles), erg/s."""
     beta = beta_of_gamma(gamma)
     b_perp = beta * jnp.sin(alpha)
-    wB = E_ESU * B / (gamma * M_E * C_CGS)
-    return (2.0 / 3.0) * (E_ESU**2 / C_CGS) * gamma**4 * wB**2 * b_perp**2
+    cyclotron = E_ESU * B / (M_E * C_CGS)
+    return (2.0 / 3.0) * (E_ESU**2 / C_CGS) * (cyclotron * gamma * b_perp) ** 2

@@ -1,0 +1,796 @@
+{
+ "description": "Expansion order and reference-point scan (Sec. 5.2) and prescribed scalar-absorption slab (Sec. 5.4), continuum kernel, intensity only.",
+ "seed": 20261102,
+ "nreal": 200,
+ "config": {
+  "nu_lo": 100000000.0,
+  "nu_hi": 10000000000.0,
+  "n_channels": 41,
+  "chan_half": 0.2,
+  "n_chan_nodes": 48,
+  "b_kind": "uniform",
+  "b_lo": 4.0,
+  "b_hi": 6.0,
+  "b_rms": 5.0,
+  "n_b": 16,
+  "maxwell_cut": 8.0,
+  "eta_max": 0.5,
+  "n_eta": 12,
+  "azimuth_amp": 0.8,
+  "azimuth_phase": 0.25,
+  "screen_mean": 8.0,
+  "screen_sd": 0.5,
+  "noise_frac": 0.01,
+  "seed": 20260928,
+  "gamma_lo": 300.0,
+  "gamma_hi": 2962642.632683605,
+  "n_bins": 19,
+  "ref_slope": 2.6,
+  "azimuth_factor": [
+   0.3510330247561491,
+   0.1917702154416812
+  ],
+  "Z1": 1.2069003224378763,
+  "h_b": 0.2420476245964176,
+  "mean_b2_muG2": 25.333333333333336,
+  "mean_bperp_muG": 4.783057387452592
+ },
+ "refined_config": {
+  "nu_lo": 100000000.0,
+  "nu_hi": 10000000000.0,
+  "n_channels": 41,
+  "chan_half": 0.2,
+  "n_chan_nodes": 96,
+  "b_kind": "uniform",
+  "b_lo": 4.0,
+  "b_hi": 6.0,
+  "b_rms": 5.0,
+  "n_b": 32,
+  "maxwell_cut": 8.0,
+  "eta_max": 0.5,
+  "n_eta": 24,
+  "azimuth_amp": 0.8,
+  "azimuth_phase": 0.25,
+  "screen_mean": 8.0,
+  "screen_sd": 0.5,
+  "noise_frac": 0.01,
+  "seed": 20260928,
+  "gamma_lo": 300.0,
+  "gamma_hi": 2962642.632683605,
+  "n_bins": 19,
+  "ref_slope": 2.6,
+  "azimuth_factor": [
+   0.3510330247561491,
+   0.1917702154416812
+  ],
+  "Z1": 1.2069003224378763,
+  "h_b": 0.2420476245964176,
+  "mean_b2_muG2": 25.333333333333336,
+  "mean_bperp_muG": 4.783057387452591
+ },
+ "offsets": [
+  -0.5,
+  0.0,
+  0.5
+ ],
+ "orders": [
+  0,
+  1,
+  2,
+  3,
+  4
+ ],
+ "slab_ensemble": "E1",
+ "nnls_grids": [
+  192,
+  384
+ ],
+ "errors": "fractions of the noise-free channel intensity, no extrapolation outside the band",
+ "limitations": "finite continuum tests, a moved reference point also changes the TSVD metric, passive scalar slab, finite nonnegative grids only",
+ "checks": {
+  "E1_refinement_max_fraction": 3.0259117433928395e-10,
+  "E2_refinement_max_fraction": 3.0535696193823014e-10,
+  "E4-JP_refinement_max_fraction": 3.2752034417882214e-10,
+  "intensity_vs_existing_kbar_scaled": 3.806691081118768e-16,
+  "transparent_limit": 0.0,
+  "slab_tau0.0_refinement": 3.025910633169815e-10,
+  "slab_tau0.1_refinement": 3.0259084127237657e-10,
+  "slab_tau1.0_refinement": 3.0258884287093224e-10,
+  "slab_tau10.0_refinement": 3.025741879270072e-10
+ },
+ "sensitivity": [
+  {
+   "name": "E1",
+   "order": 0,
+   "offset": -0.5,
+   "forward_max": 0.15563264957034417,
+   "noiseless_held_rms": 0.0011321144779346765,
+   "numerical_rank": 12,
+   "noisy_held_rms_percentiles": [
+    0.004294920599317337,
+    0.005923570912672855,
+    0.00817732349215146
+   ],
+   "median_rank": 7.0
+  },
+  {
+   "name": "E2",
+   "order": 0,
+   "offset": -0.5,
+   "forward_max": 0.18943110985695177,
+   "noiseless_held_rms": 0.003543315156002437,
+   "numerical_rank": 12,
+   "noisy_held_rms_percentiles": [
+    0.004436527824576954,
+    0.005736545447043044,
+    0.00778563212847077
+   ],
+   "median_rank": 6.0
+  },
+  {
+   "name": "E4-JP",
+   "order": 0,
+   "offset": -0.5,
+   "forward_max": 0.308682120680297,
+   "noiseless_held_rms": 0.0013685306051674263,
+   "numerical_rank": 12,
+   "noisy_held_rms_percentiles": [
+    0.004186051770628594,
+    0.005974879900035824,
+    0.007806239611808794
+   ],
+   "median_rank": 7.0
+  },
+  {
+   "name": "E1",
+   "order": 0,
+   "offset": 0.0,
+   "forward_max": 0.025596926548000054,
+   "noiseless_held_rms": 0.00034429936855191946,
+   "numerical_rank": 12,
+   "noisy_held_rms_percentiles": [
+    0.004259454024156431,
+    0.005934210002170991,
+    0.007497199871920601
+   ],
+   "median_rank": 7.0
+  },
+  {
+   "name": "E2",
+   "order": 0,
+   "offset": 0.0,
+   "forward_max": 0.03831086694231689,
+   "noiseless_held_rms": 0.0023153834218444776,
+   "numerical_rank": 12,
+   "noisy_held_rms_percentiles": [
+    0.004089453655549693,
+    0.005463857161723405,
+    0.00734917992132191
+   ],
+   "median_rank": 5.0
+  },
+  {
+   "name": "E4-JP",
+   "order": 0,
+   "offset": 0.0,
+   "forward_max": 0.1848541035995528,
+   "noiseless_held_rms": 0.0005580994467034991,
+   "numerical_rank": 12,
+   "noisy_held_rms_percentiles": [
+    0.004461476397300805,
+    0.006113035732819776,
+    0.008320835303148044
+   ],
+   "median_rank": 8.0
+  },
+  {
+   "name": "E1",
+   "order": 0,
+   "offset": 0.5,
+   "forward_max": 0.2447244286520378,
+   "noiseless_held_rms": 0.0011277954319581073,
+   "numerical_rank": 13,
+   "noisy_held_rms_percentiles": [
+    0.00426349712799497,
+    0.00576405027973545,
+    0.007964945857753975
+   ],
+   "median_rank": 7.0
+  },
+  {
+   "name": "E2",
+   "order": 0,
+   "offset": 0.5,
+   "forward_max": 0.3253873185435856,
+   "noiseless_held_rms": 0.0035157972804820237,
+   "numerical_rank": 13,
+   "noisy_held_rms_percentiles": [
+    0.004362514827432404,
+    0.0057336776411641395,
+    0.007659171781895203
+   ],
+   "median_rank": 7.0
+  },
+  {
+   "name": "E4-JP",
+   "order": 0,
+   "offset": 0.5,
+   "forward_max": 0.9265852235306047,
+   "noiseless_held_rms": 0.0008770842336244184,
+   "numerical_rank": 13,
+   "noisy_held_rms_percentiles": [
+    0.004158472269779811,
+    0.005931570912963604,
+    0.008334385889161761
+   ],
+   "median_rank": 7.0
+  },
+  {
+   "name": "E1",
+   "order": 1,
+   "offset": -0.5,
+   "forward_max": 0.03409496465711659,
+   "noiseless_held_rms": 0.0025650389207796144,
+   "numerical_rank": 19,
+   "noisy_held_rms_percentiles": [
+    0.004960125054298042,
+    0.006418414189786887,
+    0.00815324666388116
+   ],
+   "median_rank": 7.0
+  },
+  {
+   "name": "E2",
+   "order": 1,
+   "offset": -0.5,
+   "forward_max": 0.050544070444084266,
+   "noiseless_held_rms": 0.0014710878239639303,
+   "numerical_rank": 19,
+   "noisy_held_rms_percentiles": [
+    0.0045726310075676025,
+    0.006207778323592119,
+    0.008028246822433194
+   ],
+   "median_rank": 7.0
+  },
+  {
+   "name": "E4-JP",
+   "order": 1,
+   "offset": -0.5,
+   "forward_max": 0.18456703072929936,
+   "noiseless_held_rms": 0.0012698686554499785,
+   "numerical_rank": 19,
+   "noisy_held_rms_percentiles": [
+    0.00527422954782664,
+    0.006777627811584235,
+    0.008988122701529815
+   ],
+   "median_rank": 9.0
+  },
+  {
+   "name": "E1",
+   "order": 1,
+   "offset": 0.0,
+   "forward_max": 0.02598885433617537,
+   "noiseless_held_rms": 0.0017749844914318703,
+   "numerical_rank": 19,
+   "noisy_held_rms_percentiles": [
+    0.004537759673477,
+    0.006093063040378751,
+    0.007922575443527287
+   ],
+   "median_rank": 7.0
+  },
+  {
+   "name": "E2",
+   "order": 1,
+   "offset": 0.0,
+   "forward_max": 0.03938445889052733,
+   "noiseless_held_rms": 0.0010091642168203693,
+   "numerical_rank": 19,
+   "noisy_held_rms_percentiles": [
+    0.004441267060920377,
+    0.006017839201086941,
+    0.008058226275188573
+   ],
+   "median_rank": 7.0
+  },
+  {
+   "name": "E4-JP",
+   "order": 1,
+   "offset": 0.0,
+   "forward_max": 0.1660527819369102,
+   "noiseless_held_rms": 0.002107763682041296,
+   "numerical_rank": 19,
+   "noisy_held_rms_percentiles": [
+    0.005165336806570795,
+    0.0065903722198890746,
+    0.008541702552632428
+   ],
+   "median_rank": 8.0
+  },
+  {
+   "name": "E1",
+   "order": 1,
+   "offset": 0.5,
+   "forward_max": 0.05935529532919537,
+   "noiseless_held_rms": 0.0016600535056092221,
+   "numerical_rank": 19,
+   "noisy_held_rms_percentiles": [
+    0.004502162220474135,
+    0.0059601620719948924,
+    0.007732524494754042
+   ],
+   "median_rank": 7.0
+  },
+  {
+   "name": "E2",
+   "order": 1,
+   "offset": 0.5,
+   "forward_max": 0.0896843680137468,
+   "noiseless_held_rms": 0.0008452611879318308,
+   "numerical_rank": 19,
+   "noisy_held_rms_percentiles": [
+    0.004342935251251178,
+    0.005909179379702541,
+    0.008037826671770321
+   ],
+   "median_rank": 7.0
+  },
+  {
+   "name": "E4-JP",
+   "order": 1,
+   "offset": 0.5,
+   "forward_max": 0.405417076959828,
+   "noiseless_held_rms": 0.0016629951237558636,
+   "numerical_rank": 19,
+   "noisy_held_rms_percentiles": [
+    0.005153892014191235,
+    0.006413096078902198,
+    0.008666060450415231
+   ],
+   "median_rank": 8.0
+  },
+  {
+   "name": "E1",
+   "order": 2,
+   "offset": -0.5,
+   "forward_max": 0.004964476426989162,
+   "noiseless_held_rms": 0.002940537333112263,
+   "numerical_rank": 21,
+   "noisy_held_rms_percentiles": [
+    0.0050807727199830306,
+    0.0065959797533595675,
+    0.008208196682659007
+   ],
+   "median_rank": 7.5
+  },
+  {
+   "name": "E2",
+   "order": 2,
+   "offset": -0.5,
+   "forward_max": 0.00687000235660562,
+   "noiseless_held_rms": 0.0016832120343641956,
+   "numerical_rank": 21,
+   "noisy_held_rms_percentiles": [
+    0.004618683494459603,
+    0.00617701675754408,
+    0.00806491240143352
+   ],
+   "median_rank": 7.0
+  },
+  {
+   "name": "E4-JP",
+   "order": 2,
+   "offset": -0.5,
+   "forward_max": 0.042942973427488984,
+   "noiseless_held_rms": 0.0016482132680683595,
+   "numerical_rank": 21,
+   "noisy_held_rms_percentiles": [
+    0.0054983514882374716,
+    0.0068921014429209355,
+    0.008788705377343492
+   ],
+   "median_rank": 9.0
+  },
+  {
+   "name": "E1",
+   "order": 2,
+   "offset": 0.0,
+   "forward_max": 0.0008582511420922589,
+   "noiseless_held_rms": 0.0027972904536972074,
+   "numerical_rank": 21,
+   "noisy_held_rms_percentiles": [
+    0.004988439254932424,
+    0.006530784964276952,
+    0.008158682222724452
+   ],
+   "median_rank": 7.0
+  },
+  {
+   "name": "E2",
+   "order": 2,
+   "offset": 0.0,
+   "forward_max": 0.0009069120873064218,
+   "noiseless_held_rms": 0.0015364570260380137,
+   "numerical_rank": 21,
+   "noisy_held_rms_percentiles": [
+    0.004521366062974781,
+    0.006093513569357311,
+    0.008117515179824536
+   ],
+   "median_rank": 7.0
+  },
+  {
+   "name": "E4-JP",
+   "order": 2,
+   "offset": 0.0,
+   "forward_max": 0.0036406622753373252,
+   "noiseless_held_rms": 0.0031826008865629826,
+   "numerical_rank": 21,
+   "noisy_held_rms_percentiles": [
+    0.0054360219509271435,
+    0.006841787749175414,
+    0.008773464325018973
+   ],
+   "median_rank": 9.0
+  },
+  {
+   "name": "E1",
+   "order": 2,
+   "offset": 0.5,
+   "forward_max": 0.010145569261914567,
+   "noiseless_held_rms": 0.0027854036546967336,
+   "numerical_rank": 21,
+   "noisy_held_rms_percentiles": [
+    0.0050065289067806025,
+    0.00650505985064616,
+    0.008060731097998139
+   ],
+   "median_rank": 7.0
+  },
+  {
+   "name": "E2",
+   "order": 2,
+   "offset": 0.5,
+   "forward_max": 0.012379788049562412,
+   "noiseless_held_rms": 0.0014577549471266789,
+   "numerical_rank": 21,
+   "noisy_held_rms_percentiles": [
+    0.004487086825562116,
+    0.0060932585452266085,
+    0.007993725575473724
+   ],
+   "median_rank": 7.0
+  },
+  {
+   "name": "E4-JP",
+   "order": 2,
+   "offset": 0.5,
+   "forward_max": 0.06389774852773855,
+   "noiseless_held_rms": 0.002971711963311626,
+   "numerical_rank": 21,
+   "noisy_held_rms_percentiles": [
+    0.00534265635465302,
+    0.006789671106008719,
+    0.008719298619494246
+   ],
+   "median_rank": 9.0
+  },
+  {
+   "name": "E1",
+   "order": 3,
+   "offset": -0.5,
+   "forward_max": 0.0011879211973165882,
+   "noiseless_held_rms": 0.003246308076647254,
+   "numerical_rank": 21,
+   "noisy_held_rms_percentiles": [
+    0.0052670738311504555,
+    0.006771546383558521,
+    0.008313904505692143
+   ],
+   "median_rank": 9.0
+  },
+  {
+   "name": "E2",
+   "order": 3,
+   "offset": -0.5,
+   "forward_max": 0.0015882353188643172,
+   "noiseless_held_rms": 0.0018538590219845975,
+   "numerical_rank": 21,
+   "noisy_held_rms_percentiles": [
+    0.004637779132187915,
+    0.0062174383090695656,
+    0.008094953933051879
+   ],
+   "median_rank": 7.0
+  },
+  {
+   "name": "E4-JP",
+   "order": 3,
+   "offset": -0.5,
+   "forward_max": 0.004099045077363805,
+   "noiseless_held_rms": 0.001898020013347114,
+   "numerical_rank": 21,
+   "noisy_held_rms_percentiles": [
+    0.005560069356856509,
+    0.006958153407654839,
+    0.008767396940808374
+   ],
+   "median_rank": 9.0
+  },
+  {
+   "name": "E1",
+   "order": 3,
+   "offset": 0.0,
+   "forward_max": 0.00047416592231031007,
+   "noiseless_held_rms": 0.002984130581471692,
+   "numerical_rank": 21,
+   "noisy_held_rms_percentiles": [
+    0.005106212675800276,
+    0.0066161298533844734,
+    0.00812756592569862
+   ],
+   "median_rank": 8.0
+  },
+  {
+   "name": "E2",
+   "order": 3,
+   "offset": 0.0,
+   "forward_max": 0.000566618443190503,
+   "noiseless_held_rms": 0.0016476666074014964,
+   "numerical_rank": 21,
+   "noisy_held_rms_percentiles": [
+    0.00454440661540994,
+    0.006139704007880151,
+    0.008060398947284013
+   ],
+   "median_rank": 7.0
+  },
+  {
+   "name": "E4-JP",
+   "order": 3,
+   "offset": 0.0,
+   "forward_max": 0.0019412897800726858,
+   "noiseless_held_rms": 0.001781351558047355,
+   "numerical_rank": 21,
+   "noisy_held_rms_percentiles": [
+    0.005497034890129969,
+    0.006914832828297373,
+    0.00869924493585608
+   ],
+   "median_rank": 9.0
+  },
+  {
+   "name": "E1",
+   "order": 3,
+   "offset": 0.5,
+   "forward_max": 0.002619239847341248,
+   "noiseless_held_rms": 0.00287455830888508,
+   "numerical_rank": 21,
+   "noisy_held_rms_percentiles": [
+    0.005042316764451292,
+    0.006544537980907069,
+    0.008038212701699327
+   ],
+   "median_rank": 7.5
+  },
+  {
+   "name": "E2",
+   "order": 3,
+   "offset": 0.5,
+   "forward_max": 0.003100661052248377,
+   "noiseless_held_rms": 0.0015013595584519154,
+   "numerical_rank": 21,
+   "noisy_held_rms_percentiles": [
+    0.00450628674498588,
+    0.0060736786413203205,
+    0.008064337691584817
+   ],
+   "median_rank": 7.0
+  },
+  {
+   "name": "E4-JP",
+   "order": 3,
+   "offset": 0.5,
+   "forward_max": 0.01340026878931122,
+   "noiseless_held_rms": 0.0030592073256134776,
+   "numerical_rank": 21,
+   "noisy_held_rms_percentiles": [
+    0.005363781010562304,
+    0.0067977320620793156,
+    0.008868927563829527
+   ],
+   "median_rank": 9.0
+  },
+  {
+   "name": "E1",
+   "order": 4,
+   "offset": -0.5,
+   "forward_max": 0.0006082315821722695,
+   "noiseless_held_rms": 0.0032761616300401204,
+   "numerical_rank": 21,
+   "noisy_held_rms_percentiles": [
+    0.0052839177613248755,
+    0.00679292569881859,
+    0.008435977800077571
+   ],
+   "median_rank": 9.0
+  },
+  {
+   "name": "E2",
+   "order": 4,
+   "offset": -0.5,
+   "forward_max": 0.00081045426445292,
+   "noiseless_held_rms": 0.0018704136746572134,
+   "numerical_rank": 21,
+   "noisy_held_rms_percentiles": [
+    0.004643026007229162,
+    0.006224270242657359,
+    0.008103321945596719
+   ],
+   "median_rank": 7.0
+  },
+  {
+   "name": "E4-JP",
+   "order": 4,
+   "offset": -0.5,
+   "forward_max": 0.0023459782189652056,
+   "noiseless_held_rms": 0.0019408560892395699,
+   "numerical_rank": 21,
+   "noisy_held_rms_percentiles": [
+    0.005585421933750353,
+    0.006977983122362149,
+    0.008785181092202561
+   ],
+   "median_rank": 9.0
+  },
+  {
+   "name": "E1",
+   "order": 4,
+   "offset": 0.0,
+   "forward_max": 8.759734113406026e-05,
+   "noiseless_held_rms": 0.0030268049975743796,
+   "numerical_rank": 21,
+   "noisy_held_rms_percentiles": [
+    0.00513451044818228,
+    0.006639870317450072,
+    0.008101498768064689
+   ],
+   "median_rank": 8.0
+  },
+  {
+   "name": "E2",
+   "order": 4,
+   "offset": 0.0,
+   "forward_max": 0.00011622862270965761,
+   "noiseless_held_rms": 0.0016688033807222638,
+   "numerical_rank": 21,
+   "noisy_held_rms_percentiles": [
+    0.004533352412600658,
+    0.006149547474133651,
+    0.008096810855831575
+   ],
+   "median_rank": 7.0
+  },
+  {
+   "name": "E4-JP",
+   "order": 4,
+   "offset": 0.0,
+   "forward_max": 0.0004466984270425911,
+   "noiseless_held_rms": 0.001836262696353094,
+   "numerical_rank": 21,
+   "noisy_held_rms_percentiles": [
+    0.00553498035049946,
+    0.006914263362474881,
+    0.008658666625655684
+   ],
+   "median_rank": 9.0
+  },
+  {
+   "name": "E1",
+   "order": 4,
+   "offset": 0.5,
+   "forward_max": 0.0014248766537638957,
+   "noiseless_held_rms": 0.0029410084206103106,
+   "numerical_rank": 21,
+   "noisy_held_rms_percentiles": [
+    0.0050790359978579135,
+    0.006569520221950232,
+    0.008109335953996048
+   ],
+   "median_rank": 8.0
+  },
+  {
+   "name": "E2",
+   "order": 4,
+   "offset": 0.5,
+   "forward_max": 0.0019737157678796358,
+   "noiseless_held_rms": 0.0015373254235122068,
+   "numerical_rank": 21,
+   "noisy_held_rms_percentiles": [
+    0.00451543151223039,
+    0.006083326410535673,
+    0.008046687786866078
+   ],
+   "median_rank": 7.0
+  },
+  {
+   "name": "E4-JP",
+   "order": 4,
+   "offset": 0.5,
+   "forward_max": 0.009220930235467106,
+   "noiseless_held_rms": 0.0031316458295306466,
+   "numerical_rank": 21,
+   "noisy_held_rms_percentiles": [
+    0.005385780553624581,
+    0.006835452072625998,
+    0.008590753021787
+   ],
+   "median_rank": 9.0
+  }
+ ],
+ "absorption": [
+  {
+   "tau": 0.0,
+   "rank": 7,
+   "free_train_rms": 0.0031083689744184693,
+   "free_held_rms": 0.0027972904536972074,
+   "nnls192_train_rms": 1.8675716926010536e-16,
+   "nnls192_held_rms": 7.369037229667154e-07,
+   "nnls384_train_rms": 1.1947043348951723e-16,
+   "nnls384_held_rms": 7.376662625995492e-07
+  },
+  {
+   "tau": 0.1,
+   "rank": 7,
+   "free_train_rms": 0.0027146726627322684,
+   "free_held_rms": 0.002413571220758708,
+   "nnls192_train_rms": 1.6423203416171506e-07,
+   "nnls192_held_rms": 1.889266222889448e-06,
+   "nnls384_train_rms": 1.5560899906957383e-07,
+   "nnls384_held_rms": 1.9709067641993365e-06
+  },
+  {
+   "tau": 1.0,
+   "rank": 8,
+   "free_train_rms": 0.0016801698262242225,
+   "free_held_rms": 0.0016363053978837017,
+   "nnls192_train_rms": 0.007794652309733597,
+   "nnls192_held_rms": 0.005970326445349982,
+   "nnls384_train_rms": 0.0077810578972252005,
+   "nnls384_held_rms": 0.005955212882735167
+  },
+  {
+   "tau": 10.0,
+   "rank": 8,
+   "free_train_rms": 0.0031854714840604407,
+   "free_held_rms": 0.0032951037535992526,
+   "nnls192_train_rms": 0.18914158925161995,
+   "nnls192_held_rms": 0.1690018622871168,
+   "nnls384_train_rms": 0.1891255315904994,
+   "nnls384_held_rms": 0.16867232789147207
+  }
+ ],
+ "provenance": {
+  "script": "sensitivity.py",
+  "script_sha256": "f2a8443c53759f4c761fc3ba5536853d051b264843189f75477bca0ebf6c1b26",
+  "lib_sha256": {
+   "kernels.py": "b0983233f8fee93b12b10c299c0ea0d0011d72a106884029ec46107ba4121570",
+   "config.py": "78aaca6292cd15db1d820d25651c288ed47d14213b8da3d55440b7d4546e887c",
+   "basis.py": "438afd89638545dbddfd9acf51cbef67d67d8484a24dcd28d2a1755b6697eace",
+   "ensembles.py": "608dc23a9f795bd7cf4af10b84bfb618c41d3d0d5d858e878aacb410fcbc7c60",
+   "provenance.py": "32dc912a4bc75a4460d6264b1ffcf8e278e7da1c6db8e0a43e810fa31f737590"
+  },
+  "inputs_sha256": {
+   "baseline_models.py": "66ec3e3c109838713139c49956417e6f8a6a2c1c901e0475bc697181246daff7"
+  },
+  "versions": {
+   "python": "3.12.9",
+   "numpy": "2.3.5",
+   "scipy": "1.16.3"
+  },
+  "wall_clock_s": 7.316818952560425,
+  "finished": "2026-11-13T01:36:41+0000"
+ }
+}

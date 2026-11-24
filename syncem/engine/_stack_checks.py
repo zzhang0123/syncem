@@ -33,6 +33,8 @@ class StackRefused(ValueError):
 
 def _check_lattice(averaged: AveragedKernel, lattice: Any) -> None:
     """The celled set the stack takes, and a lattice consistent with the averaged kernel."""
+    if averaged.leaf_factors:
+        raise StackRefused("conditional leaf weights need the jet")
     names = lattice.cells.variables
     if "gamma" not in names or not set(names) <= {"gamma", "B"}:
         raise StackRefused(

@@ -14,6 +14,7 @@ NAMES = {
     "Cells": "syncem.lattice.cells",
     "CellTable": "syncem.lattice.table",
     "Legendre": "syncem.lattice.representations",
+    "AzimuthFourier": "syncem.lattice.representations",
     "AzimuthHarmonic": "syncem.lattice.representations",
     "Lattice": "syncem.lattice.lattice",
     "MomentIndex": "syncem.lattice.index",
@@ -27,6 +28,8 @@ NAMES = {
     "FaradayRotation": "syncem.base.phase",
     "Similarity": "syncem.base.capabilities",
     "Beaming": "syncem.base.capabilities",
+    "Population": "syncem.population",
+    "SpectralBasis": "syncem.engine.basis",
     "UnitError": "syncem.values.errors",
     "RoleError": "syncem.values.errors",
     "RegimeError": "syncem.values.errors",
@@ -47,8 +50,8 @@ def test_front_door_names(name):
 
 
 def test_unknown_name_raises_attribute_error():
-    with pytest.raises(AttributeError, match="no attribute 'Population'"):
-        syncem.Population  # noqa: B018  (arrives with the population step)
+    with pytest.raises(AttributeError, match="no attribute 'UndefinedModel'"):
+        syncem.UndefinedModel  # noqa: B018
 
 
 def test_import_syncem_loads_neither_the_model_nor_scipy():

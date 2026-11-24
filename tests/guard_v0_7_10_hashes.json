@@ -8,7 +8,7 @@
   "syncem/_expm.py": "29ecf0fb78af843be14f03277f28fb32d9de5c70ab56c46aecd17251718314d7",
   "syncem/bessel.py": "f3e75ed92c99a98353331042be134fd69ca135aa25289bfbc3cf988dc033ee5d",
   "syncem/constants.py": "7a454571eafacb5e9b9aaae6943a3675d0f123b768541680f0d9d1b66938d232",
-  "syncem/conversion.py": "c106248d61227e613dd67612218ec87f0d9aee72fc15ebc96c17b87905606f16",
+  "syncem/conversion.py": "723c209384798d9a11e56060d9411cfdc91207b9e7fc1bb3e34b1d32329a0972",
   "syncem/cumulants.py": "ba48545524a0eb8eb5f4e16ffefd6b0d9cef7b30bec411e33c6ca131a82b6044",
   "syncem/derivatives.py": "d6d1fdb02a32832a31e897a1bcfe106bce43b4a9667d265aa2db9107db456518",
   "syncem/expansion.py": "0dad309cb5e3323502c0e47b4b9b68053427e6e60192fd27c6c504b9ba2ff3ae",
@@ -98,11 +98,31 @@
   "syncem/model/phase.py": "d765fa873abd92920531cbe6aebc52d22d02bcf06ca1101c88943fda68a71f07",
   "syncem/model/predict.py": "73e89ac02409de92d077fc3cf208ca1b9ad3fe73818980c309c312ccfeb37afc",
   "syncem/model/screens.py": "c3f65e9cae9934c34ab4e972cd984fe90bd7ab19c86b6dddd427815cd8afc04f",
-  "syncem/rm.py": "4ba2fe0724d722d17f2a2e8e95b2b3d1e5f33b3192e327c590c72986b4e0d171",
+  "syncem/rm.py": "26ac58dadef4a6169e741e9397ba68c08323ce8f8065cd5b99ba330f8c45c4d5",
   "syncem/sed.py": "d22e5831d8aa0184944179279b10bd235d94b27e035881db9fede667fa9a4b9c",
   "syncem/solutions.py": "2e1897f24f26294bd5176e36c4da989d7b05c59b8d05fa1286d8836d5e798156",
-  "syncem/stokes.py": "c2f40096fdfb05c299aa0bc80140c8a9ba7a98a1aced9fc183327aff748eaa30",
+  "syncem/stokes.py": "5ca4a75388dc80db43477a5f4096aa437c2fe65b828e39b84ad52a38a6b4de9a",
   "syncem/transfer.py": "4b03a306dd352b27dec21f301062824d063b32b898198978cc15b43de32e4139",
   "syncem/ultrarel.py": "773c80a77403e1c7bf6317d622808b3677c97a17d4a5c608aef96f31b5cbc73c"
+ },
+ "amended": {
+  "syncem/conversion.py": {
+   "v0_7_10_sha256": "c106248d61227e613dd67612218ec87f0d9aee72fc15ebc96c17b87905606f16",
+   "reason": "promote integer inputs to float before powers (integer nu gave the wrong sign)",
+   "review": "2026-11-23 package review, T-003",
+   "approved": "owner, 2026-11-24"
+  },
+  "syncem/rm.py": {
+   "v0_7_10_sha256": "4ba2fe0724d722d17f2a2e8e95b2b3d1e5f33b3192e327c590c72986b4e0d171",
+   "reason": "promote integer wavelengths before lam**2 and lam**4 (int32 216 m amplified P)",
+   "review": "2026-11-23 package review, T-003",
+   "approved": "owner, 2026-11-24"
+  },
+  "syncem/stokes.py": {
+   "v0_7_10_sha256": "c2f40096fdfb05c299aa0bc80140c8a9ba7a98a1aced9fc183327aff748eaa30",
+   "reason": "Resolve both viewing axes at high gamma and avoid overflow in integer gamma powers",
+   "review": "2026-11-23 package review, T-003",
+   "approved": "owner, 2026-11-24"
+  }
  }
 }

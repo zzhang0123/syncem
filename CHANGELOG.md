@@ -1,5 +1,74 @@
 # Changelog
 
+## 0.9.0
+
+- Add a finite-channel response that combines harmonic and continuum bases
+  for intensity and linear polarisation. The branches share physical
+  population declarations and split the electron measure at a configurable
+  Lorentz factor.
+- Add paper population presets extending to Lorentz factor 100 at the
+  original density amplitudes. Use the finite-harmonic response below 300
+  and the continuum response on log critical-frequency cells above it.
+- Project physical cell moments into both branches for free, regularised,
+  non-negative and family fits. Record changes under response and pairing
+  refinement in the error ledger.
+- Use the shared bounded-memory cache for continuum primitives and reusable
+  numerical rules.
+- Recover non-negative profile fits after a failed line search when a
+  feasible solution passes a numerical dual-gap check.
+- Match reused harmonic rows by their line-frequency response. Check
+  continuum spacing on the physical fit cells and report cell coverage
+  from the quadrature used for the returned prediction.
+- Evaluate an optional conditional Faraday screen on parent coordinates
+  and emission frequencies in both branches. Fit its fixed screen law
+  using physical-cell columns.
+- Carry the population scale through the single-reference harmonic route,
+  in the moments and in the direct reference.
+- Match stored single-reference rows by their full line transmission and
+  quadrature, including selections from a reloaded basis.
+- Refuse an explicit `kernel=` or `phase=` that differs from a supplied basis
+  in `predict`, `fit` and `problem`. A loaded basis refuses an explicit phase.
+- Switch the direct integral to the small-x asymptote per frequency node
+  and local transverse field at `min(x_min, 1e-9)` (SPEC decision 198).
+  `basis.direct` reports `small_x:tail` when its support reaches the asymptote.
+- Refuse a ledger declaration in another space or reference than the term it
+  replaces. A sum that includes a declared term counts as declared.
+- Predict linear density-form fits from their moments and report withheld rows.
+- Count an atom on a face shared by two complement boxes once.
+- Recompute the coverage estimate after `select`.
+- Apply `stokes=` to supplied bases and rays. Select the corresponding
+  components of the noise and Stokes error terms.
+- Require a declared azimuth when an observed response row uses Q or U
+  (SPEC decision 7).
+- Apply `FreeMoments(cells=...)` slices in `fit` and `problem`.
+- Include all six jet and stack reference arrays in the source distribution
+  and check them in the unpacked release.
+- Promote integer frequencies and wavelengths to floating point in
+  `syncem.conversion` and `syncem.rm` before powers are taken. An integer
+  1 GHz frequency gave a conversion rate of the wrong sign.
+- Resolve high-energy harmonics near both viewing axes for floating-point
+  and integer Lorentz factors. At gamma = 2e8, on-axis physical intensity
+  could become negative for integer input or NaN for floating-point input
+  (SPEC decision 197).
+
+## 0.8.0
+
+- Add the 0.8 spectral-basis interface with typed populations, physical-column
+  lattice moments, channel responses, conditional distributions and direct
+  quadrature checks.
+- Add free-moment, non-negative, penalized and family estimators with withheld
+  observations. Expose retained coordinates and supported JAX likelihoods.
+- Add versioned basis archives, paper population presets and a bridge from
+  the 0.7.10 harmonic single-reference basis.
+- Add estimates from quadrature refinement and bounded-memory reference
+  evaluations. Keep measured representation terms separate from physical
+  discrepancy and uncertainty from noise.
+- Correct withheld family diagnostics, discrepancy and noise handling in
+  observation joins, and goodness of fit at fractional degrees of freedom.
+- Require a declared phase domain without amplification for third- or
+  fourth-order Faraday cumulant screens. Include compact validation inputs
+  in the source distribution.
+
 ## 0.7.10 (2026-11-17)
 
 ### Classical-model study

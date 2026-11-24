@@ -21,7 +21,7 @@ from typing import Any
 import numpy as np
 
 from ..base.capabilities import Beaming, Parity
-from ..lattice.representations import AzimuthHarmonic, Legendre
+from ..lattice.representations import AzimuthFourier, AzimuthHarmonic, Legendre
 
 __all__ = ["REASONS", "STOKES", "Context", "build", "capability", "context"]
 
@@ -67,6 +67,7 @@ class Context:
     arrays: Any
     request: tuple[str, ...]
     harmonic: bool
+    fourier_order: int | None
     legendre: tuple[str, ...]
     parity: Any
     beaming: Any
@@ -84,9 +85,12 @@ def _check_lattice(lattice: Any, kernel: Any) -> None:
             f"{sorted(names)}"
         )
     for name, rep in reps.items():
-        if isinstance(rep, AzimuthHarmonic) and name != kernel.azimuth:
+        if (
+            isinstance(rep, (AzimuthHarmonic, AzimuthFourier))
+            and name != kernel.azimuth
+        ):
             raise ValueError(
-                f"AzimuthHarmonic on {name} resolves the kernel's azimuth, and the azimuth of "
+                f"{type(rep).__name__} on {name} resolves the kernel's azimuth, and the azimuth of "
                 f"{_name(kernel)} is {kernel.azimuth}"
             )
 
@@ -151,12 +155,14 @@ def context(lattice: Any, kernel: Any, rules: Any) -> Context:
     request = stokes_request(kernel, rules.stokes)
     _check_rules(lattice, kernel, rules)
     index = lattice.index
+    azimuth = lattice.representations.get(kernel.azimuth)
     return Context(
         index=index,
         table=lattice.cells,
         arrays=index.arrays,
         request=request,
-        harmonic="Re M2" in index.blocks,
+        harmonic=isinstance(azimuth, AzimuthHarmonic),
+        fourier_order=azimuth.m_max if isinstance(azimuth, AzimuthFourier) else None,
         legendre=tuple(n for n, _ in index.legendre),
         parity=capability(kernel, Parity),
         beaming=capability(kernel, Beaming),
@@ -182,8 +188,14 @@ def _remove(
 
 
 def _feeds(ctx: Context) -> tuple[np.ndarray, np.ndarray]:
-    spin0 = ctx.arrays.block == ctx.index.blocks.index("M0")
-    feeds = {"I": spin0, "P": ~spin0 | (not ctx.harmonic), "V": spin0}
+    if ctx.fourier_order is None:
+        spin0 = ctx.arrays.block == ctx.index.blocks.index("M0")
+        spin2 = ~spin0 | (not ctx.harmonic)
+    else:
+        k = (ctx.arrays.block + 1) // 2
+        spin0 = k <= ctx.fourier_order
+        spin2 = k >= max(0, 2 - ctx.fourier_order)
+    feeds = {"I": spin0, "P": spin2, "V": spin0}
     uses = np.stack([feeds[s] & (s in ctx.request) for s in STOKES])
     why = np.where(uses.any(0), np.int8(-1), np.int8(REASONS.index("unused")))
     return uses, why.astype(np.int8)

@@ -152,7 +152,7 @@ def _case(order=2, n_nu=16):
 
 
 def test_the_default_budget_and_order_limit():
-    assert DEFAULT_JET_MEM_BYTES == 4_000_000_000 and DEFAULT_JET_MAX_ORDER == 5
+    assert DEFAULT_JET_MEM_BYTES == 4_000_000_000 and DEFAULT_JET_MAX_ORDER == 12
     assert TRACE_SLOTS == 4 and JET_NODE_CHUNK == 64
 
 
@@ -219,20 +219,21 @@ def test_an_unavailable_analysis_runs_unchecked_and_warns_once(monkeypatch, brok
 # ------------------------------------------------------------------ the order limit
 
 
-def test_order_6_raises_before_tracing(monkeypatch):
+def test_above_the_ceiling_raises_before_tracing(monkeypatch):
     def fail(*a, **k):
         pytest.fail("traced")
 
-    monkeypatch.setattr(provider_jet, "taylor_coefficients", fail)
-    with pytest.raises(JetMemoryError, match="order 6") as info:
-        jet_columns(fixed_b_avg(), chans(2, 8), AXES, list(exps(6)))
+    monkeypatch.setattr(provider_jet, "taylor_mode_coefficients", fail)
+    too_high = DEFAULT_JET_MAX_ORDER + 1
+    with pytest.raises(JetMemoryError, match=f"order {too_high}") as info:
+        jet_columns(fixed_b_avg(), chans(2, 8), AXES, list(exps(too_high)))
     msg = str(info.value)
-    assert info.value.kind == "order" and "SYNCEM_JET_MAX_ORDER=6" in msg
-    assert "stack" in msg and "orders up to 5" in msg
+    assert info.value.kind == "order" and f"SYNCEM_JET_MAX_ORDER={too_high}" in msg
+    assert "stack" in msg and f"orders up to {DEFAULT_JET_MAX_ORDER}" in msg
     with pytest.raises(JetMemoryError, match="cell 0"):
-        jet_lattice(fixed_b_avg(), chans(2, 8), gamma_lattice(2, 6))
-    with pytest.raises(JetMemoryError, match="order 6"):
-        make_routine(NAMES, CHARTS, exps(6))
+        jet_lattice(fixed_b_avg(), chans(2, 8), gamma_lattice(2, too_high))
+    with pytest.raises(JetMemoryError, match=f"order {too_high}"):
+        make_routine(NAMES, CHARTS, exps(too_high))
 
 
 def test_the_order_limit_follows_the_environment(monkeypatch):
@@ -248,7 +249,8 @@ def test_the_order_limit_follows_the_environment(monkeypatch):
             jet_columns(args[0], chans(2, 8), AXES, list(e))
 
 
-def test_an_order_7_cell_names_the_reason_of_the_stack():
+def test_an_order_7_cell_names_the_reason_of_the_stack(monkeypatch):
+    monkeypatch.setenv(JET_MAX_ORDER_ENV, "6")
     reason = "order 7 exceeds the S1 table order 6"
     lattice, ch = switch_lattice(7, 1, 3e7, 1.2e8), chans(2, 8)
     with pytest.raises(JetMemoryError, match=reason) as info:
@@ -260,7 +262,7 @@ def test_an_order_7_cell_names_the_reason_of_the_stack():
 
 @pytest.mark.slow
 def test_order_5_runs():
-    """Order 5 is the largest default order of the jet."""
+    """Order 5 is the largest order of the nested jet."""
     i, p = jet_columns(fixed_b_avg(), chans(2, 8), AXES, list(exps(5)))
     assert np.all(np.isfinite(np.asarray(i))) and np.all(np.isfinite(np.asarray(p)))
 

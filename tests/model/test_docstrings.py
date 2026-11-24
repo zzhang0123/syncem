@@ -19,8 +19,10 @@ correctness; the numerical content is tested by the other files here.
 
 from __future__ import annotations
 
+import ast
 import importlib
 import inspect
+import json
 import pkgutil
 import re
 from pathlib import Path
@@ -33,15 +35,18 @@ import syncem.model.fit
 LABEL_RX = re.compile(r"LABEL|eq:|\[extension\]|app:|sec:|tab:")
 UNITS_RX = re.compile(
     r"\bunits?\b|Gauss|\bHz\b|rad/m\^?2|erg|metres|dimensionless|Dimensionless",
+    re.I,
 )
-SHAPE_RX = re.compile(r"\(n_\w+|\(S,|\(n0|\(n2|\(4 n_ch|shape|\(n, n\)|tuples? of")
+SHAPE_RX = re.compile(
+    r"\(n_\w+|\(S,|\(n0|\(n2|\(4 n_ch|shape|\(n, n\)|tuples? of", re.I
+)
 NOT_CERTIFIED_RX = re.compile(
     r"not\s+(be\s+)?(certif|verif|checked|bounded|sufficient|a\s+bound"
     r"|an?\s+(accuracy\s+|package\s+)?certificate)"
     r"|certif\w*\s+nothing|nothing\s+[\w\s]{0,24}?(certif|verif)"
     r"|never\s+a\s+(package\s+)?certificate|neither\s+is\s+verified"
     r"|does\s+not\s+(certify|verify|bound)|assumed\s+or\s+certified"
-    r"|certifies\s+only",
+    r"|no\s+certifi\w*|certifies\s+only",
     re.IGNORECASE,
 )
 MODULE_POINTER_RX = re.compile(r"module\s+docstring|see\s+:(class|func|mod):", re.I)
@@ -59,7 +64,7 @@ def _public_modules():
 
 def _new_layer_modules():
     """Public modules of the 0.8 layers (design/0.8/SPEC.md Sec. 9.7): ``syncem.units`` and the subpackages."""
-    names = ["syncem.units"]
+    names = ["syncem.units", "syncem.paper"]
     for layer in NEW_LAYERS:
         try:
             package = importlib.import_module(f"syncem.{layer}")
@@ -84,6 +89,7 @@ NEW_LAYERS = (
     "planning",
     "results",
     "fitting",
+    "front",
 )
 MODEL_MODULES = _public_modules()
 MODULES = MODEL_MODULES + _new_layer_modules()
@@ -148,6 +154,33 @@ def test_public_object_docstring(module_name, name):
 # -- README / DESIGN against the current signatures (round-2 documentation) ---------
 
 ROOT = Path(__file__).resolve().parents[2]
+
+
+def test_new_layer_labels_match_the_manuscript_snapshot():
+    snapshot = json.loads(
+        (ROOT / "tests" / "v080" / "data" / "manuscript_labels.json").read_text()
+    )
+    labels = set(snapshot["labels"])
+    unknown = []
+    for name in _new_layer_modules():
+        mod = importlib.import_module(name)
+        source = Path(mod.__file__).read_text()
+        docs = mod.__doc__ or ""
+        assert ";" not in docs, name
+        cited = re.findall(r"``((?:eq|sec|app|tab|fig):[^\x60]+)``", docs)
+        cited.extend(re.findall(r"^LABEL ((?:eq|sec|app|tab|fig):[^.\n]+)", docs, re.M))
+        for node in ast.walk(ast.parse(source)):
+            if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+                if node.target.id == "LABEL" and isinstance(node.value, ast.Constant):
+                    cited.append(node.value.value)
+        unknown.extend(
+            (name, label)
+            for label in cited
+            if label not in labels and not label.startswith("[extension]")
+        )
+    assert not unknown, unknown
+
+
 DOCUMENTED = (
     ("syncem.model.predict", "predict"),
     ("syncem.model.predict", "direct_channel_average"),

@@ -51,7 +51,7 @@ def _pattern_tables(index: "MomentIndex") -> tuple[np.ndarray, np.ndarray, np.nd
     starts = np.concatenate([[0], np.cumsum(counts)[:-1]]).astype(np.int64)
     exponents = np.array(
         [e for p in index.patterns for e in p], dtype=np.int64
-    ).reshape(-1, n_celled)
+    ).reshape(np.sum(counts), n_celled)
     return counts, starts, exponents
 
 

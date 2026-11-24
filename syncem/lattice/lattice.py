@@ -21,12 +21,17 @@ import equinox as eqx
 import jax.numpy as jnp
 import numpy as np
 
+from ..base.variables import (
+    CRITICAL_FREQUENCY,
+    SYNCHROTRON_DEPTH,
+    SYNCHROTRON_VARIABLES,
+)
 from ..values.errors import SizeError
 from .cells import Cells
 from .index import MomentIndex
 from .maps import coarsen_values, recentre_values
 from .moments import Moments
-from .representations import AzimuthHarmonic, Legendre
+from .representations import AzimuthFourier, AzimuthHarmonic, Legendre
 from .table import CellTable
 from ._lattice_parts import (
     REFERENCE_SLOPE,
@@ -55,6 +60,9 @@ class Lattice(eqx.Module):
     explicit_weights: bool = eqx.field(static=True)
     explicit_order: bool = eqx.field(static=True)
     cell_axes: tuple[tuple[str, Cells], ...] | None
+    _variables: tuple = eqx.field(static=True)
+    _depth_variable: str | None = eqx.field(static=True)
+    _references: tuple = eqx.field(static=True)
 
     def __init__(
         self,
@@ -64,17 +72,29 @@ class Lattice(eqx.Module):
         depth_in_total: bool = False,
         _table: CellTable | None = None,
         _reps: dict | None = None,
+        _variables: tuple | None = None,
+        _depth_variable: str | None = SYNCHROTRON_DEPTH,
+        _references: tuple = (),
         **axes: Any,
     ):
+        self._variables = (
+            (*SYNCHROTRON_VARIABLES.values(), CRITICAL_FREQUENCY)
+            if _variables is None
+            else _variables
+        )
+        self._depth_variable = _depth_variable
+        self._references = _references
+        variables = {v.name: v for v in self._variables}
+        excluded = (
+            () if depth_in_total or _depth_variable is None else (_depth_variable,)
+        )
         if _table is None:
             for name, axis in axes.items():
-                _check_axis(name, axis)
+                _check_axis(name, axis, variables)
             cell_axes = {n: a for n, a in axes.items() if isinstance(a, Cells)}
             reps = {n: a for n, a in axes.items() if not isinstance(a, Cells)}
-            kinds = {n: _kind(n, a) for n, a in cell_axes.items()}
-            _table = CellTable.tensor_product(
-                cell_axes, kinds, () if depth_in_total else ("depth",)
-            )
+            kinds = {n: _kind(n, a, variables) for n, a in cell_axes.items()}
+            _table = CellTable.tensor_product(cell_axes, kinds, excluded)
             self.cell_axes = tuple(cell_axes.items())
         else:
             reps = dict(_reps or {})
@@ -84,17 +104,20 @@ class Lattice(eqx.Module):
                         f"{name}: cells belong to the table, and a celled variable takes no other "
                         "representation"
                     )
-                _check_axis(name, axis)
+                _check_axis(name, axis, variables)
             self.cell_axes = None
-        if sum(isinstance(a, AzimuthHarmonic) for a in reps.values()) > 1:
-            raise ValueError("a lattice takes one AzimuthHarmonic axis")
+        azimuth = [
+            a for a in reps.values() if isinstance(a, (AzimuthHarmonic, AzimuthFourier))
+        ]
+        if len(azimuth) > 1:
+            raise ValueError("a lattice takes one azimuth representation")
         self.cells = _table
         self.reps = tuple(reps.items())
         self.order = self._total(order)
         self.explicit_order = order is not None
         self.depth_in_total = depth_in_total
-        harmonic = any(isinstance(a, AzimuthHarmonic) for a in reps.values())
-        blocks = ("M0", "Re M2", "Im M2") if harmonic else ("M0",)
+        modes = azimuth[0].modes if azimuth else ()
+        blocks = ("M0",) + tuple(f"{part} M{k}" for k in modes for part in ("Re", "Im"))
         legendre = tuple(
             (n, a.degree) for n, a in reps.items() if isinstance(a, Legendre)
         )
@@ -137,7 +160,7 @@ class Lattice(eqx.Module):
 
     def _weights(self, weights: Any) -> np.ndarray:
         if weights is None:
-            return _default_weights(self.cells)
+            return _default_weights(self.cells, self._references)
         w = np.asarray(weights, dtype=float)
         if (
             w.shape != (self.cells.n_cells,)
@@ -151,6 +174,20 @@ class Lattice(eqx.Module):
 
     # ------------------------------------------------------------ constructors and derived lattices
     @classmethod
+    def default(cls, population, channels, **options):
+        """Choose lattice geometry from the population and channel supports."""
+        from ..planning.defaults import default_lattice
+
+        return default_lattice(population, channels, **options)
+
+    @classmethod
+    def single(cls, *, about, order=2, degree=8):
+        """One affine product cell about the weighted sample means."""
+        from ..population.single import single_lattice
+
+        return single_lattice(about=about, order=order, degree=degree)
+
+    @classmethod
     def from_cells(
         cls,
         table: CellTable,
@@ -162,7 +199,9 @@ class Lattice(eqx.Module):
     ) -> "Lattice":
         """Any table of axis-aligned boxes. Invalid boxes and overlaps raise. Coverage is not required."""
         excluded = (
-            () if depth_in_total else tuple(v for v in table.variables if v == "depth")
+            ()
+            if depth_in_total
+            else tuple(v for v in table.variables if v == SYNCHROTRON_DEPTH)
         )
         table = table_with(table, tensor=None, excluded=excluded)
         table.validate({v: _kind(v, None) for v in table.variables})
@@ -175,6 +214,40 @@ class Lattice(eqx.Module):
             _reps=representations,
         )
 
+    def _config(self) -> dict:
+        return {
+            "_variables": self._variables,
+            "_depth_variable": self._depth_variable,
+            "_references": self._references,
+        }
+
+    def _for_kernel(self, variables, depth, references=()) -> "Lattice":
+        """Resolve cell geometry and implicit weights from a kernel's declarations."""
+        variables, references = tuple(variables), tuple(references)
+        if (variables, depth, references) == (
+            self._variables,
+            self._depth_variable,
+            self._references,
+        ):
+            return self
+        config = dict(
+            _variables=variables, _depth_variable=depth, _references=references
+        )
+        options = dict(
+            order=self.order if self.explicit_order else None,
+            weights=self.weights if self.explicit_weights else None,
+            depth_in_total=self.depth_in_total,
+        )
+        if self.cell_axes is not None:
+            return Lattice(**options, **config, **self.axes)
+        declared = {v.name: v.kind for v in variables}
+        excluded = (
+            () if self.depth_in_total or depth not in self.cells.variables else (depth,)
+        )
+        table = table_with(self.cells, excluded=excluded)
+        table.validate(declared)
+        return Lattice(**options, **config, _table=table, _reps=self.representations)
+
     def _derived(self, table: CellTable, weights: Any = None) -> "Lattice":
         return Lattice(
             order=self.order if self.explicit_order else None,
@@ -182,6 +255,7 @@ class Lattice(eqx.Module):
             depth_in_total=self.depth_in_total,
             _table=table,
             _reps=self.representations,
+            **self._config(),
         )
 
     @property
@@ -199,21 +273,20 @@ class Lattice(eqx.Module):
 
     def _tensor(self, order: Any = "keep", **changes: Any) -> "Lattice":
         axes = self.axes
-        unknown = set(changes) - set(axes)
-        if unknown:
-            raise ValueError(
-                f"{sorted(unknown)} are not axes of this lattice: {sorted(axes)}"
-            )
         axes.update(changes)
         if order == "keep":
             order = self.order if self.explicit_order else None
         weights = self.weights if self.explicit_weights else None
         return Lattice(
-            order=order, weights=weights, depth_in_total=self.depth_in_total, **axes
+            order=order,
+            weights=weights,
+            depth_in_total=self.depth_in_total,
+            **self._config(),
+            **axes,
         )
 
     def replace(self, **axes: Any) -> "Lattice":
-        """The tensor lattice with some axes replaced. An implicit total is recomputed."""
+        """The tensor lattice with axes added or replaced. Recompute implicit order."""
         return self._tensor(**axes)
 
     def with_order(self, order: int) -> "Lattice":
@@ -235,6 +308,7 @@ class Lattice(eqx.Module):
             depth_in_total=self.depth_in_total,
             _table=table_with(t, order=rows),
             _reps=self.representations,
+            **self._config(),
         )
 
     def with_key(self, key: str) -> "Lattice":

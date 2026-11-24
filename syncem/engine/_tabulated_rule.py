@@ -77,4 +77,8 @@ def with_tabulated_rules(
         fixed=dict(averaged.fixed),
         phase=averaged.phase,
         outer_batch=averaged.outer_batch,
+        ties=averaged.ties,
+        leaf_factors=averaged.leaf_factors,
+        legendre_panels=averaged.legendre_panels,
+        diagonal=averaged.diagonal,
     )

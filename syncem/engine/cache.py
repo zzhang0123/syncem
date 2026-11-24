@@ -44,6 +44,8 @@ from __future__ import annotations
 import itertools
 import threading
 from collections.abc import Callable, Hashable, Sequence
+from contextlib import contextmanager
+from contextvars import ContextVar
 from pathlib import Path
 from typing import Any
 
@@ -86,6 +88,7 @@ MEM_ENV = "SYNCEM_CACHE_MEM"
 STAGES = ("s0", "s1", "memo")
 ROUTINE_SLOTS = 64
 TRIAL_SLOTS = 8
+_TRIAL_S1 = ContextVar("syncem_trial_s1", default=False)
 EVENTS = (
     "hits",
     "misses",
@@ -101,6 +104,16 @@ EVENTS = (
 
 
 # The cache --------------------------------------------------------------------------------------
+
+
+@contextmanager
+def trial_tables():
+    """Keep variable S1 tables in the trial LRU and leave fixed stages available."""
+    token = _TRIAL_S1.set(True)
+    try:
+        yield
+    finally:
+        _TRIAL_S1.reset(token)
 
 
 class Cache:
@@ -184,6 +197,9 @@ class Cache:
     def peek(self, stage: str, key: str) -> str | None:
         """``"memory"``, ``"disk"`` or ``None``. Neither the recency nor a modification time changes."""
         path = self._path(stage, key)
+        if stage == "s1" and _TRIAL_S1.get():
+            with self._lock:
+                return "memory" if (stage, key) in self._trials else None
         with self._lock:
             if (stage, key) in self._store:
                 return "memory"
@@ -195,6 +211,11 @@ class Cache:
     def get(self, stage: str, key: str) -> Any:
         """The stored value or ``None``. A disk hit is kept in memory as well."""
         path = self._path(stage, key)
+        if stage == "s1" and _TRIAL_S1.get():
+            with self._lock:
+                value = self._trials.get((stage, key))
+                self._count("misses" if value is MISSING else "hits")
+            return None if value is MISSING else shallow(value)
         with self._lock:
             value = self._store.get((stage, key))
             if value is not MISSING:
@@ -216,6 +237,12 @@ class Cache:
         JSON raises ``TypeError`` or ``ValueError`` before anything is kept.
         """
         path = self._path(stage, key)
+        if stage == "s1" and _TRIAL_S1.get():
+            value = table(value)
+            if nbytes_of(value) <= self._mem_bytes // TRIAL_SLOTS:
+                with self._lock:
+                    self._trials.put((stage, key), value, 1)
+            return shallow(value)
         if path is not None:
             description = _disk.plain_description(description)
         value = table(value) if stage in _disk.STAGES else freeze(value)

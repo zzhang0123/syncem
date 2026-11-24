@@ -32,6 +32,7 @@ import numpy as np
 
 from ..base._fingerprint import NotCacheable, digest
 from ..base.phase import phase_fingerprints
+from ._jet_routine import jet_max_order
 from ._keys import ENGINE_SOURCE, averaged_record, kernel_record_with_reason, memo_key
 from ._keys import design_key as _design_key
 from ._routes import JetSetup
@@ -39,6 +40,7 @@ from ._rule_fingerprint import chain_with_reason, with_tabulated_rules
 from ._s2_columns import Reuse
 from ._stage_memo import StageMemo, local_memo
 from .cache import Cache, default_cache
+from .field_average import TABLE_ORDER
 from .provider_jet import make_routine
 
 __all__ = [
@@ -92,6 +94,13 @@ def cell_orders(lattice: Any) -> tuple[int, ...]:
 def _chains(averaged: Any, lattice: Any, orders: tuple) -> tuple[dict, dict, list]:
     """Chains per rule and cell, the fingerprint of each rule (or ``None``) and the reasons."""
     chains, prints, reasons = {}, {}, []
+    max_order = max(jet_max_order(), TABLE_ORDER)
+    if averaged.averaged and max(orders, default=0) > max_order:
+        return (
+            chains,
+            prints,
+            ["not cached: rule order exceeds the jet and stack ceilings"],
+        )
     for name, rule in averaged.averaged:
         found, why = [], None
         for cell, order in enumerate(orders):
@@ -207,7 +216,7 @@ class BuildRun:
     ) -> "BuildRun":
         if not cache:
             return cls(None, None, local_memo(), fresh_jet(averaged, {}), (_OFF,))
-        provider = (("routes", routes), ("s1", s1))
+        provider = (("routes", routes), ("s1", s1), ("jet max order", jet_max_order()))
         keys = build_keys(averaged, channels, lattice, columns, rules, provider)
         if keys.memo is None:
             jet = fresh_jet(averaged, keys.fingerprints)

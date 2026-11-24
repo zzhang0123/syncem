@@ -287,3 +287,9 @@ SYNCHROTRON_VARIABLES: dict[str, Variable] = {
         ),
     )
 }
+
+# Geometry defaults for a lattice built without a kernel.
+SYNCHROTRON_PRIMARY = "gamma"
+SYNCHROTRON_DEPTH = "depth"
+
+CRITICAL_FREQUENCY = Variable("nu_c", "critical frequency", "positive", "Hz", True)

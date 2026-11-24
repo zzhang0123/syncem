@@ -16,7 +16,7 @@ through its values:
   chart coordinates of every celled variable, declared or not. The nodes and probabilities are differentiated
   as the jet moves them, with the nodes of averaged parents moving with the point. The density is
   differentiated at the rule's nodes and the parents' nodes frozen at the reference, as the stack reweights.
-  One eager ``taylor_coefficients`` call per rule and cell gives every ``c_n``.
+  Nested forward mode supplies ``c_n`` through order 5. Taylor mode supplies higher degrees (decision 172).
 
 ``order`` is the largest total degree, over every celled variable, of an exponent the build reads. A rule that
 is not a ``NodeRule``, has ``parents=None``, declares a parent that is not celled, fixed, projected or averaged
@@ -39,7 +39,6 @@ and coefficients, so two rules equal on them share keys. S1 and S2 read the rule
 from __future__ import annotations
 
 import dataclasses
-import itertools
 from typing import Any
 
 import jax
@@ -49,6 +48,8 @@ import numpy as np
 from ..base._fingerprint import NotCacheable, digest
 from .average import AveragedKernel, NodeRule
 from ._tabulated_rule import TabulatedRule, fixed_fingerprint, with_tabulated_rules
+from ._jet_routine import NESTED_MAX_ORDER
+from ._taylor_jet import homogeneous_powers, taylor_mode_coefficients
 from .provider_jet import _point, taylor_coefficients
 
 __all__ = [
@@ -258,9 +259,7 @@ def _point_set(ctx: _Context, table: Any, cell: int) -> np.ndarray:
 
 def _exponents(d: int, order: int) -> tuple[tuple[int, ...], ...]:
     """Every exponent of total degree 1 to ``order`` in ``d`` variables, by degree then descending."""
-    every = itertools.product(range(order + 1), repeat=d)
-    chosen = [e for e in every if 1 <= sum(e) <= order]
-    return tuple(sorted(chosen, key=lambda e: (sum(e), tuple(-x for x in e))))
+    return tuple(e for n in range(1, order + 1) for e in homogeneous_powers(d, n))
 
 
 def _coefficients(
@@ -279,7 +278,13 @@ def _coefficients(
             return nodes, probs
         return nodes, probs, _frozen_density(rule, ctx, nodes0, values0, point)
 
-    return tuple(taylor_coefficients(f, len(ctx.celled), exps))
+    d = len(ctx.celled)
+    split = sum(sum(e) <= NESTED_MAX_ORDER for e in exps)
+    nested = taylor_coefficients(f, d, exps[:split])
+    if split == len(exps):
+        return tuple(nested)
+    taylor = taylor_mode_coefficients(f, d, exps[split:])
+    return tuple(jnp.concatenate((a, b)) for a, b in zip(nested, taylor))
 
 
 # ------------------------------------------------------------------ the chain

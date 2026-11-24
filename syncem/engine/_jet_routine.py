@@ -13,7 +13,8 @@ Before the first execution of a program (not at its compile) the routine reads `
 ``JetMemoryError`` when the temporary, argument and output bytes together exceed it. The budget decides whether
 a program runs, never its bits. When the analysis is ``None`` or raises, the program runs unchecked, counted in
 "jet memory unchecked", with one ``RuntimeWarning`` per routine. A routine whose nesting depth (the largest total
-degree of its exponents) exceeds ``SYNCEM_JET_MAX_ORDER`` (default 5) raises before tracing.
+degree of its exponents) exceeds ``SYNCEM_JET_MAX_ORDER`` (default 12) raises before tracing. Nested forward mode
+is used through order 5.
 
 ``chunk_plan(n_nu)`` gives the ``K = ceil(n_nu / 64)`` chunks of ``C = ceil(n_nu / K)`` nodes of a channel, and
 ``chunk_views(channels, j)`` the ``ResponseView`` chunks of channel ``j``, the last padded with copies of its last
@@ -67,7 +68,8 @@ __all__ = [
 JET_NODE_CHUNK = 64
 TRACE_SLOTS = 4
 DEFAULT_JET_MEM_BYTES = 4_000_000_000
-DEFAULT_JET_MAX_ORDER = 5
+DEFAULT_JET_MAX_ORDER = 12
+NESTED_MAX_ORDER = 5
 JET_MEM_ENV = "SYNCEM_JET_MEM"
 JET_MAX_ORDER_ENV = "SYNCEM_JET_MAX_ORDER"
 
@@ -96,7 +98,7 @@ def jet_mem_bytes(environ: Mapping[str, str] | None = None) -> int:
 
 
 def jet_max_order(environ: Mapping[str, str] | None = None) -> int:
-    """The largest nesting depth of a routine, ``SYNCEM_JET_MAX_ORDER`` (a positive integer) or 5."""
+    """The overall order ceiling, ``SYNCEM_JET_MAX_ORDER`` (a positive integer) or 12."""
     value = (os.environ if environ is None else environ).get(JET_MAX_ORDER_ENV, "")
     value = value.strip()
     if not value:
@@ -119,15 +121,10 @@ def order_error(
     limit = jet_max_order()
     where = f"cell {cell}" if cell is not None else f"the jet routine for {names}"
     why = f" (the stack refused it: {reason})" if reason else ""
-    since = (
-        ", since order 6 did not compile within 12 GB"
-        if limit == DEFAULT_JET_MAX_ORDER
-        else f" ({JET_MAX_ORDER_ENV})"
-    )
     return JetMemoryError(
-        f"{where} needs the jet at order {order}{why}, and the jet takes orders up to {limit}{since}. "
+        f"{where} needs the jet at order {order}{why}, and the jet takes orders up to {limit}. "
         f"Lower the order, route the cell to the stack where its precondition holds (the continuum kernel "
-        f"to order 6), or set {JET_MAX_ORDER_ENV}={order} on a machine with more memory.",
+        f"to order 6), or set {JET_MAX_ORDER_ENV}={order}.",
         kind="order",
         order=order,
         cell=cell,
@@ -135,7 +132,7 @@ def order_error(
 
 
 def check_order(names: tuple, exponents: Any, cell: int | None = None) -> int:
-    """The nesting depth of ``exponents``. Raises ``JetMemoryError`` above the order limit."""
+    """The highest derivative order. Raises ``JetMemoryError`` above the order limit."""
     order = max((sum(int(x) for x in e) for e in exponents), default=0)
     if order > jet_max_order():
         raise order_error(names, order, cell)

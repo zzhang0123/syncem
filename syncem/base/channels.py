@@ -310,6 +310,21 @@ class Channels(_ModelChannels):
         """``(n_ch, n_nu)`` weights of the band average: ``weights * R_j(nodes)``."""
         return self.weights * self.node_values()
 
+    def _double_nodes(self):
+        """Refine the Gauss rule while preserving the declared response."""
+        if self.family == "monochromatic":
+            return self
+        count = 2 * self.n_nu
+        x, w = np.polynomial.legendre.leggauss(count)
+        lo, hi = np.asarray(self.support).T
+        half = (hi - lo) / 2
+        return dataclasses.replace(
+            self,
+            nodes=jnp.asarray((lo + half)[:, None] + half[:, None] * x),
+            weights=jnp.asarray(half[:, None] * w),
+            n_nu=count,
+        )
+
     def row_keys(self) -> tuple[str, ...]:
         """One sha256 digest per channel (decision 153), for keying stored rows channel by channel.
 

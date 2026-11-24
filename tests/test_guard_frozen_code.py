@@ -6,7 +6,9 @@
 2. The five names that the study scripts import from ``syncem.model`` still exist.
 3. Every file under ``syncem/`` at the v0.7.10 tag, except ``syncem/__init__.py`` (which holds the
    version and gains the front door), has its v0.7.10 SHA-256. The hashes are stored in
-   ``guard_v0_7_10_hashes.json``, written once from ``git show v0.7.10:<path>``.
+   ``guard_v0_7_10_hashes.json``, written once from ``git show v0.7.10:<path>``. Files
+   corrected after the tag with the owner's approval are listed under ``amended`` with
+   their v0.7.10 hash and reason (SPEC decision 197).
 
 A deliberate change to existing code updates the stored hash in the same commit, with the reason in
 the commit message. The manuscript cites v0.7.10, so such a change needs the owner's approval.
@@ -87,6 +89,7 @@ NEW_LAYER_DIRS = (
     "planning",
     "results",
     "fitting",
+    "front",
 )
 NEW_TOP_LEVEL = ("syncem/units.py", "syncem/paper.py", "syncem/front.py")
 
@@ -132,6 +135,15 @@ def test_added_file_guard_detects(tmp_path, probe):
         (tmp_path / rel).parent.mkdir(parents=True, exist_ok=True)
         (tmp_path / rel).touch()
     assert _added_files(tmp_path) == [probe]
+
+
+def test_amended_files_record_their_tagged_hash():
+    stored = _stored()
+    amended = stored.get("amended", {})
+    assert set(amended) <= set(stored["sha256"])
+    assert not any(path.startswith("syncem/model/") for path in amended)
+    for entry in amended.values():
+        assert len(entry["v0_7_10_sha256"]) == 64 and entry["reason"]
 
 
 @pytest.mark.parametrize(
