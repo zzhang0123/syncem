@@ -1,6 +1,6 @@
 # Inputs
 
-External files that the scripts of `studies/classical-models` read or hash. Each subfolder is named by the origin of its files. Except for the two files listed under "Edited copies", every file is a byte copy of the file the study used, and its SHA-256 equals the value that the study's results recorded for it.
+External files that the scripts of `studies/classical-models` read or hash, and in `validation/` the manuscript scripts behind Fig. 1 and the data of Fig. 3(b, c). Each subfolder is named by the origin of its files. Except for the two files listed under "Edited copies", every file is a byte copy of its origin. For each file that the study's scripts read or hash, the SHA-256 equals the value that the study's results recorded for it.
 
 ## `harmonic-radio-fit/`
 
@@ -35,11 +35,36 @@ The study's earlier results record the pipeline's SHA-256 for these two files. R
 
 ## `validation/`
 
-Output of the validation script `harmonic_continuum_check.py` (harmonic against continuum kernels at θ = π/3). The script is not distributed.
+Byte copies, taken on 2026-11-20, of seven files of the `validation/` folder of the manuscript repository, and two outputs that they wrote. The folder is a Python package there and here (`__init__.py`).
 
-| File | SHA-256 | Read by |
+- `harmonic_continuum_check.py` wrote `harmonic_continuum_results.json`, the data of Fig. 3(b, c). At θ = π/3 and for isotropic pitch angles, it sums the integer-order harmonic lines inside the beaming cone at single frequencies, for γ = 3, 10, 30 and 100 and 49 values of x in [1e-3, 10], and compares the sums with the continuum kernels. It also checks the Liénard power at γ = 1.5 and 2. It needs NumPy and SciPy only.
+- `single_particle_figure.py` draws Fig. 1 and writes `single_particle_figure_results.json`. Panel (a) comes from `angle_geometry.py`. Panel (b) comes from `moving_lines` in `narrative_figures.py`, which sums the lines m = 1–7 at γ = 20 and μ = η = 0.5 and checks the channel values against `direct_kernel` of `full_response.py`. `figure_style.py` equals `lib/figure_style_paper.py` byte for byte. The figure uses matplotlib with LaTeX (`text.usetex`).
+
+Both scripts write next to themselves. `harmonic_continuum_check.py` rewrites `harmonic_continuum_results.json` in its own folder, and `single_particle_figure.py` writes into `figures/` and `validation/` under the parent of its folder. Run them from a copy of this folder, so that the files listed here keep their checksums. From `studies/classical-models`:
+
+```text
+mkdir -p /tmp/syncem-validation/figures
+cp -R inputs/validation /tmp/syncem-validation/
+cd /tmp/syncem-validation
+python -m validation.single_particle_figure
+python validation/harmonic_continuum_check.py
+```
+
+On 2026-11-20, with Python 3.12.9, NumPy 2.3.5 and SciPy 1.16.3, a run of `harmonic_continuum_check.py` from a copy of this folder reproduced every value of `harmonic_continuum_results.json`: the 196 rows, the 1001 low-harmonic rows, both Liénard values and the settings. Its file differs from the one here only in the position of the key `low_harmonic_detail`, which the file here has last. With the keys in the same order, the two files are byte-identical.
+
+`single_particle_figure_results.json` records the SHA-256 of the five sources of Fig. 1 and of the two figure files of the manuscript. Four of the recorded sources equal the copies here. The recorded `figure_style.py` (SHA-256 `42221f5976bdba9043be733fe8f3e293903990c697dbb8d78489d4bf49284e1b`) is an earlier version that is no longer available. On 2026-11-20, with Python 3.12.9 and matplotlib 3.10.8, a run from a copy of this folder reproduced the recorded PNG of Fig. 1 byte for byte and the recorded `geometry` and `moving_lines` values. Its PDF differed from the recorded one only in the creation date.
+
+| File | SHA-256 | Read, imported or run by |
 |---|---|---|
 | `harmonic_continuum_results.json` | `aad5d7140bfa7e66818a0659c3982b6496fb18e87e439e7375e2feceba55cd12` | `harmonic_correction.py` (harmonic-versus-continuum kernels at θ = π/3), `render_classical_limit.py` (Fig. 3(b, c)) |
+| `harmonic_continuum_check.py` | `3476b711a65d7ef12ee79414742032751d2aaa828ce1cdaf3bca1910feb3d1de` | run by hand. It wrote `harmonic_continuum_results.json` |
+| `single_particle_figure.py` | `8215020ad8cdbe897f2122574de7190471649b1534180444e645911bd4504ea1` | run by hand. It draws Fig. 1 |
+| `angle_geometry.py` | `0070fbc1df482bc8c7eec82066b5c946d2a27dda7e8f28ce46f0f1444029cf63` | `single_particle_figure.py` (panel (a)) |
+| `narrative_figures.py` | `a4a81e018a12ae2a9d5f25a394b428a38dbc75d51e6472e3d546fb6a174dbfc7` | `single_particle_figure.py` (`moving_lines`, panel (b)) |
+| `full_response.py` | `d54fbb8bf68c351c9712b65b07bae18e8f00626cdb714df2a5620f83a811d57a` | `narrative_figures.py` (`response`, `direct_kernel`) |
+| `figure_style.py` | `9bf0aa49a7b84b4c382588b915c6db6b49b6cd6d411dd8266987270c0f9262e3` | `single_particle_figure.py`, `angle_geometry.py`, `narrative_figures.py` |
+| `single_particle_figure_results.json` | `77578a1c4ec98cc215b0d0701e51791eff981202c644dea3d8420d55a0eb9b38` | record of the manuscript's Fig. 1, written by `single_particle_figure.py` |
+| `__init__.py` | `4161789390369b810ea4f7ddc9717862f3e1dbc1780520fe6bf2e63c2bffb345` | marks the folder as a package |
 
 `lib/figure_style.py` is a byte copy of an earlier version of the style module of the paper's figures (SHA-256 `e2f37e065b7e0b4f927a16819faba9f406e2733eb61977af70529e22d20cd003`), used by `bridge.py`. `lib/figure_style_paper.py` is a byte copy of the later version of that module (SHA-256 `9bf0aa49a7b84b4c382588b915c6db6b49b6cd6d411dd8266987270c0f9262e3`), with the palette and the row packing, used by `make_figures.py` (through `figure_plots.py`), `render_classical_limit.py`, `fig_cmb_extrapolation.py`, `fig_extrapolation_positive.py`, `emission_windows.py`, `basis_spectra_figure.py` and `harmonic_basis_figure.py`.
 

@@ -2,6 +2,10 @@
 
 ## 0.9.0
 
+- Include the manuscript validation scripts for the single-particle figure and
+  the harmonic-to-continuum comparison in `studies/classical-models/inputs/validation`.
+  The input guide records the commands and the comparisons with the archived outputs.
+
 - Add a finite-channel response that combines harmonic and continuum bases
   for intensity and linear polarisation. The branches share physical
   population declarations and split the electron measure at a configurable

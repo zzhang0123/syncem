@@ -1,0 +1,51 @@
+{
+  "geometry": {
+    "view": "Single orthographic construction, generic noncoplanar velocity",
+    "illustrative_angles_deg": {
+      "theta": 42.0,
+      "phi": 35.0,
+      "alpha": 28.0
+    },
+    "schematic_camera_deg": {
+      "azimuth": 20.0,
+      "elevation": 30.0
+    },
+    "geometric_residuals": {
+      "pitch_angle": 0.0,
+      "field_inclination": 0.0,
+      "sky_azimuth": 0.0,
+      "sky_normal_component": 0.0,
+      "velocity_norm": 0.0
+    },
+    "noncoplanar_scalar_triple_product": -0.2041895644588565,
+    "sky_handedness": "e_parallel cross e_perp = n; x cross y = n",
+    "scope": "Direction schematic; arrow lengths do not compare physical magnitudes"
+  },
+  "moving_lines": {
+    "gamma": 20.0,
+    "mu": 0.5,
+    "eta": 0.5,
+    "harmonics_summed": 7,
+    "channel_centre": 4.0,
+    "half_width": 2.6,
+    "field_range": [
+      0.8,
+      1.2
+    ],
+    "oracle_max_absolute_difference": 2.168404344971009e-18,
+    "power_normalisation": "e^2 Omega_0^2/(2 pi c), divided out in dynamic and oracle channel checks",
+    "plotted_line_normalisation": "Largest displayed line at B/B0=1"
+  },
+  "scope": "Panel (a) is a generic direction schematic. Panel (b) retains the original gamma=20, mu=eta=0.5 example; the panel angles are not shared.",
+  "source_sha256": {
+    "validation/single_particle_figure.py": "8215020ad8cdbe897f2122574de7190471649b1534180444e645911bd4504ea1",
+    "validation/angle_geometry.py": "0070fbc1df482bc8c7eec82066b5c946d2a27dda7e8f28ce46f0f1444029cf63",
+    "validation/narrative_figures.py": "a4a81e018a12ae2a9d5f25a394b428a38dbc75d51e6472e3d546fb6a174dbfc7",
+    "validation/figure_style.py": "42221f5976bdba9043be733fe8f3e293903990c697dbb8d78489d4bf49284e1b",
+    "validation/full_response.py": "d54fbb8bf68c351c9712b65b07bae18e8f00626cdb714df2a5620f83a811d57a"
+  },
+  "output_sha256": {
+    "figures/single_particle_geometry_channels.pdf": "6aa2a4c8d71082c3f46ca62b8d1050fae06ee7203d6b8f8053762c6c1cb7d81f",
+    "figures/single_particle_geometry_channels.png": "faac45c3bcb58d43ef5d14fbd9477ded0fe510c4e90b2c80e0b8fbf086ab349e"
+  }
+}
