@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+### Classical-model study
+
+- `inputs/validation/` now holds byte copies of the manuscript's validation
+  scripts behind Fig. 1 (`single_particle_figure.py`, with
+  `angle_geometry.py`, `narrative_figures.py`, `full_response.py` and
+  `figure_style.py`) and behind the data of Fig. 3(b, c)
+  (`harmonic_continuum_check.py`), with the Fig. 1 record
+  `single_particle_figure_results.json`. `inputs/README.md` gives the commands
+  and the checks of the copies against the recorded outputs. `run_all.py` does
+  not run them.
+
 ## 0.7.10 (2026-11-17)
 
 ### Classical-model study
