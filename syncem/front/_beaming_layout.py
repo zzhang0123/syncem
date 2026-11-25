@@ -1,10 +1,29 @@
 """Geometry and direct quadrature for two resolved Beaming axes."""
 
 from ..base.capabilities import Beaming
-from ..population import Samples
-from ..population.declaration import law_at, parents
+from ..population._diagonal import conditional_crossings
+from ..population.declaration import ancestors, law_at, parents
 from ..population.quadrature import _subtract
+from ..records.ledger import ErrorTerm
 from ..values.errors import RoleError
+
+
+def crossing_terms(populations, kernel=None):
+    """Record the finite resolution of a conditional diagonal boundary search."""
+    pair = ("mu", "eta")
+    if kernel is not None:
+        cap = next((c for c in kernel.capabilities if isinstance(c, Beaming)), None)
+        if cap is None:
+            return ()
+        pair = (cap.variable, cap.partner)
+    if any(conditional_crossings(pop.factors, pair) for pop in populations):
+        return (
+            ErrorTerm.unbounded(
+                "Conditional beaming boundaries can have unresolved crossings.",
+                name="quadrature:beaming_crossings",
+            ),
+        )
+    return ()
 
 
 def merge_beaming(kernel, lattice):
@@ -59,13 +78,12 @@ def resolved_beaming(kernel, population, lattice):
     if beaming is None:
         return ()
     pair = (beaming.variable, beaming.partner)
-    for block in population.blocks:
-        if isinstance(block, Samples) and set(pair).issubset(block.variables):
-            raise RoleError(
-                "joint point samples do not supply a density on the Beaming diagonal"
-            )
     degrees = dict(lattice.index.legendre)
     cells = lattice.cells.variables
+    if beaming.variable in cells and any(
+        set(pair).issubset(block.variables) for block in population.blocks
+    ):
+        raise RoleError("joint point samples under Beaming need a Legendre pitch axis")
     if not set(pair).issubset(set(cells) | degrees.keys()):
         return ()
     if all(name in cells for name in pair):
@@ -79,19 +97,14 @@ def resolved_beaming(kernel, population, lattice):
 
 def diagonal_reference(pop, lattice, pair, units):
     factors = pop.factors
-    cell = next((name for name in pair if name in lattice.cells.variables), None)
-    resolved = set(lattice.cells.variables) | set(lattice.representations)
-    for source, target in (pair, pair[::-1]):
-        if source == cell:
+    directions = sorted(
+        (pair, pair[::-1]), key=lambda d: d[0] in lattice.cells.variables
+    )
+    for source, target in directions:
+        if source in ancestors(factors, target):
             continue
         law = factors.get(source)
         if law is None or (not hasattr(law, "density") and not parents(law)):
-            continue
-        if any(
-            source in parents(other)
-            for name, other in factors.items()
-            if name != source and name in resolved
-        ):
             continue
 
         def density(point):
@@ -104,6 +117,5 @@ def diagonal_reference(pop, lattice, pair, units):
 
         return ((source, target),), (("all", density),)
     raise RoleError(
-        "the direct Beaming diagonal needs one integrable cosine and a density for its partner. "
-        "A resolved conditional on the folded-out cosine needs an alias-aware integration rule."
+        "the direct Beaming diagonal needs one integrable cosine and a density for its partner."
     )

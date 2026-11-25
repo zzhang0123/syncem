@@ -385,3 +385,29 @@ def test_public_plan_and_free_moment_fit_on_user_lattice():
     assert result.moments.origin == "minimum_norm"
     assert result.rank == 2
     np.testing.assert_allclose(result.predict().I, data.stokes[:, 0], rtol=1e-13)
+
+
+@pytest.mark.parametrize(
+    "origin,n_ulps", [(2.0**20, 4), (1.5 * 2.0**20, 32), (2.0**400, 32)]
+)
+def test_reference_density_on_narrow_log_cells(origin, n_ulps):
+    hi = origin + n_ulps * np.spacing(origin)
+    cells = se.Cells.log(origin, hi, 2, order=0)
+
+    @se.kernel(
+        variables=[se.Variable("x", kind="positive")],
+        stokes=("I",),
+        capabilities=(se.ReferenceDensity("x", lambda x: jnp.ones_like(x)),),
+    )
+    def one(nu, x):
+        return {"I": jnp.ones_like(nu) + 0 * x}
+
+    pop = se.Population(x=se.Uniform(origin, hi))
+    basis = se.spectral_basis(
+        pop, ([1.0], "GHz"), lattice=se.Lattice(x=cells), kernel=one, check=False
+    )
+    expected = np.diff(cells.edges) / (hi - origin)
+    np.testing.assert_allclose(basis.lattice.weights, expected, rtol=4e-14)
+    np.testing.assert_allclose(basis.predict(pop, check=False).I, [1.0], rtol=5e-14)
+    # gamma's default power law varies by less than 2e-14 across this interval.
+    np.testing.assert_allclose(se.Lattice(gamma=cells).weights, expected, rtol=4e-14)

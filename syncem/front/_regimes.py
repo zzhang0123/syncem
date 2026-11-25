@@ -38,6 +38,7 @@ from ..records.ledger import ErrorTerm, Ledger
 from ..units import to_canonical
 from ..values.errors import RegimeError, RoleError, SpecifiedMismatch
 from ..values.spectrum import Spectrum
+from ._beaming_layout import crossing_terms
 from ._predictions import channels_from
 from ._regime_measure import pair_branch, source_columns
 from ._setup import placed, screen_truncation
@@ -453,6 +454,7 @@ class RegimeBasis:
         )
         plan = self.plan
         if isinstance(population_or_moments, Population):
+            terms.extend(crossing_terms(population_or_moments.parts))
             paired = self._pair(population_or_moments, self.moment_nodes)
             moments = tuple(part[0] for part in paired)
             if check:

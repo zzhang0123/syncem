@@ -1,21 +1,24 @@
 """Physical electron family fits sharing harmonic and continuum responses."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 import numpy as np
 
 from ..distributions.electrons import ElectronFamily
 from ..distributions.parameters import parameter_number, parameter_unit
+from ..fitting._family_batch import FamilyBatch, family_pixel, fit_pixels
+from ..fitting._family_noise import physical_jacobian
+from ..fitting._family_starts import solve_starts
 from ..fitting._combined import combined_columns
-from ..fitting._family_result import FamilyFit, Parameter
-from ..fitting._finite_difference import _jacobian
+from ..fitting._family_result import FamilyFit
 from ..fitting._free_fit_arrays import Withheld
 from ..fitting.data import StokesData
 from ..fitting.family_fit import (
     _amplitude,
     _coordinate,
-    _parameter_errors,
+    _measure_parameters,
     _parameter_values,
+    _physical_parameters,
     _population_at,
     free_parameters,
 )
@@ -36,14 +39,19 @@ class RegimeFamilyFit(FamilyFit):
 
     @property
     def column(self):
-        law = self.electron_spectrum()
-        mass = (
-            law._coefficient() * law._unnormalised_mass()
-            if law.column is None
-            else law.column
-        )
+        def column(pop):
+            return pop.factors["gamma"].integrated_column() * pop.column_factor
+
+        value = column(self.population)
+        sigma = 0.0
+        if self.params:
+            jac = physical_jacobian(
+                lambda x: column(self.trial_population(x)), self.params
+            )
+            sigma, _ = self.noise.propagate(jac, ())
         return Observable(
-            value=mass * self.population.column_factor,
+            value=value,
+            sigma=sigma,
             origin="family",
             label="physical electron column in cm^-2",
         )
@@ -66,7 +74,7 @@ class FixedRegimeFamilyFit(RegimeFamilyFit):
     estimator = "declared population in the two-regime observation likelihood"
 
 
-def _fit_design(basis, data):
+def _fit_design(basis, data, n_parameters):
     """Map the full moment coordinates to whitened observations once."""
     if isinstance(data, StokesData):
         if data.batch_shape:
@@ -110,6 +118,13 @@ def _fit_design(basis, data):
         raise DataError(
             "the compressed likelihood needs the original branch moment coordinates"
         )
+    retained = retained.for_parameters(
+        n_parameters,
+        lambda obs: obs.whitened(
+            combined_columns(supplied, obs.channels, obs.components),
+            components=obs.components,
+        ),
+    )
     count = int(retained.rank)
     if not count:
         raise DataError("the compressed likelihood has no retained coordinates")
@@ -152,7 +167,6 @@ def _withheld(data, basis, moments):
 
 def fit_regime_family(basis, population, data, *, starts=None):
     """Fit physical parameters of one electron family with both bases fixed."""
-    from scipy.optimize import least_squares
     from scipy.stats import chi2 as chi2_distribution
 
     if (
@@ -163,13 +177,35 @@ def fit_regime_family(basis, population, data, *, starts=None):
         raise RoleError(
             "a two-regime family fit needs one declared electron family in gamma"
         )
-    fitted, target, design, count = _fit_design(basis, data)
+    if isinstance(data, StokesData) and data.batch_shape:
+        return fit_pixels(
+            data,
+            lambda pixel: fit_regime_family(basis, population, pixel, starts=starts),
+        )
+    if isinstance(data, SumFit) and data.retained.batch_shape:
+        observations = data.problem.data
+
+        def fit_pixel(index):
+            part = replace(
+                data,
+                retained=family_pixel(data.retained, index),
+                problem=replace(data.problem, data=family_pixel(observations, index)),
+            )
+            return fit_regime_family(basis, population, part, starts=starts)
+
+        return FamilyBatch(
+            observations,
+            tuple(fit_pixel(index) for index in np.ndindex(data.retained.batch_shape)),
+        )
+
     source = free_parameters(population)
     averaged = dict(basis.averaged)
     for name in source:
         if name.split(".", 1)[0] in averaged:
             raise RoleError(f"{name} changes specified basis statistics")
-    linear = _amplitude(population, fitted, "gamma", source, starts)
+    linear = _amplitude(population, basis, "gamma", source, starts)
+    n_parameters = len(source) + int(linear is not None and linear not in source)
+    fitted, target, design, count = _fit_design(basis, data, n_parameters)
     shape = {name: marker for name, marker in source.items() if name != linear}
     names, x0, lo, hi, log = _parameter_values(shape, starts or {})
     amp_bounds, amp_unit = _amplitude_bounds(source.get(linear), linear)
@@ -192,21 +228,12 @@ def fit_regime_family(basis, population, data, *, starts=None):
             amplitude = float(np.clip((target @ model) / power, *amp_bounds))
         return target - amplitude * model, amplitude, model
 
-    x = x0
+    x, attempts, reached = x0, 1, 1
     if names:
-        solution = least_squares(
-            lambda trial: profile(trial)[0],
-            x0,
-            bounds=(lo, hi),
-            method="trf",
-            max_nfev=60,
+        x, attempts, reached = solve_starts(
+            lambda trial: profile(trial)[0], "2-point", x0, lo, hi, 3
         )
-        if not solution.success:
-            raise DataError(
-                f"two-regime family fit did not converge. {solution.message}"
-            )
-        x = solution.x
-    residual, amplitude, unit_model = profile(x)
+    residual, amplitude, _ = profile(x)
     physical = _coordinate(x, log)
     result = _population_at(population, names, physical, linear, amplitude)
     moments = tuple(
@@ -221,46 +248,40 @@ def fit_regime_family(basis, population, data, *, starts=None):
             fitted._independent().parts, fitted.moments(result), strict=True
         )
     )
-    covariance, parameter_rank, parameters = None, 0, {}
-    if names or linear is not None:
-        jac = np.empty((target.size, 0))
-        if names:
-            jac, _ = _jacobian(
-                lambda trial: amplitude * signal(trial),
-                x,
-                lo,
-                hi,
-                np.cbrt(np.finfo(float).eps),
-            )
-        scale = np.where(log, physical, 1.0)
-        if linear is not None:
-            jac = np.column_stack((jac, unit_model))
-            scale = np.append(scale, 1.0)
-        covariance, visible, parameter_rank = _parameter_errors(jac, scale)
-        lower, upper = _coordinate(lo, log), _coordinate(hi, log)
-        errors = np.sqrt(np.diag(covariance))
-        for i, name in enumerate(names):
-            parameters[name] = Parameter(
-                float(physical[i]),
-                float(errors[i]),
-                (float(lower[i]), float(upper[i])),
-                bool(min(x[i] - lo[i], hi[i] - x[i]) <= 1e-5),
-                bool(visible[i]),
-                parameter_unit(shape[name]),
-            )
-        if linear is not None:
-            parameters[linear] = Parameter(
-                amplitude,
-                float(errors[-1]),
-                amp_bounds,
-                amplitude in amp_bounds,
-                bool(visible[-1]),
-                amp_unit,
-            )
+    parameters = _physical_parameters(
+        names, x, lo, hi, log, shape, linear, amplitude, amp_bounds, amp_unit
+    )
+
+    def trial_population(values):
+        norm = values[-1] if linear is not None else 1.0
+        return _population_at(population, names, values[: len(names)], linear, norm)
+
+    def project(values):
+        return np.concatenate(
+            [
+                np.asarray(part.values)
+                for part in fitted.moments(trial_population(values))
+            ]
+        )
+
+    jacobian = noise = covariance = None
+    parameter_rank = 0
+    if parameters:
+        jacobian = physical_jacobian(project, parameters)
+        parameters, noise, covariance, parameter_rank = _measure_parameters(
+            design @ jacobian, parameters
+        )
+
+    def spectrum_jacobian(output):
+        axes = output.harmonic.record.stokes
+        columns = combined_columns(output._independent(), output.channels, axes)
+        return (np.asarray(columns) @ jacobian).reshape(-1, len(parameters))
+
     chi2 = float(residual @ residual)
     dof = count - parameter_rank
     probability = float(chi2_distribution.sf(chi2, dof)) if dof > 0 else np.nan
     result_type = RegimeFamilyFit if parameters else FixedRegimeFamilyFit
+
     return result_type(
         basis,
         data.problem.data if isinstance(data, SumFit) else data,
@@ -273,4 +294,10 @@ def fit_regime_family(basis, population, data, *, starts=None):
         parameter_rank,
         withheld_details=_withheld(data, fitted, moments),
         parameter_covariance=covariance,
+        noise=noise,
+        trial_population=trial_population,
+        spectrum_jacobian=spectrum_jacobian,
+        moment_jacobian=lambda: jacobian,
+        n_starts=attempts,
+        converged_starts=reached,
     )

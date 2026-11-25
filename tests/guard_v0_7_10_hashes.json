@@ -20,9 +20,9 @@
   "syncem/model/_allowances.py": "5fec57212144850c07fdd0d77c49bbf70bfc050363d0d5a9a16ec07fda2c46de",
   "syncem/model/_angular_faint_bounds.py": "1cd1ac060c0df57b0cd96c1cdf88df431fadb4fe76726212bb68d1464fffc1e4",
   "syncem/model/_angular_global_bounds.py": "8cbabf440000ce60152f88852b5614c91a8e1117a11e819f374395c0b55f36e8",
-  "syncem/model/_basis_checks.py": "5c8e7ad9893e40900e4ac5cc6956f91a7ef76df82eede0e21209fc866f6a6c32",
+  "syncem/model/_basis_checks.py": "c290ec0dbb9aec59a78a7798924801a6321241acdf2e5533d06272c58c30cf0d",
   "syncem/model/_basis_combine.py": "8427f78b9e23efe8a79fd13d1de2e8398ae007bbcdaf2d95d500789187cfc305",
-  "syncem/model/_basis_core.py": "bf7941c5443e49930aff88b41b64de0bd83cc6a2a72862730a729a215003569a",
+  "syncem/model/_basis_core.py": "118e3536fa52772fcba5f54a36997a4350d8470daf9ec5365956a26412c8b51b",
   "syncem/model/_basis_taylor.py": "e843daac871b8fd28397d95b82586accc9ec01cefd569df9edd38c2fc19e2093",
   "syncem/model/_bessel_recurrence.py": "b040decb61a051f05da98aa71be90de56e8773b5c19bf8a0f2462f0b70ce702c",
   "syncem/model/_bound_helpers.py": "71e7e1e42818032328e388f17a88d62bc4696161e996ca63a5f8bb233c9eb94a",
@@ -33,9 +33,9 @@
   "syncem/model/_certified_sparse_harmonic.py": "de919de1ab80720e3ccb5d46a1bbcf142414b7be021b26d54eb169ce4f1e847e",
   "syncem/model/_channel_compose.py": "603657d34097534a37e39baa872a215af78ec5a7c5f719345509cc9db4c5a77e",
   "syncem/model/_channel_shapes.py": "f61e32161f48b34d5362fdc47a8013efba8d475524f22693d21cef3a48a085f2",
-  "syncem/model/_continuum.py": "28134b93d89defa774a483be2c21973fecadfc2874493fd385f54450fdb8c86e",
-  "syncem/model/_depth_bound.py": "67132adfb5249b41950f86ec02743e1b4acffa7f851dea96bc20baddde1fd735",
-  "syncem/model/_direct.py": "420bc956d48945f24ddc112eb9ff5670a9c179b185cd2cefcc5c5d8d7b95b0a2",
+  "syncem/model/_continuum.py": "e2d945a0b174beeb1628520206253de161d6d8b84fba0e5e44ed26fddf102f31",
+  "syncem/model/_depth_bound.py": "92540fbb75406a70f70fd7f27e7efaa56b8add6b6c38bdf8ea23011074646a64",
+  "syncem/model/_direct.py": "4ce2655de0d752a963ca9e903c2e150d27eea09b9406acf38ca0acd672790944",
   "syncem/model/_factor.py": "c84131285714abd5e4a052c7a7382ec98785ca9a7683fdffb7b1608d152a5f37",
   "syncem/model/_factorisation_bounds.py": "7e1cc04f3ceddaba96250892a2bd0ad01b00ff7dfcdbce13cdac76ae58d40d24",
   "syncem/model/_harmonic_cells.py": "bf5780db4e061596b6f339aa4b24a4ff52e2d05c7b286bd4ebc5894f43afff1c",
@@ -57,11 +57,11 @@
   "syncem/model/_support_check.py": "f89133cbb2f33f2a54a0dccdf4ce7738259a190e5902a06c8dc530acb30db557",
   "syncem/model/_verified_airy.py": "78c632172fbb2b89e05eed61c5b21722446c3de59e1356e55d56e52284909037",
   "syncem/model/_verified_bessel.py": "c8f031c41245bb336fc65f453f8a3e0dd520b797725d7fbc761a9412b4d40b8d",
-  "syncem/model/adapters.py": "b4e9b99ced5647244dc8ae6825d08ac4692fe7eed424508c842c2d91837f59af",
+  "syncem/model/adapters.py": "1316a6e4e355a385dff02b7f418f3617b5884d23c13e529bb896daeb634ca99b",
   "syncem/model/assumptions.py": "90673cf6370333fb30790051ddec3413297de7d8c2f40f90e830e13caf3243bf",
   "syncem/model/bandpass.py": "f25634aa57520ab7cad210fc4396bb8d2eb5935c9e98640769d70c167bf1698f",
-  "syncem/model/basis.py": "31f0e3a3ef356012b87655c9d1ac2a89f904069df1ffb72ca93b8c2ee236f6ab",
-  "syncem/model/bounds.py": "4f29f4bcb38c97c93172a3933a0958249b51d87cacdebb0156cf8a81e66f6a44",
+  "syncem/model/basis.py": "4eb898c11996301a025a533be78cb65d10aa329bf86ba979ec8d7465ee8d0423",
+  "syncem/model/bounds.py": "5df7ebe6b2f5f913bb0d7f0bc1461ea0f4808b6633bb698d0849056147480de9",
   "syncem/model/channels.py": "25c14f401799c44f0df9306d5eaff24a27fa070b9b57f73d7faa1929780d503f",
   "syncem/model/errors.py": "f67604b9c6fa9be4a2eafd58d80f9e348c1d113de53af88978b9b58189a259ae",
   "syncem/model/fit/__init__.py": "fa964406031ece7c7b5b7225b788f1b9f432593a7b92562b4e6613feb7ab9b8a",
@@ -96,10 +96,10 @@
   "syncem/model/kernels.py": "5187375d3d27d7a988682c69e7a9289b26aed692aaf48edd19111d0317612ace",
   "syncem/model/moments.py": "ca3bb2d314fe686c8258224c80364a577102473c268a02c42594464a9df1ea1d",
   "syncem/model/phase.py": "d765fa873abd92920531cbe6aebc52d22d02bcf06ca1101c88943fda68a71f07",
-  "syncem/model/predict.py": "73e89ac02409de92d077fc3cf208ca1b9ad3fe73818980c309c312ccfeb37afc",
+  "syncem/model/predict.py": "c2605d628c1b54f7ea001f0e715a1d43c2a955397d0d6df779a49307959afd2c",
   "syncem/model/screens.py": "c3f65e9cae9934c34ab4e972cd984fe90bd7ab19c86b6dddd427815cd8afc04f",
   "syncem/rm.py": "26ac58dadef4a6169e741e9397ba68c08323ce8f8065cd5b99ba330f8c45c4d5",
-  "syncem/sed.py": "d22e5831d8aa0184944179279b10bd235d94b27e035881db9fede667fa9a4b9c",
+  "syncem/sed.py": "2cfe85e15e27f283d2ab2e17419b2210c91fd9b2576629de8ffb2d5be0cef6f4",
   "syncem/solutions.py": "2e1897f24f26294bd5176e36c4da989d7b05c59b8d05fa1286d8836d5e798156",
   "syncem/stokes.py": "5ca4a75388dc80db43477a5f4096aa437c2fe65b828e39b84ad52a38a6b4de9a",
   "syncem/transfer.py": "4b03a306dd352b27dec21f301062824d063b32b898198978cc15b43de32e4139",
@@ -112,10 +112,70 @@
    "review": "2026-11-23 package review, T-003",
    "approved": "owner, 2026-11-24"
   },
+  "syncem/model/_basis_checks.py": {
+   "v0_7_10_sha256": "5c8e7ad9893e40900e4ac5cc6956f91a7ef76df82eede0e21209fc866f6a6c32",
+   "reason": "Identify the selected isotropic closure and expose the joint continuum route in diagnostics.",
+   "review": "SPEC decision 200, T-001",
+   "approved": "owner, 2026-11-24"
+  },
+  "syncem/model/_basis_core.py": {
+   "v0_7_10_sha256": "bf7941c5443e49930aff88b41b64de0bd83cc6a2a72862730a729a215003569a",
+   "reason": "Preserve the pitch closure during quadrature refinement and measure cutoff changes on joint columns.",
+   "review": "SPEC decision 200, T-001",
+   "approved": "owner, 2026-11-24"
+  },
+  "syncem/model/_continuum.py": {
+   "v0_7_10_sha256": "28134b93d89defa774a483be2c21973fecadfc2874493fd385f54450fdb8c86e",
+   "reason": "Project joint pitch moments, weight the direct kernel and its tail, and identify the pitch model for basis diagnostics.",
+   "review": "SPEC decisions 200 and 201, T-001",
+   "approved": "owner, 2026-11-24"
+  },
+  "syncem/model/_depth_bound.py": {
+   "v0_7_10_sha256": "67132adfb5249b41950f86ec02743e1b4acffa7f851dea96bc20baddde1fd735",
+   "reason": "Weight the direct depth-error estimate by the conditional pitch density of each marginal sample.",
+   "review": "SPEC decisions 200 and 201, T-001",
+   "approved": "owner, 2026-11-24"
+  },
+  "syncem/model/_direct.py": {
+   "v0_7_10_sha256": "420bc956d48945f24ddc112eb9ff5670a9c179b185cd2cefcc5c5d8d7b95b0a2",
+   "reason": "Interpret a scalar or per-sample conditional density on the marginal grid for direct emission.",
+   "review": "SPEC decisions 200 and 201, T-001",
+   "approved": "owner, 2026-11-24"
+  },
+  "syncem/model/adapters.py": {
+   "v0_7_10_sha256": "b4e9b99ced5647244dc8ae6825d08ac4692fe7eed424508c842c2d91837f59af",
+   "reason": "Use the matching pitch model in the fixed-harmonic comparison and weight direct continuum and Burn-screen diagnostics by the conditional density.",
+   "review": "SPEC decisions 200 and 201, T-001",
+   "approved": "owner, 2026-11-24"
+  },
+  "syncem/model/basis.py": {
+   "v0_7_10_sha256": "31f0e3a3ef356012b87655c9d1ac2a89f904069df1ffb72ca93b8c2ee236f6ab",
+   "reason": "Refine only the pitch model used by the basis and document its numerical estimate.",
+   "review": "SPEC decisions 200 and 201, T-001",
+   "approved": "owner, 2026-11-24"
+  },
+  "syncem/model/bounds.py": {
+   "v0_7_10_sha256": "4f29f4bcb38c97c93172a3933a0958249b51d87cacdebb0156cf8a81e66f6a44",
+   "reason": "Match the pitch model for derivative probes and require a population-integrated angular remainder for a distributional projection.",
+   "review": "SPEC decisions 200 and 201, T-001",
+   "approved": "owner, 2026-11-24"
+  },
+  "syncem/model/predict.py": {
+   "v0_7_10_sha256": "73e89ac02409de92d077fc3cf208ca1b9ad3fe73818980c309c312ccfeb37afc",
+   "reason": "Match the kernel pitch model and report unbounded angular truncation when samples cannot determine a diagonal density.",
+   "review": "SPEC decisions 200 and 201, T-001",
+   "approved": "owner, 2026-11-24"
+  },
   "syncem/rm.py": {
    "v0_7_10_sha256": "4ba2fe0724d722d17f2a2e8e95b2b3d1e5f33b3192e327c590c72986b4e0d171",
    "reason": "promote integer wavelengths before lam**2 and lam**4 (int32 216 m amplified P)",
    "review": "2026-11-23 package review, T-003",
+   "approved": "owner, 2026-11-24"
+  },
+  "syncem/sed.py": {
+   "v0_7_10_sha256": "d22e5831d8aa0184944179279b10bd235d94b27e035881db9fede667fa9a4b9c",
+   "reason": "Attribute isotropic pitch to the analytic power-law integral in its docstring.",
+   "review": "SPEC decision 200, T-001",
    "approved": "owner, 2026-11-24"
   },
   "syncem/stokes.py": {

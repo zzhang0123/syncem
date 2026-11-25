@@ -6,13 +6,17 @@ from dataclasses import dataclass, field, replace
 from functools import cached_property
 from typing import Any
 
+import numpy as np
+
 
 from ..engine.assemble import predict_values
 from ..population import Population
 from ..results.printing import fit_summary
 from ..values.errors import DataError
 from ..values.observable import Observable
-from ..values.spectrum import Spectrum
+from ..values.spectrum import Spectrum, channel_conversion
+from ._family_noise import physical_jacobian
+from ._family_derived import family_quantity
 from ._free_fit_arrays import Withheld
 
 
@@ -45,6 +49,13 @@ class FamilyFit:
     parameter_covariance: Any = field(kw_only=True, default=None)
     allow_mismatch: bool = field(kw_only=True, default=False)
 
+    noise: Any = field(kw_only=True, default=None, repr=False)
+    trial_population: Any = field(kw_only=True, default=None, repr=False)
+    moment_jacobian: Any = field(kw_only=True, default=None, repr=False)
+    spectrum_jacobian: Any = field(kw_only=True, default=None, repr=False)
+    n_starts: int = field(kw_only=True, default=1)
+    converged_starts: int = field(kw_only=True, default=1)
+
     kind = "separable"
     estimator = "noise-whitened trust-region fit with profiled normalization"
     retained = None
@@ -66,14 +77,38 @@ class FamilyFit:
 
     @property
     def defaults(self):
-        return ()
+        return (
+            ("starts reaching the minimum", (self.converged_starts, self.n_starts)),
+        )
+
+    def observable(self, c):
+        """Evaluate a real linear functional and propagate its local noise response."""
+        blocks = self.moments if isinstance(self.moments, tuple) else (self.moments,)
+        moments = np.concatenate([np.asarray(m.values) for m in blocks])
+        rows = np.asarray(c)
+        if rows.shape[-1:] != moments.shape or np.iscomplexobj(rows):
+            raise DataError(
+                f"a linear functional must end in {len(moments)} real lattice coefficients"
+            )
+        value = rows @ moments
+        if self.params:
+            response = rows.reshape(-1, len(moments)) @ self.moment_jacobian()
+            sigma, _ = self.noise.propagate(response, value.shape)
+        else:
+            sigma = np.zeros(value.shape)
+        return Observable(
+            value,
+            sigma,
+            origin="family",
+            label="linear functional of the scaled lattice moments",
+        )
 
     @property
     def column(self):
-        value = self.basis.lattice.column(self.moments)
-        if hasattr(value, "value"):
-            return value
-        return Observable(value=value, origin="family", label="column in cm^-2")
+        lattice = self.basis.lattice
+        rows = np.zeros(lattice.index.n)
+        rows[lattice.index.n_pairs * lattice.index.offsets[:-1]] = lattice.weights
+        return self.observable(rows)._replace(label="column in cm^-2")
 
     @property
     def source_column(self):
@@ -84,15 +119,42 @@ class FamilyFit:
         return law if gamma is None else law.density(gamma)
 
     def predict(self, channels=None, *, cov=False):
+        basis = self.basis if channels is None else self.basis.at(channels)
+        value = self._fit_spectrum if channels is None else self._predict(basis)
+        if self.noise is None and self.params:
+            if cov:
+                raise DataError(
+                    "the fitted estimator supplies no prediction covariance"
+                )
+            return value
+        shape = value.stokes.shape
         if cov:
-            raise DataError(
-                "full spectral covariance needs the fitted family response Jacobian"
+            print(f"Spectrum covariance size {8 * int(np.prod(shape))**2:,} bytes")
+        if not self.params:
+            sigma = np.zeros(shape)
+            matrix = np.zeros((sigma.size, sigma.size)) if cov else None
+        else:
+            jac = self.spectrum_jacobian(basis)
+            conversion = np.asarray(
+                channel_conversion(basis.channels, "cgs", value.unit)
             )
-        return (
-            self._fit_spectrum
-            if channels is None
-            else self._predict(self.basis.at(channels))
-        )
+            jac = jac * np.repeat(conversion, shape[-1])[:, None]
+            sigma, matrix = self.noise.propagate(jac, shape, cov=cov)
+        return replace(value, sigma=sigma, cov=matrix)
+
+    def derived(self, name):
+        """Return a paper invariant with its local observation-noise uncertainty."""
+        value, label = family_quantity(self.population, name)
+        sigma = 0.0
+        if self.params:
+            if self.noise is None or self.trial_population is None:
+                raise DataError("the fitted estimator supplies no derived response")
+            jac = physical_jacobian(
+                lambda x: family_quantity(self.trial_population(x), name)[0],
+                self.params,
+            )
+            sigma, _ = self.noise.propagate(jac, ())
+        return Observable(value=value, sigma=sigma, origin="family", label=label)
 
     @cached_property
     def _fit_spectrum(self):

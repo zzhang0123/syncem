@@ -317,3 +317,44 @@ def test_fixed_harmonic_comparison_returns_both_remainders():
     fixed_I = np.asarray(result.fixed_finite)[:, 0]
     assert_allclose(fixed_I, np.asarray(result.fixed_direct)[:, 0], rtol=5e-2)
     assert jnp.all(jnp.isfinite(result.fixed_finite))
+
+
+def test_fixed_harmonics_use_sampled_pitch_and_continuum_uses_its_density():
+    reference = Reference(GAMMA0, B0)
+    channels = Channels.bump([3 * NU_STAR], [0.4 * NU_STAR])
+    kernel = ContinuumKernel(pitch="joint")
+    support = Support((GAMMA0 - 1, GAMMA0 + 1), (0.9 * B0, 1.1 * B0), (0, 0))
+    basis = build_stub_basis(kernel, channels, Truncation(1, 1, 0), reference, support)
+    # Two-node quadrature for p(mu) = (1 + a mu)/2 at a fixed viewing angle.
+    slope, eta = 0.8, 0.4
+    mu = np.array([-1, 1]) / np.sqrt(3)
+    samples = PopulationSamples(
+        np.full(2, GAMMA0),
+        np.full(2, B0),
+        mu,
+        np.full(2, eta),
+        np.zeros(2),
+        np.zeros(2),
+        weights=(1 + slope * mu) / 2,
+    )
+    alpha0, theta0 = np.pi / 2, np.arccos(eta)
+    expansion = build_expansion((2,), GAMMA0, alpha0, theta0, B=B0)
+    result = fixed_harmonic_comparison(
+        basis,
+        expansion,
+        samples,
+        alpha0=alpha0,
+        theta0=theta0,
+        kernel=kernel,
+        pitch_density=(1 + slope * eta) / 2,
+    )
+    uniform = ContinuumKernel().channel_modes(channels, GAMMA0, B0, 0, eta)
+    expected = np.stack(
+        (uniform.I, uniform.P[0].real, uniform.P[0].imag, uniform.V), axis=1
+    )
+    assert_allclose(
+        result.channel_direct, (1 + slope * eta) * expected, rtol=1e-14, atol=0
+    )
+    assert_allclose(
+        result.fixed_direct, fixed_harmonic_oracle(samples, (2,)), rtol=1e-9
+    )

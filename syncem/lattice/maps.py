@@ -20,20 +20,10 @@ from typing import Any
 import jax.numpy as jnp
 import numpy as np
 
+from ._cell_values import log_displacement
 from .index import MomentIndex
 
 __all__ = ["coarsen_values", "recentre_values"]
-
-
-def _chart_coords(index: MomentIndex, c: int) -> tuple[np.ndarray, np.ndarray]:
-    t = index.table
-    ref = np.array(
-        [
-            np.log(t.reference[c, i]) if t.chart[c][i] == "log" else t.reference[c, i]
-            for i in range(len(t.variables))
-        ]
-    )
-    return ref, t.half_width[c].astype(float)
 
 
 def _transfer(
@@ -95,12 +85,18 @@ def _apply(
     for b in range(len(dst.blocks)):
         for t, members in enumerate(groups):
             pt = dst.patterns[int(dst.cell_pattern[t])]
-            ref_t, h_t = _chart_coords(dst, t)
+            ref_t, h_t = dst.table.reference[t], dst.table.half_width[t]
             acc = jnp.zeros(lead + (dst.n_pairs, len(pt)))
             for s, factor in members:
                 ps = src.patterns[int(src.cell_pattern[s])]
-                ref_s, h_s = _chart_coords(src, s)
-                transfer = _transfer(pt, ps, h_s / h_t, (ref_s - ref_t) / h_t)
+                ref_s, h_s = src.table.reference[s], src.table.half_width[s]
+                delta = np.array(
+                    [
+                        log_displacement(a, b) if chart == "log" else a - b
+                        for a, b, chart in zip(ref_s, ref_t, dst.table.chart[t])
+                    ]
+                )
+                transfer = _transfer(pt, ps, h_s / h_t, delta / h_t)
                 rows = src.cell_rows(s, b)
                 block = values[..., rows.start : rows.stop].reshape(
                     lead + (src.n_pairs, len(ps))
@@ -116,26 +112,6 @@ def _apply(
     return jnp.concatenate(pieces, axis=-1), tuple(sorted(masked_out))
 
 
-def _same(a: Any, b: Any) -> bool:
-    """Equal boxes up to 1e-12 of each box's extent in every variable (infinite ends must match)."""
-    if a.lo.shape != b.lo.shape:
-        return False
-    finite = (
-        np.isfinite(a.lo) & np.isfinite(a.hi) & np.isfinite(b.lo) & np.isfinite(b.hi)
-    )
-    scale = np.where(finite, np.maximum(np.abs(a.lo), np.abs(a.hi)), 0.0)
-    for x, y in ((a.lo, b.lo), (a.hi, b.hi)):
-        both = np.isfinite(x) & np.isfinite(y)
-        if np.any(~both & (x != y)):
-            return False
-        if np.any(
-            np.abs(np.subtract(x, y, out=np.zeros_like(x, dtype=float), where=both))
-            > 1e-12 * scale
-        ):
-            return False
-    return True
-
-
 def recentre_values(
     values: Any,
     src: MomentIndex,
@@ -147,7 +123,7 @@ def recentre_values(
     """Moments of the same cells at the reference points (and half-widths) of ``dst``."""
     _check_structure(src, dst)
     a, b = src.table, dst.table
-    same = a.n_cells == b.n_cells and _same(a, b)
+    same = np.array_equal(a.lo, b.lo) and np.array_equal(a.hi, b.hi)
     if not same or a.chart != b.chart:
         raise ValueError(
             "recentre needs the same cells in the same chart. Use coarsen for unions of cells"
@@ -158,16 +134,65 @@ def recentre_values(
     return _apply(values, src, dst, groups, masked)
 
 
-def _volume(table: Any, c: int) -> float:
-    lo, hi = table.lo[c], table.hi[c]
-    return float(
-        np.prod(
-            [
-                np.log(h / l) if ch == "log" else h - l
-                for l, h, ch in zip(lo, hi, table.chart[c])
-            ]
+def _fills_box(source, members, target, cell):
+    """Count elementary boxes between distinct faces in each coordinate."""
+    if not members:
+        return False
+    ids = [index for index, _ in members]
+    lo, hi = source.lo[ids], source.hi[ids]
+    # The sources already have disjoint interiors. Replacing each face by its
+    # sorted rank preserves coverage, including gaps smaller than a volume ulp.
+    counts = np.ones(len(ids), dtype=object)
+    target_count = 1
+    for axis in range(lo.shape[1]):
+        lower, upper = lo[:, axis], hi[:, axis]
+        faces = np.unique(np.r_[lower, upper])
+        if faces[0] != target.lo[cell, axis] or faces[-1] != target.hi[cell, axis]:
+            return False
+        counts *= np.searchsorted(faces, upper) - np.searchsorted(faces, lower)
+        target_count *= len(faces) - 1
+    return sum(counts) == target_count
+
+
+def _covered(lo, hi, box_lo, box_hi):
+    """Test coverage of a closed face, including lower-dimensional intersections."""
+    touched = np.all((box_hi >= lo) & (box_lo <= hi), axis=1)
+    left, right = box_lo[touched], box_hi[touched]
+    if not len(left):
+        return False
+    if np.any(np.all((left <= lo) & (right >= hi), axis=1)):
+        return True
+    # Split the face at the first nontrivial coordinate. The finite union
+    # is closed, so coverage of every subinterval includes its endpoints.
+    axis = np.flatnonzero(lo < hi)[0]
+    cuts = np.unique(
+        np.clip(
+            np.r_[lo[axis], left[:, axis], right[:, axis], hi[axis]], lo[axis], hi[axis]
         )
     )
+    keep = np.arange(len(lo)) != axis
+    for a, b in zip(cuts[:-1], cuts[1:]):
+        covers = (left[:, axis] <= a) & (right[:, axis] >= b)
+        if not _covered(
+            lo[keep], hi[keep], left[covers][:, keep], right[covers][:, keep]
+        ):
+            return False
+    return True
+
+
+def _check_face_ownership(source, target, owners):
+    """A point belongs to the first closed cell containing it in each table."""
+    if all(a <= b for a, b in zip(owners[:-1], owners[1:])):
+        return
+    for s, t in enumerate(owners):
+        # Earlier target cells can overlap this member on faces and corners.
+        lower = np.maximum(source.lo[s], target.lo[:t])
+        upper = np.minimum(source.hi[s], target.hi[:t])
+        for i in np.flatnonzero(np.all(lower <= upper, axis=1)):
+            if not _covered(lower[i], upper[i], source.lo[:s], source.hi[:s]):
+                raise ValueError(
+                    "coarsen would change ownership of a shared cell boundary"
+                )
 
 
 def coarsen_values(
@@ -190,16 +215,17 @@ def coarsen_values(
         raise ValueError(
             "coarsen needs cells with edges. Cells without edges can only be recentred"
         )
-    slack = 1e-12 * np.maximum(np.abs(b.lo), np.abs(b.hi))
     groups: list[list[tuple[int, float]]] = [[] for _ in range(b.n_cells)]
+    owners = []
     for s in range(a.n_cells):
-        inside = np.all((a.lo[s] >= b.lo - slack) & (a.hi[s] <= b.hi + slack), axis=1)
+        inside = np.all((a.lo[s] >= b.lo) & (a.hi[s] <= b.hi), axis=1)
         hits = np.nonzero(inside)[0]
         if hits.size != 1:
             raise ValueError(
                 f"source cell {s} lies in {hits.size} target cells: the targets must be unions of cells"
             )
         t = int(hits[0])
+        owners.append(t)
         if a.chart[s] != b.chart[t]:
             raise ValueError(
                 f"source cell {s} and target cell {t} use different charts"
@@ -207,7 +233,7 @@ def coarsen_values(
         _check_order(src, dst, s, t)
         groups[t].append((s, float(w_src[s] / w_dst[t])))
     for t, members in enumerate(groups):
-        filled = sum(_volume(a, s) for s, _ in members)
-        if not np.isclose(filled, _volume(b, t), rtol=1e-10, atol=0.0):
+        if not _fills_box(a, members, b, t):
             raise ValueError(f"target cell {t} is not a union of source cells")
+    _check_face_ownership(a, b, owners)
     return _apply(values, src, dst, groups, masked)

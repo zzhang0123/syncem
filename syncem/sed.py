@@ -41,7 +41,7 @@ def power_law_emissivity_abs(nu, p, C, B, *, theta=None):
     """Physical emissivity [erg/s/cm^3/Hz/sr] for N(gamma)=C gamma^-p.
 
     B [G], nu [Hz], p>1/3. ``theta`` selects an ordered-field viewing angle.
-    The directional continuum approximation assumes isotropic electron pitch
+    This power-law integral uses isotropic electron pitch
     angles. ``theta=None`` averages that directional emissivity with the
     normalised measure sin(theta)dtheta/2 (equivalently, random field axes).
     This default corrects the legacy omitted factor1/2. A physical ordered

@@ -181,3 +181,30 @@ def test_retained_subset_and_family_artifact(experiment, tmp_path):
     path = tmp_path / "two-regime-family.npz"
     fit.save(path)
     assert path.stat().st_size > 0
+
+
+@pytest.mark.parametrize("reverse", [False, True])
+def test_withheld_rank_and_source_column_per_pixel(experiment, reverse):
+    basis, truth = experiment
+    spectrum = basis.predict(truth, check=False)
+    y = np.stack((spectrum.stokes, 2 * spectrum.stokes))
+    mask = np.ones_like(y, dtype=bool)
+    mask[0, 0] = False
+    selection = slice(None, None, -1 if reverse else 1)
+    data = se.StokesData(
+        basis.channels,
+        stokes=y[selection],
+        mask=mask[selection],
+        sigma=0.02 * spectrum.I[:, None],
+        unit="cgs",
+    ).withhold([0])
+    law = truth.factors["gamma"]._at({"amplitude": se.Free(0.04, bounds=(0.001, 1))})
+    fit = se.fit(truth.replace(gamma=law), data, basis=basis, check=False)
+    np.testing.assert_array_equal(fit.withheld.n, np.array([0, 3])[selection])
+    assert np.max(fit.withheld.chi2) < 1e-16
+    np.testing.assert_allclose(
+        fit.source_column.sigma,
+        fit.params["gamma.amplitude"].sigma
+        * truth.factors["gamma"].integrated_column()
+        / 0.08,
+    )

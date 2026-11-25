@@ -15,6 +15,7 @@ from ..base.channels import Channels
 from ..base.variables import CRITICAL_FREQUENCY, SYNCHROTRON_VARIABLES
 from ..constants import C_CGS, C_SI_M, E_ESU, M_E
 from ..distributions.screens import GaussianScreen
+from ..lattice._cell_values import interpolation_nodes, log_displacement
 from ..model.channels import Channels as ModelChannels
 from ..model.phase import phase_coordinate
 from ..records.ledger import ErrorTerm, Ledger
@@ -115,64 +116,76 @@ class _Geometry(eqx.Module):
 
 @dataclass(frozen=True)
 class _Axis:
-    centre: float
-    radius: float
-    ref: float
-    half: float
-    chart: str
+    points: np.ndarray
+    inverse: np.ndarray
+    reference: float
+    scale: float
 
-    def point(self, u):
-        value = self.centre + self.radius * u
-        return np.exp(value) if self.chart == "log" else value
-
-    def coefficients(self, degree, count):
-        coordinate = (self.ref - self.centre) / self.radius
+    def coefficients(self, degree):
+        count = self.points.size
         polynomials = chebyshev.chebder(np.eye(count), m=degree, axis=0)
         return (
-            chebyshev.chebval(coordinate, polynomials)
-            @ _cheb_rule(count)[1]
-            * (self.half / self.radius) ** degree
+            chebyshev.chebval(self.reference, polynomials)
+            @ self.inverse
+            * self.scale**degree
             / factorial(degree)
         )
 
 
-def _cheb_rule(count):
+def _cheb_nodes(count):
     cache = default_cache()
-    key = f"regime-chebyshev:{count}"
-    rule = cache.get("memo", key)
-    if rule is not None:
-        return rule
-    nodes = np.cos(np.pi * np.arange(count) / (count - 1))
-    return cache.put(
-        "memo", key, (nodes, np.linalg.inv(chebyshev.chebvander(nodes, count - 1)))
-    )
+    key = f"regime-lobatto:{count}"
+    nodes = cache.get("memo", key)
+    if nodes is None:
+        nodes = np.cos(np.pi * np.arange(count) / (count - 1))
+        cache.put("memo", key, nodes)
+    return nodes
 
 
-def polynomial_columns(table, cell, powers, value, extra, *, dimensions=None):
+def _interpolation_axis(table, cell, i, count, open_upper):
+    lo, hi, ref = table.lo[cell, i], table.hi[cell, i], table.reference[cell, i]
+    chart = table.chart[cell][i]
+    points = interpolation_nodes(lo, hi, chart, (_cheb_nodes(count) + 1) / 2)
+    if table.variables[i] == open_upper:
+        # Evaluate the interpolant from within the domain of this branch.
+        points = np.minimum(points, np.nextafter(hi, lo))
+    points = np.unique(points)
+    # The interpolating polynomial lives on the representable sample positions.
+    # A cell a few floats wide may support fewer samples than the ideal rule.
+    values = np.append(points, ref)
+    if chart == "log":
+        radius = 0.5 * log_displacement(hi, lo)
+        positions = log_displacement(values, lo) / radius - 1
+    else:
+        radius = 0.5 * hi - 0.5 * lo
+        if lo < 0 < hi:
+            positions = (values - (0.5 * lo + 0.5 * hi)) / radius
+        else:
+            positions = (values - lo) / radius - 1
+    inverse = np.linalg.inv(chebyshev.chebvander(positions[:-1], points.size - 1))
+    return _Axis(points, inverse, positions[-1], table.half_width[cell, i] / radius)
+
+
+def polynomial_columns(
+    table, cell, powers, value, extra, *, dimensions=None, open_upper=None
+):
     """Evaluate a local interpolant into the requested scaled Taylor rows."""
-    axes, counts = [], []
+    axes = []
     dimensions = range(len(table.variables)) if dimensions is None else dimensions
     names = [table.variables[i] for i in dimensions]
     for i in dimensions:
-        chart = table.chart[cell][i]
-        lo, hi, ref = table.lo[cell, i], table.hi[cell, i], table.reference[cell, i]
-        if chart == "log":
-            lo, hi, ref = np.log([lo, hi, ref])
-        axes.append(
-            _Axis((lo + hi) / 2, (hi - lo) / 2, ref, table.half_width[cell, i], chart)
-        )
         order = np.max(powers[:, i])
-        counts.append(int(order + extra) if order or extra > 3 else 3)
-    grids = [axis.point(_cheb_rule(n)[0]) for axis, n in zip(axes, counts, strict=True)]
+        count = int(order + extra) if order or extra > 3 else 3
+        axes.append(_interpolation_axis(table, cell, i, count, open_upper))
+    counts = [axis.points.size for axis in axes]
+    grids = [axis.points for axis in axes]
     values = [value(dict(zip(names, point, strict=True))) for point in product(*grids)]
     table_values = np.asarray(values).reshape(*counts, *np.shape(values[0]))
     rows = []
     for power in powers:
         row = table_values
-        for axis, degree, count in zip(
-            axes, power[list(dimensions)], counts, strict=True
-        ):
-            row = np.tensordot(axis.coefficients(int(degree), count), row, axes=1)
+        for axis, degree in zip(axes, power[list(dimensions)], strict=True):
+            row = np.tensordot(axis.coefficients(int(degree)), row, axes=1)
         rows.append(row)
     return np.asarray(rows)
 

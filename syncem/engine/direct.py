@@ -48,6 +48,12 @@ TAIL_X = 1e-9
 _MARGIN = 1 - 8 * np.finfo(float).eps
 
 
+def continuum_children(kernel):
+    """Continuum children whose direct integrals use the local continuation."""
+    children = kernel.kernels if isinstance(kernel, HybridKernel) else (kernel,)
+    return tuple(child for child in children if type(child) is ContinuumKernel)
+
+
 def _tail_x(kernel: ContinuumKernel) -> float:
     return min(float(kernel.model.x_min), TAIL_X)
 
@@ -63,9 +69,9 @@ def continuum_tail_thresholds(
     if type(kernel) is not ContinuumKernel or b_perp_max is None:
         return None
     b = float(b_perp_max)
-    if not np.isfinite(b) or b < 0:
-        raise ValueError("b_perp_max must be a finite nonnegative field in G")
-    if b == 0:
+    if np.isnan(b) or b < 0:
+        raise ValueError("b_perp_max must be a nonnegative field in G")
+    if b == 0 or np.isposinf(b):
         return None
     scale = A1_HZ_PER_G * b * _tail_x(kernel)
     return np.sqrt(_channel_lows(channels) / scale) * _MARGIN
@@ -95,7 +101,9 @@ class _ContinuumTail(eqx.Module):
         positive, _, scale = self.continuum.model._geometry(
             1.0, point["B"], point.get("eta", 0.0)
         )
-        threshold = jnp.sqrt(jnp.asarray(nu, dtype=float) / scale / self.x_tail) * _MARGIN
+        threshold = (
+            jnp.sqrt(jnp.asarray(nu, dtype=float) / scale / self.x_tail) * _MARGIN
+        )
         return jnp.where(positive, threshold, jnp.inf)
 
     def channel(self, channels, point, *, phase, per_node=False):
@@ -114,14 +122,27 @@ class _ContinuumTail(eqx.Module):
 def _continued(
     averaged: AveragedKernel, channels: Any, b_perp_max: float | None
 ) -> AveragedKernel:
-    if continuum_tail_thresholds(averaged.kernel, channels, b_perp_max) is None:
+    if not continuum_children(averaged.kernel) or b_perp_max is None:
+        return averaged
+    b = float(b_perp_max)
+    if np.isnan(b) or b < 0:
+        raise ValueError("b_perp_max must be a nonnegative field in G")
+    if b == 0:
         return averaged
     kernel = averaged.kernel
-    x_tail = _tail_x(kernel)
-    lowered = dataclasses.replace(kernel, x_min=x_tail)
-    return eqx.tree_at(
-        lambda a: a.kernel, averaged, _ContinuumTail(lowered, x_tail)
+
+    def adapt(child):
+        if type(child) is not ContinuumKernel:
+            return child
+        x_tail = _tail_x(child)
+        return _ContinuumTail(dataclasses.replace(child, x_min=x_tail), x_tail)
+
+    evaluator = (
+        kernel._with_evaluators(adapt(child) for child in kernel.kernels)
+        if isinstance(kernel, HybridKernel)
+        else adapt(kernel)
     )
+    return eqx.tree_at(lambda a: a.kernel, averaged, evaluator)
 
 
 def _positive_batch(batch: int) -> int:

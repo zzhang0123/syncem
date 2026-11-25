@@ -81,4 +81,5 @@ def with_tabulated_rules(
         leaf_factors=averaged.leaf_factors,
         legendre_panels=averaged.legendre_panels,
         diagonal=averaged.diagonal,
+        emission_ties=averaged.emission_ties,
     )

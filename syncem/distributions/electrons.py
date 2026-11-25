@@ -24,6 +24,8 @@ from ._common import (
     concrete,
     count,
     interval,
+    log_interval as _log_panel,
+    log_span,
     node_count,
     probabilities,
     require,
@@ -62,12 +64,6 @@ def _nonnegative(value, name):
     if concrete(x):
         require(x >= 0, f"{name} must be nonnegative")
     return x
-
-
-def _log_panel(lo, hi, n):
-    logs, w = interval(jnp.log(lo), jnp.log(hi), n)
-    gamma = jnp.exp(logs)
-    return gamma, w * gamma
 
 
 def _tail_panel(lo, n):
@@ -159,6 +155,14 @@ class ElectronFamily(Law):
             "electron density must have finite positive mass for column=",
         )
         return jnp.where(jnp.isfinite(mass) & (mass > 0), self.column / mass, jnp.nan)
+
+    def integrated_column(self):
+        """Total electron column in cm^-2 for the specified family."""
+        return (
+            self.column
+            if self.column is not None
+            else self._coefficient() * self._unnormalised_mass()
+        )
 
     def density(self, x, *, parents=None):
         """Column density dN/dgamma, including its normalisation."""
@@ -254,7 +258,7 @@ class PowerLaw(ElectronFamily):
         if concrete(hi, self.index) and not np.isfinite(hi) and self.index <= 1:
             raise ValueError("column= for an unbounded PowerLaw needs index > 1")
         finite = jnp.isfinite(hi)
-        width = jnp.log(jnp.where(finite, hi, lo) / lo)
+        width = log_span(lo, jnp.where(finite, hi, lo))
         q = 1 - self.index
         y = q * width
         denominator = jnp.where(y == 0, 1.0, y)

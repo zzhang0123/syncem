@@ -365,7 +365,13 @@ def solve_sum(problem, rank, chunk_bytes, *, keep_directions=False):
         repr(tuple((x.lattice.key, x.columns.key) for x in basis.parts)).encode()
     ).hexdigest()
     retained = RetainedCombinations(
-        solution.beta, solution.sigma, directions, solution.rank, key, unit=data.unit
+        solution.beta,
+        solution.sigma,
+        directions,
+        solution.rank,
+        key,
+        unit=data.unit,
+        observations=data,
     )
     base = _spectrum_ledger(basis.parts)
     ledger = Ledger(

@@ -29,7 +29,7 @@ UNITS = (
 )
 ISOTROPIC = AssumptionRecord(
     "isotropic_pitch",
-    "eq: conditional legendre coefficients [required by ContinuumKernel]",
+    "eq: conditional legendre coefficients [ContinuumKernel uniform pitch closure]",
     (("gamma", "B", "eta", "phi", "depth"), ("mu",)),
     "uniform_mu",
     (),
@@ -115,6 +115,11 @@ def check_kernel(kernel, channels, truncation, support, reference, allow, notes)
         raise ValueError(
             f"{type(kernel).__name__} requires the uniform_mu closure "
             "(isotropic pitch): use L_mu = 0"
+            + (
+                " or choose ContinuumKernel(pitch='joint') for joint moments"
+                if getattr(kernel, "pitch", None) == "isotropic"
+                else ""
+            )
         )
     line_kernel = hasattr(kernel, "line_frequencies")
     if line_kernel and channels.smoothness < truncation.N + 1:
@@ -131,7 +136,7 @@ def check_kernel(kernel, channels, truncation, support, reference, allow, notes)
         if required > _core.M_REGIME:
             raise ValueError(
                 f"required_m_max={required} lies outside the harmonic design regime "
-                f"(m <~ {_core.M_REGIME}); use ContinuumKernel with isotropic_pitch"
+                f"(m <~ {_core.M_REGIME}); use ContinuumKernel"
             )
         if kernel.m_max < required and not allow_truncated:
             raise ValueError(

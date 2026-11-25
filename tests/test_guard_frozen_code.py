@@ -8,10 +8,10 @@
    version and gains the front door), has its v0.7.10 SHA-256. The hashes are stored in
    ``guard_v0_7_10_hashes.json``, written once from ``git show v0.7.10:<path>``. Files
    corrected after the tag with the owner's approval are listed under ``amended`` with
-   their v0.7.10 hash and reason (SPEC decision 197).
+   their v0.7.10 hash and reason (SPEC decisions 197, 200 and 201).
 
 A deliberate change to existing code updates the stored hash in the same commit, with the reason in
-the commit message. The manuscript cites v0.7.10, so such a change needs the owner's approval.
+the commit message. Changes to these files need the owner's approval.
 """
 
 import hashlib
@@ -141,7 +141,20 @@ def test_amended_files_record_their_tagged_hash():
     stored = _stored()
     amended = stored.get("amended", {})
     assert set(amended) <= set(stored["sha256"])
-    assert not any(path.startswith("syncem/model/") for path in amended)
+    joint_pitch_files = {
+        "syncem/model/_basis_checks.py",
+        "syncem/model/_basis_core.py",
+        "syncem/model/_continuum.py",
+        "syncem/model/_depth_bound.py",
+        "syncem/model/_direct.py",
+        "syncem/model/adapters.py",
+        "syncem/model/basis.py",
+        "syncem/model/bounds.py",
+        "syncem/model/predict.py",
+    }
+    assert {
+        path for path in amended if path.startswith("syncem/model/")
+    } == joint_pitch_files
     for entry in amended.values():
         assert len(entry["v0_7_10_sha256"]) == 64 and entry["reason"]
 

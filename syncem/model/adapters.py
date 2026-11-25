@@ -38,6 +38,7 @@ from ..constants import C_SI_M
 from ..expansion import mixed_moments
 from ..rm import burn_depolarisation
 from ..stokes import stokes_harmonic
+from ._continuum import check_basis_pitch
 from ._direct import direct_channel_average
 from ._remainder_probe import depth_rows, depth_tail
 from .errors import ErrorTerm
@@ -145,7 +146,15 @@ def _fixed_harmonic_direct(samples, harmonics, amplitude):
 
 
 def fixed_harmonic_comparison(
-    basis, expansion, samples, *, alpha0, theta0, kernel=None, amplitude=1.0
+    basis,
+    expansion,
+    samples,
+    *,
+    alpha0,
+    theta0,
+    kernel=None,
+    amplitude=1.0,
+    pitch_density=None,
 ) -> HarmonicComparison:
     """Compare ``predict`` on ``basis`` with ``expansion.mixed_average`` on ``samples``.
 
@@ -156,10 +165,18 @@ def fixed_harmonic_comparison(
     factors ``(B/B0)^2`` and ``(B/B0)^2 exp(2 i phi)``. The fixed-harmonic
     direct reference is ``syncem.stokes.stokes_harmonic`` at every sample.
     ``kernel`` (the basis kernel) enables the channel direct average.
+    For a joint continuum kernel, supply joint samples and the generating
+    population's conditional pitch density at mu=eta for each sample.
+    The fixed harmonics use the sampled pitch. The direct continuum average
+    integrates over pitch and uses the remaining sample coordinates.
     Units: see :class:`HarmonicComparison`. Assumes the same vacuum
     helical-orbit model on both sides. Nothing is certified beyond the
     measured differences on ``samples``.
     """
+    if kernel is not None:
+        check_basis_pitch(basis, kernel)
+    elif pitch_density is not None:
+        raise ValueError("pitch_density needs kernel= for the channel direct average")
     reference = basis.reference
     moments = JointMoments.from_samples(samples, basis.index, reference)
     channel = predict(basis, moments, amplitude=amplitude)
@@ -173,6 +190,7 @@ def fixed_harmonic_comparison(
             amplitude=amplitude,
             reference=reference,
             support=basis.support,
+            pitch_density=pitch_density,
         )
         channel_direct = direct.stokes
         channel_remainder = ErrorTerm(
@@ -234,7 +252,17 @@ class BurnCheck(NamedTuple):
 
 
 def burn_screen_check(
-    kernel, channels, gamma, B, mu, eta, mean, sigma, *, amplitude=1.0
+    kernel,
+    channels,
+    gamma,
+    B,
+    mu,
+    eta,
+    mean,
+    sigma,
+    *,
+    amplitude=1.0,
+    pitch_density=None,
 ) -> BurnCheck:
     """``GaussianScreen`` applied line by line versus Burn rotation at the channel centre.
 
@@ -247,16 +275,22 @@ def burn_screen_check(
     Units: ``amplitude`` times erg/s/sr per electron, ``mean`` in rad/m^2,
     ``sigma`` in rad/m^2, ``B`` in Gauss. Assumes an independent Gaussian
     screen. The difference is measured at one viewing point and is not a
-    bound over a population.
+    bound over a population. For a joint continuum kernel, supply the
+    conditional pitch density at mu=eta for this emitting point.
     """
     screen = GaussianScreen(
         jnp.asarray(mean, dtype=float), jnp.asarray(sigma, dtype=float)
     )
     amplitude = jnp.asarray(amplitude, dtype=float)
+    pitch = {"pitch_density": pitch_density} if pitch_density is not None else {}
     screened = (
-        amplitude * kernel.channel_modes(channels, gamma, B, mu, eta, phase=screen).P[0]
+        amplitude
+        * kernel.channel_modes(channels, gamma, B, mu, eta, phase=screen, **pitch).P[0]
     )
-    P0 = amplitude * kernel.channel_modes(channels, gamma, B, mu, eta, phase=None).P[0]
+    P0 = (
+        amplitude
+        * kernel.channel_modes(channels, gamma, B, mu, eta, phase=None, **pitch).P[0]
+    )
     lam = C_SI_M / jnp.asarray(channels.centres_hz)
     nominal = burn_depolarisation(P0, screen.mean, screen.sigma**2, lam)
     diff = jnp.abs(screened - nominal)

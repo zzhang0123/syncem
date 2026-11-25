@@ -19,6 +19,8 @@ from typing import Any
 import equinox as eqx
 import numpy as np
 
+from ._cell_values import edge_tolerance
+
 __all__ = ["CellTable"]
 
 
@@ -139,9 +141,7 @@ class CellTable(eqx.Module):
         lo, hi, ref = self.lo, self.hi, self.reference
         if np.any(np.isnan(lo)) or np.any(np.isnan(hi)) or np.any(~(lo < hi)):
             raise ValueError("every box needs lo < hi without NaN")
-        slack = 1e-12 * np.where(
-            np.isfinite(lo) & np.isfinite(hi), np.maximum(np.abs(lo), np.abs(hi)), 0.0
-        )
+        slack = edge_tolerance(lo, hi)
         if (
             np.any(ref < lo - slack)
             or np.any(ref > hi + slack)

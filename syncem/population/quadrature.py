@@ -21,8 +21,19 @@ import numpy as np
 
 from ..distributions.aged import AgedPowerLaw
 from ..distributions.electrons import ElectronFamily
+from ..distributions.user import UserFamily
+from ..lattice._cell_values import panel_coordinates
 from ..values.errors import RoleError
-from .declaration import law_at, ordered, parents, placed_law
+from ._diagonal import (
+    fixed_angular_knots,
+    host_diagonal_knots,
+    knot_parents,
+    knot_paths,
+    on_panel_nodes,
+)
+from ._node_offsets import point_displacement, sum_with_residual
+from ._panel_cuts import panel_knots, rounded_cuts
+from .declaration import ancestors, law_at, ordered, parents, placed_law
 
 _INTERVAL = (-np.inf, np.inf)
 
@@ -38,43 +49,98 @@ def _interval(lo, hi, n):
     return lo + half * (1 + x), half * w
 
 
-def _breaks(law, lo, hi, extra):
-    anchors = [lo, hi, *(x for x in extra if lo < x < hi)]
-    anchors.extend(x for x in getattr(law, "kinks", ()) if lo < x < hi)
-    return np.unique(anchors)
+def _density_panels(law, knots, chart, n, offsets, shifts=None):
+    """Integrate a density in local panel coordinates and retain node rounding."""
+    lower, upper = knots[:-1, None], knots[1:, None]
+    nodes, weights = _legendre(n)
+    x, w, residual = panel_coordinates(
+        lower,
+        upper,
+        chart,
+        nodes,
+        weights,
+        offsets=offsets,
+        edge_offsets=None if shifts is None else (shifts[:-1, None], shifts[1:, None]),
+    )
+    x = x.ravel()
+    # The density at an excluded upper support endpoint can be zero. A Gauss
+    # node which rounds to that endpoint samples the left-hand limit.
+    evaluate = np.minimum(x.reshape(lower.size, n), np.nextafter(upper, lower))
+    if shifts is not None:
+        # Two distinct cuts can round to the upper endpoint of the law.
+        a, b = law.support
+        evaluate = np.clip(evaluate, a, np.nextafter(float(b), float(a)))
+    mass = w.ravel() * law.density(evaluate.ravel())
+    return (x, mass, residual.ravel()) if offsets else (x, mass)
 
 
-def _finite_rule(law, lo, hi, chart, n, extra):
-    knots = _breaks(law, lo, hi, extra)
-    for low, high in zip(knots[:-1], knots[1:]):
-        if hasattr(law, "panel_rule"):
-            yield law.panel_rule(low, high, n=n)
-        elif chart == "log" and low > 0:
-            z, w = _interval(np.log(low), np.log(high), n)
-            x = np.exp(z)
-            yield x, x * w * law.density(x)
+def _custom_panel(law, low, high, n, offsets):
+    nodes, weights = law.panel_rule(low, high, n=n)
+    if not offsets:
+        return nodes, weights
+    # This is a continuous integral. Even when a custom rule returns an
+    # endpoint, its weight represents this panel's interior.
+    nodes = np.asarray(nodes)
+    step = np.nextafter(0.0, 1.0)
+    residual = np.where(nodes == low, step, np.where(nodes == high, -step, 0.0))
+    return nodes, weights, residual
+
+
+def _finite_rule(law, lo, hi, chart, n, extra, *, offsets=False):
+    knots, residual = panel_knots(law, lo, hi, extra)
+    for i, (low, high) in enumerate(zip(knots[:-1], knots[1:])):
+        edges = knots[i : i + 2]
+        shifts = None if residual is None else residual[i : i + 2]
+        # Evaluate a smooth law in its own log chart when its absolute
+        # log endpoints lose precision. Preserve specialised cutoff rules.
+        narrow = low > 0 and high - low <= 1e-6 * low
+        smooth_log = (isinstance(law, UserFamily) and law.cutoff is None) or (
+            isinstance(law, ElectronFamily)
+            and type(law) is not AgedPowerLaw
+            and _batchable_density(law)
+        )
+        if narrow and smooth_log:
+            yield _density_panels(law, edges, "log", n, offsets, shifts)
+        elif hasattr(law, "panel_rule"):
+            yield from _custom_interval(law, edges, shifts, chart, n, offsets)
         else:
-            x, w = _interval(low, high, n)
-            yield x, w * law.density(x)
+            yield _density_panels(law, edges, chart, n, offsets, shifts)
 
 
-def _batched_finite_rule(law, lo, hi, chart, n, extra):
-    knots = _breaks(law, lo, hi, extra)
+def _custom_interval(law, edges, shifts, chart, n, offsets):
+    """Preserve the custom rule on the representable interior of a cut panel."""
+    low, high = edges
+    if shifts is None or not np.any(shifts):
+        yield _custom_panel(law, low, high, n, offsets)
+        return
+    a = np.nextafter(low, np.inf) if shifts[0] > 0 else low
+    b = np.nextafter(high, -np.inf) if shifts[1] < 0 else high
+    if a >= b:
+        yield _density_panels(law, edges, chart, n, offsets, shifts)
+        return
+    if shifts[0]:
+        yield _density_panels(
+            law, np.array([low, a]), chart, n, offsets, np.array([shifts[0], 0.0])
+        )
+    yield _custom_panel(law, a, b, n, offsets)
+    if shifts[1]:
+        yield _density_panels(
+            law, np.array([b, high]), chart, n, offsets, np.array([0.0, shifts[1]])
+        )
+
+
+def _batched_finite_rule(law, lo, hi, chart, n, extra, *, offsets=False):
+    knots, shifts = panel_knots(law, lo, hi, extra)
     if isinstance(law, AgedPowerLaw) and knots[-1] == float(law.gamma_cut):
-        yield law.panel_rule(knots[-2], knots[-1], n=n)
+        yield from _custom_interval(
+            law, knots[-2:], None if shifts is None else shifts[-2:], chart, n, offsets
+        )
         knots = knots[:-1]
+        if shifts is not None:
+            shifts = shifts[:-1]
         if knots.size == 1:
             return
-    log = chart == "log" and lo > 0
-    edges = np.log(knots) if log else knots
-    nodes, weights = _legendre(n)
-    widths = np.diff(edges)[:, None] / 2
-    x = (edges[:-1, None] + widths * (1 + nodes)).ravel()
-    w = (widths * weights).ravel()
-    if log:
-        x = np.exp(x)
-        w = w * x
-    yield x, w * law.density(x)
+    yield _density_panels(law, knots, chart, n, offsets, shifts)
 
 
 def _batchable_density(law):
@@ -86,15 +152,18 @@ def _batchable_density(law):
     )
 
 
-def _unbounded(law, lo, hi, chart, n, extra):
-    scales = [abs(x) for x in (lo, hi, *extra) if np.isfinite(x)]
+def _unbounded(law, lo, hi, chart, n, extra, *, offsets):
+    rounded = tuple(rounded_cuts(extra))
+    scales = [abs(x) for x in (lo, hi, *rounded) if np.isfinite(x)]
     scale = max([1.0, *scales])
     if np.isfinite(lo) and np.isinf(hi) and chart == "log":
         # Integrate in log panels to a finite anchor, then compactify the tail.
         last = max(100 * scale, 1e8) if hasattr(law, "panel_rule") else 100 * scale
         n_panels = math.ceil(math.log(last / max(lo, 1e-12)) / 0.7)
         log_grid = np.geomspace(max(lo, 1e-12), last, max(1, n_panels) + 1)
-        yield from _finite_rule(law, lo, last, chart, n, (*extra, *log_grid))
+        yield from _finite_rule(
+            law, lo, last, chart, n, (*extra, *log_grid), offsets=offsets
+        )
         t, w = _interval(0.0, 1.0, max(96, n))
         x = last / t
         yield x, w * last / t**2 * law.density(x)
@@ -106,10 +175,10 @@ def _unbounded(law, lo, hi, chart, n, extra):
         profile = float(centre) + scale * np.arange(-8, 9, 2)
     else:
         profile = (0.0,)
-    edges = _breaks(law, lo, hi, (*extra, *profile))
+    edges, _ = panel_knots(law, lo, hi, (*rounded, *profile))
     for a, b in zip(edges[:-1], edges[1:]):
         if np.isfinite(a) and np.isfinite(b):
-            yield from _finite_rule(law, a, b, chart, n, ())
+            yield from _finite_rule(law, a, b, chart, n, extra, offsets=offsets)
         else:
             lower = np.isneginf(a)
             t, w = _interval(0.0, 1.0, max(96, n))
@@ -122,7 +191,7 @@ def _unbounded(law, lo, hi, chart, n, extra):
                 yield x, w * scale / (1 - t) ** 2 * law.density(x)
 
 
-def _axis(law, interval, chart, n, extra, *, batch_panels=False):
+def _axis(law, interval, chart, n, extra, *, batch_panels=False, offsets=False):
     lo, hi = interval
     if not hasattr(law, "rule"):
         try:
@@ -150,9 +219,9 @@ def _axis(law, interval, chart, n, extra, *, batch_panels=False):
             if batch_panels and _batchable_density(law)
             else _finite_rule
         )
-        yield from rule(law, lo, hi, chart, n, extra)
+        yield from rule(law, lo, hi, chart, n, extra, offsets=offsets)
         return
-    yield from _unbounded(law, lo, hi, chart, n, extra)
+    yield from _unbounded(law, lo, hi, chart, n, extra, offsets=offsets)
 
 
 def _expanded(nodes, weights, size):
@@ -177,26 +246,127 @@ def panels(
     diagonal=None,
     diagonal_filter=None,
     split_points=None,
+    aliases=None,
+    diagonal_paths=None,
+    fixed=None,
+    offset_axes=None,
 ):
     """Yield batches of flattened quadrature nodes and weights over a box.
 
     A diagonal maps one integrated axis to a density evaluated at that
     axis. A diagonal filter can restrict that route to particular parent
     nodes. Dynamic panel splits are evaluated at their declared parents.
+    Supplying offset_axes returns a third mapping of the sub-ulp displacement
+    of continuous nodes on the requested axes for physical face ownership.
     """
     supplied = tuple(name for block in blocks for name in block.variables)
     tied, driver = diagonal if diagonal is not None else (None, None)
-    split_points = split_points or {}
+    split_points = dict(split_points or {})
+    charts, breaks = charts or {}, breaks or {}
+    axis_nodes = axis_nodes or {}
+    aliases = aliases or {}
+    fixed = fixed or {}
+    paths = dict(diagonal_paths or {})
+    return_offsets = offset_axes is not None
+    offset_axes = frozenset(offset_axes or ())
+    # A conditional point inherits continuous displacements through its parents.
+    for axis in tuple(offset_axes):
+        offset_axes |= ancestors(factors, axis)
+    ties = {**aliases, **({tied: driver} if diagonal is not None else {})}
+    for source, target in ties.items():
+        if source in offset_axes:
+            offset_axes |= {target, *ancestors(factors, target)}
+
+    point_charts = {}
+
+    def axis_rule(name, law, point):
+        if name in offset_axes and point and getattr(law, "is_point", False):
+            nodes, weights = map(np.asarray, law.rule())
+            variable = variables.get(name) if variables else None
+            lo, hi = box.get(name, _INTERVAL)
+            faces = (*breaks.get(name, ()), lo, hi)
+            shift = point_displacement(
+                factors[name], variable, units, point, nodes[0], faces, point_charts
+            )
+            if shift is not None:
+                nodes, shifts = sum_with_residual(nodes, shift)
+                keep = _in_interval(nodes, lo, hi, shifts)
+                return (
+                    ((nodes[keep], weights[keep], shifts[keep]),)
+                    if np.any(keep)
+                    else ()
+                )
+        extra = breaks.get(name, ())
+        if (
+            name in split_points
+            and hasattr(law, "density")
+            and not getattr(law, "is_point", False)
+        ):
+            extra = (*extra, *split_points[name][1](point))
+        return _axis(
+            law,
+            box.get(name, _INTERVAL),
+            charts.get(name, "affine"),
+            axis_nodes.get(name, n),
+            extra,
+            batch_panels=name in split_points,
+            offsets=name in offset_axes,
+        )
+
+    def rule_nodes(name, law, point):
+        if variables and name in variables:
+            law = placed_law(law, variables[name])
+        rows = [np.asarray(rule[0]) for rule in axis_rule(name, law, point)]
+        return np.concatenate(rows) if rows else np.empty(0)
+
+    if tied is not None:
+        folded = factors[tied]
+
+        knots = (
+            fixed_angular_knots(folded, units)
+            if parents(folded)
+            else (*getattr(folded, "support", ()), *getattr(folded, "kinks", ()))
+        )
+        if knots is not None:
+            breaks = {**breaks, driver: (*breaks.get(driver, ()), *knots)}
+        elif driver in factors:
+            paths[driver] = knot_paths(factors, tied, driver, rule_nodes, host=True)
+
+    for axis, geom in paths.items():
+        geometry = on_panel_nodes(geom, factors, rule_nodes)
+        deps = set(knot_parents(geometry)) - {axis} - fixed.keys()
+        prior_deps, prior_knots = split_points.get(axis, ((), None))
+
+        def folded_knots(point, axis=axis, geometry=geometry, existing=prior_knots):
+            lower, upper = box.get(axis, (-1.0, 1.0))
+            interval = max(lower, -1.0), min(upper, 1.0)
+            roots = host_diagonal_knots(
+                geometry, axis, {**fixed, **point}, units, interval
+            )
+            return roots if existing is None else (*existing(point), *roots)
+
+        split_points[axis] = (set(prior_deps) | deps, folded_knots)
     requires = {name: set(deps) for name, (deps, _) in split_points.items()}
     if tied is not None:
         requires.setdefault(tied, set()).add(driver)
-    spec = ordered(factors, available=supplied, requires=requires)
-    charts, breaks = charts or {}, breaks or {}
-    axis_nodes = axis_nodes or {}
+    spec = ordered(factors, available=supplied, requires=requires, aliases=aliases)
 
     def walk(level, current, mass):
+        for source, target in aliases.items():
+            if target in current and source not in current:
+                current = {**current, source: current[target]}
+                if source in offset_axes and (target,) in current:
+                    current[(source,)] = current[(target,)]
         if level == len(spec):
-            yield current, mass
+            if return_offsets:
+                # Tuple keys carry sub-ulp displacements alongside their axes
+                # while the product rule expands and slices parent nodes.
+                shifts = {k[0]: v for k, v in current.items() if isinstance(k, tuple)}
+                yield {
+                    k: v for k, v in current.items() if isinstance(k, str)
+                }, mass, shifts
+            else:
+                yield current, mass
             return
         name, declaration = spec[level]
         dependencies = parents(declaration)
@@ -232,24 +402,20 @@ def panels(
                 f"the beaming diagonal needs a continuous density for {name}"
             )
         nodes = current[driver]
+        if name in offset_axes and (driver,) in current:
+            current = {**current, (name,): current[(driver,)]}
         yield from walk(level + 1, {**current, name: nodes}, mass * law.density(nodes))
 
     def extend(level, name, law, current, mass, point=None):
-        chart = charts.get(name, "affine")
-        setting = box.get(name, _INTERVAL)
-        count = axis_nodes.get(name, n)
-        extra = breaks.get(name, ())
-        if name in split_points:
-            extra = (*extra, *split_points[name][1](point))
-        for nodes, weights in _axis(
-            law, setting, chart, count, extra, batch_panels=name in split_points
-        ):
-            nodes, weights = np.asarray(nodes), np.asarray(weights)
+        for rule in axis_rule(name, law, point):
+            nodes, weights = map(np.asarray, rule[:2])
             if nodes.ndim != 1 or weights.shape != nodes.shape:
                 raise RoleError(f"{name} must return one-dimensional nodes and weights")
             for i, j in _expanded(nodes, mass, batch):
                 points = {key: values[i] for key, values in current.items()}
                 points[name] = nodes[j]
+                if len(rule) == 3:
+                    points[(name,)] = rule[2][j]
                 yield from walk(level + 1, points, mass[i] * weights[j])
 
     def seed(level, current, mass):
@@ -280,33 +446,42 @@ def cell_boxes(table):
     )
 
 
-def ownership(points, table, count, *, open_upper=None):
-    """Index of the first containing box, or -1, for each column of points."""
+def _in_interval(values, lo, hi, shift, *, upper_open=False):
+    if shift is None:
+        return (lo <= values) & ((values < hi) if upper_open else (values <= hi))
+    lower = (lo < values) | ((lo == values) & (shift >= 0))
+    upper = (values < hi) | (
+        (values == hi) & ((shift < 0) if upper_open else (shift <= 0))
+    )
+    return lower & upper
+
+
+def ownership(points, table, count, *, open_upper=None, offsets=None):
+    """Index the first containing box, retaining the sides of rounded nodes."""
+    offsets = offsets or {}
     found = np.full(count, -1, dtype=int)
     for cell, (lo, hi) in enumerate(zip(table.lo, table.hi)):
         match = found < 0
         for i, name in enumerate(table.variables):
-            upper = (
-                points[name] < hi[i]
-                if open_upper and open_upper.get(name) == hi[i]
-                else points[name] <= hi[i]
+            match &= _in_interval(
+                points[name],
+                lo[i],
+                hi[i],
+                offsets.get(name),
+                upper_open=open_upper and open_upper.get(name) == hi[i],
             )
-            match &= (lo[i] <= points[name]) & upper
         found[match] = cell
     return found
 
 
-def box_owner(points, boxes, count):
-    """Index of the first closed box containing each column of points, or -1.
-
-    Complement boxes share faces, so a point on a shared face belongs to the
-    first box only.
-    """
+def box_owner(points, boxes, count, *, offsets=None):
+    """Index the first closed complement box containing each node."""
+    offsets = offsets or {}
     found = np.full(count, -1, dtype=int)
     for k, box in enumerate(boxes):
         match = found < 0
         for name, (lo, hi) in box.items():
-            match &= (lo <= points[name]) & (points[name] <= hi)
+            match &= _in_interval(points[name], lo, hi, offsets.get(name))
         found[match] = k
     return found
 

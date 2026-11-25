@@ -163,6 +163,24 @@ def interval(lo, hi, n):
     return lo + (t + 1) * width, w * width
 
 
+def log_span(lo, hi):
+    """Logarithmic separation of nearby or widely spaced positive bounds."""
+    near = hi - lo <= 0.5 * lo
+    relative = (jnp.where(near, hi, lo) - lo) / lo
+    return jnp.where(near, jnp.log1p(relative), jnp.log(hi) - jnp.log(lo))
+
+
+def log_interval(lo, hi, n):
+    """Gauss nodes in log x with physical dx weights on a positive interval."""
+    t, w = _legendre(n)
+    near = hi - lo <= 0.5 * lo
+    span = log_span(lo, hi)
+    step = 0.5 * span * (1 + t)
+    local = lo * jnp.expm1(jnp.where(near, step, 0.0))
+    x = jnp.where(near, lo + local, jnp.exp(jnp.log(lo) + step))
+    return x, 0.5 * span * w * x
+
+
 def probabilities(nodes, weights):
     total = jnp.sum(weights)
     require(jnp.isfinite(total) & (total > 0), "rule must have positive finite mass")

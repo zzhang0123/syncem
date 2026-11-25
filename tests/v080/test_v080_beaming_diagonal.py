@@ -126,7 +126,7 @@ def test_mixed_direct_reference_splits_cells_at_folded_density_jumps(channels):
     np.testing.assert_allclose(direct.I, expected, atol=5e-14, rtol=0)
 
 
-def test_doubly_celled_and_joint_point_routes_refuse(channels):
+def test_doubly_celled_route_refuses(channels):
     pop = se.Population(pitch=se.Isotropic(), look=se.Isotropic())
     axis = se.Cells.linear(-1, 1, 2, order=1)
     with pytest.raises(se.RoleError, match="Beaming"):
@@ -137,10 +137,6 @@ def test_doubly_celled_and_joint_point_routes_refuse(channels):
             lattice=se.Lattice(pitch=axis, look=axis),
             check=False,
         )
-    points = se.Population(se.Samples(pitch=[-0.3, 0.3], look=[-0.2, 0.6]))
-    lat = se.Lattice(pitch=se.Legendre(2), look=se.Legendre(2))
-    with pytest.raises(se.RoleError, match="joint point samples"):
-        se.spectral_basis(points, channels, kernel=_simple, lattice=lat, check=False)
 
 
 def test_celled_pitch_axis_needs_all_cosines_with_a_legendre_partner(channels):

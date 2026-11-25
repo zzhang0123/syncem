@@ -37,7 +37,7 @@ divided by ``N_src``). A concrete ``delta N_src = 0`` is a zero
 ``bound`` (amplitude declared exact) and a negative one raises. The first
 ``AssumptionRecord`` of the moments gets ``N_src |C| Delta`` from ``moments.discrepancy`` or is
 ``unbounded``. Every further record is ``unbounded``. Assumptions forced by
-the basis (phase-route screens, the continuum kernel's isotropic pitch) are
+the basis (phase-route screens, the default continuum pitch closure) are
 ``unbounded`` and override a moment-level term of the same name, since the
 retained moments do not resolve what they constrain. ``assumption_allowances``
 (keyword addition, ``{name: ErrorTerm}`` in Stokes units) replaces the term
@@ -68,6 +68,7 @@ import jax.numpy as jnp
 
 from . import _budget_terms as terms
 from ._allowances import allowance_notes, check_allowances, split_assumption_terms
+from ._continuum import check_basis_pitch, joint_pitch_basis
 from ._direct import direct_channel_average, excluded_tail_term, truncation_term
 from ._prediction import LABEL, Prediction
 from .bounds import RemainderInputs
@@ -115,6 +116,12 @@ def _basis_remainder(errors, basis, amplitude):
 def _probed_errors(samples, basis, kernel):
     """``RemainderInputs.from_samples`` on the basis phase route, or an
     ``unbounded`` term when the order-``N+1`` probe is not validated."""
+    if joint_pitch_basis(basis):
+        return ErrorTerm.unbounded(
+            "the joint continuum angular residual needs a population-integrated "
+            "envelope. Atomic pitch samples do not determine the diagonal density.",
+            "N_src <rho_nu>",
+        )
     N = basis.index.truncation.N
     validated = tuple(int(o) for o in basis.certified_orders)
     if N + 1 not in validated:
@@ -241,6 +248,8 @@ def predict(
         raise ValueError("moments.index must equal basis.index")
     if samples is not None and kernel is None:
         raise ValueError("samples need kernel= (the kernel that built the basis)")
+    if samples is not None:
+        check_basis_pitch(basis, kernel)
     amplitude = terms.as_amplitude(amplitude)
     n_ch = basis.n_ch
     C = basis.response_matrix()

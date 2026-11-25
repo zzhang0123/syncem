@@ -161,6 +161,11 @@ def _validate_component(sources, resolved, representations, kernel, average, lat
                 raise RoleError(
                     f"Ray needs axes for {sorted(missing)}. Omit lattice= to use direct integration."
                 )
+        if source.kind == "Samples" and any(
+            isinstance(cap, Beaming) and source.variables == (cap.variable,)
+            for cap in kernel.capabilities
+        ):
+            missing.clear()
         if lattice is not None and source.kind in _RESOLVED_BLOCKS and missing:
             if not _independent_phi(source, kernel, sources, average):
                 raise RoleError(

@@ -62,17 +62,13 @@ def problem(population, data, *, basis=None, prior=None, **options):
     if not isinstance(data, StokesData):
         raise TypeError("problem needs StokesData")
     component = _population(population)
-    check_azimuth_declared(
-        component, data, _model_of(options.get("kernel"), basis)
-    )
+    check_azimuth_declared(component, data, _model_of(options.get("kernel"), basis))
     if component.components:
         return sum_problem(component, data, basis=basis, prior=prior, **options)
     if isinstance(basis, BasisSum):
         raise RoleError("a BasisSum needs a population sum")
     if basis is not None:
-        check_declared(
-            basis, kernel=options.get("kernel"), phase=options.get("phase")
-        )
+        check_declared(basis, kernel=options.get("kernel"), phase=options.get("phase"))
     average = options.pop("average", ())
     assumptions = ()
     if average:
@@ -160,11 +156,23 @@ def fit(
             from dataclasses import replace
 
             destination = basis.at(predict)
-            result = replace(
-                result,
-                basis=destination,
-                moments=destination.moments(result.population),
-            )
+
+            def at_destination(fitted):
+                return replace(
+                    fitted,
+                    basis=destination,
+                    moments=destination.moments(fitted.population),
+                )
+
+            from ..fitting._family_batch import FamilyBatch
+
+            if isinstance(result, FamilyBatch):
+                result = replace(
+                    result,
+                    pixels=tuple(at_destination(pixel) for pixel in result.pixels),
+                )
+            else:
+                result = at_destination(result)
         return result
     if isinstance(data, RetainedCombinations):
         if (
@@ -183,10 +191,17 @@ def fit(
             raise RoleError("the compressed family fit needs the original lattice key")
         if kernel is not None and kernel is not original.averaged.kernel:
             raise RoleError("the compressed family fit needs the original kernel")
+        component = _population(population)
+        if hasattr(
+            component.factors.get(original.averaged.kernel.primary), "basis_density"
+        ):
+            from ..fitting.moment_form import fit_moment_form
+
+            return fit_moment_form(original, data, component, chunk_bytes=chunk_bytes)
         return fit_family(
             original,
             data,
-            _population(population),
+            component,
             starts=starts,
             allow_mismatch=allow_mismatch,
         )

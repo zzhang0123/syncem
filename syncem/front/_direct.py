@@ -9,9 +9,8 @@ import numpy as np
 from ..base.continuum import ContinuumKernel
 from ..base.hybrid import HybridKernel
 from ..engine._fourier_reference import projected_integral
-from ..engine.direct import continuum_tail_threshold, integrate
+from ..engine.direct import continuum_children, continuum_tail_threshold, integrate
 from ..engine.provider_fourier import fourier_axis
-from ..planning.defaults import beaming_knots
 from ..population import Population
 from ..population.declaration import parents
 from ..population.quadrature import (
@@ -24,6 +23,9 @@ from ..population.quadrature import (
 from ..records.ledger import ErrorTerm, Ledger
 from ..values.spectrum import Spectrum
 from ..values.errors import RoleError
+from ._beaming_layout import crossing_terms
+from ._direct_tail import DirectTail
+from ._sample_beaming import angular_ledger
 from ._setup import (
     configure,
     support_for,
@@ -47,13 +49,17 @@ def _face_breaks(setup, lattice, channels):
         name: tuple(np.unique(np.r_[table.lo[:, i], table.hi[:, i]]))
         for i, name in enumerate(table.variables)
     }
-    for source, target in setup.averaged.ties:
-        knots = beaming_knots(setup.population.factors.get(source))
+    for target, knots in setup.beaming_breaks.items():
         breaks[target] = (*breaks.get(target, ()), *knots)
-    threshold = continuum_tail_threshold(setup.averaged.kernel, channels, setup.b_max)
-    if threshold is not None:
-        primary = setup.averaged.kernel.primary
-        breaks[primary] = (*breaks.get(primary, ()), threshold)
+    kernel = setup.averaged.kernel
+    if isinstance(kernel, HybridKernel) and kernel.switch is not None:
+        axis, edge = kernel.switch
+        breaks[axis] = (*breaks.get(axis, ()), edge)
+    for child in continuum_children(kernel):
+        threshold = continuum_tail_threshold(child, channels, setup.b_max)
+        if threshold is not None:
+            primary = child.primary
+            breaks[primary] = (*breaks.get(primary, ()), threshold)
     return breaks
 
 
@@ -84,18 +90,22 @@ def _panel_geometry(setup, lattice, channels, within, *, nodes=24, cells=None):
     folded = {}
     for source, target in setup.averaged.ties:
         law = setup.population.factors.get(source)
-        # A static folded density contributes zero outside its own support.
-        # Conditional edges are evaluated at the parent nodes as before.
         if not parents(law) and hasattr(law, "support"):
             folded[target] = tuple(map(float, law.support))
+    folded_cells = tuple((s, t) for s, t in setup.averaged.ties if s in table.variables)
     for piece, (expected, box) in enumerate(boxes):
         clipped = dict(box)
+        for source, target in folded_cells:
+            if source in clipped:
+                lo, hi = clipped.pop(source)
+                a, b = clipped.get(target, (-np.inf, np.inf))
+                clipped[target] = max(a, lo), min(b, hi)
         for target, (lower, upper) in folded.items():
-            lo, hi = box.get(target, (-np.inf, np.inf))
+            lo, hi = clipped.get(target, (-np.inf, np.inf))
             clipped[target] = max(lo, lower), min(hi, upper)
         if any(lo > hi for lo, hi in clipped.values()):
             continue
-        for point, weights in panels(
+        for point, weights, shifts in panels(
             setup.resolved,
             clipped,
             blocks=setup.population.blocks,
@@ -105,11 +115,27 @@ def _panel_geometry(setup, lattice, channels, within, *, nodes=24, cells=None):
             breaks=breaks,
             n=nodes,
             axis_nodes=axis_nodes,
+            diagonal_paths={
+                name: geom
+                for name, geom in setup.beaming_geometry.items()
+                if name in setup.resolved and name not in setup.beaming_breaks
+            },
+            fixed=dict(setup.averaged.fixed),
+            aliases=dict(setup.averaged.ties),
+            offset_axes=set(table.variables) | {target for _, target in folded_cells},
         ):
             if expected is not None:
-                match = ownership(point, table, weights.size) == expected
+                coordinates = {**point, **{s: point[t] for s, t in folded_cells}}
+                shifts.update((s, shifts[t]) for s, t in folded_cells if t in shifts)
+                match = (
+                    ownership(coordinates, table, weights.size, offsets=shifts)
+                    == expected
+                )
                 if within == "outside":
-                    match &= box_owner(point, pieces, weights.size) == piece
+                    match &= (
+                        box_owner(coordinates, pieces, weights.size, offsets=shifts)
+                        == piece
+                    )
                 if not np.any(match):
                     continue
                 point, weights = (
@@ -123,7 +149,7 @@ class UnassignedSupport(RoleError):
     """The hybrid cell assignment has no declaration on uncovered support."""
 
 
-def _direct_values(basis, population, within):
+def _direct_values(basis, population, within, *, tail=None):
     lat, ch = basis.lattice, basis.channels
     setup = configure(
         population, basis.averaged.kernel, ch, lat, basis.forward_phase, direct=True
@@ -141,6 +167,8 @@ def _direct_values(basis, population, within):
         b_perp_max=setup.b_max,
         azimuth_factor=setup.azimuth,
     )
+    if tail is not None:
+        tail.record(setup, lat.cells, ch, within)
     return _stokes_array(basis, modes), setup
 
 
@@ -179,33 +207,30 @@ def direct(basis, population, *, within="support"):
     if within not in ("support", "cells"):
         raise ValueError("within must be 'support' or 'cells'")
     parts = population.parts if isinstance(population, Population) else (population,)
-    values = []
-    notes, tails = [], []
+    values, declarations = [], []
+    tail = DirectTail()
+    notes = []
     for part in parts:
-        val, setup = _direct_values(basis, part, within)
+        val, setup = _direct_values(basis, part, within, tail=tail)
         values.append(val)
+        declarations.append(setup.population)
         kernel = setup.averaged.kernel
         if type(kernel) is not ContinuumKernel:
             continue
-        lo, hi = support_for(setup.population, kernel.primary)
+        lo, _ = support_for(setup.population, kernel.primary)
         if within == "support" and lo < kernel.gamma_min:
             notes.append("declared support extends below the continuum kernel regime")
-        table = basis.lattice.cells
-        if within == "cells" and kernel.primary in table.variables:
-            column = table.variables.index(kernel.primary)
-            hi = min(hi, float(np.max(table.hi[:, column])))
-        cutoff = continuum_tail_threshold(kernel, basis.channels, setup.b_max)
-        if cutoff is not None and hi > cutoff:
-            tails.append(
-                "the integrated support can reach the small-x continuation "
-                f"above gamma = {cutoff:.6g}"
-            )
-    ledger = basis.ledger
-    extra = []
+    ledger = angular_ledger(
+        basis.ledger, basis.averaged.kernel, basis.lattice, declarations
+    )
+    extra = [
+        term
+        for term in crossing_terms(declarations, basis.averaged.kernel)
+        if all(t.name != term.name for t in ledger.terms)
+    ]
     if notes:
         extra.append(ErrorTerm.unbounded(notes[0], name="regime"))
-    if tails:
-        extra.append(ErrorTerm.unbounded(tails[0], name="small_x:tail"))
+    extra.extend(tail.terms)
     if extra:
         ledger = Ledger((*ledger.terms, *extra), assumptions=ledger.assumptions)
     return _spectrum(basis, sum(values), ledger=ledger)

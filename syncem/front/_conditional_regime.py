@@ -18,6 +18,7 @@ from ..population.quadrature import ownership
 from ..records.ledger import ErrorTerm, Ledger
 from ..values.errors import RoleError
 from ..values.spectrum import Spectrum
+from ._beaming_layout import crossing_terms
 from ._regime_measure import physical_panels, pair_branch, source_columns
 from ._regimes import RegimeBasis, _check_statistics, _phase
 from ._setup import placed
@@ -104,7 +105,7 @@ def _continuum(regime, parts, count):
         memo.close()
     batch_size = max(1, 2**17 // frequency.size)
     for pop in parts:
-        for point, spin, mass in physical_panels(
+        for point, spin, mass, shifts in physical_panels(
             pop,
             lattice,
             "continuum",
@@ -113,8 +114,9 @@ def _continuum(regime, parts, count):
             ("depth",),
             nodes=count,
             min_width=width,
+            return_offsets=True,
         ):
-            cells = ownership(point, lattice.cells, mass.size)
+            cells = ownership(point, lattice.cells, mass.size, offsets=shifts)
             total += float(mass.sum())
             outside += float(mass[cells < 0].sum())
             inside = np.flatnonzero(cells >= 0)
@@ -183,7 +185,7 @@ class ConditionalRegimeBasis(RegimeBasis):
         )
         _check_statistics(parts, self.averaged, conditional_screen=self.screen.law)
         check = self.refine if check is None else check
-        terms = list(self.harmonic.ledger.terms)
+        terms = [*self.harmonic.ledger.terms, *crossing_terms(parts)]
         terms.append(
             ErrorTerm.unbounded(
                 "harmonic cell representation and continuum physical approximation",

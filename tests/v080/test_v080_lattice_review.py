@@ -272,12 +272,15 @@ def test_cells_reference_inside_and_spelling_follows():
 # ------------------------------------------------------------------ verification round
 
 
-def test_recentre_accepts_edges_equal_to_rounding():
+def test_recentre_requires_identical_internal_faces_for_point_measures():
     a = Cells.linear(-0.3, 0.7, 10, order=2)
     b = Cells.from_edges(np.round(a.edges, 12), chart="affine", order=2)
     la, lb = Lattice(eta=a), Lattice(eta=b)
-    out = la.recentre(Moments(la, np.ones(la.n)), to=lb)
-    assert np.all(np.isfinite(np.asarray(out.values)))
+    # The nominal zero face lies just above zero in the first grid. Rounding
+    # transfers the atom at zero to a different cell in the target grid.
+    assert a.edges[3] > 0 and b.edges[3] == 0
+    with pytest.raises(ValueError, match="same cells"):
+        la.recentre(Moments(la, np.ones(la.n)), to=lb)
 
 
 def test_recentre_of_edgeless_cells_emits_no_warning():

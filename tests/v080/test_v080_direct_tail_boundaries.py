@@ -144,3 +144,103 @@ def test_zero_transverse_field_emits_zero(b, eta):
     point = {"gamma": 1e9, "B": b, "eta": eta}
     for mode in TAIL.channel(CHANNELS, point, phase=None, per_node=True):
         np.testing.assert_array_equal(mode, np.zeros_like(mode))
+
+
+def test_unbounded_field_bound_enables_local_tail_and_rejects_invalid_bounds():
+    from syncem.engine.average import AveragedKernel
+    from syncem.engine.direct import (
+        continuum_tail_threshold,
+        continuum_tail_thresholds,
+        node_modes,
+    )
+
+    kernel = se.ContinuumKernel(x_min=1e-7)
+    channels = se.Channels.at([0.01, 1.4], unit="GHz", half_width=0.1, n_nu=8)
+    assert continuum_tail_thresholds(kernel, channels, np.inf) is None
+    assert continuum_tail_threshold(kernel, channels, np.inf) is None
+    for bad in (-1.0, -np.inf, np.nan):
+        with pytest.raises(ValueError, match="field in G"):
+            continuum_tail_thresholds(kernel, channels, bad)
+    avg = AveragedKernel(kernel, fixed={"B": 5e-6, "eta": 0.0})
+    gamma = np.array([1e4, 1e8])
+    got = node_modes(avg, channels, {"gamma": gamma}, b_perp_max=np.inf)
+    want = node_modes(
+        AveragedKernel(REFERENCE, fixed={"B": 5e-6, "eta": 0.0}),
+        channels,
+        {"gamma": gamma},
+    )
+    np.testing.assert_allclose(got.I[0], want.I[0], rtol=1e-12, atol=0)
+    assert np.all(_rel(got.I[1], want.I[1]) < 2e-6)
+    assert np.all(_rel(got.P[1], want.P[1]) < 2e-6)
+
+
+def test_conditional_field_predict_and_direct_with_continuum_kernel():
+    import jax.numpy as jnp
+
+    channels = se.Channels.log(0.5, 5.0, 4, unit="GHz", half_width=0.1, n_nu=8)
+    lattice = se.Lattice(gamma=se.Cells.log(1e3, 1e4, 6, order=2))
+
+    pop_eta = se.Population(
+        gamma=se.PowerLaw(2.5, column=1.0, lo=1e3, hi=1e4),
+        B=lambda eta: se.Delta(5.0 + 1.0 * eta, unit="uG"),
+        eta=se.Uniform(-0.5, 0.5),
+        mu=Isotropic(),
+        phi=se.AzimuthFactor(0.4),
+        depth=se.NoRotation(),
+    )
+    basis_eta = se.spectral_basis(pop_eta, channels, lattice=lattice, check=False)
+    pred_eta = basis_eta.predict(pop_eta, check=True)
+    direct_eta = basis_eta.direct(pop_eta)
+    assert pred_eta.ledger["small_x:tail"].kind == "unbounded"
+    assert direct_eta.ledger["small_x:tail"].kind == "unbounded"
+    np.testing.assert_allclose(
+        pred_eta.ledger["representation"].value,
+        pred_eta.stokes - direct_eta.stokes,
+        rtol=1e-12,
+        atol=1e-42,
+    )
+    rel_eta = np.max(np.abs(pred_eta.stokes - direct_eta.stokes)) / np.max(direct_eta.I)
+    assert rel_eta < 1e-3
+
+    # Conditional B(phi) with AzimuthFourier must also support checked prediction.
+    lat_fourier = se.Lattice(
+        gamma=se.Cells.log(1e3, 1e4, 6, order=2), phi=se.AzimuthFourier(4)
+    )
+    pop_phi = se.Population(
+        gamma=se.PowerLaw(2.5, column=1.0, lo=1e3, hi=1e4),
+        B=lambda phi: se.Delta(5.0 + 1.0 * jnp.cos(phi.to("rad").value), unit="uG"),
+        eta=0.0,
+        mu=Isotropic(),
+        phi=se.Uniform(0.0, 2 * np.pi, unit="rad"),
+        depth=se.NoRotation(),
+    )
+    basis_phi = se.spectral_basis(pop_phi, channels, lattice=lat_fourier, check=False)
+    pred_phi = basis_phi.predict(pop_phi, check=True)
+    direct_phi = basis_phi.direct(pop_phi)
+    assert pred_phi.ledger["small_x:tail"].kind == "unbounded"
+    rel_phi = np.max(np.abs(pred_phi.stokes - direct_phi.stokes)) / np.max(direct_phi.I)
+    assert rel_phi < 1e-3
+
+    # Conditional B resolved on finite B cells uses the cell upper bound for within="cells".
+    pop_full_eta = pop_eta.replace(eta=Isotropic())
+    lat_cells = se.Lattice(
+        gamma=se.Cells.log(1e3, 1e4, 6, order=2),
+        B=se.Cells.linear("3 uG", "7 uG", 2, order=2),
+        eta=se.Legendre(2),
+    )
+    basis_cells = se.spectral_basis(
+        pop_full_eta, channels, lattice=lat_cells, check=False
+    )
+    pred_cells = basis_cells.predict(pop_full_eta, check=True)
+    direct_in = basis_cells.direct(pop_full_eta, within="cells")
+    assert "small_x:tail" not in {term.name for term in direct_in.ledger.terms}
+    np.testing.assert_allclose(
+        pred_cells.ledger["representation"].value,
+        pred_cells.stokes - direct_in.stokes,
+        rtol=1e-12,
+        atol=1e-42,
+    )
+    rel_cells = np.max(np.abs(pred_cells.stokes - direct_in.stokes)) / np.max(
+        direct_in.I
+    )
+    assert rel_cells < 1e-2

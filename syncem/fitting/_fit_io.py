@@ -31,6 +31,8 @@ def save_fit(fit, path):
         "p_value": fit.p_value,
         "effective_parameters": getattr(fit, "effective_parameters", None),
         "weights": getattr(fit, "weights", None),
+        "n_starts": getattr(fit, "n_starts", None),
+        "converged_starts": getattr(fit, "converged_starts", None),
         "parameter_covariance": getattr(fit, "parameter_covariance", None),
         "moments": tuple(map(_moments, moments)),
         "params": (

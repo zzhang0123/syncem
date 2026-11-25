@@ -7,6 +7,7 @@ from typing import NamedTuple
 
 import numpy as np
 
+from ..lattice._cell_values import interpolation_nodes, log_displacement
 from ..population.blocks import NonNegativeCells
 from ..values.errors import RoleError, SizeError
 
@@ -74,18 +75,20 @@ def point_mass_map(basis, marker, budget):
     masses = np.empty((len(names), n_points))
     moment_map = np.zeros((lattice.index.n, n_points))
     cells = np.repeat(active_cells, per_cell)
+    fractions = (lobatto + 1) / 2
+    edge = getattr(basis, "excluded_upper_gamma", None)
     for offset, cell in enumerate(active_cells):
         lower, upper = boxes[cell]
         nodes, z = [], []
         for i, chart in enumerate(table.chart[cell]):
             ref, hw = table.reference[cell, i], table.half_width[cell, i]
-            t = 0.5 * (lobatto + 1)
-            if chart == "log":
-                x = np.exp(np.log(lower[i]) * (1 - t) + np.log(upper[i]) * t)
-                normalized = np.log(x / ref) / hw
-            else:
-                x = lower[i] * (1 - t) + upper[i] * t
-                normalized = (x - ref) / hw
+            x = interpolation_nodes(lower[i], upper[i], chart, fractions)
+            if names[i] == "gamma" and edge is not None and upper[i] == edge:
+                # Only the actual upper Lobatto endpoint belongs to the next branch.
+                inner = fractions < 1
+                x[inner] = np.minimum(x[inner], np.nextafter(edge, lower[i]))
+            displacement = log_displacement(x, ref) if chart == "log" else x - ref
+            normalized = displacement / hw
             nodes.append(x)
             z.append(normalized)
         start = offset * per_cell
@@ -99,12 +102,9 @@ def point_mass_map(basis, marker, budget):
         for index, axis in enumerate(normalized):
             values *= axis.ravel()[None, :] ** powers[:, index, None]
         moment_map[rows, columns] = values / lattice.weights[cell]
-    edge = getattr(basis, "excluded_upper_gamma", None)
     if edge is not None:
         axis = names.index("gamma")
-        at_edge = np.abs(masses[axis] - edge) <= 4 * np.spacing(edge)
-        keep = ~(at_edge & (table.hi[cells, axis] == edge))
-        masses[axis, at_edge] = edge
+        keep = ~((masses[axis] == edge) & (table.hi[cells, axis] == edge))
         masses, moment_map, cells = masses[:, keep], moment_map[:, keep], cells[keep]
     return PointMassMap(moment_map, dict(zip(names, masses, strict=True)), cells)
 

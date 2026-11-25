@@ -8,7 +8,7 @@ channel modes over a ``PopulationSamples`` measure with the sky factor
 sample's own depth). A screen route replaces that phase by the screen's
 characteristic function (the sample depths are then ignored, and the screen
 assumptions are recorded). A kernel requiring ``uniform_mu``
-(``ContinuumKernel``, which ignores ``mu``) records ``isotropic_pitch`` as
+(``ContinuumKernel(pitch="isotropic")``) records ``isotropic_pitch`` as
 ``build_basis`` does, with an ``unbounded`` term. No Legendre or Taylor truncation enters, so
 ``basis_remainder`` is ``not_applicable`` and ``statistical_input`` is a
 declared zero (exact average over the supplied measure). Units follow
@@ -28,6 +28,7 @@ from ._prediction import Prediction
 from ._bound_helpers import _tau_max
 from ._basis_checks import ISOTROPIC
 from ._basis_core import package_version
+from ._continuum import sample_pitch_density
 from ._support_check import UNCHECKED_COMPLETE, outside_support
 from .errors import ErrorBudget, ErrorTerm, Provenance
 from .index import MomentIndex, Truncation
@@ -63,11 +64,21 @@ def sample_batch(kernel, channels, requested, size) -> int:
     return batch if per_step is None else max(1, min(batch, per_step(channels, batch)))
 
 
-def _per_sample(samples, kernel, channels, route, use_sample_depth, depth_ref, batch):
+def _per_sample(
+    samples,
+    kernel,
+    channels,
+    route,
+    use_sample_depth,
+    depth_ref,
+    batch,
+    pitch_density=None,
+):
     """``(S, n_ch, 4)`` per-electron channel Stokes of every sample (sky basis)."""
 
     def one(leaf):
-        gamma, B, mu, eta, phi, depth = leaf
+        gamma, B, mu, eta, phi, depth = leaf[:6]
+        pitch = {"pitch_density": leaf[6]} if pitch_density is not None else {}
         ref = depth if use_sample_depth else depth_ref
         modes = kernel.channel_modes(
             channels,
@@ -78,11 +89,14 @@ def _per_sample(samples, kernel, channels, route, use_sample_depth, depth_ref, b
             phase=route,
             depth_ref=ref,
             s_depth=jnp.ones(()),
+            **pitch,
         )
         P = jnp.exp(2j * phi) * modes.P[0]
         return jnp.stack([modes.I, jnp.real(P), jnp.imag(P), modes.V], axis=-1)
 
     leaves = tuple(getattr(samples, name) for name in _LEAVES)
+    if pitch_density is not None:
+        leaves += (pitch_density,)
     batch = sample_batch(kernel, channels, batch, samples.size)
     return jax.lax.map(one, leaves, batch_size=batch)
 
@@ -212,6 +226,7 @@ def direct_channel_average(
     amplitude_uncertainty=None,
     depth_model=None,
     batch_size=256,
+    pitch_density=None,
     assumption_allowances=None,
 ) -> Prediction:
     """Exact channel average of ``samples`` under ``kernel`` (module docstring).
@@ -234,7 +249,11 @@ def direct_channel_average(
     The ``numerical`` term is unbounded (no two-quadrature estimate here).
     Provenance is built eagerly (``describe`` calls need concrete values).
     Units: ``amplitude`` times the per-electron channel Stokes of the
-    kernel. Assumes the discrete measure is the population. Not certified:
+    kernel. For ``ContinuumKernel(pitch="joint")``, the samples represent the
+    marginal over gamma, B, eta, phi and depth. Supply ``pitch_density`` as
+    a scalar or one conditional density per sample, evaluated at mu=eta.
+    The marginal sample weights are normalized once. The emission factor
+    ``2 * pitch_density`` preserves the absolute intensity. Not certified:
     sampling error against a continuous population and ``physical_kernel``.
     """
     if int(batch_size) < 1:
@@ -243,6 +262,7 @@ def direct_channel_average(
     route, use_sample_depth = _route(phase)
     if reference is None:
         reference = _default_reference(samples)
+    pitch_density = sample_pitch_density(kernel, pitch_density, samples.size)
     per_sample = _per_sample(
         samples,
         kernel,
@@ -251,6 +271,7 @@ def direct_channel_average(
         use_sample_depth,
         reference.depth_ref,
         batch_size,
+        pitch_density,
     )
     w = samples.normalised_weights()
     per_electron = jnp.einsum("s,scq->cq", w, per_sample)

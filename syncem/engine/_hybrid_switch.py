@@ -46,9 +46,9 @@ def _faces(table, assignments):
                         ), tuple(point)
 
 
-def _regime(child, box, channels):
+def _regime(hybrid, label, box, channels):
     try:
-        return child.regime(box, channels).ok
+        return hybrid.child_regime(label, box, channels).ok
     except KeyError:
         return False
 
@@ -62,11 +62,10 @@ def _comparisons(hybrid, averaged, lattice, channels, cell_boxes):
     for pair in combinations(range(len(hybrid.kernels)), 2):
         if not all(i in hybrid.assignment for i in pair):
             continue
-        left, right = (hybrid.kernels[i] for i in pair)
         valid = [
             cell
             for cell, box in enumerate(cell_boxes)
-            if _regime(left, box, channels) and _regime(right, box, channels)
+            if all(_regime(hybrid, i, box, channels) for i in pair)
         ]
         if valid:
             ends = (
@@ -81,7 +80,7 @@ def _comparisons(hybrid, averaged, lattice, channels, cell_boxes):
     for pair, point in cases:
         physical = dict(zip(names, point))
         box = {**fixed, **{n: (x, x) for n, x in physical.items()}}
-        if not all(_regime(hybrid.kernels[i], box, channels) for i in pair):
+        if not all(_regime(hybrid, i, box, channels) for i in pair):
             raise RegimeError(
                 f"hybrid kernels {pair} do not both admit their comparison point {physical}"
             )

@@ -300,6 +300,16 @@ def _fit_basis(basis, channels):
     return basis if basis.channels is channels else basis.at(channels)
 
 
+def family_combinations(retained, basis, n_parameters):
+    """Use genuine observed singular coordinates for a parametric likelihood."""
+
+    def whiten(obs):
+        observed = _fit_basis(basis, obs.channels)
+        return obs.whitened(_design(observed), components=observed.record.stokes)
+
+    return retained.for_parameters(n_parameters, whiten, pairs=_pairs(basis))
+
+
 def fit_free(
     basis: SpectralBasis,
     data: StokesData,
@@ -380,6 +390,7 @@ def fit_free(
         key,
         basis=basis,
         unit=data.unit,
+        observations=data,
     )
     moment = Moments(
         basis.lattice,

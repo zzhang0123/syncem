@@ -18,12 +18,13 @@ from ..engine._small_x import small_x_term
 from ..engine.assemble import predict_values
 from ..engine._remainder import remainder_term
 from ..engine.basis import SpectralBasis, build_from_averaged
-from ..engine.direct import continuum_tail_threshold
 from ..engine.provider_fourier import FourierBasis
 from ..lattice.moments import Moments
 from ..population import Population, pair
+from ..population.declaration import ancestors
 from ..records.ledger import ErrorTerm, Ledger
 from ..values.errors import SpecifiedMismatch
+from ._beaming_layout import crossing_terms
 from ._accuracy import check_policy, estimate_direct, provider_checks
 from ._direct import (
     UnassignedSupport,
@@ -31,7 +32,9 @@ from ._direct import (
     _projected_cell_values,
     _spectrum,
 )
+from ._direct_tail import DirectTail
 from ._quadrature_accuracy import quadrature_terms
+from ._sample_beaming import angular_ledger, sample_beaming
 from ._specified import comparison_plan, replace_terms, specified_terms
 from ._setup import (
     bind_lattice,
@@ -132,7 +135,11 @@ def build_one(
         )
     else:
         record = basis.record
-    terms = (*basis.ledger.terms, _physical(setup.averaged.kernel, ch))
+    terms = (
+        *basis.ledger.terms,
+        _physical(setup.averaged.kernel, ch),
+        *crossing_terms((setup.population,), kernel),
+    )
     if depth is not None:
         terms = (*terms, depth)
     if "P" in blocks:
@@ -145,10 +152,14 @@ def build_one(
         )
         if omitted is not None:
             terms = (*terms, omitted)
+    ledger = Ledger(terms)
+    sampled = sample_beaming(kernel, setup.population, lat)
+    if sampled is not None:
+        ledger = sampled.record(ledger)
     result = dataclasses.replace(
         basis,
         record=record,
-        ledger=Ledger(terms),
+        ledger=ledger,
         forward_population=setup.population,
         forward_phase=phase,
         forward_defaults=setup.defaults,
@@ -196,9 +207,9 @@ def basis_moments(basis, population, *, allow_mismatch=False, nodes=24):
         pop, _ = placed(part, kernel)
         resolved = set(lattice.cells.variables) | set(lattice.representations)
         if kernel.primary is not None:
-            resolved.add(
-                kernel.primary
-            )  # preserve the column even when the primary shape is averaged
+            # Moments integrate the absolute column, including its latent parents.
+            resolved.update(ancestors(pop.factors, kernel.primary))
+            resolved.add(kernel.primary)
         factors = {name: val for name, val in pop.factors.items() if name in resolved}
         measure = eqx.tree_at(lambda p: p.factors, pop, factors)
         variables = {v.name: v for v in kernel.variables}
@@ -223,6 +234,10 @@ def predict_one(basis: SpectralBasis, population, *, check=True, allow_mismatch=
     moments = basis.moments(population, allow_mismatch=allow_mismatch)
     values = predict_values(basis, moments)
     ledger = basis.ledger
+    if isinstance(population, Population):
+        kernel = basis.averaged.kernel
+        declarations = (placed(part, kernel)[0] for part in population.parts)
+        ledger = angular_ledger(ledger, kernel, basis.lattice, declarations)
     if isinstance(basis, FourierBasis):
         sampling = ErrorTerm(
             basis.sampling_error(moments),
@@ -257,7 +272,10 @@ def predict_one(basis: SpectralBasis, population, *, check=True, allow_mismatch=
             terms = (*ledger.terms, ErrorTerm.unbounded(note, name="representation"))
             ledger = Ledger(terms, assumptions=ledger.assumptions)
             return _spectrum(basis, values, ledger=ledger, moments=moments)
-        cell_checks = [_direct_values(basis, part, "cells") for part in baseline]
+        tail = DirectTail()
+        cell_checks = [
+            _direct_values(basis, part, "cells", tail=tail) for part in baseline
+        ]
         cells = sum(value for value, _ in cell_checks)
         if (
             isinstance(basis, FourierBasis)
@@ -279,12 +297,15 @@ def predict_one(basis: SpectralBasis, population, *, check=True, allow_mismatch=
             )
             cells = projected
         try:
-            uncovered = [_direct_values(basis, p, "outside")[0] for p in baseline]
+            uncovered = [
+                _direct_values(basis, p, "outside", tail=tail)[0] for p in baseline
+            ]
         except UnassignedSupport as exc:
             terms = (
                 *ledger.terms,
                 ErrorTerm(values - cells, "measured", name="representation"),
                 ErrorTerm.unbounded(str(exc), name="outside_lattice"),
+                *tail.terms,
             )
             return _spectrum(
                 basis,
@@ -298,8 +319,10 @@ def predict_one(basis: SpectralBasis, population, *, check=True, allow_mismatch=
                 value + extra
                 for (value, _), extra in zip(cell_checks, uncovered, strict=True)
             )
+
             diagnostics = comparison.measure(
-                totals, lambda part: _direct_values(basis, part, "support")[0]
+                totals,
+                lambda part: _direct_values(basis, part, "support", tail=tail)[0],
             )
             ledger = replace_terms(ledger, diagnostics)
         note = ""
@@ -321,6 +344,7 @@ def predict_one(basis: SpectralBasis, population, *, check=True, allow_mismatch=
             baseline,
             max(0.0, policy.max_seconds - estimate),
             direct_cost,
+            tail,
         )
         if quadrature.value is not None:
             refined = basis_moments(
@@ -335,19 +359,6 @@ def predict_one(basis: SpectralBasis, population, *, check=True, allow_mismatch=
         terms = (*terms, quadrature, *other)
         if type(kernel) is ContinuumKernel:
             terms = (*terms, small_x_term(kernel))
-            for _, setup in cell_checks:
-                cutoff = continuum_tail_threshold(kernel, basis.channels, setup.b_max)
-                if (
-                    cutoff is not None
-                    and support_for(setup.population, kernel.primary)[1] > cutoff
-                ):
-                    terms = (
-                        *terms,
-                        ErrorTerm.unbounded(
-                            "the population support can reach the small-x continuation",
-                            name="small_x:tail",
-                        ),
-                    )
-                    break
+        terms = (*terms, *tail.terms)
         ledger = Ledger(terms, assumptions=ledger.assumptions)
     return _spectrum(basis, values, ledger=ledger, moments=moments)

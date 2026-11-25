@@ -1,5 +1,6 @@
 """A separable physical fit profiles its normalization on the whitened data."""
 
+import equinox as eqx
 import numpy as np
 import pytest
 
@@ -113,3 +114,35 @@ def test_linear_index_mixture_on_a_polynomial_in_log_energy():
     np.testing.assert_allclose(
         result.electron_spectrum(points), law.basis_density(points) @ coefficients
     )
+
+
+def test_two_sightlines_share_the_measured_response_trace(monkeypatch):
+    import syncem.fitting.family_fit as fit_module
+
+    recorded = []
+    measured_response = fit_module.primary_moment_jacobian
+
+    @eqx.filter_jit
+    def traced(law, geometry, fields, values):
+        recorded.append(fields)
+        return measured_response(law, geometry, fields, values)
+
+    monkeypatch.setattr(fit_module, "primary_moment_jacobian", traced)
+    channels = se.Channels.log(0.2, 5.0, 4, unit="GHz", n_nu=4)
+    bounds = {"lo": 300.0, "hi": 1e5}
+    cells = se.Lattice(gamma=se.Cells.log(300.0, 1e5, 4, order=2))
+    fixed = se.Population(gamma=se.PowerLaw(2.6, amplitude=1.0, **bounds), B="5 uG")
+    basis = se.spectral_basis(fixed, channels, lattice=cells, stokes="I", check=False)
+    family = fixed.replace(gamma=se.PowerLaw(se.Free(2.5, bounds=(2.0, 3.0)), **bounds))
+    for index, amplitude in [(2.7, 0.6), (2.35, 1.4)]:
+        sky = fixed.replace(gamma=se.PowerLaw(index, amplitude=amplitude, **bounds))
+        intensity = basis.predict(sky, check=False).I
+        data = se.StokesData(channels, I=intensity, sigma=0.02 * intensity, unit="cgs")
+        fit = se.fit(family, data, basis=basis, check=False)
+        np.testing.assert_allclose(
+            [fit.params["gamma.index"].value, fit.params["gamma.amplitude"].value],
+            [index, amplitude],
+            rtol=3e-8,
+        )
+        assert np.isfinite(fit.parameter_covariance).all()
+    assert len(recorded) == 1

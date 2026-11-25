@@ -63,6 +63,7 @@ from ._bound_helpers import (
     _nonnegative,
     _stokes,
 )
+from ._continuum import check_basis_pitch, joint_pitch_basis
 from ._depth_bound import depth_error_bound
 from ._factorisation_bounds import (
     azimuth_factorisation_bound,
@@ -222,6 +223,15 @@ class RemainderInputs(eqx.Module):
         Frobenius norms at finitely many points are not a supremum over the
         reference-to-support segments, and sampling error is not assessed.
         """
+        if (
+            isinstance(angular_residual, str)
+            and angular_residual == "probe"
+            and joint_pitch_basis(basis)
+        ):
+            raise ValueError(
+                "joint continuum angular residual needs a population-integrated "
+                "envelope. Use angular_residual=None or supply that envelope."
+            )
         index = basis.index
         N, capped = index.truncation.N, index.truncation.is_capped()
         rows = index.truncation.margin_rows() if capped else ()
@@ -242,6 +252,8 @@ class RemainderInputs(eqx.Module):
         )
         if needs_kernel and kernel is None:
             raise ValueError("from_samples needs kernel= for a probe")
+        if needs_kernel:
+            check_basis_pitch(basis, kernel)
         n_ch, n_lk = basis.channels.n_ch, index.n_lk
         shape = (n_ch, 3, n_lk, len(rows)) if capped else (n_ch, 3, n_lk)
         H_2d = None

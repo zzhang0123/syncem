@@ -8,6 +8,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from ..engine.average import NodeRule
 from ..engine.provider_fourier import fourier_axis, sample_count
 from ..engine._routes import route_cells
 from ..engine.assemble import gather_spectra
@@ -52,13 +53,35 @@ def estimate_direct(basis):
     if fourier is not None:
         initial[phi] = 0.0
     n_inner = 1
+    pending = {
+        name: rule
+        for name, rule in averaged.legendre_panels
+        if isinstance(rule, NodeRule)
+    }
     for name, _, count in averaged.legendre:
-        initial[name] = 0.0
-        n_inner *= count
+        if name not in pending:
+            initial[name] = 0.0
+            n_inner *= count
+
+    def ready_panels(point):
+        count = 1
+        point = averaged.tied_point(point)
+        for name, panel in tuple(pending.items()):
+            if set(panel.parents).issubset(point):
+                nodes, _ = panel(point)
+                point[name] = nodes[len(nodes) // 2]
+                point = averaged.tied_point(point)
+                count *= len(nodes)
+                del pending[name]
+        return point, count
+
+    initial, count = ready_panels(initial)
+    n_inner *= count
     for name, rule in averaged.averaged:
-        nodes, _ = rule(initial)
+        nodes, _ = rule(averaged.physical_point(initial))
         initial[name] = nodes[len(nodes) // 2]
-        n_inner *= len(nodes)
+        initial, count = ready_panels(initial)
+        n_inner *= len(nodes) * count
     n_panel_terms = lattice.n_cells * 24 ** len(lattice.cells.variables)
     if fourier is not None:
         n_panel_terms *= fourier.moment_nodes * (1 + sample_count(fourier.m_max))

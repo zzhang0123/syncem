@@ -10,6 +10,9 @@ certified global minimum.
 from __future__ import annotations
 
 
+from dataclasses import replace
+from functools import cache
+
 import equinox as eqx
 import jax.numpy as jnp
 import numpy as np
@@ -22,13 +25,16 @@ from ..distributions.parameters import (
     parameter_unit,
 )
 from ..distributions.user import UserFamily
+from ..distributions.electrons import ElectronFamily
 from ..engine.assemble import predict_values
 from ..population.declaration import law_at, parents
 from ..values.errors import DataError, RoleError
 from ._family_curve import compiled_curve
+from ._family_noise import FamilyNoise, physical_jacobian
+from ._primary_rows import primary_geometry, primary_moment_jacobian
+from ._family_starts import solve_starts
 from ._family_result import BasisFamilyFit, FamilyFit, FixedFit, Parameter
-from ._finite_difference import _jacobian
-from .free_fit import RetainedCombinations, _fit_basis
+from .free_fit import RetainedCombinations, _fit_basis, family_combinations
 from ._free_fit_arrays import Withheld
 
 
@@ -194,36 +200,75 @@ def _withheld(data, basis, moments):
     return Withheld(jnp.sum(residual**2), white.count, None, jnp.max(jnp.abs(residual)))
 
 
-def _parameter_errors(jac, scale):
-    """Compute the noise-only Gauss-Newton covariance in physical units."""
-    normalisation = np.linalg.norm(jac, axis=0)
-    safe = np.where(normalisation > 0, normalisation, 1.0)
-    _, singular, vectors = np.linalg.svd(jac / safe, full_matrices=False)
-    keep = singular > 1e-13 * singular[0]
-    retained = vectors[keep]
-    covariance = (retained.T / singular[keep] ** 2) @ retained
-    visible = np.sum(retained**2, axis=0) > 1 - 1e-8
-    covariance *= np.outer(scale / safe, scale / safe)
-    covariance[~visible, :] = np.nan
-    covariance[:, ~visible] = np.nan
-    return covariance, visible, int(np.count_nonzero(keep))
+def _physical_parameters(
+    names, x, lo, hi, log, declarations, linear, amplitude, bounds, unit
+):
+    """Parameter values and admissible directions in physical coordinates."""
+    table = {}
+    values = _coordinate(x, log)
+    lower, upper = _coordinate(lo, log), _coordinate(hi, log)
+    for i, name in enumerate(names):
+        table[name] = Parameter(
+            float(values[i]),
+            np.nan,
+            (float(lower[i]), float(upper[i])),
+            bool(min(x[i] - lo[i], hi[i] - x[i]) <= 1e-5),
+            False,
+            parameter_unit(declarations[name]),
+        )
+    if linear is not None:
+        table[linear] = Parameter(
+            amplitude, np.nan, bounds, amplitude in bounds, False, unit
+        )
+    return table
+
+
+def _measure_parameters(response, table):
+    """Fit the rank and covariance in the same physical coordinates as each output."""
+    noise = FamilyNoise.from_response(response, np.ones(len(table)))
+    covariance, visible, rank = noise.covariance()
+    measured = {
+        name: replace(
+            param, sigma=float(np.sqrt(covariance[i, i])), identified=bool(visible[i])
+        )
+        for i, (name, param) in enumerate(table.items())
+    }
+    return measured, noise, covariance, rank
 
 
 def fit_family(
     basis, data, population, *, starts=None, rebuild=None, allow_mismatch=False
 ):
     """Profile the linear normalization and fit a fixed-basis family with SciPy."""
-    from scipy.optimize import least_squares
     from scipy.stats import chi2 as chi2_dist
 
     if data.batch_shape:
-        raise DataError("the host family fit needs one sightline at a time")
+        from ._family_batch import fit_pixels
+
+        return fit_pixels(
+            data,
+            lambda pixel: fit_family(
+                basis,
+                pixel,
+                population,
+                starts=starts,
+                rebuild=rebuild,
+                allow_mismatch=allow_mismatch,
+            ),
+        )
+    if rebuild is not None and isinstance(data, RetainedCombinations):
+        raise RoleError(
+            "a compressed moment likelihood requires a fixed observational basis"
+        )
     prediction_basis = basis
     if not isinstance(data, RetainedCombinations):
         basis = _fit_basis(basis, data.channels)
     source = free_parameters(population)
     primary = basis.averaged.kernel.primary
     linear = _amplitude(population, basis, primary, source, starts)
+    if isinstance(data, RetainedCombinations):
+        count = len(source) + int(linear is not None and linear not in source)
+        data = family_combinations(data, basis, count)
     if not source and linear is None:
         target, model, count = _white(
             data, basis, population, allow_mismatch=allow_mismatch
@@ -311,69 +356,138 @@ def fit_family(
             da = (residual - a * s) @ ds / np.dot(s, s)
             return -a * ds - s[:, None] * da
 
-        best = least_squares(
-            lambda x: evaluate(x)[0],
-            x0,
-            jac="2-point" if analytic is None else residual_jacobian,
-            bounds=(lo, hi),
-            method="trf",
-            max_nfev=60,
+        count_starts = (
+            4
+            if any(isinstance(law, UserFamily) for law in population.factors.values())
+            else 3
         )
-        if not best.success:
-            raise DataError(f"family fit did not converge. {best.message}")
-        x = best.x
+        x, n_starts, converged_starts = solve_starts(
+            lambda trial: evaluate(trial)[0],
+            "2-point" if analytic is None else residual_jacobian,
+            x0,
+            lo,
+            hi,
+            count_starts,
+        )
     else:
-        x = x0
-    residual, amplitude, derivative, count, fitted_basis = evaluate(x)
+        x, n_starts, converged_starts = x0, 1, 1
+    residual, amplitude, _, count, fitted_basis = evaluate(x)
     actual = _coordinate(x, log)
     fitted = _population_at(population, names, actual, linear, amplitude)
-    table = {}
+    table = _physical_parameters(
+        names,
+        x,
+        lo,
+        hi,
+        log,
+        shape,
+        linear,
+        amplitude,
+        amplitude_bounds,
+        amplitude_unit,
+    )
     chi2 = float(np.dot(residual, residual))
-    scale = np.where(log, actual, 1.0)
-    jac = np.empty((len(derivative), 0))
-    if analytic is not None:
-        jac = amplitude * analytic(x)[1]
-    elif names:
-
-        def sensitivity(trial):
-            try:
-                return amplitude * unit_model(trial)[1]
-            except ValueError:
-                return None
-
-        jac, _ = _jacobian(sensitivity, x, lo, hi, np.cbrt(np.finfo(float).eps))
-    if linear is not None:
-        jac = np.column_stack((jac, derivative))
-        scale = np.append(scale, 1.0)
-    covariance, active, n_parameters = _parameter_errors(jac, scale)
-    if names:
-        physical_lo, physical_hi = _coordinate(lo, log), _coordinate(hi, log)
-        for i, name in enumerate(names):
-            table[name] = Parameter(
-                float(actual[i]),
-                float(np.sqrt(covariance[i, i])),
-                (float(physical_lo[i]), float(physical_hi[i])),
-                bool(min(x[i] - lo[i], hi[i] - x[i]) <= 1e-5),
-                bool(active[i]),
-                parameter_unit(shape[name]),
-            )
-    if linear is not None:
-        at_bound = amplitude in amplitude_bounds
-        table[linear] = Parameter(
-            amplitude,
-            float(np.sqrt(covariance[-1, -1])),
-            amplitude_bounds,
-            at_bound,
-            bool(active[-1]),
-            amplitude_unit,
-        )
     moments = fitted_basis.moments(fitted, allow_mismatch=allow_mismatch)
     moments = type(moments)(
         fitted_basis.lattice, jnp.asarray(moments.values), origin="family"
     )
+
+    def trial_population(values):
+        norm = values[-1] if linear is not None else 1.0
+        return _population_at(population, names, values[: len(names)], linear, norm)
+
+    def trial_basis(values, trial):
+        return (
+            fitted_basis
+            if rebuild is None
+            else rebuild(trial, dict(zip(names, values)))
+        )
+
+    @cache
+    def moment_jacobian():
+        # Fit coordinates enter the compiled derivative through values. The
+        # shared declaration keeps the executable independent of each sightline.
+        law = population.factors.get(primary)
+        geometry = primary_geometry(fitted_basis.lattice, primary)
+        if (
+            geometry is not None
+            and isinstance(law, (UserFamily, ElectronFamily))
+            and all(key.startswith(primary + ".") for key in table)
+            and (analytic is not None or not names)
+        ):
+            values = jnp.asarray([parameter.value for parameter in table.values()])
+            fields = tuple(key.split(".", 1)[1] for key in table)
+            derivative, check = primary_moment_jacobian(law, geometry, fields, values)
+            scale = fitted.column_factor
+            expected = np.asarray(moments.values)
+            if np.max(np.abs(check * scale - expected)) <= 2e-11 * np.max(
+                np.abs(expected)
+            ):
+                return np.asarray(derivative * scale)
+
+        def project(values):
+            trial = trial_population(values)
+            return (
+                trial_basis(values, trial)
+                .moments(trial, allow_mismatch=allow_mismatch)
+                .values
+            )
+
+        return physical_jacobian(project, table)
+
+    def stokes_response(output):
+        design = output.columns.lift(output.design())
+        response = np.asarray(design) @ moment_jacobian()
+        if rebuild is not None:
+            # d(A m) = A dm + (dA) m. Hold the best-fit moments fixed when
+            # differentiating the basis, whose averaged statistics may move.
+            def column_effect(values):
+                trial = trial_population(values)
+                active = trial_basis(values, trial)
+                if active.channels.row_keys() != output.channels.row_keys():
+                    active = active.at(output.channels)
+                return predict_values(active, moments)
+
+            response += physical_jacobian(column_effect, table).reshape(response.shape)
+        return response
+
+    fitted_response = (
+        stokes_response(fitted_basis)
+        if not isinstance(data, RetainedCombinations)
+        else None
+    )
+    if fitted_response is None:
+        _, operator, _ = data.whitened_operator()
+        response = np.asarray(operator) @ moment_jacobian()
+    else:
+        response = data.whitened(
+            fitted_response, components=fitted_basis.record.stokes
+        ).design
+    table, noise, covariance, n_parameters = _measure_parameters(
+        np.asarray(response), table
+    )
+
+    def spectrum_jacobian(output):
+        if fitted_response is not None and output is fitted_basis:
+            return fitted_response.reshape(-1, len(table))
+        if rebuild is None:
+            return stokes_response(output).reshape(-1, len(table))
+        # Rebuilding identical bands in a differently grouped grid can perturb
+        # finite differences by roundoff. Reuse every fitted physical band row.
+        original = dict(zip(fitted_basis.channels.row_keys(), fitted_response))
+        keys = output.channels.row_keys()
+        new = [i for i, key in enumerate(keys) if key not in original]
+        if new:
+            destination = (
+                output if len(new) == len(keys) else output.at(output.channels[new])
+            )
+            original.update(zip((keys[i] for i in new), stokes_response(destination)))
+        return np.stack([original[key] for key in keys]).reshape(-1, len(table))
+
     dof = count - n_parameters
     probability = float(chi2_dist.sf(chi2, dof)) if dof > 0 else float("nan")
     cls = FamilyFit if rebuild is None else BasisFamilyFit
+
     return cls(
         prediction_basis if rebuild is None else fitted_basis,
         data,
@@ -386,5 +500,11 @@ def fit_family(
         n_parameters,
         withheld_details=_withheld(data, fitted_basis, moments),
         parameter_covariance=covariance,
+        noise=noise,
+        trial_population=trial_population,
+        spectrum_jacobian=spectrum_jacobian,
+        moment_jacobian=moment_jacobian,
+        n_starts=n_starts,
+        converged_starts=converged_starts,
         allow_mismatch=allow_mismatch,
     )

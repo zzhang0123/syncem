@@ -565,18 +565,30 @@ names the violating variable and its range.
 
 ### 6.2 `ContinuumKernel`
 
-`ContinuumKernel(*, n_nodes_F=128, tail_cutoff=50.0, x_min=1e-6, E_phys=None,
+`ContinuumKernel(*, pitch="isotropic", n_nodes_F=128, tail_cutoff=50.0, x_min=1e-6, E_phys=None,
 n_eta=48, chunk_budget=CHUNK_BUDGET)`
 implements `eq: directional continuum`: `K_I = A F(x)`, `K_Q = -A G(x)`,
 `B_perp = B sqrt(1 - eta^2)`, `x = nu / (a_B gamma^2)`; `channel_modes` sums
 `w_n R_j(nu_n) K_S(nu_n) w(2 (c/nu_n)^2)` over the channel's quadrature
-nodes. `mu` is ignored: `components = ("I", "Q")`,
-`required_closures = ("uniform_mu",)`. `build_basis` raises for `L_mu > 0`,
-records `isotropic_pitch [required by ContinuumKernel]` and drops the
-odd-parity `h0` rows ("V not modelled"). `x < x_min` is a value error.
+nodes. The default `pitch="isotropic"` uses the `uniform_mu` closure and
+requires `L_mu = 0`. With `pitch="joint"`, the physical kernel is the
+distribution `2 delta(mu-eta) K(eta)`. Its coefficient for each retained
+pair is `(2l+1)(2k+1)/2` times the integral of
+`P_l(eta) P_k(eta) K(eta)` over the full cosine range. Direct averages
+use the conditional pitch density on the diagonal with the marginal
+distribution of the remaining coordinates. The finite basis uses joint
+angular moments and leaves unresolved angular structure in the remainder.
+The joint projection requires `n_eta > max(L_mu, L_eta)`. Both routes model
+`I` and linear polarisation. The beaming limit requires `gamma sin(theta) >> 1`
+and a conditional pitch density that varies little over an angular width of
+order `1/gamma` about the viewing angle at fixed remaining coordinates,
+including Faraday depth. Comparing with a harmonic spectrum also requires
+channels that average over many lines. At this order `V = 0`.
+The numerical refinement and derivative probes use the pitch model recorded
+in the basis. `x < x_min` is a value error.
 `truncation_error` is `not_applicable`; the finite `F`/`G` tail bound at
 `(gamma0, B0, eta = 0)` enters the `numerical` slot on the mass column
-`(0,0,0,0,0)`, so `predict` multiplies it by `|m_0|`.
+`(0,0,0,0,0)`, so `predict` multiplies it by `|m_0|` in isotropic mode. Joint mode measures the change under refinement of the tail cutoff on each column.
 
 Memory `[extension]`: `chunk_budget` bounds the `F`/`G` cosh-integral
 values of one `lax.map` step. `angular_projection` runs its `eta` nodes in
@@ -626,7 +638,7 @@ that can meet any channel on the declared support (the manuscript's
 | regime | kernel | notes |
 |---|---|---|
 | `gamma` up to a few tens, `m` up to about 1e3 | `HarmonicKernel` | the manuscript's benchmark: `gamma0 = 20`, `m <= 40` |
-| Galactic (`B ~ 5 uG`, `gamma ~ 1e4`, `nu ~ 1 GHz`, `m ~ 7e11`) | `ContinuumKernel` only | `isotropic_pitch` required; `physical_kernel` stays `unbounded` because the continuum replacement is not bounded against the harmonic reference |
+| Galactic (`B ~ 5 uG`, `gamma ~ 1e4`, `nu ~ 1 GHz`, `m ~ 7e11`) | `ContinuumKernel` only | isotropic or joint pitch. `physical_kernel` stays `unbounded` because the continuum replacement is not bounded against the harmonic reference |
 
 Measured costs of 0.2.0 (CPU, one machine; not remeasured for 0.3.0):
 harmonic product quadrature with `m_max = 40`, three bump channels,
@@ -780,7 +792,7 @@ An assumption's discrepancy has four explicit sources; otherwise it is
    allowance by `N_src`. Nothing checks that the allowance holds.
 
 Assumptions forced by the basis (screen routes: `independent_screen` and
-`<shape>_screen`; `ContinuumKernel`: `isotropic_pitch`) are `unbounded` in
+`<shape>_screen`; `ContinuumKernel(pitch="isotropic")`: `isotropic_pitch`) are `unbounded` in
 `predict` and `direct_channel_average` unless the caller supplies an
 allowance. They override a
 moment-level term of the same name, because the retained moments (`b = 0`
@@ -1253,13 +1265,18 @@ raises `ValueError`.
 `direct_channel_average(samples, kernel, channels, *, amplitude,
 reference=None, phase=None, support=None, excluded_tail=None,
 amplitude_uncertainty=None, depth_model=None, batch_size=256,
-assumption_allowances=None)` averages the channel kernels over a discrete
+pitch_density=None, assumption_allowances=None)` averages the channel kernels over a discrete
 population without truncation (`basis_remainder = not_applicable`,
 `numerical` `unbounded`); it checks the samples against the `Support` for
 `harmonic_truncation` and `excluded_tail`, and its amplitude slot has the
 same cross term as `predict` (`delta N_src` times the valued per-electron
 slots, `depth_model / N_src` and the screen term); the omitted unbounded
-`numerical` slot is named in the note.
+`numerical` slot is named in the note. With `ContinuumKernel(pitch="joint")`,
+`samples` represents the marginal over the five remaining coordinates.
+`pitch_density` supplies the density per unit pitch cosine at each viewing
+cosine, conditioned on those coordinates. A scalar applies to every sample.
+Each channel contribution is multiplied by twice its density. The original
+sample weights set the normalization.
 
 ## 10. Fit module (`fit/`)
 
@@ -1661,12 +1678,12 @@ differs from the joint one by more than 1e-3 relative for
 `|predict(m_fac) - direct| <= assumption + basis_remainder` holds with the
 probe `H`, the name appears in `to_dict()`, and without
 `discrepancy="measured"` the term and the total are `unbounded`.
-`ContinuumKernel` with `L_mu > 0` raises and the provenance lists
+`ContinuumKernel(pitch="isotropic")` with `L_mu > 0` raises and the provenance lists
 `isotropic_pitch`. `test_assumptions_jit.py` checks `ParameterMap.flatten`
 and `unflatten` under plain `jax.jit` for maps with complex (`e^{2i phi}`)
 free tables against the eager NumPy layout (regression for a traced
 boolean index). In README example (b) the `isotropic_pitch` term is
-`unbounded`: the continuum kernel forces the assumption, its columns vanish
+`unbounded`: the example uses the uniform-pitch closure, its columns vanish
 on every `l >= 1` row, and the measured `|m_joint - m_fac|` on the retained
 `L_mu = 0` rows is zero by construction, so `predict` does not propagate it
 (Section 7.3). A pitch-dependent population is not seen by any measured

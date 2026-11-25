@@ -147,24 +147,26 @@ def refined(kernel, channels, route, factor, full, *, cross=False):
         )
         return alt, channels, target, text
     if isinstance(kernel, ContinuumKernel) and not cross:
-        alt = ContinuumKernel(
+        joint = kernel.pitch == "joint"
+        alt = dataclasses.replace(
+            kernel,
+            tail_cutoff=factor * kernel.tail_cutoff if joint else kernel.tail_cutoff,
             n_nodes_F=factor * kernel.n_nodes_F if full else kernel.n_nodes_F,
-            tail_cutoff=kernel.tail_cutoff,
-            x_min=kernel.x_min,
-            E_phys=kernel.E_phys,
             n_eta=factor * kernel.n_eta,
-            chunk_budget=kernel.chunk_budget,
         )
         text = f"{factor}x n_nu and n_eta" + (
             f" and {factor}x n_nodes_F" if full else ""
         )
+        if joint:
+            text += f" and {factor}x F/G tail cutoff"
         return alt, refined_channels(channels, factor), route, text
     return None
 
 
 def continuum_tail(kernel, channels, reference) -> ErrorTerm | None:
     """``F``/``G`` finite-tail bound at the reference for continuum kernels."""
-    if not isinstance(kernel, ContinuumKernel):
+    # Joint bases measure the cutoff change on every column in refined().
+    if not isinstance(kernel, ContinuumKernel) or kernel.pitch == "joint":
         return None
     return kernel.tail_bound(channels, reference.gamma0, reference.B0, 0.0)
 

@@ -2,7 +2,7 @@
 
 (b) the continuum kernel in the Galactic regime (``gamma0 = 3000``,
     ``B0 = 5 uG``, bump channels between 0.1 and 3 GHz), where
-    ``isotropic_pitch`` is required and ``physical_kernel`` stays unbounded;
+    the chosen pitch law is uniform and ``physical_kernel`` stays unbounded;
 (d) ``assumption_allowances`` on a screen route: two rays whose field
     strength and Faraday depth are correlated, an ``EmpiricalScreen`` of their
     depths, and ``bounds.screen_factorisation_bound`` as the caller's
@@ -81,7 +81,7 @@ def galactic_population(n_gamma=32, n_B=8, n_mu=16):
 
 
 def example_b():
-    banner("(b) continuum kernel, Galactic regime, isotropic_pitch required")
+    banner("(b) continuum kernel, Galactic regime, uniform pitch example")
     t0 = time.time()
     channels, reference, support, screen = galactic_setup()
     print("channels (GHz):", np.round(np.asarray(channels.centres_hz) / 1e9, 3))
@@ -123,17 +123,18 @@ def example_b():
     )
     print("forced assumptions:", [r.name for r in basis.provenance.assumptions])
     print("notes:", basis.provenance.notes)
-    try:
-        build_basis(
-            kernel,
-            channels,
-            Truncation(1, 2, 2, depth_degree=0),
-            reference,
-            support=support,
-            phase=screen,
-        )
-    except ValueError as err:
-        print("L_mu > 0 refused:", err)
+    joint = build_basis(
+        ContinuumKernel(pitch="joint"),
+        channels,
+        Truncation(1, 1, 0),
+        reference,
+        support=support,
+        convergence=False,
+    )
+    print(
+        "Joint pitch basis retains the (1, 1) angular pair:",
+        (1, 1) in joint.index.pairs,
+    )
 
     samples = galactic_population()
     print("population size:", samples.size)

@@ -13,6 +13,40 @@ from syncem.front._regime_physical import paper_energy_basis
 from syncem.front._regimes import RegimeBasis
 
 
+def test_physical_projection_keeps_the_continuous_critical_frequency_displacement():
+    from tests.v090.test_regime_review_regressions import _population, _regime
+
+    gamma, field = 1024.0, 2.0**-17
+    nu = A1_HZ_PER_G * field * gamma**2
+    field_width = np.spacing(field)
+    freq_width = 4 * np.spacing(nu)
+    source = _population(se.Delta(gamma), eta=0.0).replace(
+        B=se.Uniform(field, field + field_width, unit="G")
+    )
+    regime = _regime(
+        source,
+        se.Channels.at([0.55 * nu], unit="Hz", half_width=0.12, n_nu=4),
+        se.Cells.from_edges([299.0, 300.0], order=0),
+        se.Cells.from_edges([nu, nu + freq_width], unit="Hz", reference=[nu], order=2),
+        moments=16,
+        B=se.Cells.linear(2, 16, 1, unit="uG", order=0),
+    )
+    physical = paper_energy_basis(
+        regime, source, se.Cells.from_edges([1000, 1050], reference=[gamma], order=0)
+    )
+
+    # At fixed gamma and inclination, both frequency and emission weight
+    # scale with B. Integrate in t = (B - field) / field_width.
+    nodes, weights = np.polynomial.legendre.leggauss(8)
+    relative_field = (field_width / field) * (nodes + 1) / 2
+    z = np.log1p(relative_field) / (0.5 * np.log1p(freq_width / nu))
+    mass = weights * (1 + relative_field)
+    reference = [np.average(z**power, weights=mass) for power in range(3)]
+    for moments in (regime.moments(source), physical.project(physical.moments(source))):
+        intensity = np.asarray(moments[1].values[:3])
+        np.testing.assert_allclose(intensity / intensity[0], reference, rtol=5e-13)
+
+
 @pytest.fixture(scope="module")
 def example():
     channels = se.Channels.at([0.4, 0.8, 1.6, 3.0], unit="GHz", half_width=0.2, n_nu=32)
@@ -231,3 +265,42 @@ def test_joint_energy_and_field_projection():
     free = se.Population(se.FreeMoments("gamma", "B"), **fixed)
     fit = se.fit(free, data, basis=energy, rank=se.FullRank(), check=False)
     np.testing.assert_allclose(fit.predict().stokes, truth.stokes, rtol=1e-9, atol=0)
+
+
+@pytest.mark.parametrize("compressed", [False, True])
+def test_branch_family_reports_the_noise_on_its_only_observed_stokes_row(
+    example, compressed
+):
+    regime, _, truth = example
+    spectrum = regime.predict(truth, check=False)
+    model = truth.replace(
+        gamma=se.PowerLaw(
+            se.Free(2.6, bounds=(1, 4)),
+            lo=280,
+            hi=321,
+            column=se.Free(1.0, bounds=(0.25, 3.0)),
+        )
+    )
+    sigma = 0.02 * spectrum.I
+    data = se.StokesData(
+        regime.channels,
+        I=spectrum.I,
+        sigma=sigma,
+        mask=[True, False, False, False],
+        unit="cgs",
+    )
+    target = (
+        regime.fit(data, rank=se.FullRank(), keep_directions=True)
+        if compressed
+        else data
+    )
+    fit = se.fit(model, target, basis=regime, check=False)
+    assert fit.rank == 1
+    assert not any(p.identified for p in fit.params.values())
+    out = fit.predict(cov=True)
+    np.testing.assert_allclose(out.sigma[0, 0], sigma[0], rtol=3e-13, atol=0)
+    np.testing.assert_allclose(out.cov[0, 0], sigma[0] ** 2, rtol=3e-13, atol=0)
+    assert np.isnan(np.asarray(out.sigma).ravel()[1:]).all()
+    # The same response must survive moving this band to another output row.
+    subset = fit.predict(regime.channels[[2, 0]])
+    np.testing.assert_allclose(subset.sigma[1, 0], sigma[0], rtol=3e-13, atol=0)

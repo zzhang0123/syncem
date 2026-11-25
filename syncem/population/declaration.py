@@ -44,6 +44,17 @@ def parents(law: Any) -> tuple[str, ...]:
     return ()
 
 
+def ancestors(factors, name, *, given=()):
+    """Transitive parents of a factor, stopping at coordinates already given."""
+    found, pending = set(), list(parents(factors.get(name)))
+    while pending:
+        parent = pending.pop()
+        if parent not in found and parent not in given:
+            found.add(parent)
+            pending.extend(parents(factors.get(parent)))
+    return found
+
+
 def law_at(law: Any, point: Mapping, units: Mapping | None = None) -> Any:
     """Resolve a conditional law at its current parent values."""
     if isinstance(law, Conditional):

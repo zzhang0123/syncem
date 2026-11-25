@@ -10,7 +10,7 @@ numbers are pasted into ``README.md``; rerun this script after any change to
     ``independent_screen`` declared and ``discrepancy="measured"`` (this file);
 (b) the continuum kernel in the Galactic regime (``gamma0 = 3000``,
     ``B0 = 5 uG``, bump channels between 0.1 and 3 GHz), where
-    ``isotropic_pitch`` is required and ``physical_kernel`` stays unbounded
+    the chosen pitch law is uniform and ``physical_kernel`` stays unbounded
     (``model_examples_continuum.py``);
 (c) ``fit_linear`` on synthetic channel data with identifiability and
     feasibility output (``model_examples_fit.py``);

@@ -12,6 +12,13 @@ from typing import Any
 import numpy as np
 
 from ..base.variables import SYNCHROTRON_PRIMARY, SYNCHROTRON_VARIABLES
+from ._cell_values import (
+    centers_and_widths,
+    edge_tolerance,
+    partition_edges,
+    panel_coordinates,
+    log_displacement,
+)
 from .cells import Cells
 from .representations import AzimuthFourier, AzimuthHarmonic, Legendre
 from .table import CellTable
@@ -66,12 +73,8 @@ def _check_axis(name: str, axis: Any, variables=SYNCHROTRON_VARIABLES) -> None:
 def _density_masses(density, bounds, chart):
     a, b = bounds
     x, w = np.polynomial.legendre.leggauss(32)
-    if chart == "log" and a > 0:
-        lo, hi = np.log(a), np.log(b)
-        z = np.exp(lo + (hi - lo) * (x + 1) / 2)
-        return (hi - lo) / 2 * np.sum(w * z * density(z))
-    z = a + (b - a) * (x + 1) / 2
-    return (b - a) / 2 * np.sum(w * density(z))
+    z, jac, _ = panel_coordinates(a, b, chart, x, w)
+    return np.sum(jac * np.asarray(density(z), dtype=float))
 
 
 def _default_weights(table: CellTable, references=()) -> np.ndarray:
@@ -105,7 +108,16 @@ def _default_weights(table: CellTable, references=()) -> np.ndarray:
             weights *= masses / norm
         elif name == SYNCHROTRON_PRIMARY and np.all(np.isfinite(hi) & (lo > 0)):
             k = 1.0 - REFERENCE_SLOPE
-            weights *= (hi**k - lo**k) / (hi.max() ** k - lo.min() ** k)
+            if np.any(hi - lo <= 1e-6 * lo) or lo.min() ** k == hi.max() ** k:
+                span = log_displacement(hi, lo)
+                interval_mass = np.exp(k * log_displacement(lo, lo.min())) * np.expm1(
+                    k * span
+                )
+                weights *= interval_mass / np.expm1(
+                    k * log_displacement(hi.max(), lo.min())
+                )
+            else:
+                weights *= (hi**k - lo**k) / (hi.max() ** k - lo.min() ** k)
     return weights
 
 
@@ -131,19 +143,15 @@ def _split(t: CellTable, c: int, factors: dict[str, int]) -> list[dict]:
         k = int(factors.get(v, 1))
         if k < 1:
             raise ValueError(f"refine factor for {v} must be a positive int")
-        lo, hi, log = t.lo[c, i], t.hi[c, i], t.chart[c][i] == "log"
+        lo, hi = t.lo[c, i], t.hi[c, i]
         if k > 1 and not (np.isfinite(lo) and np.isfinite(hi)):
             raise ValueError(f"cell {c} has no edges in {v} and cannot be refined")
-        a, b = (np.log(lo), np.log(hi)) if log else (lo, hi)
-        cuts = np.linspace(a, b, k + 1) if k > 1 else np.array([a, b])
-        edges = np.exp(cuts) if log else cuts
-        if k > 1:
-            edges[0], edges[-1] = lo, hi
-        mids = 0.5 * (cuts[1:] + cuts[:-1])
-        refs = np.exp(mids) if log else mids
-        halves = 0.5 * np.diff(cuts)
         if k == 1:
+            edges = np.array([lo, hi])
             refs, halves = np.array([t.reference[c, i]]), np.array([t.half_width[c, i]])
+        else:
+            edges = partition_edges(lo, hi, k, t.chart[c][i])
+            refs, halves = centers_and_widths(edges, t.chart[c][i])
         pieces.append(
             [(edges[j], edges[j + 1], refs[j], halves[j]) for j in range(len(refs))]
         )
@@ -200,11 +208,7 @@ def shift_table(t: CellTable, fractions: dict[str, float]) -> CellTable:
             ref[:, i] * np.exp(f * t.half_width[:, i]),
             ref[:, i] + f * t.half_width[:, i],
         )
-    slack = 1e-12 * np.where(
-        np.isfinite(t.lo) & np.isfinite(t.hi),
-        np.maximum(np.abs(t.lo), np.abs(t.hi)),
-        0.0,
-    )
+    slack = edge_tolerance(t.lo, t.hi)
     if np.any(ref < t.lo - slack) or np.any(ref > t.hi + slack):
         raise ValueError("the shift moves reference points outside their cells")
     return table_with(t, reference=ref, tensor=None)

@@ -186,3 +186,187 @@ def test_cell_rows_and_monomials():
     assert exps == [
         e for e in itertools.chain([(0, 0)], [(1, 0), (0, 1)], [(2, 0), (1, 1), (0, 2)])
     ]
+
+
+@pytest.mark.parametrize("base", [0.0, 2.0**20, -(2.0**20)])
+def test_narrow_cell_maps_depend_on_extent(base):
+    width = 2.0**-22
+
+    def lattice(start, stop, n=1):
+        return Lattice(x=Cells.linear(start, stop, n, order=1), weights=np.ones(n))
+
+    source = lattice(base, base + width)
+    other = lattice(base + 2 * width, base + 3 * width)
+    atom = Moments(source, [1.0, 0.0])
+    with pytest.raises(ValueError, match="same cells"):
+        source.recentre(atom, to=other)
+    with pytest.raises(ValueError, match="unions of cells"):
+        source.coarsen(atom, to=other)
+    np.testing.assert_allclose(source.recentre(atom, to=source).values, atom.values)
+    pair = lattice(base, base + 2 * width, 2)
+    merged = pair.coarsen(
+        Moments(pair, [1, 0, 3, 0]), to=lattice(base, base + 2 * width)
+    )
+    np.testing.assert_allclose(merged.values, [4, 1])
+
+
+def test_coarsen_detects_an_interior_hole_even_if_its_volume_rounds_away():
+    # A small square removed from the interior changes the float64 volume by < 1 ulp.
+    edges = [0.0, 0.5, 0.5 + 2.0**-30, 1.0]
+    axis = Cells.from_edges(edges, order=0, chart="affine")
+    full = Lattice(x=axis, y=axis)
+    sparse = Lattice.from_cells(full.cells.rows([0, 1, 2, 3, 5, 6, 7, 8]))
+    unit = Cells.linear(0, 1, 1, order=0)
+    target = Lattice(x=unit, y=unit)
+    with pytest.raises(ValueError, match="not a union"):
+        sparse.coarsen(Moments(sparse, np.ones(sparse.n)), to=target)
+    joined = full.coarsen(Moments(full, np.ones(full.n)), to=target)
+    np.testing.assert_allclose(
+        target.column(joined), full.column(Moments(full, np.ones(full.n)))
+    )
+
+
+def test_one_representable_boundary_shift_excludes_a_unit_atom():
+    lower = 0.5
+    source = Lattice(x=Cells.linear(lower, 1, 1, order=1), weights=[1])
+    at_edge = Moments(source, [1, -1])
+    for different in (np.nextafter(lower, 1), lower + 5e-13):
+        target = Lattice(x=Cells.linear(different, 1, 1, order=1), weights=[1])
+        with pytest.raises(ValueError, match="same cells"):
+            source.recentre(at_edge, to=target)
+        with pytest.raises(ValueError, match="unions of cells"):
+            source.coarsen(at_edge, to=target)
+
+
+def test_coarsen_preserves_first_owner_of_shared_faces_and_corners():
+    from syncem import Delta, Population
+    from syncem.population.pairing import pair
+
+    fine = Cells.linear(0, 4, 4, order=0)
+    coarse = Cells.linear(0, 4, 2, order=0)
+    for source, target, point in (
+        (Lattice(x=fine), Lattice(x=coarse), Population(x=Delta(2))),
+        (
+            Lattice(x=fine, y=fine),
+            Lattice(x=coarse, y=coarse),
+            Population(x=Delta(2), y=Delta(2)),
+        ),
+    ):
+        mass = pair(point, source)
+        direct = pair(point, target)
+        np.testing.assert_allclose(
+            source.coarsen(mass, to=target).values, direct.values
+        )
+        reverse = Lattice.from_cells(
+            target.cells.rows(list(range(target.n_cells))[::-1])
+        )
+        with pytest.raises(ValueError, match="ownership"):
+            source.coarsen(mass, to=reverse)
+
+
+def test_log_map_resolves_one_ulp_between_large_reference_points():
+    from syncem import Delta, Population
+    from syncem.population.pairing import pair
+
+    a = 2.0**20
+    ulp = np.spacing(a)
+    edges = [a, a + 1024 * ulp]
+
+    def lattice(ref):
+        return Lattice(
+            gamma=Cells.from_edges(edges, chart="log", reference=[ref], order=1),
+            weights=[1],
+        )
+
+    x = a + 512 * ulp
+    other = x + ulp
+    src, dst = lattice(x), lattice(other)
+    source = Population(gamma=Delta(x))
+    mass = pair(source, src)
+    expected = [1.0, np.log1p((x - other) / other) / dst.cells.half_width[0, 0]]
+    for mapped in (
+        pair(source, dst),
+        src.recentre(mass, to=dst),
+        src.coarsen(mass, to=dst),
+    ):
+        np.testing.assert_allclose(mapped.values, expected, rtol=2e-15, atol=0)
+
+
+def test_narrow_log_refine_preserves_distinct_canonical_edges():
+    lo = 2.0**20
+    ulp = np.spacing(lo)
+    axis = Cells.log(lo, lo + 4 * ulp, 2, order=1)
+    np.testing.assert_array_equal(axis.edges, lo + ulp * np.array([0, 2, 4]))
+    fine = axis.refine(2)
+    np.testing.assert_array_equal(fine.edges, lo + ulp * np.arange(5))
+    np.testing.assert_allclose(
+        fine.half_width,
+        0.5 * np.log1p(np.diff(fine.edges) / fine.edges[:-1]),
+        rtol=2e-15,
+    )
+
+
+@pytest.mark.parametrize("chart", ["log", "affine"])
+@pytest.mark.parametrize(
+    "origin,width_ulps", [(2.0**-20, 4), (1.5 * 2.0**20, 32), (2.0**400, 1024)]
+)
+def test_rounded_continuous_nodes_keep_their_cell_and_local_moments(
+    chart, origin, width_ulps
+):
+    from syncem import Delta, Population, Uniform
+    from syncem.population.pairing import pair
+
+    upper = origin + width_ulps * np.spacing(origin)
+    make = Cells.log if chart == "log" else Cells.linear
+    fine = Lattice(x=make(origin, upper, 2, order=3), weights=[1.0, 1.0])
+    coarse = Lattice(x=make(origin, upper, 1, order=3), weights=[1.0])
+    uniform = Population(x=Uniform(origin, upper))
+    boundary = fine.cells.hi[0, 0]
+    mixture = 0.7 * uniform + 0.3 * Population(x=Delta(boundary))
+    roots, weights = np.polynomial.legendre.leggauss(12)
+
+    for lattice in (fine, coarse):
+        # Compute relative to physical faces before adding the large origin.
+        expected = []
+        for cell in range(lattice.n_cells):
+            lo, hi = lattice.cells.lo[cell, 0], lattice.cells.hi[cell, 0]
+            ref = lattice.cells.reference[cell, 0]
+            half_width = lattice.cells.half_width[cell, 0]
+            delta = (lo - ref) + 0.5 * (roots + 1) * (hi - lo)
+            atom = boundary - ref
+            if chart == "log":
+                delta, atom = np.log1p(delta / ref), np.log1p(atom / ref)
+            mass = 0.35 * (hi - lo) / (upper - origin)
+            for power in range(4):
+                val = mass * (weights @ ((delta / half_width) ** power))
+                if cell == 0:
+                    val += 0.3 * (atom / half_width) ** power
+                expected.append(val)
+        np.testing.assert_allclose(
+            pair(mixture, lattice).values, expected, rtol=3e-14, atol=4e-15
+        )
+    result = fine.coarsen(pair(mixture, fine), to=coarse)
+    np.testing.assert_allclose(
+        result.values, pair(mixture, coarse).values, rtol=3e-14, atol=4e-15
+    )
+
+
+def test_normalised_smooth_families_conserve_column_on_narrow_log_cells():
+    import jax.numpy as jnp
+    from syncem import family, Population, PowerLaw
+    from syncem.population.pairing import pair
+
+    lo = 1.5 * 2.0**20
+    hi = lo + 4 * np.spacing(lo)
+    lat = Lattice(gamma=Cells.log(lo, hi, 2, order=0), weights=[1.0, 1.0])
+    for law, total in (
+        (PowerLaw(2, lo=lo, hi=hi, column=3), 3.0),
+        (
+            family(variable="gamma", support=(lo, hi))(
+                lambda gamma: jnp.ones_like(gamma)
+            )(),
+            1.0,
+        ),
+    ):
+        result = pair(Population(gamma=law), lat).values
+        np.testing.assert_allclose(result, total * np.array([0.5, 0.5]), rtol=5e-14)

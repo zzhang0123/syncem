@@ -2,6 +2,10 @@
 
 ## 0.9.0
 
+- Add `ContinuumKernel(pitch="joint")` for physical moments of pitch and
+  inclination. Direct averages use the conditional pitch density on the
+  viewing direction. The default retains the isotropic closure.
+
 - Include the manuscript validation scripts for the single-particle figure and
   the harmonic-to-continuum comparison in `studies/classical-models/inputs/validation`.
   The input guide records the commands and the comparisons with the archived outputs.

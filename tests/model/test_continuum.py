@@ -82,6 +82,19 @@ def test_channel_modes_match_scipy_quadrature():
     assert np.array_equal(np.asarray(other.I), np.asarray(modes.I))
 
 
+def test_legacy_continuum_instance_defaults_to_uniform_pitch():
+    # An instance restored with the v0.7.10 state has neither new instance field.
+    current = ContinuumKernel()
+    legacy = object.__new__(ContinuumKernel)
+    vars(legacy).update(
+        (key, value)
+        for key, value in vars(current).items()
+        if key not in ("pitch", "required_closures")
+    )
+    assert legacy.describe() == current.describe()
+    assert legacy.required_closures == ("uniform_mu",)
+
+
 @pytest.mark.parametrize("eta", [1.0, -1.0, 1 - 1e-6, -(1 - 1e-6), 0.0])
 def test_eta_limits_are_finite_symmetric_and_differentiable(eta):
     channels, gamma, B = galactic_channel()
@@ -201,3 +214,60 @@ def test_error_terms_and_tail_bound():
     assert value[0, 0] < 1e-12 * float(modes.I[0])
     assert np.all(np.asarray(kernel.tail_bound(channels, gamma, B, 1.0).value) == 0)
     assert hash(kernel.describe()) and dict(kernel.describe())["n_eta"] == 48
+
+
+def test_joint_tail_bound_tracks_conditional_density():
+    channels, gamma, B = galactic_channel(n_nu=16)
+    low = ContinuumKernel(pitch="joint", tail_cutoff=1.0)
+    high = ContinuumKernel(pitch="joint", tail_cutoff=80.0)
+    for density in (0.0, 0.5, 10.0):
+        args = (channels, gamma, B, 0.0, 0.0)
+        base = low.channel_modes(*args, pitch_density=density)
+        accurate = high.channel_modes(*args, pitch_density=density)
+        bound = low.tail_bound(channels, gamma, B, 0.0, pitch_density=density).value
+        assert np.all(np.abs(accurate.I - base.I) <= bound[:, 0])
+        assert np.all(np.abs(accurate.P[0] - base.P[0]) <= bound[:, 1])
+        at_half = low.tail_bound(channels, gamma, B, 0.0, pitch_density=0.5)
+        assert_allclose(bound, 2 * density * at_half.value, atol=0)
+    with pytest.raises(ValueError, match="pitch_density"):
+        low.tail_bound(channels, gamma, B, 0.0)
+
+
+def test_joint_projection_resolves_retained_legendre_degrees():
+    channels, gamma, B = galactic_channel(n_nu=8)
+    truncation = Truncation(2, 2, 0)
+    for nodes in (2, 3, 64):
+        kernel = ContinuumKernel(pitch="joint", n_eta=nodes)
+        if nodes == 2:
+            with pytest.raises(ValueError, match="n_eta"):
+                kernel.angular_projection(channels, gamma, B, truncation=truncation)
+            continue
+        projected = kernel.angular_projection(channels, gamma, B, truncation=truncation)
+        index = MomentIndex.build(truncation, components=kernel.components)
+        eta, weight = leggauss(nodes)
+        # Independent physical kernel at each node and the exact (2,2) normalization.
+        expected = sum(
+            w
+            * (25 / 2)
+            * eval_legendre(2, e) ** 2
+            * np.asarray(
+                kernel.channel_modes(channels, gamma, B, e, e, pitch_density=0.5).I
+            )
+            for e, w in zip(eta, weight)
+        )
+        assert np.all(expected > 0)
+        assert_allclose(
+            projected.I[:, index.pairs.index((2, 2))], expected, rtol=1e-13, atol=0
+        )
+
+
+def test_joint_density_scaling_uses_channel_precision():
+    channels, gamma, B = galactic_channel(n_nu=8)
+    kernel = ContinuumKernel(pitch="joint")
+    args = (channels, gamma, B, 0.0, 0.4)
+    reference = kernel.channel_modes(*args, pitch_density=0.5)
+    for density in (np.float16(40000), np.finfo(float).max):
+        modes = kernel.channel_modes(*args, pitch_density=density)
+        expected = (2.0 * np.asarray(reference.I)) * float(density)
+        assert np.all(np.isfinite(expected))
+        assert_allclose(modes.I, expected, rtol=1e-14, atol=0)

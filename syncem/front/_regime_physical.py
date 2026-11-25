@@ -19,6 +19,7 @@ from ..engine.average import AveragedKernel
 from ..engine.basis import SpectralBasis
 from ..engine.columns import ColumnRules, column_map
 from ..fitting._point_mass_fit import point_mass_map
+from ..lattice._cell_values import log_displacement
 from ..lattice.cells import Cells
 from ..lattice.lattice import Lattice
 from ..lattice.moments import Moments
@@ -33,6 +34,7 @@ from ._conditional_regime import ConditionalRegimeBasis
 from ._leaf import spin_factor
 from ._predictions import channels_from
 from ._regime_measure import physical_panels, projected_continuum_width
+from ._beaming_layout import crossing_terms
 from ._regimes import _check_statistics
 from ._setup import placed
 
@@ -78,7 +80,7 @@ def _log_energy_pullback(regime, source, gamma, half_width, orders):
     weight_scale = np.asarray(part.lattice.weights)
     result = np.zeros((len(orders), len(index.blocks), index.block_size))
     width = float(np.min(np.diff(np.asarray(regime.channels.support), axis=1)))
-    for point, spin, mass in physical_panels(
+    for point, spin, mass, shifts in physical_panels(
         population,
         part.lattice,
         "continuum",
@@ -87,15 +89,24 @@ def _log_energy_pullback(regime, source, gamma, half_width, orders):
         ("depth",),
         nodes=regime.moment_nodes,
         min_width=width,
+        return_offsets=True,
     ):
-        cell_number = ownership(point, table, mass.size)
+        cell_number = ownership(point, table, mass.size, offsets=shifts)
         spin = np.broadcast_to(spin, mass.shape)
         for cell in np.unique(cell_number[cell_number >= 0]):
             keep = cell_number == cell
             span = index.cell_rows(cell)
             power = index.arrays.powers[span, 0]
             radius = table.half_width[cell, 0]
-            z = np.log(point["nu_c"][keep] / table.reference[cell, 0]) / radius
+            shift = shifts.get("nu_c")
+            z = (
+                log_displacement(
+                    point["nu_c"][keep],
+                    table.reference[cell, 0],
+                    offset=None if shift is None else shift[keep],
+                )
+                / radius
+            )
             stride = 2 * half_width / radius
             weights = mass[keep] / weight_scale[cell]
             polar = weights * spin[keep]
@@ -155,11 +166,6 @@ def _transfer(regime, source, lattice, extra):
             continue
 
         def point_response(point):
-            gamma = float(np.clip(point["gamma"], lo, hi))
-            # The lower cell's interpolant needs the limit from its own side.
-            if hi == switch:
-                gamma = min(gamma, np.nextafter(switch, lo))
-            point = {**point, "gamma": gamma}
             key = tuple(point.values())
             if key not in sampled:
                 sampled[key] = (
@@ -169,7 +175,14 @@ def _transfer(regime, source, lattice, extra):
                 )
             return sampled[key]
 
-        result[rows] = polynomial_columns(table, cell, powers, point_response, extra)
+        result[rows] = polynomial_columns(
+            table,
+            cell,
+            powers,
+            point_response,
+            extra,
+            open_upper="gamma" if hi == switch else None,
+        )
     if conditional:
         return result.transpose(1, 2, 0)
     return tuple(jnp.asarray(m.T) for m in np.split(result, [shapes[0]], axis=1))
@@ -217,6 +230,7 @@ class PaperEnergyBasis(SpectralBasis):
         ledger = Ledger(
             (
                 *regime.harmonic.ledger.terms,
+                *crossing_terms((forward_population,)),
                 ErrorTerm.unbounded(
                     "physical energy collocation and Taylor truncation",
                     name="physical_energy_projection",
@@ -388,19 +402,7 @@ class PaperEnergyBasis(SpectralBasis):
         the Taylor columns instead contracts them with the returned moment map.
         """
         points = point_mass_map(self, marker, chunk_bytes)
-        gamma = points.coordinates["gamma"]
-        switch = self.regime.gamma_switch
-        table = self.lattice.cells
-        axis = table.variables.index("gamma")
-        adjacent = (table.lo[points.cells, axis] == switch) | (
-            table.hi[points.cells, axis] == switch
-        )
-        at_switch = adjacent & (np.abs(gamma - switch) <= 4 * np.spacing(switch))
-        coordinates = {
-            **points.coordinates,
-            "gamma": np.where(at_switch, switch, gamma),
-        }
-        points = points._replace(coordinates=coordinates)
+        coordinates = points.coordinates
         source = self.source.replace(phi=AzimuthFactor(self.azimuth_factor))
         if isinstance(self.regime, ConditionalRegimeBasis):
             values = [

@@ -11,7 +11,7 @@ from ._direct import _panel_geometry, _stokes_array
 from ._setup import configure
 
 
-def _sample(basis, setup, channels, cells, nodes):
+def _sample(basis, setup, channels, cells, nodes, tail):
     modes = integrate(
         setup.averaged,
         channels,
@@ -21,10 +21,11 @@ def _sample(basis, setup, channels, cells, nodes):
         b_perp_max=setup.b_max,
         azimuth_factor=setup.azimuth,
     )
+    tail.record(setup, basis.lattice.cells, channels, "cells", cells)
     return _stokes_array(basis, modes)
 
 
-def quadrature_terms(basis, checks, populations, budget, direct_cost):
+def quadrature_terms(basis, checks, populations, budget, direct_cost, tail):
     """Compare the aggregate spectrum of the first, middle and last cells."""
     lat, ch = basis.lattice, basis.channels
     kernel = basis.averaged.kernel
@@ -85,7 +86,7 @@ def quadrature_terms(basis, checks, populations, budget, direct_cost):
             )
             if leaf_check:
                 rules = (*rules, depth)
-            raw_part = _sample(basis, setup, ch, cells, 24)
+            raw_part = _sample(basis, setup, ch, cells, 24, tail)
             refined = configure(
                 population,
                 kernel,
@@ -96,7 +97,7 @@ def quadrature_terms(basis, checks, populations, budget, direct_cost):
                 refine=rules,
             )
             raw += raw_part
-            doubled += _sample(basis, refined, high, cells, 48)
+            doubled += _sample(basis, refined, high, cells, 48, tail)
             if depth_check:
                 refined = configure(
                     population,
@@ -107,7 +108,7 @@ def quadrature_terms(basis, checks, populations, budget, direct_cost):
                     direct=True,
                     refine=(depth,),
                 )
-                high_depth += _sample(basis, refined, ch, cells, 24) - raw_part
+                high_depth += _sample(basis, refined, ch, cells, 24, tail) - raw_part
     except (RoleError, TypeError) as exc:
         return tuple(
             ErrorTerm.unbounded(f"node doubling unavailable. {exc}", name=name)

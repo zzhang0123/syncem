@@ -100,6 +100,7 @@ class AveragedKernel(eqx.Module):
     fixed: tuple[tuple[str, float], ...] = eqx.field(static=True)
     ties: tuple = eqx.field(static=True)
     leaf_factors: tuple = eqx.field(static=True)
+    emission_ties: tuple = eqx.field(static=True)
     legendre_panels: tuple = eqx.field(static=True)
     diagonal: tuple[str, ...] = eqx.field(static=True)
     phase: Any = None
@@ -118,6 +119,7 @@ class AveragedKernel(eqx.Module):
         leaf_factors: tuple = (),
         legendre_panels: tuple = (),
         diagonal: tuple[str, ...] = (),
+        emission_ties: tuple = (),
     ):
         names = [n for n, _ in averaged] + list(legendre or {}) + list(fixed or {})
         if len(names) != len(set(names)):
@@ -151,6 +153,7 @@ class AveragedKernel(eqx.Module):
         self.outer_batch = None if outer_batch is None else int(outer_batch)
         self.ties = tuple(ties)
         self.leaf_factors = tuple(leaf_factors)
+        self.emission_ties = tuple(emission_ties)
         if diagonal and (
             len(diagonal) != 2
             or len(set(diagonal)) != 2
@@ -164,13 +167,10 @@ class AveragedKernel(eqx.Module):
                 name not in variables or variables[name].kind != "cosine"
                 for name in diagonal
             )
-            or any(
-                name in dict(self.averaged) or name in dict(self.fixed)
-                for name in diagonal
-            )
+            or any(name in dict(self.averaged) for name in diagonal)
         ):
             raise ValueError(
-                "a Beaming diagonal requires two resolved cosines, with one or two Legendre axes"
+                "a Beaming diagonal needs a Legendre axis and a resolved or fixed partner"
             )
         self.diagonal = tuple(diagonal)
         if self.diagonal and ("all", diagonal_weight) not in self.leaf_factors:
@@ -205,6 +205,15 @@ class AveragedKernel(eqx.Module):
             return self._diagonal_projection(channels, point, level)
         x, w = np.polynomial.legendre.leggauss(n)
         panels = dict(self.legendre_panels).get(name)
+        if isinstance(panels, NodeRule):
+            # Integrate this projection once its external parents have been
+            # drawn. Place its degree back at its declared axis position.
+            i, v, p = self._legendre(channels, point, level + 1)
+            return (
+                jnp.moveaxis(i, -1, 1),
+                jnp.moveaxis(v, -1, 1),
+                jnp.moveaxis(p, -1, 2),
+            )
         if panels is not None:
             x = np.concatenate([a + (b - a) * (x + 1) / 2 for a, b in panels])
             w = np.concatenate([w * (b - a) / 2 for a, b in panels])
@@ -248,18 +257,43 @@ class AveragedKernel(eqx.Module):
         modes = jax.vmap(one)(x)
         return project_pair(modes, w, other_level - level)
 
+    def tied_point(self, point):
+        """Supply folded coordinates whose physical partner already has a value."""
+        if not self.ties:
+            return point
+        return {
+            **point,
+            **{child: point[parent] for child, parent in self.ties if parent in point},
+        }
+
+    def physical_point(self, point):
+        """Use the sightline for known physical laws while retaining raw sample coordinates for weights."""
+        if not self.emission_ties:
+            return point
+        return {**point, **{a: point[b] for a, b in self.emission_ties if b in point}}
+
     def _average(self, channels: Any, point: dict, level: int) -> tuple[Any, Any, Any]:
-        if self.ties:
-            point = {
-                **point,
-                **{
-                    child: point[parent]
-                    for child, parent in self.ties
-                    if parent in point
-                },
-            }
+        point = self.tied_point(point)
+        for name, panel in self.legendre_panels:
+            if (
+                isinstance(panel, NodeRule)
+                and name not in point
+                and set(panel.parents).issubset(point)
+            ):
+                x, w = panel(point)
+                degree = next(
+                    degree for axis, degree, _ in self.legendre if axis == name
+                )
+                weights = w[:, None] * jax.vmap(lambda q: point_weights(q, degree))(x)
+                values = jax.vmap(
+                    lambda q: self._average(channels, {**point, name: q}, level)
+                )(x)
+                return tuple(
+                    jnp.tensordot(value, weights, axes=(0, 0)) for value in values
+                )
         if level == len(self.averaged):
-            modes = self._leaf_modes(channels, point)
+            physical = self.physical_point(point)
+            modes = self._leaf_modes(channels, physical)
             i = jnp.asarray(modes.I)
             v = jnp.zeros_like(i) if modes.V is None else jnp.asarray(modes.V)
             if v.shape != i.shape:
@@ -271,13 +305,13 @@ class AveragedKernel(eqx.Module):
             for block, factor in self.leaf_factors:
                 if block == "depth":
                     continue
-                scale = factor(point)
+                scale = factor(point if block == "sample" else physical)
                 p = scale * p
-                if block == "all":
+                if block in ("all", "sample"):
                     i, v = scale * i, scale * v
             return i, v, p
         name, rule = self.averaged[level]
-        nodes, probs = rule(point)
+        nodes, probs = rule(self.physical_point(point))
 
         def one(value: Any) -> tuple[Any, Any, Any]:
             return self._average(channels, {**point, name: value}, level + 1)
@@ -288,26 +322,26 @@ class AveragedKernel(eqx.Module):
             values = jax.vmap(one)(nodes)
         return tuple(jnp.tensordot(probs, a, axes=1) for a in values)
 
-    def _leaf_modes(self, channels, point):
+    def _leaf_modes(self, channels, physical):
         for block, factor in self.leaf_factors:
             if block == "depth":
-                rule = factor(point)
+                rule = factor(physical)
                 if callable(rule):
                     phase = self.phase.with_screen(rule)
-                    return self.kernel.channel(channels, point, phase=phase)
+                    return self.kernel.channel(channels, physical, phase=phase)
                 depths, weights = rule
                 name = self.kernel.depth
 
                 def one(depth):
                     return self.kernel.channel(
-                        channels, {**point, name: depth}, phase=self.phase
+                        channels, {**physical, name: depth}, phase=self.phase
                     )
 
                 values = jax.vmap(one)(depths)
                 return jax.tree.map(
                     lambda value: jnp.tensordot(weights, value, axes=1), values
                 )
-        return self.kernel.channel(channels, point, phase=self.phase)
+        return self.kernel.channel(channels, physical, phase=self.phase)
 
 
 class _CoreAdapter(eqx.Module):

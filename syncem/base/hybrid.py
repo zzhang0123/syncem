@@ -48,6 +48,7 @@ class HybridKernel:
     geometry: tuple
     assignment: tuple[int, ...]
     _by_box: Mapping
+    _regime_support: tuple
 
     def __init__(self, *kernels, switch=None, assign=None, switch_tol=1e-3):
         if len(kernels) < 2:
@@ -123,6 +124,7 @@ class HybridKernel:
             ("geometry", ()),
             ("assignment", ()),
             ("_by_box", MappingProxyType({})),
+            ("_regime_support", ()),
         ):
             object.__setattr__(self, name, value)
 
@@ -157,6 +159,27 @@ class HybridKernel:
             )
         return int(selected)
 
+    def _with_evaluators(self, children):
+        """Keep the same point-to-child assignment with adapted evaluators."""
+        result = copy(self)
+        object.__setattr__(result, "kernels", tuple(children))
+        return result
+
+    def _with_regime_support(self, support):
+        """Supply declared intervals for variables integrated within each cell."""
+        intervals = tuple(sorted(support.items()))
+        if self._regime_support == intervals:
+            return self
+        bound = copy(self)
+        object.__setattr__(bound, "_regime_support", intervals)
+        return bound
+
+    def child_regime(self, label, box, channels):
+        """Check a child on the cell or face and its unresolved physical support."""
+        return self.kernels[label].regime(
+            {**dict(self._regime_support), **box}, channels
+        )
+
     def bind(self, table):
         """Freeze the host assignment in the given cell order."""
         if not table.variables:
@@ -184,7 +207,7 @@ class HybridKernel:
     def regime(self, box, channels):
         label = self.cell_index(box)
         try:
-            return self.kernels[label].regime(box, channels)
+            return self.child_regime(label, box, channels)
         except KeyError as exc:
             return Regime(
                 False, f"hybrid regime check needs a support interval for {exc.args[0]}"
@@ -294,13 +317,18 @@ class HybridKernel:
             ),
             ("switch", self.switch),
             ("assignment", self.assignment),
+            *(
+                (("regime_support", self._regime_support),)
+                if self._regime_support
+                else ()
+            ),
             ("not_cached", reasons),
         )
 
     def check_regime(self, boxes, channels):
         for cell, (box, branch) in enumerate(zip(boxes, self.assignment, strict=True)):
             try:
-                status = self.kernels[branch].regime(box, channels)
+                status = self.child_regime(branch, box, channels)
             except KeyError as exc:
                 raise RegimeError(
                     f"cell {cell}: hybrid child needs a support interval for {exc.args[0]}"

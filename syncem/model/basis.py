@@ -53,6 +53,7 @@ import jax.numpy as jnp
 
 from . import _basis_core as _core
 from ._basis_combine import combine_basis
+from ._continuum import check_basis_pitch
 from ._registry import require_affine, resolve_map
 from .assumptions import ParameterMap
 from .channels import Channels
@@ -121,7 +122,7 @@ class SpectralBasis(eqx.Module):
     can rebuild the basis. Shape errors raise ``ValueError``. Units: per-
     electron channel Stokes per unit ``z``-moment (module docstring).
     Assumes what ``provenance.assumptions`` lists (phase-route screens,
-    ``isotropic_pitch`` for the continuum kernel). Not certified: the
+    ``isotropic_pitch`` for the uniform-pitch continuum closure). Not certified: the
     quadrature error beyond the ``numerical`` estimate, derivative orders
     outside ``certified_orders``, and the kernel's physical adequacy.
     """
@@ -214,7 +215,7 @@ def build_basis(
     Eager: every input must be concrete. Validation (``ValueError``): types,
     ``gamma0 > 1``, ``B0 > 0``, support ordering, ``phase.max_b()`` equal to
     ``truncation.max_b()`` (``phase=None`` selects ``TaylorPhase(max_b)``),
-    ``ContinuumKernel`` with ``L_mu > 0``, for Dirac-line kernels a channel
+    ``ContinuumKernel(pitch="isotropic")`` with ``L_mu > 0``, for Dirac-line kernels a channel
     ``smoothness < N + 1`` unless ``allow_nonsmooth=True`` (keyword addition,
     the remainder is then unbounded and noted), ``m_max < required_m_max``
     unless ``allow_truncated=True``, and any ``required_m_max`` beyond the
@@ -418,10 +419,11 @@ def basis_convergence(
     continuum kernel, and ``full`` also multiplies the Bessel or ``F``/``G``
     resolution. ``predict`` contracts the envelope with ``|m|``, which is
     invariant under ``Reference.scales`` and bounds ``|(C' - C) m|``. The
-    continuum kernel adds its ``F``/``G`` tail bound at ``(gamma0, B0,
+    uniform-pitch continuum kernel adds its ``F``/``G`` tail bound at ``(gamma0, B0,
     eta = 0)`` on the mass column ``(0,0,0,0,0)`` (so it is multiplied by
     ``|m_0|``). An ``estimate``: the refined rule's own error and
-    non-monotone convergence are not bounded. Kernels without quadrature
+    non-monotone convergence are not bounded. Joint pitch also refines the
+    F/G tail cutoff on every column. Kernels without quadrature
     controls (or without a second route) give ``not_applicable``.
     ``basis.phase`` must be set.
     """
@@ -429,6 +431,7 @@ def basis_convergence(
         raise ValueError("factor must be an integer >= 2")
     if basis.phase is None:
         raise ValueError("basis_convergence needs basis.phase (set by build_basis)")
+    check_basis_pitch(basis, kernel)
     route = dict(basis.provenance.quadrature).get("route")
     check = _core.refined(
         kernel, basis.channels, route, factor, full, cross=bool(cross_route)

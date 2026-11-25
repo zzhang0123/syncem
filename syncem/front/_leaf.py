@@ -6,7 +6,8 @@ import numpy as np
 from ..base.capabilities import Beaming
 from ..base.continuum import ContinuumKernel
 from ..distributions import AzimuthFactor, Conditional, Isotropic
-from ..population.declaration import law_at, parents
+from ..population._diagonal import traced_diagonal_knots
+from ..population.declaration import ancestors, law_at, parents, placed_law
 from ..values.errors import RoleError
 
 
@@ -46,6 +47,14 @@ def beam(kernel, factors, resolved, units):
     ):
         return (), ()
     source, target = (eta, mu) if mu in resolved else (mu, eta)
+    if not {mu, eta}.intersection(resolved):
+        # Keep the marginal as the integration variable. Eliminating an
+        # ancestor of the other cosine would create a cycle after the tie.
+        source_law = factors.get(source)
+        if source in ancestors(factors, target) or (
+            not parents(source_law) and not hasattr(source_law, "density")
+        ):
+            source, target = target, source
     law = factors.get(source)
     if law is None or (not hasattr(law, "density") and not parents(law)):
         raise RoleError(f"Beaming needs a density on the averaged variable {source}")
@@ -60,7 +69,8 @@ def beam(kernel, factors, resolved, units):
 def split_beaming_rule(law, knots, *, factor=1):
     """Rule on the intervals where the multiplier has one formula."""
     lo, hi = law.support
-    edges = np.array([lo, *(x for x in knots if lo < x < hi), hi])
+    breaks = (*getattr(law, "kinks", ()), *knots)
+    edges = np.unique([lo, *(x for x in breaks if lo < x < hi), hi])
     n = max(24, getattr(law, "nodes", 24))
     nodes, weights = np.polynomial.legendre.leggauss(factor * n)
     radius = np.diff(edges) / 2
@@ -69,16 +79,53 @@ def split_beaming_rule(law, knots, *, factor=1):
     return jnp.asarray(x), w * law.density(x)
 
 
-def projection_panels(factors, ties, knots, legendre):
+def moving_beaming_rule(law, folded, target, units, variable, factor, point, edges):
+    """Integrate the driver on panels that follow both conditional densities."""
+    local = law_at(law, point, units)
+    local = placed_law(local, variable)
+    if getattr(local, "is_point", False) or not hasattr(local, "density"):
+        return local.rule()
+    n = factor * max(24, getattr(local, "nodes", 24))
+    lo, hi = local.support
+    if edges is None:
+        edges = traced_diagonal_knots(folded, target, point, units, lo, hi)
+    x, w = moving_panel_nodes(lo, hi, (*getattr(local, "kinks", ()), *edges), n)
+    return x, w * local.density(x)
+
+
+def moving_panel_nodes(lo, hi, breaks, n):
+    """A fixed-shape Gaussian quadrature with differentiable panel edges."""
+    edges = jnp.sort(jnp.clip(jnp.asarray((lo, hi, *breaks)), lo, hi))
+    nodes, weights = np.polynomial.legendre.leggauss(n)
+    widths = jnp.diff(edges) / 2
+    x = edges[:-1, None] + widths[:, None] * (nodes + 1)
+    # Collapsed panels may touch a pole where an otherwise unused kernel
+    # derivative is singular. Evaluate zero-weight nodes in the interior.
+    x = jnp.where(widths[:, None] > 0, x, (lo + hi) / 2)
+    return x.ravel(), (widths[:, None] * weights).ravel()
+
+
+def projection_panels(factors, ties, knots, legendre, moving, units, geometry):
     """Exclude angular panels where the independent folded density vanishes."""
     result = []
     for source, target in ties:
         law = factors.get(source)
-        if target not in legendre or parents(law) or not hasattr(law, "support"):
+        if target not in legendre:
             continue
-        lo, hi = (float(x) for x in law.support)
+        if target in moving:
+            from ..engine.average import NodeRule
+
+            def project(
+                point, law=geometry[target], target=target, n=legendre[target][1]
+            ):
+                breaks = traced_diagonal_knots(law, target, point, units, -1.0, 1.0)
+                return moving_panel_nodes(-1.0, 1.0, breaks, n)
+
+            result.append((target, NodeRule(project, moving[target])))
+            continue
+        lo, hi = map(float, getattr(law, "support", (-1.0, 1.0)))
         lo, hi = max(-1.0, lo), min(1.0, hi)
-        splits = [x for x in knots.get(target, ()) if lo < x < hi]
+        splits = [float(x) for x in knots.get(target, ()) if lo < x < hi]
         if lo < hi and (lo > -1 or hi < 1 or splits):
             edges = (lo, *splits, hi)
             result.append((target, tuple(zip(edges[:-1], edges[1:]))))

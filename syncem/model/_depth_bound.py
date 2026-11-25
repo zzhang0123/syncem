@@ -14,6 +14,7 @@ import jax
 import jax.numpy as jnp
 
 from ._bound_helpers import _amplitude, _as_float, _nonnegative, _stokes, _tau_max
+from ._continuum import sample_pitch_density
 from .errors import ErrorTerm
 
 
@@ -26,6 +27,7 @@ def depth_error_bound(
     amplitude=1.0,
     phase=None,
     absolute_channel_sum=None,
+    pitch_density=None,
     batch_size=1024,
 ) -> ErrorTerm:
     """``amplitude tau_max <|K_P| |delta depth|>`` per channel (``[extension]`` depth perturbation).
@@ -39,6 +41,9 @@ def depth_error_bound(
     below the absolute line sum, the result is ``kind="estimate"`` unless
     ``absolute_channel_sum`` ``(S, n_ch)`` (``sum_m |Q_m R_j|`` or
     ``int |R_j K_P| dnu`` per sample) is supplied, which gives ``"bound"``.
+    For a joint continuum kernel, use marginal samples and pass the
+    conditional pitch density at mu=eta to estimate the modulus. A supplied
+    absolute channel sum already includes the factor twice this density.
     Zeros in ``I, V``. Samples are mapped in batches of ``batch_size``.
     Units: ``amplitude`` times the per-electron channel Stokes units.
     ``tau_max`` in m^2 times ``delta_depth`` in rad/m^2 is a phase. Assumes
@@ -57,7 +62,10 @@ def depth_error_bound(
     )
     tau = _tau_max(channels)
     if absolute_channel_sum is None:
-        absolute = _kernel_modulus(samples, kernel, channels, phase, batch_size)
+        density = sample_pitch_density(kernel, pitch_density, size)
+        absolute = _kernel_modulus(
+            samples, kernel, channels, phase, batch_size, density
+        )
         kind = "estimate"
         note = (
             "[extension] depth-perturbation term tau_max <|K_P| |delta depth|> with "
@@ -65,6 +73,8 @@ def depth_error_bound(
             "sum_m |Q_m R_j|): estimate"
         )
     else:
+        if pitch_density is not None:
+            raise ValueError("absolute_channel_sum already includes the pitch density")
         absolute = _as_float(absolute_channel_sum, "absolute_channel_sum")
         if absolute.shape != (size, channels.n_ch):
             raise ValueError(
@@ -81,11 +91,12 @@ def depth_error_bound(
     return ErrorTerm(value=value, kind=kind, note=note, manuscript_term="E_phys")
 
 
-def _kernel_modulus(samples, kernel, channels, phase, batch_size):
+def _kernel_modulus(samples, kernel, channels, phase, batch_size, density):
     """``(S, n_ch)`` moduli of the reference polarised channel kernel per sample."""
 
     def one(leaf):
-        gamma, B, mu, eta, depth = leaf
+        gamma, B, mu, eta, depth = leaf[:5]
+        pitch = {"pitch_density": leaf[5]} if density is not None else {}
         modes = kernel.channel_modes(
             channels,
             gamma,
@@ -95,10 +106,13 @@ def _kernel_modulus(samples, kernel, channels, phase, batch_size):
             phase=phase,
             depth_ref=depth,
             s_depth=jnp.ones(()),
+            **pitch,
         )
         return jnp.abs(modes.P[0])
 
     leaves = (samples.gamma, samples.B, samples.mu, samples.eta, samples.depth)
+    if density is not None:
+        leaves += (density,)
     return jax.lax.map(one, leaves, batch_size=min(int(batch_size), samples.size))
 
 

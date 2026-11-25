@@ -39,6 +39,10 @@ def fit_summary(fit):
         lines.append(
             f"Rank {int(ranks)}{numerical}    χ² {chi2:.6g}    dof {dof:.6g}    p {probability:.4g}"
         )
+    if hasattr(fit, "n_starts") and np.ndim(fit.n_starts) == 0:
+        lines.append(
+            f"Starts reaching the minimum  {fit.converged_starts} / {fit.n_starts}"
+        )
     effective = getattr(fit, "effective_parameters", None)
     if effective is not None and np.ndim(effective) == 0:
         lines.append(f"Effective parameters  {float(effective):.6g}")

@@ -556,8 +556,24 @@ with a supplied `derivative_envelope`.
 At `B0 = 5` uG, `gamma0 = 3000` and channels between 0.1 and 3 GHz the
 harmonic index needed to reach the channels is of order 1e12, so the
 harmonic kernel is refused and `ContinuumKernel` (`eq: directional
-continuum`) is the only route. It ignores the pitch cosine `mu`, which
-forces `isotropic_pitch` (`L_mu = 0`), and it does not model `V`. The
+continuum`) supplies the intensity and linear polarisation. This example
+chooses uniform pitch, the default `ContinuumKernel(pitch="isotropic")`.
+
+For a smooth anisotropic pitch law, use `ContinuumKernel(pitch="joint")`
+with `Truncation(L_mu, L_eta, N)` and supply joint moments of pitch and
+inclination. Both Legendre polynomials enter the same viewing-angle integral.
+For instance, the joint density `(1 + a*mu*eta)/4` on the two cosines has
+uniform marginals, but its emission acquires the factor `1 + a*eta**2`.
+The angular response of this law is captured by `L_mu = L_eta = 1`.
+For a direct average, pass the marginal samples of the remaining variables
+and `pitch_density=(1 + a*samples.eta**2)/2` to `direct_channel_average`.
+The beaming approximation requires `gamma sin(theta) >> 1`. At fixed energy,
+field, viewing direction and Faraday depth, the pitch density must vary little
+within about `1/gamma` radians of the viewing angle. The continuum spectrum
+describes channels that average over many harmonics. Circular polarisation
+vanishes to leading order in this approximation.
+
+The
 Faraday screen is a Burn screen (`GaussianScreen(mean=30, sigma=5)` rad/m^2,
 exact in `tau` for that screen, `depth_degree=0`), the population is a
 product measure local to the reference (energies 2700..3300 with
@@ -592,11 +608,11 @@ critical frequency a_B gamma^2 (GHz) at gamma = 2700, 3000, 3300: [0.133 0.164 0
 Burn factor exp(-2 sigma^2 lambda^4) at the channel centres:
   [0.0000e+000 6.7602e-252 1.0801e-036 7.0752e-006 1.8302e-001 7.8414e-001
  9.6578e-001 9.9503e-001]
-HarmonicKernel refused: required_m_max=2043405178518 lies outside the harmonic design regime (m <~ 16368); use ContinuumKernel with isotropic_pitch
+HarmonicKernel refused: required_m_max=2043405178518 lies outside the harmonic design regime (m <~ 16368); use ContinuumKernel
 index: components=('I', 'Q') n0=12 n2=12 n_real=36  build time 3.7 s
 forced assumptions: ['independent_screen', 'gaussian_screen', 'isotropic_pitch']
 notes: ('V not modelled [ContinuumKernel]', 'incident polarisation not modelled')
-L_mu > 0 refused: ContinuumKernel requires the uniform_mu closure (isotropic pitch): use L_mu = 0
+Joint pitch basis retains the (1, 1) angular pair: True
 population size: 4096
 remainder probe on 8 samples: 10.0 s, kind estimate
 Prediction (eq: finite joint response): 8 channels, units per-electron channel Stokes per unit z-moment: erg/s/sr (unit_peak) or erg/s/sr/Hz (unit_integral); z = ((gamma-gamma0)/s_gamma, (B-B0)/s_B, (depth-depth_ref)/s_depth), Gauss, Hz, rad/m^2, amplitude 1e+20
@@ -643,7 +659,7 @@ replacement is not bounded against the harmonic reference, and no channel
 comparison can be run at `m ~ 1e12`. All three assumptions are `unbounded`
 because no allowance is passed (example (d) shows `assumption_allowances`).
 The screen route's `independent_screen` and `gaussian_screen` have no
-declared discrepancy. `isotropic_pitch` is forced by the continuum kernel,
+declared discrepancy. This example assumes `isotropic_pitch`,
 and the retained `L_mu = 0` moments cannot test it: the measured
 `|m_joint - m_fac|` on those rows is zero by construction, so `predict`
 keeps the term `unbounded` and notes that the moment-level discrepancy was
@@ -777,8 +793,7 @@ quadrature nodes `nu_n` as the lines:
 `sigma_{j,n} = w_n |R_j(nu_n)| sigma_P(nu_n)`, where
 `sigma_P(nu_n)` is the ray standard deviation of the incident polarisation
 `<K_Q e^{2i phi}>` of each ray, and `Phi_{j,n} = |<exp(i tau_n depth)>|` over
-the rays. Each ray is uniform in `mu` by construction, so the continuum
-kernel's forced `isotropic_pitch` gets a declared zero.
+the rays. Each ray is uniform in `mu` by construction, so the example assigns a declared zero to its pitch closure.
 
 ```python
 from syncem.model.bounds import screen_factorisation_bound
@@ -1006,8 +1021,8 @@ limitations.
   harmonic-tail note says so, and with traced samples so does the note of
   a declared-zero `excluded_tail`.
 * A measured assumption term holds for the supplied population only.
-  Assumptions forced by the basis (screen routes, the continuum kernel's
-  `isotropic_pitch`) stay `unbounded` whatever the moments carry, because
+  Assumptions forced by the basis (screen routes, the default continuum
+  pitch closure `isotropic_pitch`) stay `unbounded` whatever the moments carry, because
   the retained moments cannot test them, unless the caller supplies an
   allowance through `assumption_allowances`. An allowance keeps its kind
   and value (`not_applicable` is refused); nothing checks that it holds.

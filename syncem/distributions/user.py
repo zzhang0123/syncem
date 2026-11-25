@@ -24,6 +24,7 @@ from ._common import (
     concrete,
     count,
     interval,
+    log_interval,
     node_count,
     pair_values,
     probabilities,
@@ -107,9 +108,7 @@ class UserFamily(Law):
 
     def _panel(self, lo, hi, n):
         if self.lo > 0:
-            z, w = interval(jnp.log(lo), jnp.log(hi), n)
-            x = jnp.exp(z)
-            return x, w * x
+            return log_interval(lo, hi, n)
         return interval(lo, hi, n)
 
     def _weights(self, lo, hi, n):
@@ -153,8 +152,7 @@ class UserFamily(Law):
         )
         return mass
 
-    def panel_rule(self, lo, hi, n=None, *, fitted=False):
-        """Quadrature on a cell with the normalisation of the full law."""
+    def _raw_panel(self, lo, hi, n=None):
         support_lo, support_hi = self.support
         lo = jnp.maximum(lo, support_lo)
         hi = jnp.minimum(hi, support_hi)
@@ -162,7 +160,12 @@ class UserFamily(Law):
         a = jnp.where(valid, lo, support_lo)
         b = jnp.where(valid, hi, support_hi)
         x, w = self._weights(a, b, node_count(n, self.nodes))
-        return x, jnp.where(valid, w / self._mass(), 0.0)
+        return x, jnp.where(valid, w, 0.0)
+
+    def panel_rule(self, lo, hi, n=None, *, fitted=False):
+        """Quadrature on a cell with the normalisation of the full law."""
+        x, w = self._raw_panel(lo, hi, n)
+        return x, w / self._mass()
 
     def density(self, x, *, parents=None):
         lo, hi = self.support

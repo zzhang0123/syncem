@@ -3,6 +3,7 @@
 from dataclasses import replace
 
 from ..engine.cache import trial_tables
+from ..fitting._family_batch import FamilyBatch
 from ..fitting.family_fit import fit_family, free_parameters, start_values
 from ..fitting.moment_form import fit_moment_form
 from ..values.errors import RoleError
@@ -124,6 +125,11 @@ def separable_fit(
     result = fit_family(basis, data, component, starts=starts, rebuild=build_trial)
     if check is False:
         return result
-    with trial_tables():
-        checked = build(result.population, accuracy=check)
-    return replace(result, basis=checked)
+
+    def checked(fit):
+        with trial_tables():
+            return replace(fit, basis=build(fit.population, accuracy=check))
+
+    if isinstance(result, FamilyBatch):
+        return replace(result, pixels=tuple(checked(pixel) for pixel in result.pixels))
+    return checked(result)

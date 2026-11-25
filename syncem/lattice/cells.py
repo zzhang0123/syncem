@@ -32,6 +32,9 @@ from ._cell_values import (
     _orders,
     _reference,
     _spelling,
+    edge_tolerance,
+    partition_edges,
+    centers_and_widths,
 )
 
 __all__ = ["CHARTS", "Cells"]
@@ -61,7 +64,7 @@ class Cells(eqx.Module):
         if self.chart == "log" and np.any(self.reference <= 0):
             raise ValueError("the log chart needs positive reference points")
         slack = (
-            1e-12 * np.maximum(np.abs(self.edges[:-1]), np.abs(self.edges[1:]))
+            edge_tolerance(self.edges[:-1], self.edges[1:])
             if self.edges is not None
             else 0
         )
@@ -132,8 +135,7 @@ class Cells(eqx.Module):
         n = _count(n)
         if not 0 < a < b:
             raise ValueError(f"Cells.log needs 0 < lo < hi, not {a!r}, {b!r}")
-        edges = np.exp(np.linspace(math.log(a), math.log(b), n + 1))
-        edges[0], edges[-1] = a, b
+        edges = partition_edges(a, b, n, "log")
         return cls._from_canonical_edges(
             edges, "log", order, given, _reference(reference, unit, given), spelling
         )
@@ -258,11 +260,9 @@ class Cells(eqx.Module):
             )
         if chart == "log" and edges[0] <= 0:
             raise ValueError("the log chart needs positive edges")
-        t = np.log(edges) if chart == "log" else edges
-        half = 0.5 * np.diff(t)
-        centre = 0.5 * (t[1:] + t[:-1])
+        centre, half = centers_and_widths(edges, chart)
         if reference is None:
-            ref = np.exp(centre) if chart == "log" else centre
+            ref = centre
         else:
             ref = reference
             if (
@@ -332,12 +332,11 @@ class Cells(eqx.Module):
         k = _count(k)
         if self.edges is None:
             raise ValueError("cells without edges cannot be refined")
-        t = np.log(self.edges) if self.chart == "log" else self.edges
-        fine = np.concatenate(
-            [np.linspace(a, b, k + 1)[:-1] for a, b in zip(t[:-1], t[1:])] + [t[-1:]]
-        )
-        edges = np.exp(fine) if self.chart == "log" else fine
-        edges[0], edges[-1] = self.edges[0], self.edges[-1]
+        parts = [
+            partition_edges(a, b, k, self.chart)[:-1]
+            for a, b in zip(self.edges[:-1], self.edges[1:])
+        ]
+        edges = np.concatenate([*parts, self.edges[-1:]])
         return Cells._from_canonical_edges(
             edges,
             self.chart,

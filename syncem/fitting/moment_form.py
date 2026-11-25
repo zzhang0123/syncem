@@ -19,8 +19,12 @@ from ..lattice.moments import Moments
 from ..records.ledger import ErrorTerm, Ledger
 from ..values.errors import DataError, RoleError, SizeError
 from ..values.spectrum import Spectrum
+from ._family_noise import FamilyNoise
+from ._family_batch import fit_pixels
+from ._fit_records import RetainedCombinations
+from .data import Whitened
 from .family_fit import FamilyFit, Parameter, _withheld
-from .free_fit import _design, _fit_basis
+from .free_fit import _design, _fit_basis, family_combinations
 from .rank import FullRank, reduce_svd, solve_svd
 
 
@@ -112,17 +116,33 @@ def fit_moment_form(basis, data, population, *, rank=None, chunk_bytes=2**31):
     primary = basis.averaged.kernel.primary
     law = population.factors[primary]
     if data.batch_shape:
-        raise DataError("the linear density form accepts one sightline at a time")
-    basis = _fit_basis(basis, data.channels)
+        return fit_pixels(
+            data,
+            lambda pixel: fit_moment_form(
+                basis, pixel, population, rank=rank, chunk_bytes=chunk_bytes
+            ),
+        )
+    prediction_basis = basis
+    if not isinstance(data, RetainedCombinations):
+        basis = _fit_basis(basis, data.channels)
     mapping = _moment_matrix(law, basis.lattice, primary, chunk_bytes)
-    matrix = jnp.asarray(_design(basis) @ mapping)
-    white = data.whitened(matrix, components=basis.record.stokes)
+    if isinstance(data, RetainedCombinations):
+        data = family_combinations(data, basis, mapping.shape[1])
+        target, operator, count = data.whitened_operator()
+        white = Whitened(target, operator @ mapping, count)
+    else:
+        matrix = jnp.asarray(_design(basis) @ mapping)
+        white = data.whitened(matrix, components=basis.record.stokes)
     svd = reduce_svd(white.design)
     solution = solve_svd(svd, white.data, FullRank() if rank is None else rank)
     coefficient = solution.moments
     used = np.arange(solution.sigma.size) < int(solution.rank)
     directions = np.asarray(svd.directions)[used]
-    sigma = np.linalg.norm(directions.T * np.asarray(solution.sigma)[used], axis=-1)
+    noise = FamilyNoise(
+        directions, 1 / np.asarray(solution.sigma)[used], np.ones(coefficient.size)
+    )
+    covariance, _, _ = noise.covariance()
+    sigma = np.sqrt(np.diag(covariance))
     identified = np.sum(directions**2, axis=0) >= 1 - 1e-10
     params = {
         f"{primary}.amplitude_m{i}": Parameter(
@@ -140,7 +160,7 @@ def fit_moment_form(basis, data, population, *, rank=None, chunk_bytes=2**31):
 
     p = float(gammaincc(dof / 2, float(solution.chi2) / 2)) if dof > 0 else np.nan
     return MomentFormFit(
-        basis,
+        prediction_basis,
         data,
         population,
         params,
@@ -151,4 +171,10 @@ def fit_moment_form(basis, data, population, *, rank=None, chunk_bytes=2**31):
         int(solution.rank),
         coefficient,
         withheld_details=_withheld(data, basis, moments),
+        noise=noise,
+        moment_jacobian=lambda: mapping,
+        parameter_covariance=covariance,
+        spectrum_jacobian=lambda output: np.asarray(_design(output) @ mapping).reshape(
+            -1, coefficient.size
+        ),
     )
